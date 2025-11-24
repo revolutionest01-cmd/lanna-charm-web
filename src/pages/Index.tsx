@@ -6,7 +6,6 @@ import MenuSection from "@/components/MenuSection";
 import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import ContactSection from "@/components/ContactSection";
-import ForumSection from "@/components/ForumSection";
 import FallingLeaves from "@/components/FallingLeaves";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
@@ -26,7 +25,6 @@ const Index = () => {
         <GallerySection />
         <ReviewsSection />
         <ContactSection />
-        <ForumSection />
       </main>
       <Footer />
       <BackToTop />
