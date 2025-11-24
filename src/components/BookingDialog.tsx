@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { toast } from "sonner";
+import ReCaptcha from "@/components/ReCaptcha";
 
 interface BookingDialogProps {
   children: React.ReactNode;
@@ -32,12 +33,18 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [open, setOpen] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!checkIn || !checkOut || !name || !email || !phone) {
       toast.error(language === 'th' ? 'กรุณากรอกข้อมูลให้ครบถ้วน' : 'Please fill in all fields');
+      return;
+    }
+
+    if (!recaptchaToken) {
+      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
       return;
     }
 
@@ -56,6 +63,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     setName("");
     setEmail("");
     setPhone("");
+    setRecaptchaToken(null);
   };
 
   return (
@@ -190,6 +198,14 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
+            />
+          </div>
+
+          <div className="pt-2">
+            <ReCaptcha 
+              onVerify={(token) => setRecaptchaToken(token)}
+              onExpired={() => setRecaptchaToken(null)}
+              onError={() => setRecaptchaToken(null)}
             />
           </div>
 

@@ -16,6 +16,7 @@ import {
   Clock
 } from "lucide-react";
 import { toast } from "sonner";
+import ReCaptcha from "@/components/ReCaptcha";
 
 interface Reply {
   id: number;
@@ -55,6 +56,7 @@ const TopicDetail = () => {
   const { user, isAuthenticated } = useAuth();
 
   const [replyContent, setReplyContent] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   // Mock topics data (same as Forum page)
   const topics: Topic[] = [
@@ -203,6 +205,11 @@ const TopicDetail = () => {
       return;
     }
 
+    if (!recaptchaToken) {
+      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+      return;
+    }
+
     const newReply: Reply = {
       id: Date.now(),
       author: user.name,
@@ -214,6 +221,7 @@ const TopicDetail = () => {
 
     setReplies([...replies, newReply]);
     setReplyContent("");
+    setRecaptchaToken(null);
     toast.success(language === 'th' ? 'ตอบกลับสำเร็จ' : 'Reply submitted successfully');
   };
 
@@ -348,6 +356,13 @@ const TopicDetail = () => {
                   rows={4}
                   className="resize-none"
                 />
+                <div className="pt-2">
+                  <ReCaptcha 
+                    onVerify={(token) => setRecaptchaToken(token)}
+                    onExpired={() => setRecaptchaToken(null)}
+                    onError={() => setRecaptchaToken(null)}
+                  />
+                </div>
                 <Button type="submit" className="w-full sm:w-auto">
                   <Send className="w-4 h-4 mr-2" />
                   {language === 'th' ? 'ส่งความคิดเห็น' : 'Submit Reply'}

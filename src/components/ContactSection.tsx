@@ -7,6 +7,7 @@ import { Phone, Mail, MapPin, Clock, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import ReCaptcha from "@/components/ReCaptcha";
 
 const ContactSection = () => {
   const { language } = useLanguage();
@@ -21,6 +22,7 @@ const ContactSection = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const contactSchema = z.object({
     name: z
@@ -94,6 +96,15 @@ const ContactSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!recaptchaToken) {
+      toast.error(
+        language === "th" 
+          ? "กรุณายืนยัน reCAPTCHA" 
+          : "Please verify reCAPTCHA"
+      );
+      return;
+    }
+
     try {
       // Validate form data
       contactSchema.parse(formData);
@@ -112,6 +123,7 @@ const ContactSection = () => {
         topic: "",
         message: "",
       });
+      setRecaptchaToken(null);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
@@ -383,6 +395,14 @@ const ContactSection = () => {
                     {errors.message}
                   </p>
                 )}
+              </div>
+
+              <div className="pt-2">
+                <ReCaptcha 
+                  onVerify={(token) => setRecaptchaToken(token)}
+                  onExpired={() => setRecaptchaToken(null)}
+                  onError={() => setRecaptchaToken(null)}
+                />
               </div>
 
               <Button
