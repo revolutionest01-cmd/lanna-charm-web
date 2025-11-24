@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Languages } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import BookingDialog from "./BookingDialog";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -67,9 +68,11 @@ const Header = () => {
             >
               <Languages size={20} />
             </Button>
-            <Button variant="default" size="lg" className="font-semibold">
-              {t.bookNow}
-            </Button>
+            <BookingDialog>
+              <Button variant="default" size="lg" className="font-semibold">
+                {t.bookNow}
+              </Button>
+            </BookingDialog>
           </div>
 
           {/* Mobile Menu Button */}
@@ -105,9 +108,11 @@ const Header = () => {
                 <Languages size={18} className="mr-2" />
                 {language === 'th' ? 'EN' : 'TH'}
               </Button>
-              <Button variant="default" size="lg" className="flex-1 font-semibold">
-                {t.bookNow}
-              </Button>
+              <BookingDialog>
+                <Button variant="default" size="lg" className="flex-1 font-semibold">
+                  {t.bookNow}
+                </Button>
+              </BookingDialog>
             </div>
           </nav>
         )}
