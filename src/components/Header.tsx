@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Languages, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import BookingDialog from "./BookingDialog";
@@ -72,12 +72,36 @@ const Header = () => {
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {t.forum}
               </Button>}
-            <button onClick={toggleLanguage} className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${isScrolled ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"}`} aria-label="Toggle language">
-              <Languages size={16} />
-              <span className="text-sm font-semibold">
-                {language === 'th' ? 'TH' : 'EN'}
-              </span>
-            </button>
+            <div className={`inline-flex items-center rounded-full p-1 gap-1 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
+              <button
+                onClick={() => setLanguage('th')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                  language === 'th'
+                    ? 'bg-highlight text-highlight-foreground shadow-sm'
+                    : isScrolled
+                    ? 'text-foreground hover:bg-background/50'
+                    : 'text-white hover:bg-white/10'
+                }`}
+                aria-label="Switch to Thai"
+              >
+                <span className="text-base">🇹🇭</span>
+                <span className="text-sm font-semibold">ไทย</span>
+              </button>
+              <button
+                onClick={() => setLanguage('en')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                  language === 'en'
+                    ? 'bg-highlight text-highlight-foreground shadow-sm'
+                    : isScrolled
+                    ? 'text-foreground hover:bg-background/50'
+                    : 'text-white hover:bg-white/10'
+                }`}
+                aria-label="Switch to English"
+              >
+                <span className="text-base">🇬🇧</span>
+                <span className="text-sm font-semibold">EN</span>
+              </button>
+            </div>
             <BookingDialog>
               <Button variant="default" size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow bg-[#c65539]">
                 {t.bookNow}
@@ -97,10 +121,30 @@ const Header = () => {
                 {item.label}
               </a>)}
             <div className="flex gap-2">
-              <Button variant="outline" size="lg" onClick={toggleLanguage} className="flex-1 font-semibold">
-                <Languages size={18} className="mr-2" />
-                {language === 'th' ? 'EN' : 'TH'}
-              </Button>
+              <div className="inline-flex items-center bg-secondary rounded-full p-1 gap-1">
+                <button
+                  onClick={() => setLanguage('th')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                    language === 'th'
+                      ? 'bg-highlight text-highlight-foreground shadow-sm'
+                      : 'text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  <span className="text-base">🇹🇭</span>
+                  <span className="text-sm font-semibold">ไทย</span>
+                </button>
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                    language === 'en'
+                      ? 'bg-highlight text-highlight-foreground shadow-sm'
+                      : 'text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  <span className="text-base">🇬🇧</span>
+                  <span className="text-sm font-semibold">EN</span>
+                </button>
+              </div>
               <BookingDialog>
                 <Button variant="default" size="lg" className="flex-1 font-semibold">
                   {t.bookNow}
