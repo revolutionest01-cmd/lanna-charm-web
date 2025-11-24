@@ -99,8 +99,8 @@ const ContactSection = () => {
     if (!recaptchaToken) {
       toast.error(
         language === "th" 
-          ? "กรุณายืนยัน reCAPTCHA" 
-          : "Please verify reCAPTCHA"
+          ? "โปรดยืนยันว่าไม่ใช่บอท" 
+          : "Please verify that you are not a robot"
       );
       return;
     }
@@ -109,6 +109,21 @@ const ContactSection = () => {
       // Validate form data
       contactSchema.parse(formData);
       setErrors({});
+
+      // Verify reCAPTCHA with backend
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken }
+      });
+
+      if (error || !data?.success) {
+        toast.error(
+          language === "th" 
+            ? "การยืนยัน reCAPTCHA ไม่สำเร็จ" 
+            : "reCAPTCHA verification failed"
+        );
+        return;
+      }
 
       // Show success toast
       toast.success(t.messageSent, {
@@ -133,6 +148,13 @@ const ContactSection = () => {
           }
         });
         setErrors(newErrors);
+      } else {
+        console.error('Form submission error:', error);
+        toast.error(
+          language === "th"
+            ? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
+            : "An error occurred. Please try again."
+        );
       }
     }
   };
