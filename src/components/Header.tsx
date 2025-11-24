@@ -25,6 +25,9 @@ const Header = () => {
     { label: t.rooms, href: "#rooms" },
     { label: t.menu, href: "#menu" },
     { label: t.gallery, href: "#gallery" },
+    { label: t.reviews, href: "#reviews" },
+    { label: t.contact, href: "#contact" },
+    { label: t.forum, href: "#forum" },
   ];
 
   const toggleLanguage = () => {
@@ -61,17 +64,22 @@ const Header = () => {
 
           {/* Language Toggle & CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
+            <button
               onClick={toggleLanguage}
-              className={`font-semibold ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
+              className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+                isScrolled 
+                  ? "bg-primary/10 text-primary hover:bg-primary/20" 
+                  : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"
+              }`}
               aria-label="Toggle language"
             >
-              <Languages size={20} />
-            </Button>
+              <Languages size={16} />
+              <span className="text-sm font-semibold">
+                {language === 'th' ? 'TH' : 'EN'}
+              </span>
+            </button>
             <BookingDialog>
-              <Button variant="default" size="lg" className="font-semibold">
+              <Button variant="default" size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow">
                 {t.bookNow}
               </Button>
             </BookingDialog>

@@ -28,6 +28,9 @@ export const translations = {
     rooms: "ห้องพัก",
     menu: "เมนู",
     gallery: "แกลเลอรี",
+    reviews: "รีวิว",
+    contact: "ติดต่อเรา",
+    forum: "เว็บบอร์ด",
     bookNow: "จองเลย",
     
     // Hero
@@ -91,6 +94,29 @@ export const translations = {
     galleryTitle: "แกลเลอรี",
     gallerySubtitle: "เหลือบมองสถานที่อันเงียบสงบของเรา",
     
+    // Reviews
+    reviewsTitle: "รีวิวจากลูกค้า",
+    reviewsSubtitle: "ความประทับใจจากผู้ที่มาเยือน",
+    
+    // Contact
+    contactTitle: "ติดต่อเรา",
+    contactSubtitle: "เราพร้อมให้บริการคุณ",
+    phone: "โทรศัพท์",
+    email: "อีเมล",
+    socialMedia: "โซเชียลมีเดีย",
+    address: "ที่อยู่",
+    openingHours: "เวลาทำการ",
+    
+    // Forum
+    forumTitle: "เว็บบอร์ด",
+    forumSubtitle: "พูดคุยและแบ่งปันประสบการณ์",
+    latestTopics: "กระทู้ล่าสุด",
+    popularTopics: "กระทู้ยอดนิยม",
+    replies: "ตอบกลับ",
+    views: "ครั้ง",
+    lastPost: "โพสต์ล่าสุด",
+    startedBy: "เริ่มโดย",
+    
     // Footer
     footerDescription: "สัมผัสการผสมผสานที่ลงตัวระหว่างอาหารไทยแท้และกาแฟชั้นเยี่ยมในบรรยากาศสวนธรรมชาติ",
     contactUs: "ติดต่อเรา",
@@ -105,6 +131,9 @@ export const translations = {
     rooms: "Rooms",
     menu: "Menu",
     gallery: "Gallery",
+    reviews: "Reviews",
+    contact: "Contact",
+    forum: "Forum",
     bookNow: "Book Now",
     
     // Hero
@@ -167,6 +196,29 @@ export const translations = {
     // Gallery
     galleryTitle: "Gallery",
     gallerySubtitle: "A glimpse into our serene sanctuary",
+    
+    // Reviews
+    reviewsTitle: "Customer Reviews",
+    reviewsSubtitle: "Experiences from our visitors",
+    
+    // Contact
+    contactTitle: "Contact Us",
+    contactSubtitle: "We're here to serve you",
+    phone: "Phone",
+    email: "Email",
+    socialMedia: "Social Media",
+    address: "Address",
+    openingHours: "Opening Hours",
+    
+    // Forum
+    forumTitle: "Forum",
+    forumSubtitle: "Share your experiences",
+    latestTopics: "Latest Topics",
+    popularTopics: "Popular Topics",
+    replies: "Replies",
+    views: "Views",
+    lastPost: "Last Post",
+    startedBy: "Started by",
     
     // Footer
     footerDescription: "Experience the perfect blend of authentic Thai cuisine and artisan coffee in a natural garden setting",
