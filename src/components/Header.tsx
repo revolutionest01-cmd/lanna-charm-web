@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Languages } from "lucide-react";
+import { Menu, X, Languages, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import BookingDialog from "./BookingDialog";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
+  
+  const isForumPage = location.pathname === '/forum' || location.pathname === '/auth';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,7 +32,6 @@ const Header = () => {
     { label: t.gallery, href: "#gallery" },
     { label: t.reviews, href: "#reviews" },
     { label: t.contact, href: "#contact" },
-    { label: t.forum, href: "#forum" },
   ];
 
   const toggleLanguage = () => {
@@ -64,6 +68,17 @@ const Header = () => {
 
           {/* Language Toggle & CTA Button */}
           <div className="hidden md:flex items-center gap-4">
+            {!isForumPage && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/forum')}
+                className={`${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {t.forum}
+              </Button>
+            )}
             <button
               onClick={toggleLanguage}
               className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${
