@@ -168,51 +168,71 @@ All colors MUST be HSL.
 /* Falling leaves animation */
 @keyframes fall {
   0% {
-    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    top: -10vh;
     opacity: 0;
   }
   10% {
-    opacity: 0.8;
+    opacity: 1;
   }
   90% {
     opacity: 0.8;
   }
   100% {
-    transform: translateY(110vh) translateX(0) rotate(720deg);
+    top: 110vh;
     opacity: 0;
   }
 }
 
 @keyframes sway {
-  0% {
+  0%, 100% {
     transform: translateX(0);
   }
   25% {
     transform: translateX(var(--sway-amount, 40px));
   }
+  50% {
+    transform: translateX(0);
+  }
   75% {
     transform: translateX(calc(var(--sway-amount, 40px) * -1));
-  }
-  100% {
-    transform: translateX(0);
   }
 }
 
 @keyframes rotate {
-  0% {
+  from {
     transform: rotate(var(--initial-rotation, 0deg));
   }
+  to {
+    transform: rotate(calc(var(--initial-rotation, 0deg) + 720deg));
+  }
+}
+
+@keyframes swayRotate {
+  0% {
+    transform: translateX(0) rotate(var(--initial-rotation, 0deg));
+  }
+  25% {
+    transform: translateX(var(--sway-amount, 40px)) rotate(calc(var(--initial-rotation, 0deg) + 180deg));
+  }
+  50% {
+    transform: translateX(0) rotate(calc(var(--initial-rotation, 0deg) + 360deg));
+  }
+  75% {
+    transform: translateX(calc(var(--sway-amount, 40px) * -1)) rotate(calc(var(--initial-rotation, 0deg) + 540deg));
+  }
   100% {
-    transform: rotate(calc(var(--initial-rotation, 0deg) + 360deg));
+    transform: translateX(0) rotate(calc(var(--initial-rotation, 0deg) + 720deg));
   }
 }
 
 .falling-leaf {
   position: fixed;
+  top: -10vh;
   pointer-events: none;
   z-index: 1;
-  animation: fall linear infinite, sway ease-in-out infinite, rotate linear infinite;
-  will-change: transform, opacity;
+  animation: fall linear infinite, swayRotate ease-in-out infinite;
+  will-change: transform, opacity, top;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .leaf {
