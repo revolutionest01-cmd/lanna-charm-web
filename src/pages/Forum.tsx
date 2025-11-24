@@ -24,6 +24,8 @@ import {
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import ReCaptcha from "@/components/ReCaptcha";
+import { z } from "zod";
+import { createTopicValidation } from "@/lib/validation";
 
 // Import forum images
 import foodImage from "@/assets/forum-food-1.jpg";
@@ -199,6 +201,13 @@ const Forum = () => {
     }
 
     try {
+      // Validate input
+      const topicSchema = createTopicValidation(language);
+      topicSchema.parse({
+        title: newTopicTitle,
+        content: newTopicContent,
+      });
+
       // Verify reCAPTCHA with backend
       const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
@@ -212,14 +221,14 @@ const Forum = () => {
 
       const newTopic: Topic = {
         id: Date.now(),
-        title: newTopicTitle,
+        title: newTopicTitle.trim(),
         author: user.name,
         authorId: user.id,
         replies: 0,
         views: 0,
         likes: 0,
         category: newTopicCategory,
-        content: newTopicContent,
+        content: newTopicContent.trim(),
         createdAt: new Date().toISOString().split('T')[0]
       };
 
@@ -231,8 +240,12 @@ const Forum = () => {
       setIsDialogOpen(false);
       toast.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : 'Topic created successfully');
     } catch (error) {
-      console.error('Create topic error:', error);
-      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      }
     }
   };
 
