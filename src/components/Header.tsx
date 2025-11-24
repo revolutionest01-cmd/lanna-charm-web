@@ -61,7 +61,11 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map(item => <a key={item.label} href={item.href} className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-primary transition-colors duration-200 font-medium drop-shadow-md`}>
+            {navItems.map(item => <a 
+                key={item.label} 
+                href={item.href} 
+                className={`relative ${isScrolled ? "text-foreground" : "text-white"} font-medium drop-shadow-md transition-all duration-300 hover:scale-110 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
+              >
                 {item.label}
               </a>)}
           </nav>
@@ -72,33 +76,33 @@ const Header = () => {
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {t.forum}
               </Button>}
-            <div className={`inline-flex items-center rounded-full p-1 gap-1 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
+            <div className={`inline-flex items-center rounded-full p-1 gap-1 transition-all duration-300 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
               <button
                 onClick={() => setLanguage('th')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                   language === 'th'
-                    ? 'bg-highlight text-highlight-foreground shadow-sm'
+                    ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
                     : isScrolled
                     ? 'text-foreground hover:bg-background/50'
                     : 'text-white hover:bg-white/10'
                 }`}
                 aria-label="Switch to Thai"
               >
-                <span className="text-base">🇹🇭</span>
+                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
                 <span className="text-sm font-semibold">ไทย</span>
               </button>
               <button
                 onClick={() => setLanguage('en')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                   language === 'en'
-                    ? 'bg-highlight text-highlight-foreground shadow-sm'
+                    ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
                     : isScrolled
                     ? 'text-foreground hover:bg-background/50'
                     : 'text-white hover:bg-white/10'
                 }`}
                 aria-label="Switch to English"
               >
-                <span className="text-base">🇬🇧</span>
+                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
                 <span className="text-sm font-semibold">EN</span>
               </button>
             </div>
@@ -116,32 +120,38 @@ const Header = () => {
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4">
-            {navItems.map(item => <a key={item.label} href={item.href} className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-primary transition-colors duration-200 font-medium`} onClick={() => setIsMobileMenuOpen(false)}>
+        {isMobileMenuOpen && <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 animate-fade-in">
+            {navItems.map((item, index) => <a 
+                key={item.label} 
+                href={item.href} 
+                className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight transition-all duration-300 font-medium transform hover:translate-x-2`}
+                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 {item.label}
               </a>)}
             <div className="flex gap-2">
               <div className="inline-flex items-center bg-secondary rounded-full p-1 gap-1">
                 <button
                   onClick={() => setLanguage('th')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                     language === 'th'
                       ? 'bg-highlight text-highlight-foreground shadow-sm'
                       : 'text-foreground hover:bg-background/50'
                   }`}
                 >
-                  <span className="text-base">🇹🇭</span>
+                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
                   <span className="text-sm font-semibold">ไทย</span>
                 </button>
                 <button
                   onClick={() => setLanguage('en')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                     language === 'en'
                       ? 'bg-highlight text-highlight-foreground shadow-sm'
                       : 'text-foreground hover:bg-background/50'
                   }`}
                 >
-                  <span className="text-base">🇬🇧</span>
+                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
                   <span className="text-sm font-semibold">EN</span>
                 </button>
               </div>
