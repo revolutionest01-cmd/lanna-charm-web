@@ -24,6 +24,13 @@ import {
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
+// Import forum images
+import foodImage from "@/assets/forum-food-1.jpg";
+import staffImage from "@/assets/forum-staff-1.jpg";
+import cakeImage from "@/assets/forum-cake-1.jpg";
+import parkingImage from "@/assets/forum-parking-1.jpg";
+import wifiImage from "@/assets/forum-wifi-1.jpg";
+
 interface Topic {
   id: number;
   title: string;
@@ -73,7 +80,7 @@ const Forum = () => {
         ? 'ขอบคุณมุมกาแฟแจ่งสบาย ๆ อาหารรสชาติดี เมนูแนะนำให้ไปได้เลย อร่อยมากครับ หอมทั้งกลิ่นกาแฟและกลิ่นอาหาร'
         : 'Thank you for the cool coffee corner. The food tastes good. Recommended menu to go.',
       createdAt: '2025-01-20',
-      image: '/placeholder.svg'
+      image: foodImage
     },
     {
       id: 2,
@@ -88,7 +95,7 @@ const Forum = () => {
         ? 'ประทับใจพนักงานทุกคน ยินดีเป็นกันเอง พูดจาสุภาพ เป็นมิตรกับลูกค้าและเราได้รับการดูแลเป็นอย่างดี ทำให้รู้สึกอบอุ่นและเป็นกันเอง'
         : 'Impressed with all the staff. Friendly, polite, and we receive excellent service.',
       createdAt: '2025-01-19',
-      image: '/placeholder.svg'
+      image: staffImage
     },
     {
       id: 3,
@@ -103,7 +110,7 @@ const Forum = () => {
         ? 'ลองมาเค้กโรมนอร่อยงามมาก วัตถุดิบดี ๆ ครอซซองเหมือนไป ความอร่อยเดินบทาให้งงงง รสชาติดีจริงๆ แนะนำเลยค่ะ'
         : 'Try the delicious croissant. Good ingredients. Really good taste.',
       createdAt: '2025-01-18',
-      image: '/placeholder.svg'
+      image: cakeImage
     },
     {
       id: 4,
@@ -118,7 +125,7 @@ const Forum = () => {
         ? 'ที่จอดรถว่างมาก จอดสะดวก นี่เป็นข้อดีที่สุด ปลอดภัย มีรักษาความปลอดภัย จอดง่ายมาก'
         : 'Lots of parking space, easy to park. Very safe.',
       createdAt: '2025-01-17',
-      image: '/placeholder.svg'
+      image: parkingImage
     },
     {
       id: 5,
@@ -132,7 +139,8 @@ const Forum = () => {
       content: language === 'th'
         ? 'WiFi เร็วมาก เหมาะมาทำงาน สะดวก มีปลั๊กไฟให้ทุกที่ บรรยากาศดีเงียบสงบ'
         : 'Very fast WiFi, suitable for working. Convenient.',
-      createdAt: '2025-01-16'
+      createdAt: '2025-01-16',
+      image: wifiImage
     },
   ]);
 
@@ -384,6 +392,7 @@ const Forum = () => {
                 <Card
                   key={topic.id}
                   className="hover:shadow-md transition-all duration-200 cursor-pointer border-border/50"
+                  onClick={() => navigate(`/forum/${topic.id}`)}
                 >
                   <CardContent className="p-4">
                     <div className="flex gap-4">
@@ -451,6 +460,7 @@ const Forum = () => {
                     <div
                       key={topic.id}
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/forum/${topic.id}`)}
                     >
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
                         {index + 1}
