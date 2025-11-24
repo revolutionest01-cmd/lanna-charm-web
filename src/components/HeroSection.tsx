@@ -15,26 +15,35 @@ const HeroSection = () => {
           src={heroImage}
           alt="Plern Ping Cafe outdoor seating area with natural ambiance"
           className="w-full h-full object-cover"
+          style={{
+            filter: 'contrast(1.2) saturate(1.3) brightness(0.9)',
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/60 to-background/90" />
+        <div 
+          className="absolute inset-0" 
+          style={{
+            background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%)',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/30 to-background/70" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center animate-fade-in">
-        <div className="flex items-center justify-center gap-2 mb-6 drop-shadow-lg">
-          <MapPin className="text-primary drop-shadow-md" size={24} />
-          <p className="text-lg text-foreground font-medium drop-shadow-md">{t.location}</p>
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <MapPin className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" size={24} />
+          <p className="text-lg text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{t.location}</p>
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 font-serif drop-shadow-lg">
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 font-serif drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
           {t.heroTitle}
         </h1>
         
-        <p className="text-xl md:text-2xl text-foreground mb-8 max-w-2xl mx-auto drop-shadow-md">
+        <p className="text-xl md:text-2xl text-white mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
           {t.heroSubtitle}
         </p>
         
-        <p className="text-lg text-foreground/90 mb-10 max-w-xl mx-auto drop-shadow-md">
+        <p className="text-lg text-white mb-10 max-w-xl mx-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {t.heroDescription}
         </p>
 
