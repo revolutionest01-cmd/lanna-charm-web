@@ -149,7 +149,6 @@ const ContactSection = () => {
         });
         setErrors(newErrors);
       } else {
-        console.error('Form submission error:', error);
         toast.error(
           language === "th"
             ? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"

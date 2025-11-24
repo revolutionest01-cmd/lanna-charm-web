@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import ReCaptcha from "@/components/ReCaptcha";
+import { z } from "zod";
+import { createAuthValidation } from "@/lib/validation";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -40,6 +42,15 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      // Validate input
+      const validation = createAuthValidation(language);
+      const loginSchema = z.object({
+        email: validation.email,
+        password: validation.password,
+      });
+      
+      loginSchema.parse(loginForm);
+
       // Verify reCAPTCHA with backend
       const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
@@ -63,8 +74,12 @@ const Auth = () => {
         toast.error(result.error || (language === 'th' ? 'เข้าสู่ระบบไม่สำเร็จ' : 'Login failed'));
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      }
       setIsLoading(false);
     }
   };
@@ -80,6 +95,16 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      // Validate input
+      const validation = createAuthValidation(language);
+      const registerSchema = z.object({
+        name: validation.name,
+        email: validation.email,
+        password: validation.password,
+      });
+      
+      registerSchema.parse(registerForm);
+
       // Verify reCAPTCHA with backend
       const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
@@ -103,8 +128,12 @@ const Auth = () => {
         toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      }
       setIsLoading(false);
     }
   };
