@@ -35,7 +35,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   const [open, setOpen] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!checkIn || !checkOut || !name || !email || !phone) {
@@ -44,26 +44,42 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     }
 
     if (!recaptchaToken) {
-      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
       return;
     }
 
-    // Mock booking submission
-    toast.success(
-      language === 'th' 
-        ? `ขอบคุณคุณ${name}! เราได้รับการจองของคุณแล้ว` 
-        : `Thank you ${name}! We've received your booking.`
-    );
-    
-    setOpen(false);
-    // Reset form
-    setCheckIn(undefined);
-    setCheckOut(undefined);
-    setGuests("2");
-    setName("");
-    setEmail("");
-    setPhone("");
-    setRecaptchaToken(null);
+    try {
+      // Verify reCAPTCHA with backend
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken }
+      });
+
+      if (error || !data?.success) {
+        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+        return;
+      }
+
+      // Mock booking submission
+      toast.success(
+        language === 'th' 
+          ? `ขอบคุณคุณ${name}! เราได้รับการจองของคุณแล้ว` 
+          : `Thank you ${name}! We've received your booking.`
+      );
+      
+      setOpen(false);
+      // Reset form
+      setCheckIn(undefined);
+      setCheckOut(undefined);
+      setGuests("2");
+      setName("");
+      setEmail("");
+      setPhone("");
+      setRecaptchaToken(null);
+    } catch (error) {
+      console.error('Booking submission error:', error);
+      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+    }
   };
 
   return (

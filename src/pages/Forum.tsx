@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import ReCaptcha from "@/components/ReCaptcha";
 
 // Import forum images
 import foodImage from "@/assets/forum-food-1.jpg";
@@ -57,6 +58,7 @@ const Forum = () => {
   const [newTopicContent, setNewTopicContent] = useState("");
   const [newTopicCategory, setNewTopicCategory] = useState<Topic['category']>("general");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [createTopicRecaptcha, setCreateTopicRecaptcha] = useState<string | null>(null);
 
   const categories = [
     { value: "all", label: language === 'th' ? 'ทั้งหมด' : 'All' },
@@ -183,7 +185,7 @@ const Forum = () => {
     return colors[category];
   };
 
-  const handleCreateTopic = (e: React.FormEvent) => {
+  const handleCreateTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isAuthenticated || !user) {
@@ -191,25 +193,47 @@ const Forum = () => {
       return;
     }
 
-    const newTopic: Topic = {
-      id: Date.now(),
-      title: newTopicTitle,
-      author: user.name,
-      authorId: user.id,
-      replies: 0,
-      views: 0,
-      likes: 0,
-      category: newTopicCategory,
-      content: newTopicContent,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
+    if (!createTopicRecaptcha) {
+      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
+      return;
+    }
 
-    setTopics([newTopic, ...topics]);
-    setNewTopicTitle("");
-    setNewTopicContent("");
-    setNewTopicCategory("general");
-    setIsDialogOpen(false);
-    toast.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : 'Topic created successfully');
+    try {
+      // Verify reCAPTCHA with backend
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: createTopicRecaptcha }
+      });
+
+      if (error || !data?.success) {
+        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+        return;
+      }
+
+      const newTopic: Topic = {
+        id: Date.now(),
+        title: newTopicTitle,
+        author: user.name,
+        authorId: user.id,
+        replies: 0,
+        views: 0,
+        likes: 0,
+        category: newTopicCategory,
+        content: newTopicContent,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+
+      setTopics([newTopic, ...topics]);
+      setNewTopicTitle("");
+      setNewTopicContent("");
+      setNewTopicCategory("general");
+      setCreateTopicRecaptcha(null);
+      setIsDialogOpen(false);
+      toast.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : 'Topic created successfully');
+    } catch (error) {
+      console.error('Create topic error:', error);
+      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+    }
   };
 
   const handleLogout = () => {
@@ -343,6 +367,13 @@ const Forum = () => {
                       placeholder={language === 'th' ? 'เขียนเนื้อหากระทู้...' : 'Write your topic content...'}
                       rows={6}
                       required
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <ReCaptcha 
+                      onVerify={(token) => setCreateTopicRecaptcha(token)}
+                      onExpired={() => setCreateTopicRecaptcha(null)}
+                      onError={() => setCreateTopicRecaptcha(null)}
                     />
                   </div>
                   <Button type="submit" className="w-full">

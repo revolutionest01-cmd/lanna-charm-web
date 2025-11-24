@@ -33,20 +33,39 @@ const Auth = () => {
     e.preventDefault();
 
     if (!loginRecaptcha) {
-      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
       return;
     }
 
     setIsLoading(true);
-    const result = await login(loginForm.email, loginForm.password);
-    
-    setIsLoading(false);
 
-    if (result.success) {
-      toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
-      navigate("/forum");
-    } else {
-      toast.error(result.error || (language === 'th' ? 'เข้าสู่ระบบไม่สำเร็จ' : 'Login failed'));
+    try {
+      // Verify reCAPTCHA with backend
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: loginRecaptcha }
+      });
+
+      if (error || !data?.success) {
+        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await login(loginForm.email, loginForm.password);
+      
+      setIsLoading(false);
+
+      if (result.success) {
+        toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
+        navigate("/forum");
+      } else {
+        toast.error(result.error || (language === 'th' ? 'เข้าสู่ระบบไม่สำเร็จ' : 'Login failed'));
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      setIsLoading(false);
     }
   };
 
@@ -54,20 +73,39 @@ const Auth = () => {
     e.preventDefault();
 
     if (!registerRecaptcha) {
-      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
       return;
     }
 
     setIsLoading(true);
-    const result = await register(registerForm.name, registerForm.email, registerForm.password);
-    
-    setIsLoading(false);
 
-    if (result.success) {
-      toast.success(language === 'th' ? 'สมัครสมาชิกสำเร็จ' : 'Registration successful');
-      navigate("/forum");
-    } else {
-      toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
+    try {
+      // Verify reCAPTCHA with backend
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: registerRecaptcha }
+      });
+
+      if (error || !data?.success) {
+        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await register(registerForm.name, registerForm.email, registerForm.password);
+      
+      setIsLoading(false);
+
+      if (result.success) {
+        toast.success(language === 'th' ? 'สมัครสมาชิกสำเร็จ' : 'Registration successful');
+        navigate("/forum");
+      } else {
+        toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      setIsLoading(false);
     }
   };
 
