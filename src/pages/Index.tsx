@@ -6,6 +6,7 @@ import MenuSection from "@/components/MenuSection";
 import GallerySection from "@/components/GallerySection";
 import FallingLeaves from "@/components/FallingLeaves";
 import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 
 const Index = () => {
   return (
@@ -20,6 +21,7 @@ const Index = () => {
         <GallerySection />
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 };

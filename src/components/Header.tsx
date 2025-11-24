@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Languages } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { useLanguage, translations } from "@/hooks/useLanguage";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { language, setLanguage } = useLanguage();
+  const t = translations[language];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,12 +19,16 @@ const Header = () => {
   }, []);
 
   const navItems = [
-    { label: "Home", href: "#home" },
-    { label: "About", href: "#features" },
-    { label: "Rooms", href: "#rooms" },
-    { label: "Menu", href: "#menu" },
-    { label: "Gallery", href: "#gallery" },
+    { label: t.home, href: "#home" },
+    { label: t.about, href: "#features" },
+    { label: t.rooms, href: "#rooms" },
+    { label: t.menu, href: "#menu" },
+    { label: t.gallery, href: "#gallery" },
   ];
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'th' ? 'en' : 'th');
+  };
 
   return (
     <header
@@ -49,10 +56,19 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
+          {/* Language Toggle & CTA Button */}
+          <div className="hidden md:flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleLanguage}
+              className="font-semibold"
+              aria-label="Toggle language"
+            >
+              <Languages size={20} />
+            </Button>
             <Button variant="default" size="lg" className="font-semibold">
-              Book Now
+              {t.bookNow}
             </Button>
           </div>
 
@@ -79,9 +95,20 @@ const Header = () => {
                 {item.label}
               </a>
             ))}
-            <Button variant="default" size="lg" className="w-full font-semibold">
-              Book Now
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={toggleLanguage}
+                className="flex-1 font-semibold"
+              >
+                <Languages size={18} className="mr-2" />
+                {language === 'th' ? 'EN' : 'TH'}
+              </Button>
+              <Button variant="default" size="lg" className="flex-1 font-semibold">
+                {t.bookNow}
+              </Button>
+            </div>
           </nav>
         )}
       </div>
