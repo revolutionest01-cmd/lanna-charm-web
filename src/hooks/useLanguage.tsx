@@ -53,6 +53,24 @@ export const translations = {
     gardenSetting: "ในสวนธรรมชาติ",
     gardenSettingDesc: "ที่นั่งในร่มและกลางแจ้งท่ามกลางสวนเขียวขจี",
     
+    // Events
+    eventsTitle: "ห้องประชุม & งานเลี้ยง",
+    eventsSubtitle: "พื้นที่จองแบบพิเศษสำหรับการจัดงาน การนำเสนอ และงานสังสรรค์ รองรับได้ทุกรูปแบบ",
+    eventsMainTitle: "คาแฟล้านนาและห้องอเนกประสงค์",
+    eventsMainDesc: "พื้นที่ห้องแบบพิเศษพร้อมอุปกรณ์ทุกสิ่งอย่าง ตั้งแต่การประชุม การนำเสนอ ไปจนถึงงานสังสรรค์ พร้อมบริการจัดเลี้ยงและอุปกรณ์ครบครัน",
+    ourServices: "บริการของเรา",
+    presentationRoom: "ห้องบรรยาย/นำเสนอ",
+    presentationRoomDesc: "พร้อมโปรเจคเตอร์ ระบบเสียง และระบบควบคุมความเข้าใจ",
+    cateringService: "บริการจัดเลี้ยง",
+    cateringServiceDesc: "อาหารและเครื่องดื่มคุณภาพ ปรับเมนูตามความต้องการ",
+    privateEvents: "ห้องการไอทีและส่วนตัว",
+    privateEventsDesc: "เหมาะสำหรับงานเป็นใช้ งานเชื่อมต่อส่วนตัวหรือ และงานส่วนตัว",
+    inquirePrice: "สอบถามราคาเลี้ยง",
+    presentationRoomShort: "ห้องนำเสนอ",
+    presentationRoomShortDesc: "ห้องบรรยายพร้อมอุปกรณ์ทันสมัยนี้",
+    cateringServiceShort: "รับจัดเลี้ยง",
+    cateringServiceShortDesc: "บริการจัดเลี้ยงครบวงจร",
+    
     // Rooms
     roomsTitle: "ห้องพักของเรา",
     roomsSubtitle: "พักผ่อนในความสะดวกสบายและสไตล์ล้านนา",
@@ -155,6 +173,24 @@ export const translations = {
     authenticCuisineDesc: "Authentic Lanna and Thai dishes from local chefs",
     gardenSetting: "Garden Setting",
     gardenSettingDesc: "Indoor and outdoor seating amid lush greenery",
+    
+    // Events
+    eventsTitle: "Conference Room & Events",
+    eventsSubtitle: "Special event spaces for meetings, presentations, and gatherings supporting all formats",
+    eventsMainTitle: "Lanna Cafe and Multi-purpose Room",
+    eventsMainDesc: "Special room facilities with all equipment, from meetings and presentations to social gatherings, with complete catering services and equipment",
+    ourServices: "Our Services",
+    presentationRoom: "Presentation/Seminar Room",
+    presentationRoomDesc: "With projector, sound system and connectivity control",
+    cateringService: "Catering Service",
+    cateringServiceDesc: "Quality food and beverages with customizable menus",
+    privateEvents: "IT & Private Events",
+    privateEventsDesc: "Perfect for business use, private connections and personal events",
+    inquirePrice: "Inquire Event Pricing",
+    presentationRoomShort: "Presentation Room",
+    presentationRoomShortDesc: "Modern equipped seminar room",
+    cateringServiceShort: "Catering",
+    cateringServiceShortDesc: "Full-service event catering",
     
     // Rooms
     roomsTitle: "Our Rooms",
