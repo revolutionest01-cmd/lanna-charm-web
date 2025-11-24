@@ -34,7 +34,7 @@ export const translations = {
     bookNow: "จองเลย",
     
     // Hero
-    location: "เชียงใหม่, ประเทศไทย",
+    location: "กรุงเทพ ดอนเมือง, ประเทศไทย",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "สัมผัสการผสมผสานที่ลงตัวระหว่างเสน่ห์ล้านนาแท้และความสะดวกสบายสมัยใหม่",
     heroDescription: "ท่ามกลางธรรมชาติที่สงบ ที่ซึ่งอาหารรสเลิศผสานกับกาแฟชั้นเยี่ยมในสวนอันเงียบสงบ",
@@ -171,7 +171,7 @@ export const translations = {
     bookNow: "Book Now",
     
     // Hero
-    location: "Chiang Mai, Thailand",
+    location: "Bangkok Don Mueang, Thailand",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "Experience the perfect blend of traditional Lanna charm and modern comfort",
     heroDescription: "Nestled in nature's embrace, where exceptional food meets artisan coffee in a tranquil garden setting",
