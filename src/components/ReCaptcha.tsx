@@ -23,7 +23,7 @@ interface ReCaptchaProps {
   onError?: () => void;
 }
 
-const RECAPTCHA_SITE_KEY = "6LfY-RYsAAAAAPhyTxpkcvm4sOwKVyeOYfWKQDoo";
+const RECAPTCHA_SITE_KEY = "6LfY-RYsAAAAAPhYTxpkcvm4sOwKVyeOYfWKQDoo";
 
 const ReCaptcha = ({ onVerify, onExpired, onError }: ReCaptchaProps) => {
   const recaptchaRef = useRef<HTMLDivElement>(null);
