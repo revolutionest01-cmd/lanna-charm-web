@@ -10,6 +10,7 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import ReCaptcha from "@/components/ReCaptcha";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
+  const [loginRecaptcha, setLoginRecaptcha] = useState<string | null>(null);
+  const [registerRecaptcha, setRegisterRecaptcha] = useState<string | null>(null);
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -28,8 +31,13 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
+    if (!loginRecaptcha) {
+      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+      return;
+    }
+
+    setIsLoading(true);
     const result = await login(loginForm.email, loginForm.password);
     
     setIsLoading(false);
@@ -44,8 +52,13 @@ const Auth = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
+    if (!registerRecaptcha) {
+      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+      return;
+    }
+
+    setIsLoading(true);
     const result = await register(registerForm.name, registerForm.email, registerForm.password);
     
     setIsLoading(false);
@@ -130,6 +143,13 @@ const Auth = () => {
                       required
                     />
                   </div>
+                  <div className="pt-2">
+                    <ReCaptcha 
+                      onVerify={(token) => setLoginRecaptcha(token)}
+                      onExpired={() => setLoginRecaptcha(null)}
+                      onError={() => setLoginRecaptcha(null)}
+                    />
+                  </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
@@ -176,6 +196,13 @@ const Auth = () => {
                       value={registerForm.password}
                       onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                       required
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <ReCaptcha 
+                      onVerify={(token) => setRegisterRecaptcha(token)}
+                      onExpired={() => setRegisterRecaptcha(null)}
+                      onError={() => setRegisterRecaptcha(null)}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
