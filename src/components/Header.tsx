@@ -34,14 +34,14 @@ const Header = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-card/95 backdrop-blur-md shadow-lg" : "bg-transparent"
+        isScrolled ? "bg-card/95 backdrop-blur-md shadow-lg" : "bg-black/30 backdrop-blur-sm"
       }`}
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <a href="#home" className="flex items-center space-x-3">
-            <img src={logo} alt="Plern Ping Cafe Logo" className="h-12 w-auto" />
+            <img src={logo} alt="Plern Ping Cafe Logo" className="h-12 w-auto drop-shadow-lg" />
           </a>
 
           {/* Desktop Navigation */}
@@ -50,7 +50,9 @@ const Header = () => {
               <a
                 key={item.label}
                 href={item.href}
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                className={`${
+                  isScrolled ? "text-foreground" : "text-white"
+                } hover:text-primary transition-colors duration-200 font-medium drop-shadow-md`}
               >
                 {item.label}
               </a>
@@ -63,7 +65,7 @@ const Header = () => {
               variant="ghost" 
               size="icon"
               onClick={toggleLanguage}
-              className="font-semibold"
+              className={`font-semibold ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
               aria-label="Toggle language"
             >
               <Languages size={20} />
@@ -77,7 +79,7 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground"
+            className={`md:hidden ${isScrolled ? "text-foreground" : "text-white"}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -92,7 +94,9 @@ const Header = () => {
               <a
                 key={item.label}
                 href={item.href}
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                className={`${
+                  isScrolled ? "text-foreground" : "text-white"
+                } hover:text-primary transition-colors duration-200 font-medium`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item.label}
