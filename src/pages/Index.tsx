@@ -7,6 +7,7 @@ import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import ContactSection from "@/components/ContactSection";
 import FallingLeaves from "@/components/FallingLeaves";
+import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import FloatingActionButton from "@/components/FloatingActionButton";
@@ -16,6 +17,7 @@ const Index = () => {
   return (
     <div className="relative min-h-screen">
       <FallingLeaves />
+      <AmbientSound />
       <Header />
       <main className="relative z-10">
         <HeroSection />
