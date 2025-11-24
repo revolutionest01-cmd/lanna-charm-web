@@ -16,16 +16,16 @@ const HeroSection = () => {
           alt="Plern Ping Cafe outdoor seating area with natural ambiance"
           className="w-full h-full object-cover"
           style={{
-            filter: 'contrast(1.2) saturate(1.3) brightness(0.9)',
+            filter: 'contrast(1.35) saturate(1.5) brightness(0.75)',
           }}
         />
         <div 
           className="absolute inset-0" 
           style={{
-            background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%)',
+            background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/30 to-background/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/40 to-background/75" />
       </div>
 
       {/* Content */}
