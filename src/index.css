@@ -229,7 +229,7 @@ All colors MUST be HSL.
   position: fixed;
   top: -10vh;
   pointer-events: none;
-  z-index: 1;
+  z-index: 9999;
   animation: fall linear infinite, swayRotate ease-in-out infinite;
   will-change: transform, opacity, top;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
