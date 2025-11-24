@@ -5,17 +5,17 @@ import { Menu, X, Languages, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import BookingDialog from "./BookingDialog";
-
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { language, setLanguage } = useLanguage();
+  const {
+    language,
+    setLanguage
+  } = useLanguage();
   const t = translations[language];
-  
   const isForumPage = location.pathname === '/forum' || location.pathname === '/auth';
-
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -23,27 +23,32 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const navItems = [
-    { label: t.home, href: "#home" },
-    { label: t.about, href: "#features" },
-    { label: t.rooms, href: "#rooms" },
-    { label: t.menu, href: "#menu" },
-    { label: t.gallery, href: "#gallery" },
-    { label: t.reviews, href: "#reviews" },
-    { label: t.contact, href: "#contact" },
-  ];
-
+  const navItems = [{
+    label: t.home,
+    href: "#home"
+  }, {
+    label: t.about,
+    href: "#features"
+  }, {
+    label: t.rooms,
+    href: "#rooms"
+  }, {
+    label: t.menu,
+    href: "#menu"
+  }, {
+    label: t.gallery,
+    href: "#gallery"
+  }, {
+    label: t.reviews,
+    href: "#reviews"
+  }, {
+    label: t.contact,
+    href: "#contact"
+  }];
   const toggleLanguage = () => {
     setLanguage(language === 'th' ? 'en' : 'th');
   };
-
-  return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-card/95 backdrop-blur-md shadow-lg" : "bg-black/30 backdrop-blur-sm"
-      }`}
-    >
+  return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-card/95 backdrop-blur-md shadow-lg" : "bg-black/30 backdrop-blur-sm"}`}>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -53,85 +58,43 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className={`${
-                  isScrolled ? "text-foreground" : "text-white"
-                } hover:text-primary transition-colors duration-200 font-medium drop-shadow-md`}
-              >
+            {navItems.map(item => <a key={item.label} href={item.href} className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-primary transition-colors duration-200 font-medium drop-shadow-md`}>
                 {item.label}
-              </a>
-            ))}
+              </a>)}
           </nav>
 
           {/* Language Toggle & CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            {!isForumPage && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/forum')}
-                className={`${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
-              >
+            {!isForumPage && <Button variant="ghost" size="sm" onClick={() => navigate('/forum')} className={`${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}>
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {t.forum}
-              </Button>
-            )}
-            <button
-              onClick={toggleLanguage}
-              className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${
-                isScrolled 
-                  ? "bg-primary/10 text-primary hover:bg-primary/20" 
-                  : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"
-              }`}
-              aria-label="Toggle language"
-            >
+              </Button>}
+            <button onClick={toggleLanguage} className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${isScrolled ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"}`} aria-label="Toggle language">
               <Languages size={16} />
               <span className="text-sm font-semibold">
                 {language === 'th' ? 'TH' : 'EN'}
               </span>
             </button>
             <BookingDialog>
-              <Button variant="default" size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow">
+              <Button variant="default" size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow bg-[#c65539]">
                 {t.bookNow}
               </Button>
             </BookingDialog>
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className={`md:hidden ${isScrolled ? "text-foreground" : "text-white"}`}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
+          <button className={`md:hidden ${isScrolled ? "text-foreground" : "text-white"}`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
             {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className={`${
-                  isScrolled ? "text-foreground" : "text-white"
-                } hover:text-primary transition-colors duration-200 font-medium`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
+        {isMobileMenuOpen && <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4">
+            {navItems.map(item => <a key={item.label} href={item.href} className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-primary transition-colors duration-200 font-medium`} onClick={() => setIsMobileMenuOpen(false)}>
                 {item.label}
-              </a>
-            ))}
+              </a>)}
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={toggleLanguage}
-                className="flex-1 font-semibold"
-              >
+              <Button variant="outline" size="lg" onClick={toggleLanguage} className="flex-1 font-semibold">
                 <Languages size={18} className="mr-2" />
                 {language === 'th' ? 'EN' : 'TH'}
               </Button>
@@ -141,11 +104,8 @@ const Header = () => {
                 </Button>
               </BookingDialog>
             </div>
-          </nav>
-        )}
+          </nav>}
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
