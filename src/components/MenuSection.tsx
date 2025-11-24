@@ -133,7 +133,7 @@ const MenuSection = () => {
           </Tabs>
 
           <div className="text-center mt-10">
-            <Button variant="default" size="lg" className="font-semibold">
+            <Button variant="highlight" size="lg" className="font-semibold">
               {t.viewFullMenu}
             </Button>
           </div>

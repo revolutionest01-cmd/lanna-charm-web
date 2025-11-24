@@ -49,7 +49,7 @@ const HeroSection = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
-            variant="default" 
+            variant="highlight" 
             size="lg" 
             className="font-semibold group"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
@@ -60,7 +60,7 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40"
+            className="font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40 text-white border-white/40 hover:text-white"
             onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.viewRooms}

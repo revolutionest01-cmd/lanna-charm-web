@@ -105,7 +105,7 @@ const RoomsSection = () => {
               </CardContent>
 
               <CardFooter>
-                <Button variant="default" className="w-full font-semibold">
+                <Button variant="highlight" className="w-full font-semibold">
                   {t.bookRoom}
                 </Button>
               </CardFooter>

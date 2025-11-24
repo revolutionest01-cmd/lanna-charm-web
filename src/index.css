@@ -100,6 +100,10 @@ All colors MUST be HSL.
     --lanna-leaf: 140 30% 30%;
     --lanna-earth: 25 20% 35%;
     --lanna-bamboo: 30 15% 88%;
+    
+    /* Highlight/Accent color - Terracotta */
+    --highlight: 12 55% 50%;
+    --highlight-foreground: 30 20% 96%;
   }
 
   .dark {

@@ -15,6 +15,7 @@ const FloatingActionButton = () => {
         <div className="flex flex-col gap-2 animate-fade-in">
           <Button
             size="lg"
+            variant="highlight"
             className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2"
             onClick={() => window.open('tel:+66812345678')}
           >
@@ -25,7 +26,7 @@ const FloatingActionButton = () => {
           <BookingDialog>
             <Button
               size="lg"
-              variant="secondary"
+              variant="highlight"
               className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2"
             >
               <MessageCircle size={20} />
