@@ -64,7 +64,7 @@ const AmbientSound = () => {
   };
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-24 left-6 z-50 flex flex-col items-start gap-2">
       {/* Volume Control - shows when hovering */}
       <div
         className={`transition-all duration-300 ${
