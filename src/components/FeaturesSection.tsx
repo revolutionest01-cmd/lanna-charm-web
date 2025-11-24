@@ -1,39 +1,43 @@
 import { Coffee, Home, Leaf, Wifi } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const features = [
-  {
-    icon: Coffee,
-    title: "Artisan Coffee",
-    description: "Premium single-origin beans expertly roasted and brewed to perfection",
-  },
-  {
-    icon: Home,
-    title: "Lanna Resort",
-    description: "Traditional northern Thai architecture with modern luxury amenities",
-  },
-  {
-    icon: Leaf,
-    title: "Garden Oasis",
-    description: "Surrounded by lush tropical gardens and tranquil natural beauty",
-  },
-  {
-    icon: Wifi,
-    title: "Modern Comfort",
-    description: "High-speed WiFi, air conditioning, and all contemporary conveniences",
-  },
-];
+import { useLanguage, translations } from "@/hooks/useLanguage";
 
 const FeaturesSection = () => {
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  const features = [
+    {
+      icon: Coffee,
+      title: t.artisanCoffee,
+      description: t.artisanCoffeeDesc,
+    },
+    {
+      icon: Home,
+      title: t.traditionalArchitecture,
+      description: t.traditionalArchitectureDesc,
+    },
+    {
+      icon: Leaf,
+      title: t.gardenSetting,
+      description: t.gardenSettingDesc,
+    },
+    {
+      icon: Wifi,
+      title: t.authenticCuisine,
+      description: t.authenticCuisineDesc,
+    },
+  ];
+
   return (
     <section id="features" className="py-20 bg-card">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif">
-            Why Choose Plern Ping
+            {t.featuresTitle}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A harmonious blend of traditional Lanna culture and contemporary luxury
+            {t.featuresSubtitle}
           </p>
         </div>
 

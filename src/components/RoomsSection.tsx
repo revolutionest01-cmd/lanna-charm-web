@@ -2,44 +2,57 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Maximize, Wifi } from "lucide-react";
-
-const rooms = [
-  {
-    name: "Deluxe Garden Room",
-    price: "2,500",
-    image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&q=80",
-    capacity: "2 Guests",
-    size: "35 sqm",
-    features: ["Garden View", "King Bed", "Private Balcony"],
-  },
-  {
-    name: "Premium Suite",
-    price: "3,800",
-    image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
-    capacity: "4 Guests",
-    size: "50 sqm",
-    features: ["Pool View", "Living Area", "Bathtub"],
-  },
-  {
-    name: "Lanna Villa",
-    price: "5,500",
-    image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
-    capacity: "6 Guests",
-    size: "80 sqm",
-    features: ["Private Pool", "Kitchen", "Garden"],
-  },
-];
+import { useLanguage, translations } from "@/hooks/useLanguage";
 
 const RoomsSection = () => {
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  const rooms = [
+    {
+      name: t.deluxeRoom,
+      price: "2,500",
+      image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&q=80",
+      capacity: "2 " + (language === 'th' ? 'ท่าน' : 'Guests'),
+      size: "35 sqm",
+      features: language === 'th' 
+        ? ["วิวสวน", "เตียงคิงไซส์", "ระเบียงส่วนตัว"] 
+        : ["Garden View", "King Bed", "Private Balcony"],
+      description: t.deluxeRoomDesc,
+    },
+    {
+      name: t.familySuite,
+      price: "3,800",
+      image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
+      capacity: "4 " + (language === 'th' ? 'ท่าน' : 'Guests'),
+      size: "50 sqm",
+      features: language === 'th'
+        ? ["วิวสระว่ายน้ำ", "พื้นที่นั่งเล่น", "อ่างอาบน้ำ"]
+        : ["Pool View", "Living Area", "Bathtub"],
+      description: t.familySuiteDesc,
+    },
+    {
+      name: t.gardenView,
+      price: "5,500",
+      image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
+      capacity: "6 " + (language === 'th' ? 'ท่าน' : 'Guests'),
+      size: "80 sqm",
+      features: language === 'th'
+        ? ["สระว่ายน้ำส่วนตัว", "ครัว", "สวน"]
+        : ["Private Pool", "Kitchen", "Garden"],
+      description: t.gardenViewDesc,
+    },
+  ];
+
   return (
     <section id="rooms" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif">
-            Our Rooms & Villas
+            {t.roomsTitle}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Luxurious accommodations designed for comfort and relaxation
+            {t.roomsSubtitle}
           </p>
         </div>
 
@@ -62,7 +75,7 @@ const RoomsSection = () => {
                 <CardTitle className="text-2xl font-serif">{room.name}</CardTitle>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-3xl font-bold text-primary">฿{room.price}</span>
-                  <span className="text-muted-foreground">/ night</span>
+                  <span className="text-muted-foreground">{t.perNight}</span>
                 </div>
               </CardHeader>
 
@@ -93,7 +106,7 @@ const RoomsSection = () => {
 
               <CardFooter>
                 <Button variant="default" className="w-full font-semibold">
-                  Book Now
+                  {t.bookRoom}
                 </Button>
               </CardFooter>
             </Card>
