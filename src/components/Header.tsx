@@ -56,7 +56,7 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <a href="#home" className="flex items-center space-x-3">
-            <img src={logo} alt="Plern Ping Cafe Logo" className="h-12 w-auto drop-shadow-lg" />
+            <img src={logo} alt="Plern Ping Cafe Logo" className="h-12 w-auto drop-shadow-[0_0_8px_rgba(198,85,57,0.3)] hover:drop-shadow-[0_0_15px_rgba(198,85,57,0.7)] transition-all duration-300" />
           </a>
 
           {/* Desktop Navigation */}
@@ -64,7 +64,7 @@ const Header = () => {
             {navItems.map(item => <a 
                 key={item.label} 
                 href={item.href} 
-                className={`relative ${isScrolled ? "text-foreground hover:text-highlight" : "text-white hover:text-highlight"} font-medium drop-shadow-md transition-all duration-300 hover:scale-110 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
+                className={`relative ${isScrolled ? "text-foreground hover:text-highlight" : "text-white hover:text-highlight"} font-medium drop-shadow-md transition-all duration-300 hover:scale-110 hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
               >
                 {item.label}
               </a>)}
@@ -124,7 +124,7 @@ const Header = () => {
             {navItems.map((item, index) => <a 
                 key={item.label} 
                 href={item.href} 
-                className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight transition-all duration-300 font-medium transform hover:translate-x-2`}
+                className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] transition-all duration-300 font-medium transform hover:translate-x-2`}
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
