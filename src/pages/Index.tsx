@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import EventsSection from "@/components/EventsSection";
 import RoomsSection from "@/components/RoomsSection";
 import MenuSection from "@/components/MenuSection";
 import GallerySection from "@/components/GallerySection";
@@ -22,6 +23,7 @@ const Index = () => {
       <main className="relative z-10">
         <HeroSection />
         <FeaturesSection />
+        <EventsSection />
         <RoomsSection />
         <MenuSection />
         <GallerySection />

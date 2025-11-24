@@ -30,6 +30,9 @@ const Header = () => {
     label: t.about,
     href: "#features"
   }, {
+    label: t.eventsTitle,
+    href: "#events"
+  }, {
     label: t.rooms,
     href: "#rooms"
   }, {
