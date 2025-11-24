@@ -193,7 +193,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
             />
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
+          <Button type="submit" variant="highlight" className="w-full" size="lg">
             {language === 'th' ? 'ยืนยันการจอง' : 'Confirm Booking'}
           </Button>
         </form>
