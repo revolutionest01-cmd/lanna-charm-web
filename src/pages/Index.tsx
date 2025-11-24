@@ -7,6 +7,8 @@ import GallerySection from "@/components/GallerySection";
 import FallingLeaves from "@/components/FallingLeaves";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
+import FloatingActionButton from "@/components/FloatingActionButton";
+import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   return (
@@ -22,6 +24,8 @@ const Index = () => {
       </main>
       <Footer />
       <BackToTop />
+      <FloatingActionButton />
+      <Toaster />
     </div>
   );
 };
