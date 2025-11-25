@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import { Loader2, Star, Send } from "lucide-react";
+import { Loader2, Star, Send, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +26,12 @@ type Review = {
   image_url: string | null;
   created_at: string;
   user_id: string | null;
+  helpful_count: number;
+};
+
+type ReviewLike = {
+  review_id: string;
+  user_id: string;
 };
 
 const reviewSchema = z.object({
@@ -62,6 +68,73 @@ const Reviews = () => {
       return data as Review[];
     },
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch user's likes
+  const { data: userLikes = [] } = useQuery({
+    queryKey: ["user-review-likes", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("review_likes")
+        .select("review_id")
+        .eq("user_id", user.id);
+      
+      if (error) throw error;
+      return data.map(like => like.review_id);
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const toggleLikeMutation = useMutation({
+    mutationFn: async ({ reviewId, isLiked }: { reviewId: string; isLiked: boolean }) => {
+      if (!user?.id) {
+        throw new Error("Must be logged in");
+      }
+
+      if (isLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from("review_likes")
+          .delete()
+          .eq("review_id", reviewId)
+          .eq("user_id", user.id);
+        
+        if (error) throw error;
+      } else {
+        // Like
+        const { error } = await supabase
+          .from("review_likes")
+          .insert({
+            review_id: reviewId,
+            user_id: user.id,
+          });
+        
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews-all"] });
+      queryClient.invalidateQueries({ queryKey: ["user-review-likes"] });
+    },
+    onError: (error: any) => {
+      console.error("Error toggling like:", error);
+      if (error.message === "Must be logged in") {
+        toast.error(
+          language === "th" 
+            ? "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ" 
+            : "Please login to like reviews"
+        );
+      } else {
+        toast.error(
+          language === "th" 
+            ? "เกิดข้อผิดพลาด" 
+            : "An error occurred"
+        );
+      }
+    },
   });
 
   const submitReviewMutation = useMutation({
@@ -308,39 +381,65 @@ const Reviews = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredReviews.map((review, index) => (
-                <Card 
-                  key={review.id}
-                  className="animate-scale-in hover:shadow-lg transition-shadow"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{review.customer_name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(review.created_at), "MMM dd, yyyy")}
-                        </p>
+              {filteredReviews.map((review, index) => {
+                const isLiked = userLikes.includes(review.id);
+                
+                return (
+                  <Card 
+                    key={review.id}
+                    className="animate-scale-in hover:shadow-lg transition-shadow"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg">{review.customer_name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(review.created_at), "MMM dd, yyyy")}
+                          </p>
+                        </div>
+                        {renderStars(review.rating)}
                       </div>
-                      {renderStars(review.rating)}
-                    </div>
-                    
-                    {review.image_url && (
-                      <div className="mb-4 rounded-lg overflow-hidden">
-                        <img 
-                          src={review.image_url} 
-                          alt={review.customer_name}
-                          className="w-full h-48 object-cover"
-                        />
-                      </div>
-                    )}
+                      
+                      {review.image_url && (
+                        <div className="mb-4 rounded-lg overflow-hidden">
+                          <img 
+                            src={review.image_url} 
+                            alt={review.customer_name}
+                            className="w-full h-48 object-cover"
+                          />
+                        </div>
+                      )}
 
-                    <p className="text-muted-foreground line-clamp-4">
-                      {language === "th" ? review.review_text_th : review.review_text_en}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                      <p className="text-muted-foreground line-clamp-4 mb-4">
+                        {language === "th" ? review.review_text_th : review.review_text_en}
+                      </p>
+
+                      {/* Helpful Button */}
+                      <div className="flex items-center justify-between pt-4 border-t border-border">
+                        <Button
+                          variant={isLiked ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked })}
+                          disabled={toggleLikeMutation.isPending || !isAuthenticated}
+                          className="gap-2"
+                        >
+                          <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                          {language === "th" ? "เป็นประโยชน์" : "Helpful"}
+                          {review.helpful_count > 0 && (
+                            <span className="font-semibold">({review.helpful_count})</span>
+                          )}
+                        </Button>
+                        {!isAuthenticated && (
+                          <p className="text-xs text-muted-foreground">
+                            {language === "th" ? "เข้าสู่ระบบเพื่อกดถูกใจ" : "Login to like"}
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
