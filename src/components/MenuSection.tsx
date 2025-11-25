@@ -165,7 +165,14 @@ const MenuSection = () => {
         <div className="max-w-4xl mx-auto">
           {categories.length > 0 ? (
             <Tabs defaultValue={categories[0]?.id} className="w-full">
-              <TabsList className={`grid w-full grid-cols-${Math.min(categories.length, 4)} mb-8`}>
+              <TabsList 
+                className={`grid w-full mb-8 ${
+                  categories.length === 1 ? 'grid-cols-1' :
+                  categories.length === 2 ? 'grid-cols-2' :
+                  categories.length === 3 ? 'grid-cols-3' :
+                  'grid-cols-4'
+                }`}
+              >
                 {categories.map((cat) => (
                   <TabsTrigger key={cat.id} value={cat.id} className="text-lg">
                     {language === "th" ? cat.name_th : cat.name_en}
@@ -173,38 +180,51 @@ const MenuSection = () => {
                 ))}
               </TabsList>
 
-              {categories.map((cat) => (
-                <TabsContent key={cat.id} value={cat.id} className="space-y-4">
-                  {getMenusByCategory(cat.id).map((item, index) => (
-                    <Card
-                      key={item.id}
-                      className="border-border hover:border-primary transition-colors animate-fade-in"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <CardContent className="p-6 flex justify-between items-center">
-                        <div className="flex-1 flex items-center gap-4">
-                          {item.icon_url && (
-                            <img
-                              src={item.icon_url}
-                              alt="icon"
-                              className="w-8 h-8 object-contain"
-                            />
-                          )}
-                          <div>
-                            <h3 className="text-xl font-semibold text-foreground mb-1">
-                              {language === "th" ? item.name_th : item.name_en}
-                            </h3>
-                            <p className="text-muted-foreground">
-                              {language === "th" ? item.description_th : item.description_en}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-2xl font-bold text-primary ml-4">฿{item.price}</div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </TabsContent>
-              ))}
+              {categories.map((cat) => {
+                const categoryMenus = getMenusByCategory(cat.id);
+                return (
+                  <TabsContent key={cat.id} value={cat.id} className="space-y-4">
+                    {categoryMenus.length > 0 ? (
+                      categoryMenus.map((item, index) => (
+                        <Card
+                          key={item.id}
+                          className="border-border hover:border-primary transition-colors animate-fade-in"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <CardContent className="p-6 flex justify-between items-center">
+                            <div className="flex-1 flex items-center gap-4">
+                              {item.icon_url && (
+                                <img
+                                  src={item.icon_url}
+                                  alt="icon"
+                                  className="w-8 h-8 object-contain flex-shrink-0"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <h3 className="text-xl font-semibold text-foreground mb-1">
+                                  {language === "th" ? item.name_th : item.name_en}
+                                </h3>
+                                {(item.description_th || item.description_en) && (
+                                  <p className="text-muted-foreground">
+                                    {language === "th" ? item.description_th : item.description_en}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-2xl font-bold text-primary ml-4 flex-shrink-0">
+                              ฿{item.price}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">
+                        {language === "th" ? "ไม่มีเมนูในหมวดหมู่นี้" : "No items in this category"}
+                      </p>
+                    )}
+                  </TabsContent>
+                );
+              })}
             </Tabs>
           ) : (
             <p className="text-center text-muted-foreground">
