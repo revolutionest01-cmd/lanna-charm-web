@@ -97,7 +97,7 @@ const Header = () => {
                 <a 
                   key={item.label} 
                   href={item.href} 
-                  className={`relative flex items-center gap-2 ${isScrolled ? "text-foreground hover:text-highlight" : "text-white hover:text-highlight"} font-medium drop-shadow-md transition-all duration-300 hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
+                  className={`relative flex items-center gap-2 ${isScrolled ? "text-foreground hover:text-highlight" : "text-white hover:text-highlight"} font-medium drop-shadow-md transition-all duration-200 px-3 py-2 rounded-lg hover:border hover:border-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:bg-white/5 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:-bottom-1 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
                 >
                   <IconComponent size={16} className="flex-shrink-0" />
                   <span className="whitespace-nowrap">{item.label}</span>
