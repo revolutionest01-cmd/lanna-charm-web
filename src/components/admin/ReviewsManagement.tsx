@@ -36,12 +36,15 @@ export const ReviewsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: "",
     rating: 5,
     review_text_en: "",
     review_text_th: "",
-    image_url: "",
   });
 
   useEffect(() => {
@@ -71,14 +74,114 @@ export const ReviewsManagement = () => {
       rating: 5,
       review_text_en: "",
       review_text_th: "",
-      image_url: "",
     });
     setEditingReview(null);
+    setImageFile(null);
+    setImagePreview("");
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(
+        language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(
+        language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB"
+      );
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(
+        language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(
+        language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB"
+      );
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return editingReview?.image_url || null;
+
+    try {
+      setUploadingImage(true);
+      const fileExt = imageFile.name.split(".").pop();
+      const fileName = `review-${Date.now()}.${fileExt}`;
+
+      // Delete old image if exists
+      if (editingReview?.image_url) {
+        const oldFileName = editingReview.image_url.split("/").pop();
+        if (oldFileName) {
+          await supabase.storage.from("reviews").remove([oldFileName]);
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from("reviews")
+        .upload(fileName, imageFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("reviews")
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error(
+        language === "th" ? "ไม่สามารถอัพโหลดรูปภาพได้" : "Failed to upload image"
+      );
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async () => {
     try {
       reviewSchema.parse(formData);
+
+      const imageUrl = await uploadImage();
 
       if (editingReview) {
         const { error } = await supabase
@@ -88,7 +191,7 @@ export const ReviewsManagement = () => {
             rating: formData.rating,
             review_text_en: formData.review_text_en,
             review_text_th: formData.review_text_th,
-            image_url: formData.image_url || null,
+            image_url: imageUrl,
           })
           .eq("id", editingReview.id);
 
@@ -100,7 +203,7 @@ export const ReviewsManagement = () => {
           rating: formData.rating,
           review_text_en: formData.review_text_en,
           review_text_th: formData.review_text_th,
-          image_url: formData.image_url || null,
+          image_url: imageUrl,
         });
 
         if (error) throw error;
@@ -127,8 +230,8 @@ export const ReviewsManagement = () => {
       rating: review.rating,
       review_text_en: review.review_text_en,
       review_text_th: review.review_text_th,
-      image_url: review.image_url || "",
     });
+    setImagePreview(review.image_url || "");
     setDialogOpen(true);
   };
 
@@ -138,6 +241,15 @@ export const ReviewsManagement = () => {
     }
 
     try {
+      // Get the review to delete its image
+      const review = reviews.find(r => r.id === id);
+      if (review?.image_url) {
+        const fileName = review.image_url.split("/").pop();
+        if (fileName) {
+          await supabase.storage.from("reviews").remove([fileName]);
+        }
+      }
+
       const { error } = await supabase.from("reviews").delete().eq("id", id);
       if (error) throw error;
 
@@ -252,21 +364,75 @@ export const ReviewsManagement = () => {
                 />
               </div>
               <div>
-                <Label>{language === "th" ? "URL รูปภาพ (ถ้ามี)" : "Image URL (Optional)"}</Label>
-                <Input
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
-                />
+                <Label>{language === "th" ? "รูปภาพ (ถ้ามี)" : "Image (Optional)"}</Label>
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                    isDragging
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    disabled={loading || uploadingImage}
+                    className="hidden"
+                    id="review-image-upload"
+                  />
+                  <label
+                    htmlFor="review-image-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-2">
+                      📷
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {language === "th"
+                        ? "คลิกหรือลากไฟล์มาวาง"
+                        : "Click or drag file here"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "Max 5MB"}
+                    </p>
+                  </label>
+                </div>
+                {imagePreview && (
+                  <div className="mt-2 relative">
+                    <img
+                      src={imagePreview}
+                      alt="Review preview"
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview("");
+                      }}
+                    >
+                      {language === "th" ? "ลบ" : "Remove"}
+                    </Button>
+                  </div>
+                )}
               </div>
-              <Button onClick={handleSubmit} className="w-full">
-                {editingReview
-                  ? language === "th"
-                    ? "อัพเดท"
-                    : "Update"
-                  : language === "th"
-                  ? "เพิ่ม"
-                  : "Add"}
+              <Button onClick={handleSubmit} className="w-full" disabled={loading || uploadingImage}>
+                {loading || uploadingImage ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {language === "th" ? "กำลังบันทึก..." : "Saving..."}
+                  </>
+                ) : editingReview ? (
+                  language === "th" ? "อัพเดท" : "Update"
+                ) : (
+                  language === "th" ? "เพิ่ม" : "Add"
+                )}
               </Button>
             </div>
           </DialogContent>
