@@ -88,9 +88,9 @@ export const MenusManagement = () => {
   const [menuToDelete, setMenuToDelete] = useState<Menu | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [iconFile, setIconFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [iconPreview, setIconPreview] = useState<string>("");
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [isDraggingIcon, setIsDraggingIcon] = useState(false);
@@ -229,25 +229,24 @@ export const MenusManagement = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // ใช้แค่ไฟล์แรก (สำหรับ menu แต่ละรายการมีรูปเดียว)
-    const file = files[0];
+    const fileArray = Array.from(files);
+    const validFiles: File[] = [];
+    const previews: string[] = [];
 
-    if (!file.type.startsWith("image/")) {
-      toast.error(
-        language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
-      );
-      return;
+    for (const file of fileArray) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(
+          language === "th" ? "กรุณาเลือกเฉพาะไฟล์รูปภาพ" : "Please select only image files"
+        );
+        continue;
+      }
+
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(
-        language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB"
-      );
-      return;
-    }
-
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImageFiles(validFiles);
+    setImagePreviews(previews);
   };
 
   const handleIconSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,13 +256,6 @@ export const MenusManagement = () => {
     if (!file.type.startsWith("image/")) {
       toast.error(
         language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
-      );
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error(
-        language === "th" ? "ไฟล์ไอคอนต้องมีขนาดไม่เกิน 2MB" : "Icon file must not exceed 2MB"
       );
       return;
     }
@@ -288,25 +280,24 @@ export const MenusManagement = () => {
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
 
-    // ใช้แค่ไฟล์แรก (สำหรับ menu แต่ละรายการมีรูปเดียว)
-    const file = files[0];
+    const fileArray = Array.from(files);
+    const validFiles: File[] = [];
+    const previews: string[] = [];
 
-    if (!file.type.startsWith("image/")) {
-      toast.error(
-        language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
-      );
-      return;
+    for (const file of fileArray) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(
+          language === "th" ? "กรุณาเลือกเฉพาะไฟล์รูปภาพ" : "Please select only image files"
+        );
+        continue;
+      }
+
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(
-        language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB"
-      );
-      return;
-    }
-
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImageFiles(validFiles);
+    setImagePreviews(previews);
   };
 
   const handleIconDragOver = (e: React.DragEvent) => {
@@ -332,53 +323,46 @@ export const MenusManagement = () => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error(
-        language === "th" ? "ไฟล์ไอคอนต้องมีขนาดไม่เกิน 2MB" : "Icon file must not exceed 2MB"
-      );
-      return;
-    }
-
     setIconFile(file);
     setIconPreview(URL.createObjectURL(file));
   };
 
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return selectedMenu?.image_url || null;
+  const uploadImages = async (): Promise<string[]> => {
+    if (imageFiles.length === 0) {
+      return selectedMenu?.image_url ? [selectedMenu.image_url] : [];
+    }
 
     try {
       setUploadingImage(true);
-      const fileExt = imageFile.name.split(".").pop();
-      const fileName = `menu-${Date.now()}.${fileExt}`;
+      const uploadedUrls: string[] = [];
 
-      // Delete old image if exists
-      if (selectedMenu?.image_url) {
-        const oldFileName = selectedMenu.image_url.split("/").pop();
-        if (oldFileName) {
-          await supabase.storage.from("menus").remove([oldFileName]);
-        }
+      for (const imageFile of imageFiles) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `menu-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("menus")
+          .upload(fileName, imageFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("menus")
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
       }
 
-      const { error: uploadError } = await supabase.storage
-        .from("menus")
-        .upload(fileName, imageFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("menus")
-        .getPublicUrl(fileName);
-
-      return publicUrl;
+      return uploadedUrls;
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading images:", error);
       toast.error(
-        language === "th" ? "ไม่สามารถอัพโหลดรูปภาพได้" : "Failed to upload image"
+        language === "th" ? "ไม่สามารถอัพโหลดรูปภาพได้" : "Failed to upload images"
       );
-      return null;
+      return [];
     } finally {
       setUploadingImage(false);
     }
@@ -429,40 +413,66 @@ export const MenusManagement = () => {
     try {
       setLoading(true);
 
-      const imageUrl = await uploadImage();
+      const imageUrls = await uploadImages();
       const iconUrl = await uploadIcon();
 
-      const menuData = {
+      if (imageUrls.length === 0 && !selectedMenu) {
+        toast.error(language === "th" ? "กรุณาเลือกรูปภาพอย่างน้อย 1 รูป" : "Please select at least one image");
+        return;
+      }
+
+      const baseMenuData = {
         name_th: values.name_th,
         name_en: values.name_en,
         description_th: values.description_th || null,
         description_en: values.description_en || null,
         price: parseFloat(values.price),
         category_id: values.category_id || null,
-        image_url: imageUrl,
         icon_url: iconUrl,
         is_recommended: values.is_recommended,
         is_active: true,
       };
 
       if (selectedMenu) {
+        // Edit mode: update the existing menu with first image
+        // Delete old image if exists and we have a new one
+        if (imageUrls.length > 0 && selectedMenu.image_url) {
+          const oldFileName = selectedMenu.image_url.split("/").pop();
+          if (oldFileName) {
+            await supabase.storage.from("menus").remove([oldFileName]);
+          }
+        }
+
         const { error } = await supabase
           .from("menus")
-          .update(menuData)
+          .update({
+            ...baseMenuData,
+            image_url: imageUrls[0] || selectedMenu.image_url,
+          })
           .eq("id", selectedMenu.id);
 
         if (error) throw error;
         toast.success(language === "th" ? "แก้ไขสำเร็จ" : "Updated successfully");
       } else {
+        // Create mode: create multiple menus if multiple images
+        const menusToInsert = imageUrls.map((imageUrl, index) => ({
+          ...baseMenuData,
+          image_url: imageUrl,
+          sort_order: menus.length + index,
+        }));
+
         const { error } = await supabase
           .from("menus")
-          .insert([{
-            ...menuData,
-            sort_order: menus.length,
-          }]);
+          .insert(menusToInsert);
 
         if (error) throw error;
-        toast.success(language === "th" ? "เพิ่มเมนูสำเร็จ" : "Menu added successfully");
+        
+        const count = imageUrls.length;
+        toast.success(
+          language === "th" 
+            ? `เพิ่มเมนูสำเร็จ ${count} รายการ` 
+            : `Successfully added ${count} menu${count > 1 ? 's' : ''}`
+        );
       }
 
       setIsMenuDialogOpen(false);
@@ -487,7 +497,8 @@ export const MenusManagement = () => {
       category_id: menu.category_id || "",
       is_recommended: menu.is_recommended,
     });
-    setImagePreview(menu.image_url || "");
+    setImageFiles([]);
+    setImagePreviews(menu.image_url ? [menu.image_url] : []);
     setIconPreview(menu.icon_url || "");
     setIsMenuDialogOpen(true);
   };
@@ -550,9 +561,9 @@ export const MenusManagement = () => {
       category_id: "",
       is_recommended: false,
     });
-    setImageFile(null);
+    setImageFiles([]);
     setIconFile(null);
-    setImagePreview("");
+    setImagePreviews([]);
     setIconPreview("");
   };
 
@@ -764,6 +775,7 @@ export const MenusManagement = () => {
                         <Input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageSelect}
                           disabled={loading || uploadingImage}
                           className="hidden"
@@ -776,33 +788,34 @@ export const MenusManagement = () => {
                           <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
                           <p className="text-sm text-muted-foreground">
                             {language === "th"
-                              ? "คลิกหรือลากไฟล์มาวาง"
-                              : "Click or drag file here"}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "Max 5MB"}
+                              ? "คลิกหรือลากไฟล์มาวาง (อัพโหลดได้หลายรูป)"
+                              : "Click or drag files here (Multiple uploads)"}
                           </p>
                         </label>
                       </div>
-                      {imagePreview && (
-                        <div className="mt-2 relative">
-                          <img
-                            src={imagePreview}
-                            alt="Menu preview"
-                            className="w-full h-48 object-cover rounded-lg"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={() => {
-                              setImageFile(null);
-                              setImagePreview("");
-                            }}
-                          >
-                            {language === "th" ? "ลบ" : "Remove"}
-                          </Button>
+                      {imagePreviews.length > 0 && (
+                        <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative">
+                              <img
+                                src={preview}
+                                alt={`Menu preview ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-lg"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
+                                onClick={() => {
+                                  setImageFiles(prev => prev.filter((_, i) => i !== index));
+                                  setImagePreviews(prev => prev.filter((_, i) => i !== index));
+                                }}
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -837,9 +850,6 @@ export const MenusManagement = () => {
                             {language === "th"
                               ? "คลิกหรือลากไฟล์มาวาง"
                               : "Click or drag file here"}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 2MB" : "Max 2MB"}
                           </p>
                         </label>
                       </div>

@@ -14,18 +14,11 @@ export interface ImageOptimizationOptions {
  * Validate image file before upload
  */
 export const validateImageFile = (
-  file: File,
-  maxSizeMB = 5
+  file: File
 ): { valid: boolean; error?: string } => {
   // Check if file is an image
   if (!file.type.startsWith("image/")) {
     return { valid: false, error: "File must be an image" };
-  }
-
-  // Check file size
-  const maxSizeBytes = maxSizeMB * 1024 * 1024;
-  if (file.size > maxSizeBytes) {
-    return { valid: false, error: `File size must not exceed ${maxSizeMB}MB` };
   }
 
   return { valid: true };
