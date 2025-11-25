@@ -20,7 +20,16 @@ export default defineConfig(({ mode }) => ({
       output: {
         entryFileNames: `assets/[name].[hash].js`,
         chunkFileNames: `assets/[name].[hash].js`,
-        assetFileNames: `assets/[name].[hash].[ext]`
+        assetFileNames: `assets/[name].[hash].[ext]`,
+        manualChunks: undefined,
+      }
+    },
+    sourcemap: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
       }
     }
   },
