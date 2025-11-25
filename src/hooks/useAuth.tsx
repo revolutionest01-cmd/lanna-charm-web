@@ -1,5 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -8,75 +9,164 @@ export interface User {
   avatar?: string;
 }
 
-interface AuthStore {
+interface AuthState {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  isLoading: boolean;
 }
 
-// Mock users database
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'ผู้ดูแลระบบ',
-    email: 'admin@plernping.com',
-    avatar: undefined,
-  },
-];
+let authState: AuthState = {
+  user: null,
+  session: null,
+  isAuthenticated: false,
+  isLoading: true,
+};
 
-export const useAuth = create<AuthStore>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
+let listeners: Set<(state: AuthState) => void> = new Set();
 
-      login: async (email: string, password: string) => {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+const notifyListeners = () => {
+  listeners.forEach(listener => listener(authState));
+};
 
-        // Mock authentication - accept any password for demo
-        const user = mockUsers.find(u => u.email === email);
-        
-        if (user) {
-          set({ user, isAuthenticated: true });
-          return { success: true };
-        }
+const setAuthState = (updates: Partial<AuthState>) => {
+  authState = { ...authState, ...updates };
+  notifyListeners();
+};
 
-        // If user doesn't exist in mock database, treat it as new registration
-        return { success: false, error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' };
-      },
-
-      register: async (name: string, email: string, password: string) => {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Check if user already exists
-        const existingUser = mockUsers.find(u => u.email === email);
-        if (existingUser) {
-          return { success: false, error: 'อีเมลนี้ถูกใช้งานแล้ว' };
-        }
-
-        // Create new user
-        const newUser: User = {
-          id: Date.now().toString(),
-          name,
-          email,
-          avatar: undefined,
-        };
-
-        mockUsers.push(newUser);
-        set({ user: newUser, isAuthenticated: true });
-        return { success: true };
-      },
-
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: 'auth-storage',
+// Initialize auth state
+const initializeAuth = async () => {
+  // Set up auth state listener FIRST
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    let user: User | null = null;
+    
+    if (session?.user) {
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', session.user.id)
+        .single();
+      
+      user = {
+        id: session.user.id,
+        name: profile?.display_name || session.user.email?.split('@')[0] || 'User',
+        email: session.user.email || '',
+      };
     }
-  )
-);
+    
+    setAuthState({
+      user,
+      session,
+      isAuthenticated: !!session,
+      isLoading: false,
+    });
+  });
+
+  // THEN check for existing session
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  let user: User | null = null;
+  
+  if (session?.user) {
+    // Defer profile fetch with setTimeout
+    setTimeout(async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', session.user.id)
+        .single();
+      
+      const updatedUser: User = {
+        id: session.user.id,
+        name: profile?.display_name || session.user.email?.split('@')[0] || 'User',
+        email: session.user.email || '',
+      };
+      
+      setAuthState({ user: updatedUser });
+    }, 0);
+    
+    user = {
+      id: session.user.id,
+      name: session.user.email?.split('@')[0] || 'User',
+      email: session.user.email || '',
+    };
+  }
+  
+  setAuthState({
+    user,
+    session,
+    isAuthenticated: !!session,
+    isLoading: false,
+  });
+};
+
+// Initialize on module load
+initializeAuth();
+
+export const useAuth = () => {
+  const [state, setState] = useState<AuthState>(authState);
+
+  useEffect(() => {
+    listeners.add(setState);
+    return () => {
+      listeners.delete(setState);
+    };
+  }, []);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };
+    }
+  };
+
+  const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            display_name: name,
+          },
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'เกิดข้อผิดพลาดในการสมัครสมาชิก' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return {
+    user: state.user,
+    session: state.session,
+    isAuthenticated: state.isAuthenticated,
+    isLoading: state.isLoading,
+    login,
+    register,
+    logout,
+  };
+};
