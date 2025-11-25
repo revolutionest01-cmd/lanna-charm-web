@@ -46,7 +46,7 @@ const initializeAuth = async () => {
         .from('profiles')
         .select('display_name')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       user = {
         id: session.user.id,
@@ -75,7 +75,7 @@ const initializeAuth = async () => {
         .from('profiles')
         .select('display_name')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       const updatedUser: User = {
         id: session.user.id,
