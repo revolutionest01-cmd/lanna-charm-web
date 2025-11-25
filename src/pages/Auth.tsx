@@ -34,10 +34,11 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!loginRecaptcha) {
-      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
-      return;
-    }
+    // TEMPORARILY DISABLED - reCAPTCHA validation
+    // if (!loginRecaptcha) {
+    //   toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
+    //   return;
+    // }
 
     setIsLoading(true);
 
@@ -51,17 +52,17 @@ const Auth = () => {
       
       loginSchema.parse(loginForm);
 
-      // Verify reCAPTCHA with backend
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-        body: { token: loginRecaptcha }
-      });
+      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
+      // const { supabase } = await import("@/integrations/supabase/client");
+      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+      //   body: { token: loginRecaptcha }
+      // });
 
-      if (error || !data?.success) {
-        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
-        setIsLoading(false);
-        return;
-      }
+      // if (error || !data?.success) {
+      //   toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       const result = await login(loginForm.email, loginForm.password);
       
@@ -87,10 +88,11 @@ const Auth = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!registerRecaptcha) {
-      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
-      return;
-    }
+    // TEMPORARILY DISABLED - reCAPTCHA validation
+    // if (!registerRecaptcha) {
+    //   toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
+    //   return;
+    // }
 
     setIsLoading(true);
 
@@ -105,17 +107,17 @@ const Auth = () => {
       
       registerSchema.parse(registerForm);
 
-      // Verify reCAPTCHA with backend
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-        body: { token: registerRecaptcha }
-      });
+      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
+      // const { supabase } = await import("@/integrations/supabase/client");
+      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+      //   body: { token: registerRecaptcha }
+      // });
 
-      if (error || !data?.success) {
-        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
-        setIsLoading(false);
-        return;
-      }
+      // if (error || !data?.success) {
+      //   toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       const result = await register(registerForm.name, registerForm.email, registerForm.password);
       
@@ -210,13 +212,14 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <div className="pt-2">
+                  {/* TEMPORARILY DISABLED - reCAPTCHA */}
+                  {/* <div className="pt-2">
                     <ReCaptcha 
                       onVerify={(token) => setLoginRecaptcha(token)}
                       onExpired={() => setLoginRecaptcha(null)}
                       onError={() => setLoginRecaptcha(null)}
                     />
-                  </div>
+                  </div> */}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
@@ -265,13 +268,14 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <div className="pt-2">
+                  {/* TEMPORARILY DISABLED - reCAPTCHA */}
+                  {/* <div className="pt-2">
                     <ReCaptcha 
                       onVerify={(token) => setRegisterRecaptcha(token)}
                       onExpired={() => setRegisterRecaptcha(null)}
                       onError={() => setRegisterRecaptcha(null)}
                     />
-                  </div>
+                  </div> */}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {language === 'th' ? 'สมัครสมาชิก' : 'Register'}

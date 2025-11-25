@@ -205,10 +205,11 @@ const TopicDetail = () => {
       return;
     }
 
-    if (!recaptchaToken) {
-      toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
-      return;
-    }
+    // TEMPORARILY DISABLED - reCAPTCHA validation
+    // if (!recaptchaToken) {
+    //   toast.error(language === 'th' ? 'กรุณายืนยัน reCAPTCHA' : 'Please verify reCAPTCHA');
+    //   return;
+    // }
 
     const newReply: Reply = {
       id: Date.now(),
@@ -356,13 +357,14 @@ const TopicDetail = () => {
                   rows={4}
                   className="resize-none"
                 />
-                <div className="pt-2">
+                {/* TEMPORARILY DISABLED - reCAPTCHA */}
+                {/* <div className="pt-2">
                   <ReCaptcha 
                     onVerify={(token) => setRecaptchaToken(token)}
                     onExpired={() => setRecaptchaToken(null)}
                     onError={() => setRecaptchaToken(null)}
                   />
-                </div>
+                </div> */}
                 <Button type="submit" className="w-full sm:w-auto">
                   <Send className="w-4 h-4 mr-2" />
                   {language === 'th' ? 'ส่งความคิดเห็น' : 'Submit Reply'}

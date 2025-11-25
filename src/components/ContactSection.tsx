@@ -96,34 +96,35 @@ const ContactSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!recaptchaToken) {
-      toast.error(
-        language === "th" 
-          ? "โปรดยืนยันว่าไม่ใช่บอท" 
-          : "Please verify that you are not a robot"
-      );
-      return;
-    }
+    // TEMPORARILY DISABLED - reCAPTCHA validation
+    // if (!recaptchaToken) {
+    //   toast.error(
+    //     language === "th" 
+    //       ? "โปรดยืนยันว่าไม่ใช่บอท" 
+    //       : "Please verify that you are not a robot"
+    //   );
+    //   return;
+    // }
 
     try {
       // Validate form data
       contactSchema.parse(formData);
       setErrors({});
 
-      // Verify reCAPTCHA with backend
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-        body: { token: recaptchaToken }
-      });
+      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
+      // const { supabase } = await import("@/integrations/supabase/client");
+      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+      //   body: { token: recaptchaToken }
+      // });
 
-      if (error || !data?.success) {
-        toast.error(
-          language === "th" 
-            ? "การยืนยัน reCAPTCHA ไม่สำเร็จ" 
-            : "reCAPTCHA verification failed"
-        );
-        return;
-      }
+      // if (error || !data?.success) {
+      //   toast.error(
+      //     language === "th" 
+      //       ? "การยืนยัน reCAPTCHA ไม่สำเร็จ" 
+      //       : "reCAPTCHA verification failed"
+      //   );
+      //   return;
+      // }
 
       // Show success toast
       toast.success(t.messageSent, {
@@ -418,13 +419,14 @@ const ContactSection = () => {
                 )}
               </div>
 
-              <div className="pt-2">
+              {/* TEMPORARILY DISABLED - reCAPTCHA */}
+              {/* <div className="pt-2">
                 <ReCaptcha 
                   onVerify={(token) => setRecaptchaToken(token)}
                   onExpired={() => setRecaptchaToken(null)}
                   onError={() => setRecaptchaToken(null)}
                 />
-              </div>
+              </div> */}
 
               <Button
                 type="submit"

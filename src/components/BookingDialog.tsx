@@ -43,22 +43,23 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       return;
     }
 
-    if (!recaptchaToken) {
-      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
-      return;
-    }
+    // TEMPORARILY DISABLED - reCAPTCHA validation
+    // if (!recaptchaToken) {
+    //   toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
+    //   return;
+    // }
 
     try {
-      // Verify reCAPTCHA with backend
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-        body: { token: recaptchaToken }
-      });
+      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
+      // const { supabase } = await import("@/integrations/supabase/client");
+      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+      //   body: { token: recaptchaToken }
+      // });
 
-      if (error || !data?.success) {
-        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
-        return;
-      }
+      // if (error || !data?.success) {
+      //   toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+      //   return;
+      // }
 
       // Mock booking submission
       toast.success(
@@ -217,13 +218,14 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
             />
           </div>
 
-          <div className="pt-2">
+          {/* TEMPORARILY DISABLED - reCAPTCHA */}
+          {/* <div className="pt-2">
             <ReCaptcha 
               onVerify={(token) => setRecaptchaToken(token)}
               onExpired={() => setRecaptchaToken(null)}
               onError={() => setRecaptchaToken(null)}
             />
-          </div>
+          </div> */}
 
           <Button type="submit" variant="highlight" className="w-full" size="lg">
             {language === 'th' ? 'ยืนยันการจอง' : 'Confirm Booking'}
