@@ -58,16 +58,15 @@ export const logActivity = async (
       details: details || {},
     };
 
-    // Log to console for debugging
-    console.log("[Activity Log]", logEntry);
-
-    // Save to database
+    // Save to database (only for authenticated users)
     const { error } = await supabase.from("activity_logs").insert(logEntry);
     if (error) {
-      console.error("Failed to log activity:", error);
+      // Silent fail - don't log errors to console in production
+      return;
     }
   } catch (error) {
-    console.error("Activity logging error:", error);
+    // Silent fail - activity logging should not break the app
+    return;
   }
 };
 
