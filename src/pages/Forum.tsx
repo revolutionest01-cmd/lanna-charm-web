@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-import ReCaptcha from "@/components/ReCaptcha";
 import { z } from "zod";
 import { createTopicValidation } from "@/lib/validation";
 
@@ -60,7 +59,6 @@ const Forum = () => {
   const [newTopicContent, setNewTopicContent] = useState("");
   const [newTopicCategory, setNewTopicCategory] = useState<Topic['category']>("general");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [createTopicRecaptcha, setCreateTopicRecaptcha] = useState<string | null>(null);
 
   const categories = [
     { value: "all", label: language === 'th' ? 'ทั้งหมด' : 'All' },
@@ -195,12 +193,6 @@ const Forum = () => {
       return;
     }
 
-    // TEMPORARILY DISABLED - reCAPTCHA validation
-    // if (!createTopicRecaptcha) {
-    //   toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
-    //   return;
-    // }
-
     try {
       // Validate input
       const topicSchema = createTopicValidation(language);
@@ -208,17 +200,6 @@ const Forum = () => {
         title: newTopicTitle,
         content: newTopicContent,
       });
-
-      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
-      // const { supabase } = await import("@/integrations/supabase/client");
-      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-      //   body: { token: createTopicRecaptcha }
-      // });
-
-      // if (error || !data?.success) {
-      //   toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
-      //   return;
-      // }
 
       const newTopic: Topic = {
         id: Date.now(),
@@ -237,7 +218,6 @@ const Forum = () => {
       setNewTopicTitle("");
       setNewTopicContent("");
       setNewTopicCategory("general");
-      setCreateTopicRecaptcha(null);
       setIsDialogOpen(false);
       toast.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : 'Topic created successfully');
     } catch (error) {
@@ -383,14 +363,6 @@ const Forum = () => {
                       required
                     />
                   </div>
-                  {/* TEMPORARILY DISABLED - reCAPTCHA */}
-                  {/* <div className="pt-2">
-                    <ReCaptcha 
-                      onVerify={(token) => setCreateTopicRecaptcha(token)}
-                      onExpired={() => setCreateTopicRecaptcha(null)}
-                      onError={() => setCreateTopicRecaptcha(null)}
-                    />
-                  </div> */}
                   <Button type="submit" className="w-full">
                     {language === 'th' ? 'โพสต์' : 'Post'}
                   </Button>

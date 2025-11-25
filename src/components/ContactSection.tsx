@@ -7,7 +7,6 @@ import { Phone, Mail, MapPin, Clock, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import ReCaptcha from "@/components/ReCaptcha";
 
 const ContactSection = () => {
   const { language } = useLanguage();
@@ -22,7 +21,6 @@ const ContactSection = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const contactSchema = z.object({
     name: z
@@ -96,35 +94,10 @@ const ContactSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // TEMPORARILY DISABLED - reCAPTCHA validation
-    // if (!recaptchaToken) {
-    //   toast.error(
-    //     language === "th" 
-    //       ? "โปรดยืนยันว่าไม่ใช่บอท" 
-    //       : "Please verify that you are not a robot"
-    //   );
-    //   return;
-    // }
-
     try {
       // Validate form data
       contactSchema.parse(formData);
       setErrors({});
-
-      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
-      // const { supabase } = await import("@/integrations/supabase/client");
-      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-      //   body: { token: recaptchaToken }
-      // });
-
-      // if (error || !data?.success) {
-      //   toast.error(
-      //     language === "th" 
-      //       ? "การยืนยัน reCAPTCHA ไม่สำเร็จ" 
-      //       : "reCAPTCHA verification failed"
-      //   );
-      //   return;
-      // }
 
       // Show success toast
       toast.success(t.messageSent, {
@@ -139,7 +112,6 @@ const ContactSection = () => {
         topic: "",
         message: "",
       });
-      setRecaptchaToken(null);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
@@ -418,15 +390,6 @@ const ContactSection = () => {
                   </p>
                 )}
               </div>
-
-              {/* TEMPORARILY DISABLED - reCAPTCHA */}
-              {/* <div className="pt-2">
-                <ReCaptcha 
-                  onVerify={(token) => setRecaptchaToken(token)}
-                  onExpired={() => setRecaptchaToken(null)}
-                  onError={() => setRecaptchaToken(null)}
-                />
-              </div> */}
 
               <Button
                 type="submit"
