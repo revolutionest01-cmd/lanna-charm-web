@@ -195,10 +195,11 @@ const Forum = () => {
       return;
     }
 
-    if (!createTopicRecaptcha) {
-      toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
-      return;
-    }
+    // TEMPORARILY DISABLED - reCAPTCHA validation
+    // if (!createTopicRecaptcha) {
+    //   toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
+    //   return;
+    // }
 
     try {
       // Validate input
@@ -208,16 +209,16 @@ const Forum = () => {
         content: newTopicContent,
       });
 
-      // Verify reCAPTCHA with backend
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-        body: { token: createTopicRecaptcha }
-      });
+      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
+      // const { supabase } = await import("@/integrations/supabase/client");
+      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+      //   body: { token: createTopicRecaptcha }
+      // });
 
-      if (error || !data?.success) {
-        toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
-        return;
-      }
+      // if (error || !data?.success) {
+      //   toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
+      //   return;
+      // }
 
       const newTopic: Topic = {
         id: Date.now(),
@@ -382,13 +383,14 @@ const Forum = () => {
                       required
                     />
                   </div>
-                  <div className="pt-2">
+                  {/* TEMPORARILY DISABLED - reCAPTCHA */}
+                  {/* <div className="pt-2">
                     <ReCaptcha 
                       onVerify={(token) => setCreateTopicRecaptcha(token)}
                       onExpired={() => setCreateTopicRecaptcha(null)}
                       onError={() => setCreateTopicRecaptcha(null)}
                     />
-                  </div>
+                  </div> */}
                   <Button type="submit" className="w-full">
                     {language === 'th' ? 'โพสต์' : 'Post'}
                   </Button>
