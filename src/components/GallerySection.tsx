@@ -2,6 +2,9 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { useContentData } from "@/hooks/useContentData";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 type GalleryImage = {
   id: string;
@@ -75,6 +78,21 @@ const GallerySection = () => {
             <CarouselPrevious className="left-4" />
             <CarouselNext className="right-4" />
           </Carousel>
+        )}
+
+        {/* View All Button */}
+        {images.length > 0 && (
+          <div className="text-center mt-12">
+            <Link to="/gallery">
+              <Button 
+                size="lg" 
+                className="group hover:shadow-lg transition-all duration-300"
+              >
+                {language === "th" ? "ดูรูปภาพทั้งหมด" : "View All Images"}
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
     </section>
