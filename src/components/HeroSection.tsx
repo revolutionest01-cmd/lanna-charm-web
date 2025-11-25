@@ -2,17 +2,28 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin } from "lucide-react";
 import heroImage from "@/assets/hero-cafe.jpg";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { useContentData } from "@/hooks/useContentData";
 
 const HeroSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { hero, isLoading } = useContentData();
+  
+  // Use database content if available, fallback to translations
+  const heroTitle = hero 
+    ? (language === 'th' ? hero.title_th : hero.title_en)
+    : t.heroTitle;
+  const heroSubtitle = hero
+    ? (language === 'th' ? hero.subtitle_th : hero.subtitle_en)
+    : t.heroSubtitle;
+  const heroImageUrl = hero?.image_url || heroImage;
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src={heroImage}
+          src={heroImageUrl}
           alt="Plern Ping Cafe outdoor seating area with natural ambiance"
           className="w-full h-full object-cover"
           style={{
@@ -36,11 +47,11 @@ const HeroSection = () => {
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 font-serif drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
-          {t.heroTitle}
+          {heroTitle}
         </h1>
         
         <p className="text-xl md:text-2xl text-white mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-          {t.heroSubtitle}
+          {heroSubtitle}
         </p>
         
         <p className="text-lg text-white mb-10 max-w-xl mx-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
