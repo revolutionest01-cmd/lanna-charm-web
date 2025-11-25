@@ -72,10 +72,10 @@ const Auth = () => {
 
       if (result.success) {
         toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
-        // Add small delay to show success message before redirect
+        // Delay to show success message before redirect
         setTimeout(() => {
           navigate("/");
-        }, 800);
+        }, 1500);
       } else {
         toast.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : 'Invalid email or password. Please check and try again.'));
       }
@@ -129,11 +129,11 @@ const Auth = () => {
       const result = await register(registerForm.name, registerForm.email, registerForm.password);
 
       if (result.success) {
-        toast.success(language === 'th' ? 'สมัครสมาชิกสำเร็จ' : 'Registration successful');
-        // Add small delay to show success message before redirect
+        toast.success(language === 'th' ? 'ยินดีต้อนรับ' : 'Welcome');
+        // Delay to show success message before redirect
         setTimeout(() => {
           navigate("/");
-        }, 800);
+        }, 1500);
       } else {
         toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
       }
