@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,11 @@ const Auth = () => {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
-    navigate("/forum");
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/forum");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +72,10 @@ const Auth = () => {
 
       if (result.success) {
         toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
-        navigate("/forum");
+        // Add small delay to show success message before redirect
+        setTimeout(() => {
+          navigate("/forum");
+        }, 800);
       } else {
         toast.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : 'Invalid email or password. Please check and try again.'));
       }
@@ -125,7 +130,10 @@ const Auth = () => {
 
       if (result.success) {
         toast.success(language === 'th' ? 'สมัครสมาชิกสำเร็จ' : 'Registration successful');
-        navigate("/forum");
+        // Add small delay to show success message before redirect
+        setTimeout(() => {
+          navigate("/forum");
+        }, 800);
       } else {
         toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
       }
