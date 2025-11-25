@@ -1,21 +1,43 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, LogIn, LogOut, Shield } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
+import { supabase } from "@/integrations/supabase/client";
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const {
-    language,
-    setLanguage
-  } = useLanguage();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { language, setLanguage } = useLanguage();
+  const { user, isAuthenticated, logout } = useAuth();
   const t = translations[language];
   const isForumPage = location.pathname === '/forum' || location.pathname === '/auth';
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      setIsAdmin(!!data && !error);
+    };
+
+    checkAdminStatus();
+  }, [user]);
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -76,6 +98,42 @@ const Header = () => {
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {t.forum}
               </Button>}
+            
+            {/* Auth Buttons */}
+            {isAuthenticated && user ? (
+              <>
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/admin')}
+                    className="gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    {language === 'th' ? 'Admin Panel' : 'Admin Panel'}
+                  </Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => logout()}
+                  className={`gap-2 ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/auth')}
+                className={`gap-2 ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
+              >
+                <LogIn className="h-4 w-4" />
+                {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+              </Button>
+            )}
             <div className={`inline-flex items-center rounded-full p-1 gap-1 transition-all duration-300 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
               <button
                 onClick={() => setLanguage('th')}
