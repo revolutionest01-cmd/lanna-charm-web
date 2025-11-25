@@ -10,6 +10,7 @@ import Forum from "./pages/Forum";
 import TopicDetail from "./pages/TopicDetail";
 import Admin from "./pages/Admin";
 import Gallery from "./pages/Gallery";
+import Reviews from "./pages/Reviews";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/forum/:id" element={<TopicDetail />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/reviews" element={<Reviews />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,9 +1,11 @@
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star } from "lucide-react";
+import { Star, ArrowRight } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { useContentData } from "@/hooks/useContentData";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 type Review = {
   id: string;
@@ -92,6 +94,21 @@ const ReviewsSection = () => {
             <CarouselPrevious className="left-4" />
             <CarouselNext className="right-4" />
           </Carousel>
+        )}
+
+        {/* View All Reviews Button */}
+        {reviews.length > 0 && (
+          <div className="text-center mt-12">
+            <Link to="/reviews">
+              <Button 
+                size="lg" 
+                className="group hover:shadow-lg transition-all duration-300"
+              >
+                {language === "th" ? "ดูรีวิวทั้งหมด" : "View All Reviews"}
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
     </section>
