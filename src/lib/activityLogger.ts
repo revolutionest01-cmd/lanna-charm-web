@@ -58,16 +58,14 @@ export const logActivity = async (
       details: details || {},
     };
 
-    // For now, log to console. In production, save to database
+    // Log to console for debugging
     console.log("[Activity Log]", logEntry);
 
-    // TODO: Uncomment when activity_logs table is created
-    /*
+    // Save to database
     const { error } = await supabase.from("activity_logs").insert(logEntry);
     if (error) {
       console.error("Failed to log activity:", error);
     }
-    */
   } catch (error) {
     console.error("Activity logging error:", error);
   }
@@ -82,8 +80,6 @@ export const getActivityLogs = async (
   filterUserId?: string
 ): Promise<ActivityLog[]> => {
   try {
-    // TODO: Implement when activity_logs table exists
-    /*
     let query = supabase
       .from("activity_logs")
       .select("*")
@@ -96,11 +92,7 @@ export const getActivityLogs = async (
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
-    */
-
-    console.log("Activity logs fetch requested");
-    return [];
+    return (data || []) as ActivityLog[];
   } catch (error) {
     console.error("Failed to fetch activity logs:", error);
     return [];
