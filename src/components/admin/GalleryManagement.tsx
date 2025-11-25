@@ -224,17 +224,23 @@ export const GalleryManagement = () => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
                 isDragging 
                   ? 'border-primary bg-primary/10' 
                   : 'border-border hover:border-primary/50'
               }`}
+              onClick={() => document.getElementById('gallery-upload')?.click()}
             >
               <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground mb-2">
                 {language === "th" 
-                  ? "ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก" 
-                  : "Drag files here or click to select"}
+                  ? "ลากหลายไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก" 
+                  : "Drag multiple files here or click to select"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {language === "th" 
+                  ? `รองรับไฟล์ภาพ (สูงสุด 5MB ต่อไฟล์) • ${formData.files.length} ไฟล์ที่เลือก` 
+                  : `Supports image files (max 5MB per file) • ${formData.files.length} files selected`}
               </p>
               <Input
                 type="file"
@@ -244,11 +250,6 @@ export const GalleryManagement = () => {
                 className="hidden"
                 id="gallery-upload"
               />
-              <label htmlFor="gallery-upload">
-                <Button type="button" variant="outline" className="cursor-pointer" asChild>
-                  <span>{language === "th" ? "เลือกไฟล์" : "Select Files"}</span>
-                </Button>
-              </label>
             </div>
 
             {/* Preview Grid */}

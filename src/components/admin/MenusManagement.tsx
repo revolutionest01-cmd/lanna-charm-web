@@ -226,8 +226,11 @@ export const MenusManagement = () => {
 
   // Menu CRUD
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // ใช้แค่ไฟล์แรก (สำหรับ menu แต่ละรายการมีรูปเดียว)
+    const file = files[0];
 
     if (!file.type.startsWith("image/")) {
       toast.error(
@@ -282,8 +285,11 @@ export const MenusManagement = () => {
     e.preventDefault();
     setIsDraggingImage(false);
     
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // ใช้แค่ไฟล์แรก (สำหรับ menu แต่ละรายการมีรูปเดียว)
+    const file = files[0];
 
     if (!file.type.startsWith("image/")) {
       toast.error(
