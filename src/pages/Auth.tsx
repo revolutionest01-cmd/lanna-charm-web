@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import ReCaptcha from "@/components/ReCaptcha";
 import { z } from "zod";
@@ -25,6 +25,8 @@ const Auth = () => {
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
   const [loginRecaptcha, setLoginRecaptcha] = useState<string | null>(null);
   const [registerRecaptcha, setRegisterRecaptcha] = useState<string | null>(null);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -203,14 +205,30 @@ const Auth = () => {
                     <Label htmlFor="login-password">
                       {language === 'th' ? 'รหัสผ่าน' : 'Password'}
                     </Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : 'Enter your password'}
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showLoginPassword ? "text" : "password"}
+                        placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : 'Enter your password'}
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        required
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      >
+                        {showLoginPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   {/* TEMPORARILY DISABLED - reCAPTCHA */}
                   {/* <div className="pt-2">
@@ -259,14 +277,30 @@ const Auth = () => {
                     <Label htmlFor="register-password">
                       {language === 'th' ? 'รหัสผ่าน' : 'Password'}
                     </Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : 'Enter your password'}
-                      value={registerForm.password}
-                      onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="register-password"
+                        type={showRegisterPassword ? "text" : "password"}
+                        placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : 'Enter your password'}
+                        value={registerForm.password}
+                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                        required
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                      >
+                        {showRegisterPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   {/* TEMPORARILY DISABLED - reCAPTCHA */}
                   {/* <div className="pt-2">
