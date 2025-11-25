@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ type HeroFormValues = z.infer<typeof heroFormSchema>;
 
 export const HeroManagement = () => {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentHero, setCurrentHero] = useState<any>(null);
@@ -213,6 +215,10 @@ export const HeroManagement = () => {
       toast.success(
         language === "th" ? "บันทึกสำเร็จ" : "Saved successfully"
       );
+      
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["hero-content"] });
+      
       loadHeroData();
       setImageFile(null);
     } catch (error) {

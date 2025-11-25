@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ type Review = {
 
 export const ReviewsManagement = () => {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -210,6 +212,9 @@ export const ReviewsManagement = () => {
         toast.success(language === "th" ? "เพิ่มรีวิวสำเร็จ" : "Review added successfully");
       }
 
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+
       setDialogOpen(false);
       resetForm();
       fetchReviews();
@@ -254,6 +259,10 @@ export const ReviewsManagement = () => {
       if (error) throw error;
 
       toast.success(language === "th" ? "ลบรีวิวสำเร็จ" : "Review deleted successfully");
+      
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      
       fetchReviews();
     } catch (error: any) {
       console.error("Error deleting review:", error);
@@ -269,6 +278,10 @@ export const ReviewsManagement = () => {
         .eq("id", review.id);
 
       if (error) throw error;
+      
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      
       toast.success(
         language === "th"
           ? review.is_active

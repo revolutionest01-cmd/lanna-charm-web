@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ type GalleryImage = {
 
 export const GalleryManagement = () => {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -174,6 +176,10 @@ export const GalleryManagement = () => {
       if (error) throw error;
 
       toast.success(language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully");
+      
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      
       fetchGalleryImages();
     } catch (error: any) {
       console.error("Error deleting image:", error);

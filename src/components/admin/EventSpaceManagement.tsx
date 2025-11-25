@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +33,7 @@ type EventSpaceFormValues = z.infer<typeof eventSpaceFormSchema>;
 
 export const EventSpaceManagement = () => {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentEventSpace, setCurrentEventSpace] = useState<any>(null);
@@ -215,6 +217,10 @@ export const EventSpaceManagement = () => {
       toast.success(
         language === "th" ? "บันทึกสำเร็จ" : "Saved successfully"
       );
+      
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
+      
       loadEventSpaceData();
       setImageFile(null);
     } catch (error) {

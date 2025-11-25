@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,6 +78,7 @@ interface Menu {
 
 export const MenusManagement = () => {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -474,6 +476,9 @@ export const MenusManagement = () => {
             : `Successfully added ${count} menu${count > 1 ? 's' : ''}`
         );
       }
+
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["menus"] });
 
       setIsMenuDialogOpen(false);
       resetMenuForm();
