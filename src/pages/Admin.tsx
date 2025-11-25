@@ -37,6 +37,7 @@ const Admin = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!isAuthenticated || !user) {
+        setIsAdmin(false);
         setCheckingAdmin(false);
         return;
       }
@@ -63,8 +64,10 @@ const Admin = () => {
       }
     };
 
-    checkAdminStatus();
-  }, [isAuthenticated, user]);
+    if (!isLoading) {
+      checkAdminStatus();
+    }
+  }, [isAuthenticated, user, isLoading]);
 
   // Redirect if not admin
   useEffect(() => {
