@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { HeroManagement } from "@/components/admin/HeroManagement";
+import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -194,23 +196,11 @@ const Admin = () => {
               </TabsList>
 
               <TabsContent value="hero" className="space-y-4">
-                <div className="text-center py-12 text-muted-foreground">
-                  <Image className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>{language === 'th' ? 'จัดการ Hero Section' : 'Manage Hero Section'}</p>
-                  <p className="text-sm mt-2">
-                    {language === 'th' ? 'เร็วๆ นี้...' : 'Coming soon...'}
-                  </p>
-                </div>
+                <HeroManagement />
               </TabsContent>
 
               <TabsContent value="events" className="space-y-4">
-                <div className="text-center py-12 text-muted-foreground">
-                  <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>{language === 'th' ? 'จัดการห้องประชุม & งานเลี้ยง' : 'Manage Meeting & Event Space'}</p>
-                  <p className="text-sm mt-2">
-                    {language === 'th' ? 'เร็วๆ นี้...' : 'Coming soon...'}
-                  </p>
-                </div>
+                <EventSpaceManagement />
               </TabsContent>
 
               <TabsContent value="rooms" className="space-y-4">
