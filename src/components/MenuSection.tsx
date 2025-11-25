@@ -5,6 +5,14 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Star } from "lucide-react";
 import coffeeImage from "@/assets/menu-coffee.jpg";
 import foodImage from "@/assets/menu-food.jpg";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 const MenuSection = () => {
   const { language } = useLanguage();
@@ -47,34 +55,49 @@ const MenuSection = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {recommendedMenu.map((item, index) => (
-              <Card
-                key={index}
-                className="border-border hover:border-primary transition-all duration-300 overflow-hidden group animate-scale-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                  <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full flex items-center gap-1">
-                    <Star size={16} fill="currentColor" />
-                    <span className="font-semibold">{t.recommended}</span>
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-2xl font-semibold text-foreground">{item.name}</h3>
-                    <div className="text-2xl font-bold text-primary">฿{item.price}</div>
-                  </div>
-                  <p className="text-muted-foreground">{item.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="max-w-5xl mx-auto px-12">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 4000,
+                }),
+              ]}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {recommendedMenu.map((item, index) => (
+                  <CarouselItem key={index} className="pl-4 md:basis-1/2">
+                    <Card className="border-border hover:border-primary transition-all duration-500 overflow-hidden group h-full">
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                        <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full flex items-center gap-1 animate-pulse">
+                          <Star size={16} fill="currentColor" />
+                          <span className="font-semibold">{t.recommended}</span>
+                        </div>
+                      </div>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-2xl font-semibold text-foreground">{item.name}</h3>
+                          <div className="text-2xl font-bold text-primary">฿{item.price}</div>
+                        </div>
+                        <p className="text-muted-foreground">{item.description}</p>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-0 -translate-x-1/2" />
+              <CarouselNext className="right-0 translate-x-1/2" />
+            </Carousel>
           </div>
         </div>
 
