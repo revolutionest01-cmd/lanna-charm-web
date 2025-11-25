@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { supabase } from "@/integrations/supabase/client";
+import { useContentData } from "@/hooks/useContentData";
 
 interface Menu {
   id: string;
@@ -37,32 +36,10 @@ interface Category {
 const MenuSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [menus, setMenus] = useState<Menu[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [menusRes, categoriesRes] = await Promise.all([
-        supabase.from("menus").select("*").eq("is_active", true),
-        supabase.from("menu_categories").select("*").order("sort_order"),
-      ]);
-
-      if (menusRes.error) throw menusRes.error;
-      if (categoriesRes.error) throw categoriesRes.error;
-
-      setMenus(menusRes.data || []);
-      setCategories(categoriesRes.data || []);
-    } catch (error) {
-      console.error("Error fetching menus:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { menus: menuData, isLoading: loading } = useContentData();
+  
+  const menus = menuData?.menus || [];
+  const categories = menuData?.categories || [];
 
   const recommendedMenus = menus.filter((m) => m.is_recommended);
   

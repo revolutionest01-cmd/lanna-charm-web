@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Presentation, Utensils, Wifi, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { supabase } from "@/integrations/supabase/client";
+import { useContentData } from "@/hooks/useContentData";
 
 interface EventSpace {
   id: string;
@@ -20,31 +19,7 @@ interface EventSpace {
 const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [eventSpace, setEventSpace] = useState<EventSpace | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchEventSpace();
-  }, []);
-
-  const fetchEventSpace = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("event_spaces")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      setEventSpace(data);
-    } catch (error) {
-      console.error("Error fetching event space:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { events: eventSpace, isLoading: loading } = useContentData();
 
   if (loading) {
     return (

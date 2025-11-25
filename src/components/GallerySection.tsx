@@ -1,8 +1,7 @@
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { useContentData } from "@/hooks/useContentData";
 
 type GalleryImage = {
   id: string;
@@ -14,28 +13,7 @@ type GalleryImage = {
 const GallerySection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [images, setImages] = useState<GalleryImage[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchGallery = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("gallery_images")
-          .select("*")
-          .order("sort_order", { ascending: true });
-
-        if (error) throw error;
-        setImages(data || []);
-      } catch (error) {
-        console.error("Error fetching gallery:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGallery();
-  }, []);
+  const { gallery: images = [], isLoading: loading } = useContentData();
 
   return (
     <section id="gallery" className="py-20 bg-background">

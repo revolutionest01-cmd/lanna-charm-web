@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Users, Maximize, Wifi, Loader2 } from "lucide-react";
+import { Wifi, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import {
   Carousel,
@@ -12,7 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { supabase } from "@/integrations/supabase/client";
+import { useContentData } from "@/hooks/useContentData";
 
 interface Room {
   id: string;
@@ -35,45 +33,7 @@ interface RoomImage {
 const RoomsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-  const fetchRooms = async () => {
-    try {
-      const { data: roomsData, error: roomsError } = await supabase
-        .from("rooms")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order");
-
-      if (roomsError) throw roomsError;
-
-      if (roomsData && roomsData.length > 0) {
-        const { data: imagesData, error: imagesError } = await supabase
-          .from("room_images")
-          .select("*")
-          .in("room_id", roomsData.map(r => r.id))
-          .order("sort_order");
-
-        if (imagesError) throw imagesError;
-
-        const roomsWithImages = roomsData.map(room => ({
-          ...room,
-          images: imagesData?.filter(img => img.room_id === room.id) || [],
-        }));
-
-        setRooms(roomsWithImages);
-      }
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { rooms = [], isLoading: loading } = useContentData();
 
   if (loading) {
     return (
