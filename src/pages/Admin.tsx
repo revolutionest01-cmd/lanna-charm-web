@@ -32,6 +32,12 @@ const Admin = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const [stats, setStats] = useState({
+    rooms: 0,
+    menus: 0,
+    gallery: 0,
+    reviews: 0,
+  });
 
   // Check if user is admin
   useEffect(() => {
@@ -69,6 +75,33 @@ const Admin = () => {
     }
   }, [isAuthenticated, user, isLoading]);
 
+  // Fetch stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!isAdmin) return;
+
+      try {
+        const [roomsRes, menusRes, galleryRes, reviewsRes] = await Promise.all([
+          supabase.from('rooms').select('id', { count: 'exact', head: true }),
+          supabase.from('menus').select('id', { count: 'exact', head: true }),
+          supabase.from('gallery_images').select('id', { count: 'exact', head: true }),
+          supabase.from('reviews').select('id', { count: 'exact', head: true }),
+        ]);
+
+        setStats({
+          rooms: roomsRes.count || 0,
+          menus: menusRes.count || 0,
+          gallery: galleryRes.count || 0,
+          reviews: reviewsRes.count || 0,
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, [isAdmin]);
+
   // Redirect if not admin
   useEffect(() => {
     if (!checkingAdmin && !isLoading) {
@@ -99,11 +132,11 @@ const Admin = () => {
     return null;
   }
 
-  const stats = [
-    { label: language === 'th' ? 'ห้องพัก' : 'Rooms', value: '0', icon: Home, color: 'text-blue-600' },
-    { label: language === 'th' ? 'เมนู' : 'Menus', value: '0', icon: Coffee, color: 'text-green-600' },
-    { label: language === 'th' ? 'แกลเลอรี่' : 'Gallery', value: '0', icon: ImageIcon, color: 'text-purple-600' },
-    { label: language === 'th' ? 'รีวิว' : 'Reviews', value: '0', icon: MessageSquare, color: 'text-orange-600' },
+  const statsDisplay = [
+    { label: language === 'th' ? 'ห้องพัก' : 'Rooms', value: stats.rooms, icon: Home, color: 'text-blue-600' },
+    { label: language === 'th' ? 'เมนู' : 'Menus', value: stats.menus, icon: Coffee, color: 'text-green-600' },
+    { label: language === 'th' ? 'แกลเลอรี่' : 'Gallery', value: stats.gallery, icon: ImageIcon, color: 'text-purple-600' },
+    { label: language === 'th' ? 'รีวิว' : 'Reviews', value: stats.reviews, icon: MessageSquare, color: 'text-orange-600' },
   ];
 
   return (
@@ -154,7 +187,7 @@ const Admin = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
