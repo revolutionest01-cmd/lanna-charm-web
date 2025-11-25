@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
+import { RoomsManagement } from "@/components/admin/RoomsManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -204,13 +205,7 @@ const Admin = () => {
               </TabsContent>
 
               <TabsContent value="rooms" className="space-y-4">
-                <div className="text-center py-12 text-muted-foreground">
-                  <Home className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>{language === 'th' ? 'จัดการห้องพัก' : 'Manage Rooms'}</p>
-                  <p className="text-sm mt-2">
-                    {language === 'th' ? 'เร็วๆ นี้...' : 'Coming soon...'}
-                  </p>
-                </div>
+                <RoomsManagement />
               </TabsContent>
 
               <TabsContent value="menus" className="space-y-4">
