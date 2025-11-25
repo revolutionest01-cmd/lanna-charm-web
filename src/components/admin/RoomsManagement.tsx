@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +62,7 @@ interface RoomImage {
 
 export const RoomsManagement = () => {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -295,6 +297,9 @@ export const RoomsManagement = () => {
           language === "th" ? "เพิ่มห้องพักสำเร็จ" : "Room added successfully"
         );
       }
+
+      // Invalidate queries to refresh data on homepage
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
 
       setIsDialogOpen(false);
       resetForm();
