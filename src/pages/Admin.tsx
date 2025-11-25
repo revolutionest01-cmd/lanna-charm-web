@@ -23,6 +23,8 @@ import { HeroManagement } from "@/components/admin/HeroManagement";
 import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
 import { RoomsManagement } from "@/components/admin/RoomsManagement";
 import { MenusManagement } from "@/components/admin/MenusManagement";
+import { GalleryManagement } from "@/components/admin/GalleryManagement";
+import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -178,7 +180,7 @@ const Admin = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="hero" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6">
+              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6">
                 <TabsTrigger value="hero" className="gap-2">
                   <Image className="w-4 h-4" />
                   {language === 'th' ? 'Hero' : 'Hero'}
@@ -194,6 +196,14 @@ const Admin = () => {
                 <TabsTrigger value="menus" className="gap-2">
                   <Coffee className="w-4 h-4" />
                   {language === 'th' ? 'เมนู' : 'Menus'}
+                </TabsTrigger>
+                <TabsTrigger value="gallery" className="gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  {language === 'th' ? 'แกลเลอรี่' : 'Gallery'}
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  {language === 'th' ? 'รีวิว' : 'Reviews'}
                 </TabsTrigger>
               </TabsList>
 
@@ -211,6 +221,14 @@ const Admin = () => {
 
               <TabsContent value="menus" className="space-y-4">
                 <MenusManagement />
+              </TabsContent>
+
+              <TabsContent value="gallery" className="space-y-4">
+                <GalleryManagement />
+              </TabsContent>
+
+              <TabsContent value="reviews" className="space-y-4">
+                <ReviewsManagement />
               </TabsContent>
             </Tabs>
           </CardContent>
