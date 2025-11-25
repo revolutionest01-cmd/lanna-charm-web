@@ -31,7 +31,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/forum");
+      navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
@@ -74,7 +74,7 @@ const Auth = () => {
         toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
         // Add small delay to show success message before redirect
         setTimeout(() => {
-          navigate("/forum");
+          navigate("/");
         }, 800);
       } else {
         toast.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : 'Invalid email or password. Please check and try again.'));
@@ -132,7 +132,7 @@ const Auth = () => {
         toast.success(language === 'th' ? 'สมัครสมาชิกสำเร็จ' : 'Registration successful');
         // Add small delay to show success message before redirect
         setTimeout(() => {
-          navigate("/forum");
+          navigate("/");
         }, 800);
       } else {
         toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
