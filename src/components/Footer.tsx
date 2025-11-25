@@ -1,5 +1,6 @@
 import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import plernpingLogo from "@/assets/plernping-logo.png";
 
 const Footer = () => {
   const { language } = useLanguage();
@@ -8,6 +9,15 @@ const Footer = () => {
   return (
     <footer className="bg-card border-t border-border py-12">
       <div className="container mx-auto px-4">
+        {/* Logo Section */}
+        <div className="flex justify-center mb-8">
+          <img 
+            src={plernpingLogo} 
+            alt="Plern Ping Cafe Logo" 
+            className="h-24 w-auto opacity-90"
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Contact Info */}
           <div>

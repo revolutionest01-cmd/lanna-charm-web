@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageCircle, LogIn, LogOut, Shield } from "lucide-react";
+import { Menu, X, MessageCircle, LogIn, LogOut, Shield, Home, Info, Calendar, Bed, Coffee, Image, Star, Mail } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,28 +47,36 @@ const Header = () => {
   }, []);
   const navItems = [{
     label: t.home,
-    href: "/"
+    href: "/",
+    icon: Home
   }, {
     label: t.about,
-    href: "/#features"
+    href: "/#features",
+    icon: Info
   }, {
     label: t.eventsTitle,
-    href: "/#events"
+    href: "/#events",
+    icon: Calendar
   }, {
     label: t.rooms,
-    href: "/#rooms"
+    href: "/#rooms",
+    icon: Bed
   }, {
     label: t.menu,
-    href: "/#menu"
+    href: "/#menu",
+    icon: Coffee
   }, {
     label: t.gallery,
-    href: "/gallery"
+    href: "/gallery",
+    icon: Image
   }, {
     label: t.reviews,
-    href: "/reviews"
+    href: "/reviews",
+    icon: Star
   }, {
     label: t.contact,
-    href: "/#contact"
+    href: "/#contact",
+    icon: Mail
   }];
   const toggleLanguage = () => {
     setLanguage(language === 'th' ? 'en' : 'th');
@@ -83,13 +91,19 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map(item => <a 
-                key={item.label} 
-                href={item.href} 
-                className={`relative ${isScrolled ? "text-foreground hover:text-highlight" : "text-white hover:text-highlight"} font-medium drop-shadow-md transition-all duration-300 hover:scale-110 hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
-              >
-                {item.label}
-              </a>)}
+            {navItems.map(item => {
+              const IconComponent = item.icon;
+              return (
+                <a 
+                  key={item.label} 
+                  href={item.href} 
+                  className={`relative flex items-center gap-2 ${isScrolled ? "text-foreground hover:text-highlight" : "text-white hover:text-highlight"} font-medium drop-shadow-md transition-all duration-300 hover:scale-110 hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-highlight after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left`}
+                >
+                  <IconComponent size={16} />
+                  {item.label}
+                </a>
+              );
+            })}
           </nav>
 
           {/* Language Toggle & CTA Button */}
@@ -179,15 +193,21 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 animate-fade-in">
-            {navItems.map((item, index) => <a 
-                key={item.label} 
-                href={item.href} 
-                className={`${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] transition-all duration-300 font-medium transform hover:translate-x-2`}
-                style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item.label}
-              </a>)}
+            {navItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <a 
+                  key={item.label} 
+                  href={item.href} 
+                  className={`flex items-center gap-2 ${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] transition-all duration-300 font-medium transform hover:translate-x-2`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <IconComponent size={18} />
+                  {item.label}
+                </a>
+              );
+            })}
             
             {/* Mobile Auth Buttons */}
             <div className="flex flex-col gap-2 pt-2 border-t border-border">
