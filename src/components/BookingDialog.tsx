@@ -17,7 +17,6 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { toast } from "sonner";
-import ReCaptcha from "@/components/ReCaptcha";
 
 interface BookingDialogProps {
   children: React.ReactNode;
@@ -33,7 +32,6 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [open, setOpen] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,24 +41,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       return;
     }
 
-    // TEMPORARILY DISABLED - reCAPTCHA validation
-    // if (!recaptchaToken) {
-    //   toast.error(language === 'th' ? 'โปรดยืนยันว่าไม่ใช่บอท' : 'Please verify that you are not a robot');
-    //   return;
-    // }
-
     try {
-      // TEMPORARILY DISABLED - Verify reCAPTCHA with backend
-      // const { supabase } = await import("@/integrations/supabase/client");
-      // const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
-      //   body: { token: recaptchaToken }
-      // });
-
-      // if (error || !data?.success) {
-      //   toast.error(language === 'th' ? 'การยืนยัน reCAPTCHA ไม่สำเร็จ' : 'reCAPTCHA verification failed');
-      //   return;
-      // }
-
       // Mock booking submission
       toast.success(
         language === 'th' 
@@ -76,7 +57,6 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       setName("");
       setEmail("");
       setPhone("");
-      setRecaptchaToken(null);
     } catch (error) {
       console.error('Booking submission error:', error);
       toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
@@ -217,15 +197,6 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
               required
             />
           </div>
-
-          {/* TEMPORARILY DISABLED - reCAPTCHA */}
-          {/* <div className="pt-2">
-            <ReCaptcha 
-              onVerify={(token) => setRecaptchaToken(token)}
-              onExpired={() => setRecaptchaToken(null)}
-              onError={() => setRecaptchaToken(null)}
-            />
-          </div> */}
 
           <Button type="submit" variant="highlight" className="w-full" size="lg">
             {language === 'th' ? 'ยืนยันการจอง' : 'Confirm Booking'}
