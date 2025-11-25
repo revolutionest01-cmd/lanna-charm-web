@@ -14,16 +14,361 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      event_spaces: {
+        Row: {
+          created_at: string
+          description_en: string | null
+          description_th: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          keywords_en: string | null
+          keywords_th: string | null
+          title_en: string
+          title_th: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          keywords_en?: string | null
+          keywords_th?: string | null
+          title_en: string
+          title_th: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          keywords_en?: string | null
+          keywords_th?: string | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gallery_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          sort_order: number | null
+          title_en: string | null
+          title_th: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          sort_order?: number | null
+          title_en?: string | null
+          title_th?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          sort_order?: number | null
+          title_en?: string | null
+          title_th?: string | null
+        }
+        Relationships: []
+      }
+      hero_content: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean | null
+          subtitle_en: string | null
+          subtitle_th: string | null
+          title_en: string
+          title_th: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en: string
+          title_th: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      menu_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name_en: string
+          name_th: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_en: string
+          name_th: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_en?: string
+          name_th?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      menus: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description_en: string | null
+          description_th: string | null
+          icon_url: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_recommended: boolean | null
+          name_en: string
+          name_th: string
+          price: number
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          icon_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_recommended?: boolean | null
+          name_en: string
+          name_th: string
+          price: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          icon_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_recommended?: boolean | null
+          name_en?: string
+          name_th?: string
+          price?: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menus_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          customer_name: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          rating: number
+          review_text_en: string
+          review_text_th: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          rating: number
+          review_text_en: string
+          review_text_th: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          rating?: number
+          review_text_en?: string
+          review_text_th?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      room_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          room_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          room_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          room_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_images_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          description_en: string | null
+          description_th: string | null
+          id: string
+          is_active: boolean | null
+          name_en: string
+          name_th: string
+          price: number
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en: string
+          name_th: string
+          price: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en?: string
+          name_th?: string
+          price?: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "staff" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +495,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "staff", "user"],
+    },
   },
 } as const
