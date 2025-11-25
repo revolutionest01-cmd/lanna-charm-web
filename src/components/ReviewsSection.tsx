@@ -6,6 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useContentData } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { ReviewSkeleton } from "@/components/SkeletonCard";
 
 type Review = {
   id: string;
@@ -20,6 +21,28 @@ const ReviewsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { reviews = [], isLoading: loading } = useContentData();
+
+  if (loading) {
+    return (
+      <section id="reviews" className="py-20 bg-gradient-to-b from-background to-secondary/20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
+              {t.reviewsTitle}
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              {t.reviewsSubtitle}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(3)].map((_, i) => (
+              <ReviewSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="reviews" className="py-20 bg-gradient-to-b from-background to-secondary/20">

@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Presentation, Utensils, Wifi, Loader2 } from "lucide-react";
+import { Presentation, Utensils, Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useContentData } from "@/hooks/useContentData";
+import { EventSkeleton } from "@/components/SkeletonCard";
 
 interface EventSpace {
   id: string;
@@ -25,8 +26,18 @@ const EventsSection = () => {
     return (
       <section id="events" className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              {t.eventsTitle}
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              {t.eventsSubtitle}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[...Array(2)].map((_, i) => (
+              <EventSkeleton key={i} />
+            ))}
           </div>
         </div>
       </section>

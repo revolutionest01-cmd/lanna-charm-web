@@ -1,6 +1,6 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wifi, Loader2 } from "lucide-react";
+import { Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import {
   Carousel,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { useContentData } from "@/hooks/useContentData";
+import { RoomSkeleton } from "@/components/SkeletonCard";
 
 interface Room {
   id: string;
@@ -39,8 +40,18 @@ const RoomsSection = () => {
     return (
       <section id="rooms" className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif">
+              {t.roomsTitle}
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t.roomsSubtitle}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(3)].map((_, i) => (
+              <RoomSkeleton key={i} />
+            ))}
           </div>
         </div>
       </section>
