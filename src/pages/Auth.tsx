@@ -67,14 +67,12 @@ const Auth = () => {
       // }
 
       const result = await login(loginForm.email, loginForm.password);
-      
-      setIsLoading(false);
 
       if (result.success) {
         toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
         navigate("/forum");
       } else {
-        toast.error(result.error || (language === 'th' ? 'เข้าสู่ระบบไม่สำเร็จ' : 'Login failed'));
+        toast.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : 'Invalid email or password. Please check and try again.'));
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -83,6 +81,8 @@ const Auth = () => {
       } else {
         toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
       }
+    } finally {
+      // Always reset loading state
       setIsLoading(false);
     }
   };
@@ -122,8 +122,6 @@ const Auth = () => {
       // }
 
       const result = await register(registerForm.name, registerForm.email, registerForm.password);
-      
-      setIsLoading(false);
 
       if (result.success) {
         toast.success(language === 'th' ? 'สมัครสมาชิกสำเร็จ' : 'Registration successful');
@@ -138,6 +136,8 @@ const Auth = () => {
       } else {
         toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
       }
+    } finally {
+      // Always reset loading state
       setIsLoading(false);
     }
   };
