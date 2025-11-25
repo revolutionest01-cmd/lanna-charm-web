@@ -248,13 +248,25 @@ export const ReviewsManagement = () => {
     try {
       // Get the review to delete its image
       const review = reviews.find(r => r.id === id);
+      
+      // Try to delete image from storage if it exists
       if (review?.image_url) {
-        const fileName = review.image_url.split("/").pop();
-        if (fileName) {
-          await supabase.storage.from("reviews").remove([fileName]);
+        try {
+          // Check if it's a Supabase storage URL
+          if (review.image_url.includes('supabase.co/storage')) {
+            const fileName = review.image_url.split("/").pop();
+            if (fileName) {
+              await supabase.storage.from("reviews").remove([fileName]);
+            }
+          }
+          // If it's not a Supabase URL (e.g., mockup data with external URLs), skip storage deletion
+        } catch (storageError) {
+          console.warn("Could not delete image from storage:", storageError);
+          // Continue with database deletion even if image deletion fails
         }
       }
 
+      // Delete the review from database
       const { error } = await supabase.from("reviews").delete().eq("id", id);
       if (error) throw error;
 
