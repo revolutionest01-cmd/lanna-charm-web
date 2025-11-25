@@ -109,7 +109,7 @@ export default {
   		},
 		fontFamily: {
 			sans: [
-				'Inter',
+				'Noto Sans Thai',
 				'ui-sans-serif',
 				'system-ui',
 				'-apple-system',
@@ -121,7 +121,7 @@ export default {
 				'sans-serif'
 			],
 			serif: [
-				'Playfair Display',
+				'Noto Sans Thai',
 				'ui-serif',
 				'Georgia',
 				'Cambria',
