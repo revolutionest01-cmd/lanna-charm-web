@@ -5,6 +5,7 @@ import { useContentData } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { GallerySkeleton } from "@/components/SkeletonCard";
 
 type GalleryImage = {
   id: string;
@@ -17,6 +18,24 @@ const GallerySection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { gallery: images = [], isLoading: loading } = useContentData();
+
+  if (loading) {
+    return (
+      <section id="gallery" className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif">
+              {t.galleryTitle}
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t.gallerySubtitle}
+            </p>
+          </div>
+          <GallerySkeleton />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="gallery" className="py-20 bg-background">
