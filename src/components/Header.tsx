@@ -188,6 +188,69 @@ const Header = () => {
               >
                 {item.label}
               </a>)}
+            
+            {/* Mobile Auth Buttons */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-border">
+              {!isForumPage && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    navigate('/forum');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="justify-start"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {t.forum}
+                </Button>
+              )}
+              
+              {isAuthenticated && user ? (
+                <>
+                  {isAdmin && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        navigate('/admin');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="justify-start gap-2"
+                    >
+                      <Shield className="h-4 w-4" />
+                      {language === 'th' ? 'Admin Panel' : 'Admin Panel'}
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="justify-start gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    navigate('/auth');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="justify-start gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                </Button>
+              )}
+            </div>
+            
             <div className="flex gap-2">
               <div className="inline-flex items-center bg-secondary rounded-full p-1 gap-1">
                 <button
