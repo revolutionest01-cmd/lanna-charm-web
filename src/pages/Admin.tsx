@@ -22,6 +22,7 @@ import logo from "@/assets/logo.png";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
 import { RoomsManagement } from "@/components/admin/RoomsManagement";
+import { MenusManagement } from "@/components/admin/MenusManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -209,13 +210,7 @@ const Admin = () => {
               </TabsContent>
 
               <TabsContent value="menus" className="space-y-4">
-                <div className="text-center py-12 text-muted-foreground">
-                  <Coffee className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>{language === 'th' ? 'จัดการเมนู' : 'Manage Menus'}</p>
-                  <p className="text-sm mt-2">
-                    {language === 'th' ? 'เร็วๆ นี้...' : 'Coming soon...'}
-                  </p>
-                </div>
+                <MenusManagement />
               </TabsContent>
             </Tabs>
           </CardContent>
