@@ -30,9 +30,10 @@ export const GalleryManagement = () => {
   const [formData, setFormData] = useState({
     title_en: "",
     title_th: "",
-    file: null as File | null,
+    files: [] as File[],
   });
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     fetchGalleryImages();
@@ -56,64 +57,102 @@ export const GalleryManagement = () => {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    handleFiles(files);
+  };
+
+  const handleFiles = (files: File[]) => {
+    const validFiles: File[] = [];
+    const previews: string[] = [];
+
+    files.forEach(file => {
       if (!file.type.startsWith("image/")) {
-        toast.error(language === "th" ? "กรุณาเลือกไฟล์รูปภาพเท่านั้น" : "Please select an image file");
+        toast.error(`${file.name}: ${language === "th" ? "กรุณาเลือกไฟล์รูปภาพเท่านั้น" : "Please select an image file"}`);
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error(language === "th" ? "ขนาดไฟล์ต้องไม่เกิน 5MB" : "File size must not exceed 5MB");
+        toast.error(`${file.name}: ${language === "th" ? "ขนาดไฟล์ต้องไม่เกิน 5MB" : "File size must not exceed 5MB"}`);
         return;
       }
-      setFormData({ ...formData, file });
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
+    });
+
+    setFormData({ ...formData, files: [...formData.files, ...validFiles] });
+    setPreviewUrls([...previewUrls, ...previews]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = formData.files.filter((_, i) => i !== index);
+    const newPreviews = previewUrls.filter((_, i) => i !== index);
+    setFormData({ ...formData, files: newFiles });
+    setPreviewUrls(newPreviews);
   };
 
   const handleUpload = async () => {
     try {
-      gallerySchema.parse(formData);
-      
-      if (!formData.file) {
-        toast.error(language === "th" ? "กรุณาเลือกรูปภาพ" : "Please select an image");
+      if (formData.files.length === 0) {
+        toast.error(language === "th" ? "กรุณาเลือกรูปภาพอย่างน้อย 1 รูป" : "Please select at least 1 image");
         return;
       }
 
       setUploading(true);
 
-      // Upload image
-      const fileName = `${Date.now()}_${formData.file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("gallery")
-        .upload(fileName, formData.file);
+      // Upload all images
+      for (let i = 0; i < formData.files.length; i++) {
+        const file = formData.files[i];
+        const fileName = `${Date.now()}_${i}_${file.name}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("gallery")
+          .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) {
+          toast.error(`${file.name}: ${uploadError.message}`);
+          continue;
+        }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(fileName);
+        // Get public URL
+        const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(fileName);
 
-      // Insert into database
-      const { error: dbError } = await supabase.from("gallery_images").insert({
-        image_url: urlData.publicUrl,
-        title_en: formData.title_en,
-        title_th: formData.title_th,
-        sort_order: images.length,
-      });
+        // Insert into database
+        const { error: dbError } = await supabase.from("gallery_images").insert({
+          image_url: urlData.publicUrl,
+          title_en: formData.title_en || `Gallery Image ${i + 1}`,
+          title_th: formData.title_th || `รูปภาพแกลเลอรี่ ${i + 1}`,
+          sort_order: images.length + i,
+        });
 
-      if (dbError) throw dbError;
+        if (dbError) {
+          toast.error(`${file.name}: ${dbError.message}`);
+          continue;
+        }
+      }
 
-      toast.success(language === "th" ? "เพิ่มรูปภาพสำเร็จ" : "Image added successfully");
-      setFormData({ title_en: "", title_th: "", file: null });
-      setPreviewUrl(null);
+      toast.success(language === "th" ? `เพิ่มรูปภาพสำเร็จ ${formData.files.length} รูป` : `${formData.files.length} images added successfully`);
+      setFormData({ title_en: "", title_th: "", files: [] });
+      setPreviewUrls([]);
       fetchGalleryImages();
     } catch (error: any) {
-      console.error("Error uploading image:", error);
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error(language === "th" ? "เกิดข้อผิดพลาดในการอัพโหลด" : "Error uploading image");
-      }
+      console.error("Error uploading images:", error);
+      toast.error(language === "th" ? "เกิดข้อผิดพลาดในการอัพโหลด" : "Error uploading images");
     } finally {
       setUploading(false);
     }
@@ -178,31 +217,65 @@ export const GalleryManagement = () => {
           </div>
 
           <div className="mt-4">
-            <Label>{language === "th" ? "รูปภาพ" : "Image"}</Label>
-            <div className="flex items-center gap-4 mt-2">
+            <Label>{language === "th" ? "รูปภาพ (ลากวางหรือคลิกเพื่อเลือกหลายไฟล์)" : "Images (Drag & drop or click to select multiple files)"}</Label>
+            
+            {/* Drag & Drop Zone */}
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                isDragging 
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground mb-2">
+                {language === "th" 
+                  ? "ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก" 
+                  : "Drag files here or click to select"}
+              </p>
               <Input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleFileSelect}
-                className="flex-1"
+                className="hidden"
+                id="gallery-upload"
               />
-              {previewUrl && (
-                <div className="relative">
-                  <img src={previewUrl} alt="Preview" className="w-20 h-20 object-cover rounded" />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 w-6 h-6"
-                    onClick={() => {
-                      setPreviewUrl(null);
-                      setFormData({ ...formData, file: null });
-                    }}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
+              <label htmlFor="gallery-upload">
+                <Button type="button" variant="outline" className="cursor-pointer" asChild>
+                  <span>{language === "th" ? "เลือกไฟล์" : "Select Files"}</span>
+                </Button>
+              </label>
             </div>
+
+            {/* Preview Grid */}
+            {previewUrls.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 md:grid-cols-5 gap-4">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img 
+                      src={url} 
+                      alt={`Preview ${index + 1}`} 
+                      className="w-full h-24 object-cover rounded border border-border" 
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                    <p className="text-xs text-center mt-1 text-muted-foreground truncate">
+                      {formData.files[index]?.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <Button onClick={handleUpload} disabled={uploading} className="mt-4">
