@@ -1,12 +1,66 @@
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Presentation, Utensils, Wifi } from "lucide-react";
-import eventsImage from "@/assets/events-conference.jpg";
+import { Presentation, Utensils, Wifi, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { supabase } from "@/integrations/supabase/client";
+
+interface EventSpace {
+  id: string;
+  title_th: string;
+  title_en: string;
+  description_th: string | null;
+  description_en: string | null;
+  image_url: string | null;
+  keywords_th: string | null;
+  keywords_en: string | null;
+  is_active: boolean | null;
+}
 
 const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const [eventSpace, setEventSpace] = useState<EventSpace | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEventSpace();
+  }, []);
+
+  const fetchEventSpace = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("event_spaces")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      setEventSpace(data);
+    } catch (error) {
+      console.error("Error fetching event space:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section id="events" className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const title = language === "th" ? eventSpace?.title_th : eventSpace?.title_en;
+  const description = language === "th" ? eventSpace?.description_th : eventSpace?.description_en;
+  const imageUrl = eventSpace?.image_url;
 
   return (
     <section id="events" className="py-20 bg-background">
@@ -23,18 +77,18 @@ const EventsSection = () => {
         <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
           <div className="animate-fade-in">
             <img
-              src={eventsImage}
-              alt="Conference Room"
+              src={imageUrl || "/placeholder.svg"}
+              alt={title || "Conference Room"}
               className="rounded-lg shadow-lg w-full h-[400px] object-cover"
             />
           </div>
 
           <div className="space-y-6 animate-fade-in">
             <h3 className="text-3xl font-bold text-foreground">
-              {t.eventsMainTitle}
+              {title || t.eventsMainTitle}
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              {t.eventsMainDesc}
+              {description || t.eventsMainDesc}
             </p>
 
             <div className="space-y-4">

@@ -92,6 +92,8 @@ export const MenusManagement = () => {
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [iconPreview, setIconPreview] = useState<string>("");
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [isDraggingIcon, setIsDraggingIcon] = useState(false);
 
   const categoryForm = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
@@ -247,6 +249,74 @@ export const MenusManagement = () => {
 
   const handleIconSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(
+        language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
+      );
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error(
+        language === "th" ? "ไฟล์ไอคอนต้องมีขนาดไม่เกิน 2MB" : "Icon file must not exceed 2MB"
+      );
+      return;
+    }
+
+    setIconFile(file);
+    setIconPreview(URL.createObjectURL(file));
+  };
+
+  const handleImageDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingImage(true);
+  };
+
+  const handleImageDragLeave = () => {
+    setIsDraggingImage(false);
+  };
+
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingImage(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(
+        language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file"
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(
+        language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB"
+      );
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleIconDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingIcon(true);
+  };
+
+  const handleIconDragLeave = () => {
+    setIsDraggingIcon(false);
+  };
+
+  const handleIconDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingIcon(false);
+    
+    const file = e.dataTransfer.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -675,19 +745,58 @@ export const MenusManagement = () => {
                     {/* Image Upload */}
                     <div className="space-y-2">
                       <Label>{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageSelect}
-                        disabled={loading || uploadingImage}
-                      />
+                      <div
+                        onDragOver={handleImageDragOver}
+                        onDragLeave={handleImageDragLeave}
+                        onDrop={handleImageDrop}
+                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                          isDraggingImage
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          disabled={loading || uploadingImage}
+                          className="hidden"
+                          id="menu-image-upload"
+                        />
+                        <label
+                          htmlFor="menu-image-upload"
+                          className="cursor-pointer flex flex-col items-center"
+                        >
+                          <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            {language === "th"
+                              ? "คลิกหรือลากไฟล์มาวาง"
+                              : "Click or drag file here"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "Max 5MB"}
+                          </p>
+                        </label>
+                      </div>
                       {imagePreview && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative">
                           <img
                             src={imagePreview}
                             alt="Menu preview"
                             className="w-full h-48 object-cover rounded-lg"
                           />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={() => {
+                              setImageFile(null);
+                              setImagePreview("");
+                            }}
+                          >
+                            {language === "th" ? "ลบ" : "Remove"}
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -695,19 +804,58 @@ export const MenusManagement = () => {
                     {/* Icon Upload */}
                     <div className="space-y-2">
                       <Label>{language === "th" ? "ไอคอนเมนู" : "Menu Icon"}</Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleIconSelect}
-                        disabled={loading || uploadingIcon}
-                      />
+                      <div
+                        onDragOver={handleIconDragOver}
+                        onDragLeave={handleIconDragLeave}
+                        onDrop={handleIconDrop}
+                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                          isDraggingIcon
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleIconSelect}
+                          disabled={loading || uploadingIcon}
+                          className="hidden"
+                          id="menu-icon-upload"
+                        />
+                        <label
+                          htmlFor="menu-icon-upload"
+                          className="cursor-pointer flex flex-col items-center"
+                        >
+                          <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            {language === "th"
+                              ? "คลิกหรือลากไฟล์มาวาง"
+                              : "Click or drag file here"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 2MB" : "Max 2MB"}
+                          </p>
+                        </label>
+                      </div>
                       {iconPreview && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative inline-block">
                           <img
                             src={iconPreview}
                             alt="Icon preview"
                             className="w-16 h-16 object-cover rounded-lg"
                           />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                            onClick={() => {
+                              setIconFile(null);
+                              setIconPreview("");
+                            }}
+                          >
+                            ×
+                          </Button>
                         </div>
                       )}
                     </div>
