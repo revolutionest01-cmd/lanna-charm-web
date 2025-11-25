@@ -47,28 +47,28 @@ const Header = () => {
   }, []);
   const navItems = [{
     label: t.home,
-    href: "#home"
+    href: "/"
   }, {
     label: t.about,
-    href: "#features"
+    href: "/#features"
   }, {
     label: t.eventsTitle,
-    href: "#events"
+    href: "/#events"
   }, {
     label: t.rooms,
-    href: "#rooms"
+    href: "/#rooms"
   }, {
     label: t.menu,
-    href: "#menu"
+    href: "/#menu"
   }, {
     label: t.gallery,
-    href: "#gallery"
+    href: "/gallery"
   }, {
     label: t.reviews,
-    href: "#reviews"
+    href: "/reviews"
   }, {
     label: t.contact,
-    href: "#contact"
+    href: "/#contact"
   }];
   const toggleLanguage = () => {
     setLanguage(language === 'th' ? 'en' : 'th');
