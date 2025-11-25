@@ -1,10 +1,9 @@
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { useContentData } from "@/hooks/useContentData";
 
 type Review = {
   id: string;
@@ -18,29 +17,7 @@ type Review = {
 const ReviewsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("reviews")
-          .select("*")
-          .eq("is_active", true)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setReviews(data || []);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReviews();
-  }, []);
+  const { reviews = [], isLoading: loading } = useContentData();
 
   return (
     <section id="reviews" className="py-20 bg-gradient-to-b from-background to-secondary/20">
