@@ -15,7 +15,8 @@ import {
   ImageIcon, 
   MessageSquare,
   Loader2,
-  Shield
+  Shield,
+  Phone
 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -25,6 +26,7 @@ import { RoomsManagement } from "@/components/admin/RoomsManagement";
 import { MenusManagement } from "@/components/admin/MenusManagement";
 import { GalleryManagement } from "@/components/admin/GalleryManagement";
 import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
+import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -216,7 +218,7 @@ const Admin = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="hero" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6">
+              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-6">
                 <TabsTrigger value="hero" className="gap-2">
                   <Image className="w-4 h-4" />
                   {language === 'th' ? 'Hero' : 'Hero'}
@@ -240,6 +242,10 @@ const Admin = () => {
                 <TabsTrigger value="reviews" className="gap-2">
                   <MessageSquare className="w-4 h-4" />
                   {language === 'th' ? 'รีวิว' : 'Reviews'}
+                </TabsTrigger>
+                <TabsTrigger value="business" className="gap-2">
+                  <Phone className="w-4 h-4" />
+                  {language === 'th' ? 'ข้อมูลธุรกิจ' : 'Business Info'}
                 </TabsTrigger>
               </TabsList>
 
@@ -265,6 +271,10 @@ const Admin = () => {
 
               <TabsContent value="reviews" className="space-y-4">
                 <ReviewsManagement />
+              </TabsContent>
+
+              <TabsContent value="business" className="space-y-4">
+                <BusinessInfoManagement />
               </TabsContent>
             </Tabs>
           </CardContent>
