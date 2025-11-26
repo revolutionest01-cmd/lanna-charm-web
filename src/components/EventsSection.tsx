@@ -65,7 +65,7 @@ const EventsSection = () => {
             <img
               src={imageUrl || "/placeholder.svg"}
               alt={title || "Conference Room"}
-              className="rounded-lg shadow-lg w-full h-[400px] object-cover"
+              className="rounded-lg shadow-lg w-full h-[250px] sm:h-[300px] md:h-[400px] object-cover"
             />
           </div>
 
