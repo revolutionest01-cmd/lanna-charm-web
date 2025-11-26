@@ -36,7 +36,7 @@ const FloatingChatButton = () => {
                 </TooltipContent>
               </Tooltip>
 
-              {/* Ask Price Button */}
+              {/* Inquire Information Button */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -50,16 +50,16 @@ const FloatingChatButton = () => {
                   >
                     <DollarSign size={20} />
                     <span className="hidden sm:inline">
-                      {language === 'th' ? 'ถามราคา' : 'Ask Price'}
+                      {language === 'th' ? 'สอบถามข้อมูลเบื้องต้น' : 'Inquire Information'}
                     </span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>{language === 'th' ? 'สอบถามราคา' : 'Inquire about pricing'}</p>
+                  <p>{language === 'th' ? 'สอบถามข้อมูลเบื้องต้น' : 'Inquire basic information'}</p>
                 </TooltipContent>
               </Tooltip>
 
-              {/* Chat with Bot Button */}
+              {/* Plernping AI Button */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -73,12 +73,12 @@ const FloatingChatButton = () => {
                   >
                     <MessageSquare size={20} />
                     <span className="hidden sm:inline">
-                      {language === 'th' ? 'แชทกับบอท' : 'Chat with Bot'}
+                      Plernping AI
                     </span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>{language === 'th' ? 'เริ่มแชทกับบอท' : 'Start chatting with bot'}</p>
+                  <p>Plernping AI</p>
                 </TooltipContent>
               </Tooltip>
             </div>
