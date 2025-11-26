@@ -2,3 +2,6 @@ project_id = "gomjfnkzhxqfmbwmaphz"
 
 [functions.pricing-chat]
 verify_jwt = false
+
+[functions.quick-info]
+verify_jwt = false

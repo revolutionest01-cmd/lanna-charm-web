@@ -47,6 +47,63 @@ export type Database = {
         }
         Relationships: []
       }
+      business_info: {
+        Row: {
+          address_en: string | null
+          address_th: string | null
+          business_name_en: string
+          business_name_th: string
+          created_at: string
+          email: string | null
+          google_maps_url: string | null
+          id: string
+          instagram: string | null
+          is_active: boolean | null
+          line_id: string | null
+          opening_hours_en: string | null
+          opening_hours_th: string | null
+          phone_primary: string
+          phone_secondary: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_en?: string | null
+          address_th?: string | null
+          business_name_en: string
+          business_name_th: string
+          created_at?: string
+          email?: string | null
+          google_maps_url?: string | null
+          id?: string
+          instagram?: string | null
+          is_active?: boolean | null
+          line_id?: string | null
+          opening_hours_en?: string | null
+          opening_hours_th?: string | null
+          phone_primary: string
+          phone_secondary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_en?: string | null
+          address_th?: string | null
+          business_name_en?: string
+          business_name_th?: string
+          created_at?: string
+          email?: string | null
+          google_maps_url?: string | null
+          id?: string
+          instagram?: string | null
+          is_active?: boolean | null
+          line_id?: string | null
+          opening_hours_en?: string | null
+          opening_hours_th?: string | null
+          phone_primary?: string
+          phone_secondary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_spaces: {
         Row: {
           created_at: string
