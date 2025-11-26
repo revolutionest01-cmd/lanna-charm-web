@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/hooks/useLanguage";
 import PricingChatbot from "./PricingChatbot";
+import QuickInfoPopup from "./QuickInfoPopup";
 
 const FloatingChatButton = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isQuickInfoOpen, setIsQuickInfoOpen] = useState(false);
   const { language } = useLanguage();
 
   return (
@@ -44,7 +46,7 @@ const FloatingChatButton = () => {
                     variant="highlight"
                     className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2"
                     onClick={() => {
-                      setIsChatOpen(true);
+                      setIsQuickInfoOpen(true);
                       setIsExpanded(false);
                     }}
                   >
@@ -108,6 +110,7 @@ const FloatingChatButton = () => {
       </TooltipProvider>
 
       <PricingChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <QuickInfoPopup isOpen={isQuickInfoOpen} onClose={() => setIsQuickInfoOpen(false)} />
     </>
   );
 };
