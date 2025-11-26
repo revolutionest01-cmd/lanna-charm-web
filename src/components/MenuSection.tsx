@@ -179,28 +179,30 @@ const MenuSection = () => {
                           className="border-border hover:border-primary transition-colors animate-fade-in"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <CardContent className="p-6 flex justify-between items-center">
-                            <div className="flex-1 flex items-center gap-4">
-                              {item.icon_url && (
-                                <img
-                                  src={item.icon_url}
-                                  alt="icon"
-                                  className="w-8 h-8 object-contain flex-shrink-0"
-                                />
-                              )}
-                              <div className="flex-1">
-                                <h3 className="text-xl font-semibold text-foreground mb-1">
-                                  {language === "th" ? item.name_th : item.name_en}
-                                </h3>
-                                {(item.description_th || item.description_en) && (
-                                  <p className="text-muted-foreground">
-                                    {language === "th" ? item.description_th : item.description_en}
-                                  </p>
+                          <CardContent className="p-4 md:p-6">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                              <div className="flex-1 flex items-start gap-3 md:gap-4 min-w-0">
+                                {item.icon_url && (
+                                  <img
+                                    src={item.icon_url}
+                                    alt="icon"
+                                    className="w-6 h-6 md:w-8 md:h-8 object-contain flex-shrink-0 mt-1"
+                                  />
                                 )}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-lg md:text-xl font-semibold text-foreground mb-1 break-words">
+                                    {language === "th" ? item.name_th : item.name_en}
+                                  </h3>
+                                  {(item.description_th || item.description_en) && (
+                                    <p className="text-sm md:text-base text-muted-foreground break-words">
+                                      {language === "th" ? item.description_th : item.description_en}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <div className="text-2xl font-bold text-primary ml-4 flex-shrink-0">
-                              ฿{item.price}
+                              <div className="text-xl md:text-2xl font-bold text-primary flex-shrink-0 self-start sm:self-center">
+                                ฿{item.price}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
