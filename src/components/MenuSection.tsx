@@ -153,20 +153,21 @@ const MenuSection = () => {
         <div className="max-w-4xl mx-auto">
           {categories.length > 0 ? (
             <Tabs defaultValue={categories[0]?.id} className="w-full">
-              <TabsList 
-                className={`grid w-full mb-8 ${
-                  categories.length === 1 ? 'grid-cols-1' :
-                  categories.length === 2 ? 'grid-cols-2' :
-                  categories.length === 3 ? 'grid-cols-3' :
-                  'grid-cols-4'
-                }`}
-              >
-                {categories.map((cat) => (
-                  <TabsTrigger key={cat.id} value={cat.id} className="text-lg">
-                    {language === "th" ? cat.name_th : cat.name_en}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <div className="overflow-x-auto mb-8 -mx-4 px-4">
+                <TabsList 
+                  className="inline-flex w-auto min-w-full justify-start md:grid md:w-full md:grid-cols-2 lg:grid-cols-4 gap-2"
+                >
+                  {categories.map((cat) => (
+                    <TabsTrigger 
+                      key={cat.id} 
+                      value={cat.id} 
+                      className="text-sm md:text-base lg:text-lg whitespace-nowrap flex-shrink-0"
+                    >
+                      {language === "th" ? cat.name_th : cat.name_en}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
 
               {categories.map((cat) => {
                 const categoryMenus = getMenusByCategory(cat.id);
