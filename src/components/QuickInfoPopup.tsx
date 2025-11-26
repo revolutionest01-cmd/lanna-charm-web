@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Phone, Mail, MapPin, Clock, DollarSign, Instagram, MessageCircle } from "lucide-react";
+import { X, Phone, Mail, MapPin, Clock, DollarSign, Instagram, MessageCircle, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -71,141 +71,202 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="relative w-full max-w-2xl max-h-[80vh] bg-background/95 backdrop-blur">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-2xl font-bold text-foreground">
-            {language === 'th' ? 'ข้อมูลเบื้องต้น' : 'Quick Information'}
-          </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+      <Card className="relative w-full max-w-2xl max-h-[85vh] bg-background rounded-3xl shadow-2xl border-0 overflow-hidden animate-scale-in">
+        {/* Header with gradient background */}
+        <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-primary/90 to-primary">
+          <div className="flex items-center gap-3">
+            <div className="bg-background/20 p-2 rounded-full backdrop-blur-sm">
+              <MessageCircle className="w-5 h-5 text-background" />
+            </div>
+            <h2 className="text-xl font-bold text-background">
+              {language === 'th' ? 'ข้อมูลเบื้องต้น' : 'Quick Information'}
+            </h2>
+          </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="hover:bg-accent"
+            className="hover:bg-background/20 text-background rounded-full h-9 w-9"
           >
-            <X size={24} />
+            <X size={20} />
           </Button>
         </div>
 
-        <ScrollArea className="h-full max-h-[calc(80vh-5rem)]">
-          <div className="p-6 space-y-6">
+        <ScrollArea className="h-full max-h-[calc(85vh-5rem)]">
+          <div className="p-6 space-y-4">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <div className="flex items-center justify-center py-16">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'th' ? 'กำลังโหลด...' : 'Loading...'}
+                  </p>
+                </div>
               </div>
             ) : data ? (
               <>
-                {/* Business Info */}
+                {/* Business Name Card */}
                 {data.businessInfo && (
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-bold text-primary">
+                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
+                    <h3 className="text-xl font-bold text-primary mb-1">
                       {data.businessInfo.name}
                     </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'th' ? 'ยินดีต้อนรับ' : 'Welcome'}
+                    </p>
+                  </div>
+                )}
 
+                {/* Contact Information Cards */}
+                {data.businessInfo && (
+                  <div className="space-y-3">
                     {/* Opening Hours */}
                     {data.businessInfo.openingHours && (
-                      <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {language === 'th' ? 'เวลาทำการ' : 'Opening Hours'}
-                          </p>
-                          <p className="text-muted-foreground">{data.businessInfo.openingHours}</p>
+                      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2.5 rounded-xl">
+                            <Clock className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground text-sm mb-1">
+                              {language === 'th' ? 'เวลาทำการ' : 'Opening Hours'}
+                            </p>
+                            <p className="text-muted-foreground text-sm">{data.businessInfo.openingHours}</p>
+                          </div>
                         </div>
                       </div>
                     )}
 
-                    {/* Contact Info */}
-                    <div className="flex items-start gap-3">
-                      <Phone className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {language === 'th' ? 'เบอร์โทรศัพท์' : 'Phone'}
-                        </p>
-                        <p className="text-muted-foreground">{data.businessInfo.phone}</p>
-                        {data.businessInfo.phoneSecondary && (
-                          <p className="text-muted-foreground">{data.businessInfo.phoneSecondary}</p>
-                        )}
+                    {/* Phone */}
+                    <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2.5 rounded-xl">
+                          <Phone className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground text-sm mb-1">
+                            {language === 'th' ? 'เบอร์โทรศัพท์' : 'Phone'}
+                          </p>
+                          <a href={`tel:${data.businessInfo.phone}`} className="text-muted-foreground hover:text-primary transition-colors text-sm block">
+                            {data.businessInfo.phone}
+                          </a>
+                          {data.businessInfo.phoneSecondary && (
+                            <a href={`tel:${data.businessInfo.phoneSecondary}`} className="text-muted-foreground hover:text-primary transition-colors text-sm block">
+                              {data.businessInfo.phoneSecondary}
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     {/* Email */}
                     {data.businessInfo.email && (
-                      <div className="flex items-start gap-3">
-                        <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {language === 'th' ? 'อีเมล' : 'Email'}
-                          </p>
-                          <p className="text-muted-foreground">{data.businessInfo.email}</p>
+                      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2.5 rounded-xl">
+                            <Mail className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground text-sm mb-1">
+                              {language === 'th' ? 'อีเมล' : 'Email'}
+                            </p>
+                            <a href={`mailto:${data.businessInfo.email}`} className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                              {data.businessInfo.email}
+                            </a>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {/* LINE */}
                     {data.businessInfo.line && (
-                      <div className="flex items-start gap-3">
-                        <MessageCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-semibold text-foreground">LINE</p>
-                          <p className="text-muted-foreground">{data.businessInfo.line}</p>
+                      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2.5 rounded-xl">
+                            <MessageCircle className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground text-sm mb-1">LINE</p>
+                            <p className="text-muted-foreground text-sm">{data.businessInfo.line}</p>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {/* Instagram */}
                     {data.businessInfo.instagram && (
-                      <div className="flex items-start gap-3">
-                        <Instagram className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-semibold text-foreground">Instagram</p>
-                          <p className="text-muted-foreground">{data.businessInfo.instagram}</p>
+                      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2.5 rounded-xl">
+                            <Instagram className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground text-sm mb-1">Instagram</p>
+                            <a 
+                              href={`https://instagram.com/${data.businessInfo.instagram.replace('@', '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                            >
+                              {data.businessInfo.instagram}
+                            </a>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {/* Address */}
                     {data.businessInfo.address && (
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="font-semibold text-foreground">
-                            {language === 'th' ? 'ที่อยู่' : 'Address'}
-                          </p>
-                          <p className="text-muted-foreground">{data.businessInfo.address}</p>
-                          {data.businessInfo.googleMaps && (
-                            <a
-                              href={data.businessInfo.googleMaps}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline text-sm mt-1 inline-block"
-                            >
-                              {language === 'th' ? 'ดูแผนที่' : 'View Map'} →
-                            </a>
-                          )}
+                      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2.5 rounded-xl">
+                            <MapPin className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground text-sm mb-1">
+                              {language === 'th' ? 'ที่อยู่' : 'Address'}
+                            </p>
+                            <p className="text-muted-foreground text-sm mb-2">{data.businessInfo.address}</p>
+                            {data.businessInfo.googleMaps && (
+                              <a
+                                href={data.businessInfo.googleMaps}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+                              >
+                                {language === 'th' ? 'ดูแผนที่' : 'View Map'}
+                                <span>→</span>
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Room Pricing */}
+                {/* Room Pricing - Highlighted */}
                 {data.minRoomPrice && (
-                  <div className="p-4 rounded-lg bg-accent/50 border border-border">
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {language === 'th' ? 'ราคาห้องพัก' : 'Room Rates'}
-                        </p>
-                        <p className="text-muted-foreground">
-                          {language === 'th' ? 'เริ่มต้นที่' : 'Starting from'}{' '}
-                          <span className="text-lg font-bold text-primary">
-                            ฿{data.minRoomPrice.price.toLocaleString()}
-                          </span>{' '}
-                          {language === 'th' ? 'ต่อคืน' : 'per night'}
-                        </p>
+                  <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl p-5 border border-primary/30 shadow-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-primary/20 p-2.5 rounded-xl">
+                        <DollarSign className="w-5 h-5 text-primary" />
                       </div>
+                      <p className="font-bold text-foreground">
+                        {language === 'th' ? 'ราคาห้องพัก' : 'Room Rates'}
+                      </p>
+                    </div>
+                    <div className="ml-12">
+                      <p className="text-muted-foreground text-sm mb-1">
+                        {language === 'th' ? 'เริ่มต้นที่' : 'Starting from'}
+                      </p>
+                      <p className="text-2xl font-bold text-primary">
+                        ฿{data.minRoomPrice.price.toLocaleString()}
+                        <span className="text-sm font-normal text-muted-foreground ml-2">
+                          {language === 'th' ? 'ต่อคืน' : 'per night'}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 )}
@@ -213,19 +274,22 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                 {/* Recommended Menus */}
                 {data.recommendedMenus && data.recommendedMenus.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="font-bold text-foreground">
-                      {language === 'th' ? 'เมนูแนะนำ' : 'Recommended Menu'}
-                    </h4>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Coffee className="w-5 h-5 text-primary" />
+                      <h4 className="font-bold text-foreground">
+                        {language === 'th' ? 'เมนูแนะนำ' : 'Recommended Menu'}
+                      </h4>
+                    </div>
                     <div className="space-y-2">
                       {data.recommendedMenus.map((menu, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border"
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:shadow-md transition-all group"
                         >
-                          <span className="text-foreground">
+                          <span className="text-foreground text-sm font-medium group-hover:text-primary transition-colors">
                             {language === 'th' ? menu.name_th : menu.name_en}
                           </span>
-                          <span className="font-semibold text-primary">
+                          <span className="font-bold text-primary text-sm">
                             ฿{menu.price.toLocaleString()}
                           </span>
                         </div>
@@ -235,10 +299,14 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                 )}
               </>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                {language === 'th' 
-                  ? 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง' 
-                  : 'Unable to load information. Please try again.'}
+              <div className="text-center py-16">
+                <div className="bg-accent/30 rounded-2xl p-8 max-w-sm mx-auto">
+                  <p className="text-muted-foreground">
+                    {language === 'th' 
+                      ? 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง' 
+                      : 'Unable to load information. Please try again.'}
+                  </p>
+                </div>
               </div>
             )}
           </div>
