@@ -11,7 +11,7 @@ import FallingLeaves from "@/components/FallingLeaves";
 import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import FloatingActionButton from "@/components/FloatingActionButton";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
@@ -32,7 +32,7 @@ const Index = () => {
       </main>
       <Footer />
       <BackToTop />
-      <FloatingActionButton />
+      <FloatingChatButton />
       <Toaster />
     </div>
   );
