@@ -55,6 +55,7 @@ export type Database = {
           business_name_th: string
           created_at: string
           email: string | null
+          facebook: string | null
           google_maps_url: string | null
           id: string
           instagram: string | null
@@ -73,6 +74,7 @@ export type Database = {
           business_name_th: string
           created_at?: string
           email?: string | null
+          facebook?: string | null
           google_maps_url?: string | null
           id?: string
           instagram?: string | null
@@ -91,6 +93,7 @@ export type Database = {
           business_name_th?: string
           created_at?: string
           email?: string | null
+          facebook?: string | null
           google_maps_url?: string | null
           id?: string
           instagram?: string | null

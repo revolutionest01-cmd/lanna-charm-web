@@ -20,6 +20,7 @@ const businessInfoSchema = z.object({
   email: z.string().email("กรุณากรอกอีเมลที่ถูกต้อง").max(255).optional().nullable(),
   line_id: z.string().max(100).optional().nullable(),
   instagram: z.string().max(100).optional().nullable(),
+  facebook: z.string().max(100).optional().nullable(),
   address_th: z.string().max(500).optional().nullable(),
   address_en: z.string().max(500).optional().nullable(),
   google_maps_url: z.string().url("กรุณากรอก URL ที่ถูกต้อง").max(500).optional().nullable(),
@@ -45,6 +46,7 @@ const BusinessInfoManagement = () => {
       email: "",
       line_id: "",
       instagram: "",
+      facebook: "",
       address_th: "",
       address_en: "",
       google_maps_url: "",
@@ -75,10 +77,11 @@ const BusinessInfoManagement = () => {
           business_name_en: data.business_name_en || "",
           phone_primary: data.phone_primary || "",
           phone_secondary: data.phone_secondary || "",
-          email: data.email || "",
-          line_id: data.line_id || "",
-          instagram: data.instagram || "",
-          address_th: data.address_th || "",
+        email: data.email || "",
+        line_id: data.line_id || "",
+        instagram: data.instagram || "",
+        facebook: data.facebook || "",
+        address_th: data.address_th || "",
           address_en: data.address_en || "",
           google_maps_url: data.google_maps_url || "",
           opening_hours_th: data.opening_hours_th || "",
@@ -106,6 +109,7 @@ const BusinessInfoManagement = () => {
         email: values.email || null,
         line_id: values.line_id || null,
         instagram: values.instagram || null,
+        facebook: values.facebook || null,
         address_th: values.address_th || null,
         address_en: values.address_en || null,
         google_maps_url: values.google_maps_url || null,
@@ -256,19 +260,34 @@ const BusinessInfoManagement = () => {
             </div>
 
             {/* Social Media */}
-            <FormField
-              control={form.control}
-              name="instagram"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Instagram</FormLabel>
-                  <FormControl>
-                    <Input placeholder="@plernpingcafe" {...field} value={field.value || ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="instagram"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instagram</FormLabel>
+                    <FormControl>
+                      <Input placeholder="@plernpingcafe" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="facebook"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Facebook</FormLabel>
+                    <FormControl>
+                      <Input placeholder="PlernPingCafe หรือ URL เต็ม" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Opening Hours */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

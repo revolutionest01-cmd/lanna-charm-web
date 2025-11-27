@@ -31,19 +31,29 @@ serve(async (req) => {
       console.error('Error fetching business info:', businessError);
     }
 
-    // Fetch minimum room price
+    // Fetch minimum room price and count
     const { data: rooms, error: roomsError } = await supabase
       .from('rooms')
       .select('price, name_th, name_en')
       .eq('is_active', true)
-      .order('price', { ascending: true })
-      .limit(1);
+      .order('price', { ascending: true });
 
     if (roomsError) {
       console.error('Error fetching rooms:', roomsError);
     }
 
-    const minRoomPrice = rooms && rooms.length > 0 ? rooms[0] : null;
+    // Calculate room statistics
+    const roomStats = rooms && rooms.length > 0 ? {
+      count: rooms.length,
+      minPrice: rooms[0].price,
+      maxPrice: rooms[rooms.length - 1].price,
+      minRoomName: language === 'th' ? rooms[0].name_th : rooms[0].name_en
+    } : null;
+
+    const minRoomPrice = roomStats ? {
+      price: roomStats.minPrice,
+      name: roomStats.minRoomName
+    } : null;
 
     // Fetch recommended menus (top 3)
     const { data: menus, error: menusError } = await supabase
@@ -67,14 +77,16 @@ serve(async (req) => {
         email: businessInfo.email,
         line: businessInfo.line_id,
         instagram: businessInfo.instagram,
+        facebook: businessInfo.facebook,
         address: language === 'th' ? businessInfo.address_th : businessInfo.address_en,
         googleMaps: businessInfo.google_maps_url,
         openingHours: language === 'th' ? businessInfo.opening_hours_th : businessInfo.opening_hours_en,
       } : null,
       minRoomPrice: minRoomPrice ? {
         price: minRoomPrice.price,
-        name: language === 'th' ? minRoomPrice.name_th : minRoomPrice.name_en,
+        name: minRoomPrice.name,
       } : null,
+      roomStats,
       recommendedMenus: menus || [],
       language,
     };
