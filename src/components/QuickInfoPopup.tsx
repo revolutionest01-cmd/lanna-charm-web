@@ -18,6 +18,7 @@ interface BusinessInfo {
   email?: string;
   line?: string;
   instagram?: string;
+  facebook?: string;
   address?: string;
   googleMaps?: string;
   openingHours?: string;
@@ -26,6 +27,13 @@ interface BusinessInfo {
 interface MinRoomPrice {
   price: number;
   name: string;
+}
+
+interface RoomStats {
+  count: number;
+  minPrice: number;
+  maxPrice: number;
+  minRoomName: string;
 }
 
 interface RecommendedMenu {
@@ -38,6 +46,7 @@ interface RecommendedMenu {
 interface QuickInfoData {
   businessInfo: BusinessInfo | null;
   minRoomPrice: MinRoomPrice | null;
+  roomStats: RoomStats | null;
   recommendedMenus: RecommendedMenu[];
 }
 
@@ -216,6 +225,30 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                       </div>
                     )}
 
+                    {/* Facebook */}
+                    {data.businessInfo.facebook && (
+                      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2.5 rounded-xl">
+                            <MessageCircle className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground text-sm mb-1">Facebook</p>
+                            <a 
+                              href={data.businessInfo.facebook.startsWith('http') 
+                                ? data.businessInfo.facebook 
+                                : `https://facebook.com/${data.businessInfo.facebook}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                            >
+                              {data.businessInfo.facebook}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Address */}
                     {data.businessInfo.address && (
                       <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:shadow-md transition-all">
@@ -247,26 +280,36 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                 )}
 
                 {/* Room Pricing - Highlighted */}
-                {data.minRoomPrice && (
+                {data.roomStats && (
                   <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl p-5 border border-primary/30 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="bg-primary/20 p-2.5 rounded-xl">
                         <DollarSign className="w-5 h-5 text-primary" />
                       </div>
                       <p className="font-bold text-foreground">
-                        {language === 'th' ? 'ราคาห้องพัก' : 'Room Rates'}
+                        {language === 'th' ? 'ข้อมูลห้องพัก' : 'Room Information'}
                       </p>
                     </div>
-                    <div className="ml-12">
-                      <p className="text-muted-foreground text-sm mb-1">
-                        {language === 'th' ? 'เริ่มต้นที่' : 'Starting from'}
-                      </p>
-                      <p className="text-2xl font-bold text-primary">
-                        ฿{data.minRoomPrice.price.toLocaleString()}
-                        <span className="text-sm font-normal text-muted-foreground ml-2">
-                          {language === 'th' ? 'ต่อคืน' : 'per night'}
-                        </span>
-                      </p>
+                    <div className="ml-12 space-y-3">
+                      <div>
+                        <p className="text-muted-foreground text-sm mb-1">
+                          {language === 'th' ? 'จำนวนห้องพัก' : 'Total Rooms'}
+                        </p>
+                        <p className="text-lg font-bold text-foreground">
+                          {data.roomStats.count} {language === 'th' ? 'ห้อง' : 'rooms'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm mb-1">
+                          {language === 'th' ? 'ช่วงราคา' : 'Price Range'}
+                        </p>
+                        <p className="text-2xl font-bold text-primary">
+                          ฿{data.roomStats.minPrice.toLocaleString()} - ฿{data.roomStats.maxPrice.toLocaleString()}
+                          <span className="text-sm font-normal text-muted-foreground ml-2">
+                            {language === 'th' ? 'ต่อคืน' : 'per night'}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

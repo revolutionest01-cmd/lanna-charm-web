@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Instagram } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Instagram, Facebook } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -19,6 +19,7 @@ const ContactSection = () => {
     email?: string | null;
     line_id?: string | null;
     instagram?: string | null;
+    facebook?: string | null;
     address_th?: string | null;
     address_en?: string | null;
     opening_hours_th?: string | null;
@@ -293,22 +294,37 @@ const ContactSection = () => {
               </div>
             )}
 
-            {/* Instagram */}
-            {businessInfo?.instagram && (
+            {/* Social Media */}
+            {(businessInfo?.instagram || businessInfo?.facebook) && (
               <div>
                 <h3 className="font-semibold text-xl mb-4 text-foreground">
                   {t.followUs}
                 </h3>
                 <div className="flex gap-4">
-                  <a
-                    href={`https://www.instagram.com/${businessInfo.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
-                    aria-label="Instagram"
-                  >
-                    <Instagram className="w-6 h-6 text-foreground" />
-                  </a>
+                  {businessInfo.instagram && (
+                    <a
+                      href={`https://www.instagram.com/${businessInfo.instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                  {businessInfo.facebook && (
+                    <a
+                      href={businessInfo.facebook.startsWith('http') 
+                        ? businessInfo.facebook 
+                        : `https://www.facebook.com/${businessInfo.facebook}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      aria-label="Facebook"
+                    >
+                      <Facebook className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
                 </div>
               </div>
             )}
