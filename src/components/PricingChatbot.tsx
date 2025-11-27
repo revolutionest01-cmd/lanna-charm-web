@@ -98,7 +98,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-8 z-50 w-96 h-[500px] bg-background border border-border rounded-lg shadow-2xl flex flex-col animate-fade-in">
+    <div className="fixed bottom-0 right-0 left-0 md:bottom-24 md:right-8 md:left-auto z-50 w-full md:w-96 h-[90vh] md:h-[500px] md:max-h-[600px] bg-background border-t md:border border-border md:rounded-lg shadow-2xl flex flex-col animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-[#8B6F47] to-[#c65539]">
         <div className="flex items-center gap-2">

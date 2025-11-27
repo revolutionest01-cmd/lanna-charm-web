@@ -72,7 +72,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <Card className="relative w-full max-w-2xl max-h-[85vh] bg-background rounded-3xl shadow-2xl border-0 overflow-hidden animate-scale-in">
+      <Card className="relative w-full max-w-[95vw] md:max-w-2xl max-h-[90vh] md:max-h-[85vh] bg-background rounded-3xl shadow-2xl border-0 overflow-hidden animate-scale-in">
         {/* Header with gradient background */}
         <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-primary/90 to-primary">
           <div className="flex items-center gap-3">
@@ -93,8 +93,8 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
           </Button>
         </div>
 
-        <ScrollArea className="h-full max-h-[calc(85vh-5rem)]">
-          <div className="p-6 space-y-4">
+        <ScrollArea className="h-full max-h-[calc(90vh-5rem)] md:max-h-[calc(85vh-5rem)] overflow-y-auto">
+          <div className="p-4 md:p-6 space-y-4">
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="flex flex-col items-center gap-3">
