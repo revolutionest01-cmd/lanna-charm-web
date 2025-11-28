@@ -64,6 +64,7 @@ export const RoomsManagement = () => {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -252,7 +253,7 @@ export const RoomsManagement = () => {
 
   const onSubmit = async (values: RoomFormValues) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
       const roomData = {
         name_th: values.name_th,
@@ -310,7 +311,7 @@ export const RoomsManagement = () => {
         language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save"
       );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -441,7 +442,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (ไทย)" : "Room Name (Thai)"}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={loading} />
+                          <Input {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -457,7 +458,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (อังกฤษ)" : "Room Name (English)"}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={loading} />
+                          <Input {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -478,7 +479,7 @@ export const RoomsManagement = () => {
                           {...field}
                           type="number"
                           step="0.01"
-                          disabled={loading}
+                          disabled={submitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -495,7 +496,7 @@ export const RoomsManagement = () => {
                         {language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={loading} rows={3} />
+                        <Textarea {...field} disabled={submitting} rows={3} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -513,7 +514,7 @@ export const RoomsManagement = () => {
                           : "Description (English)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={loading} rows={3} />
+                        <Textarea {...field} disabled={submitting} rows={3} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -559,7 +560,7 @@ export const RoomsManagement = () => {
                     accept="image/*"
                     multiple
                     onChange={handleImageSelect}
-                    disabled={loading || uploadingImages}
+                    disabled={submitting || uploadingImages}
                   />
                   {imagePreviews.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
@@ -593,12 +594,12 @@ export const RoomsManagement = () => {
                       setIsDialogOpen(false);
                       resetForm();
                     }}
-                    disabled={loading || uploadingImages}
+                    disabled={submitting || uploadingImages}
                   >
                     {language === "th" ? "ยกเลิก" : "Cancel"}
                   </Button>
-                  <Button type="submit" disabled={loading || uploadingImages}>
-                    {loading || uploadingImages ? (
+                  <Button type="submit" disabled={submitting || uploadingImages}>
+                    {submitting || uploadingImages ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         {language === "th" ? "กำลังบันทึก..." : "Saving..."}

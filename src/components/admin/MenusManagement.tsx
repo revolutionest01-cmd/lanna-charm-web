@@ -80,6 +80,7 @@ export const MenusManagement = () => {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -413,7 +414,7 @@ export const MenusManagement = () => {
 
   const onSubmitMenu = async (values: MenuFormValues) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
       const imageUrls = await uploadImages();
       const iconUrl = await uploadIcon();
@@ -487,7 +488,7 @@ export const MenusManagement = () => {
       console.error("Error saving menu:", error);
       toast.error(language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -643,7 +644,7 @@ export const MenusManagement = () => {
                           <FormItem>
                             <FormLabel>{language === "th" ? "ชื่อเมนู (ไทย)" : "Menu Name (Thai)"}</FormLabel>
                             <FormControl>
-                              <Input {...field} disabled={loading} />
+                              <Input {...field} disabled={submitting} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -657,7 +658,7 @@ export const MenusManagement = () => {
                           <FormItem>
                             <FormLabel>{language === "th" ? "ชื่อเมนู (อังกฤษ)" : "Menu Name (English)"}</FormLabel>
                             <FormControl>
-                              <Input {...field} disabled={loading} />
+                              <Input {...field} disabled={submitting} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -673,7 +674,7 @@ export const MenusManagement = () => {
                           <FormItem>
                             <FormLabel>{language === "th" ? "ราคา (บาท)" : "Price (THB)"}</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" step="0.01" disabled={loading} />
+                              <Input {...field} type="number" step="0.01" disabled={submitting} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -689,7 +690,7 @@ export const MenusManagement = () => {
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
-                              disabled={loading}
+                              disabled={submitting}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -717,7 +718,7 @@ export const MenusManagement = () => {
                         <FormItem>
                           <FormLabel>{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
                           <FormControl>
-                            <Textarea {...field} disabled={loading} rows={3} />
+                            <Textarea {...field} disabled={submitting} rows={3} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -731,7 +732,7 @@ export const MenusManagement = () => {
                         <FormItem>
                           <FormLabel>{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
                           <FormControl>
-                            <Textarea {...field} disabled={loading} rows={3} />
+                            <Textarea {...field} disabled={submitting} rows={3} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -757,7 +758,7 @@ export const MenusManagement = () => {
                             <Switch
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              disabled={loading}
+                              disabled={submitting}
                             />
                           </FormControl>
                         </FormItem>
@@ -889,12 +890,12 @@ export const MenusManagement = () => {
                           setIsMenuDialogOpen(false);
                           resetMenuForm();
                         }}
-                        disabled={loading || uploadingImage || uploadingIcon}
+                        disabled={submitting || uploadingImage || uploadingIcon}
                       >
                         {language === "th" ? "ยกเลิก" : "Cancel"}
                       </Button>
-                      <Button type="submit" disabled={loading || uploadingImage || uploadingIcon}>
-                        {loading || uploadingImage || uploadingIcon ? (
+                      <Button type="submit" disabled={submitting || uploadingImage || uploadingIcon}>
+                        {submitting || uploadingImage || uploadingIcon ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             {language === "th" ? "กำลังบันทึก..." : "Saving..."}

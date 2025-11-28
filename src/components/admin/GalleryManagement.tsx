@@ -28,6 +28,7 @@ export const GalleryManagement = () => {
   const queryClient = useQueryClient();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title_en: "",
@@ -115,7 +116,7 @@ export const GalleryManagement = () => {
         return;
       }
 
-      setUploading(true);
+      setSubmitting(true);
 
       // Upload all images
       for (let i = 0; i < formData.files.length; i++) {
@@ -156,7 +157,7 @@ export const GalleryManagement = () => {
       console.error("Error uploading images:", error);
       toast.error(language === "th" ? "เกิดข้อผิดพลาดในการอัพโหลด" : "Error uploading images");
     } finally {
-      setUploading(false);
+      setSubmitting(false);
     }
   };
 
@@ -285,8 +286,8 @@ export const GalleryManagement = () => {
             )}
           </div>
 
-          <Button onClick={handleUpload} disabled={uploading} className="mt-4">
-            {uploading ? (
+          <Button onClick={handleUpload} disabled={submitting} className="mt-4">
+            {submitting ? (
               <>
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 {language === "th" ? "กำลังอัพโหลด..." : "Uploading..."}
