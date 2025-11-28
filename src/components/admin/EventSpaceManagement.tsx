@@ -35,6 +35,7 @@ export const EventSpaceManagement = () => {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentEventSpace, setCurrentEventSpace] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -168,7 +169,7 @@ export const EventSpaceManagement = () => {
 
   const onSubmit = async (values: EventSpaceFormValues) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
       // Upload image if there's a new one
       const imageUrl = await uploadImage();
@@ -229,7 +230,7 @@ export const EventSpaceManagement = () => {
         language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save"
       );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -321,7 +322,7 @@ export const EventSpaceManagement = () => {
                               ? "กรอกชื่อภาษาไทย"
                               : "Enter Thai title"
                           }
-                          disabled={loading}
+                          disabled={submitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -347,7 +348,7 @@ export const EventSpaceManagement = () => {
                               ? "กรอกชื่อภาษาอังกฤษ"
                               : "Enter English title"
                           }
-                          disabled={loading}
+                          disabled={submitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -374,7 +375,7 @@ export const EventSpaceManagement = () => {
                             ? "กรอกรายละเอียดภาษาไทย"
                             : "Enter Thai description"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                         rows={4}
                       />
                     </FormControl>
@@ -401,7 +402,7 @@ export const EventSpaceManagement = () => {
                             ? "กรอกรายละเอียดภาษาอังกฤษ"
                             : "Enter English description"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                         rows={4}
                       />
                     </FormControl>
@@ -428,7 +429,7 @@ export const EventSpaceManagement = () => {
                             ? "กรอกคำสำคัญภาษาไทย (คั่นด้วยจุลภาค)"
                             : "Enter Thai keywords (comma separated)"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -454,7 +455,7 @@ export const EventSpaceManagement = () => {
                             ? "กรอกคำสำคัญภาษาอังกฤษ (คั่นด้วยจุลภาค)"
                             : "Enter English keywords (comma separated)"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -468,10 +469,10 @@ export const EventSpaceManagement = () => {
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={loading || uploading}
+              disabled={submitting || uploading}
               className="min-w-[120px]"
             >
-              {loading || uploading ? (
+              {submitting || uploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {language === "th" ? "กำลังบันทึก..." : "Saving..."}

@@ -36,6 +36,7 @@ export const ReviewsManagement = () => {
   const queryClient = useQueryClient();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -182,6 +183,7 @@ export const ReviewsManagement = () => {
   const handleSubmit = async () => {
     try {
       reviewSchema.parse(formData);
+      setSubmitting(true);
 
       const imageUrl = await uploadImage();
 
@@ -225,6 +227,8 @@ export const ReviewsManagement = () => {
       } else {
         toast.error(language === "th" ? "เกิดข้อผิดพลาดในการบันทึก" : "Error saving review");
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -447,8 +451,8 @@ export const ReviewsManagement = () => {
                   </div>
                 )}
               </div>
-              <Button onClick={handleSubmit} className="w-full" disabled={loading || uploadingImage}>
-                {loading || uploadingImage ? (
+              <Button onClick={handleSubmit} className="w-full" disabled={submitting || uploadingImage}>
+                {submitting || uploadingImage ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {language === "th" ? "กำลังบันทึก..." : "Saving..."}
