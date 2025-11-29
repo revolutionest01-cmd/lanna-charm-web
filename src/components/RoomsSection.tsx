@@ -12,6 +12,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { useContentData } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
+import BookingDialog from "@/components/BookingDialog";
 
 interface Room {
   id: string;
@@ -119,9 +120,11 @@ const RoomsSection = () => {
                     </CardContent>
 
                     <CardFooter>
-                      <Button variant="highlight" className="w-full font-semibold">
-                        {t.bookRoom}
-                      </Button>
+                      <BookingDialog>
+                        <Button variant="highlight" className="w-full font-semibold">
+                          {t.bookRoom}
+                        </Button>
+                      </BookingDialog>
                     </CardFooter>
                   </Card>
                 </CarouselItem>
