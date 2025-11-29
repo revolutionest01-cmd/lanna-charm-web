@@ -79,32 +79,70 @@ const Menu = () => {
                               {categoryMenus.map((item, index) => (
                                 <Card
                                   key={item.id}
-                                  className="border-border hover:border-primary transition-colors animate-fade-in"
+                                  className="border-border/50 hover:border-primary/50 transition-all duration-500 animate-fade-in overflow-hidden group hover:shadow-lg"
                                   style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                  <CardContent className="p-4 md:p-6">
-                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                                      <div className="flex-1 flex items-start gap-3 md:gap-4 min-w-0">
-                                        {item.icon_url && (
-                                          <img
-                                            src={item.icon_url}
-                                            alt="icon"
-                                            className="w-6 h-6 md:w-8 md:h-8 object-contain flex-shrink-0 mt-1"
-                                          />
+                                  <CardContent className="p-0">
+                                    <div className="flex flex-col md:flex-row">
+                                      {/* Image Section - Left */}
+                                      <div className="relative w-full md:w-64 h-56 md:h-auto overflow-hidden flex-shrink-0 bg-muted">
+                                        {item.image_url ? (
+                                          <>
+                                            <img
+                                              src={item.image_url}
+                                              alt={language === "th" ? item.name_th : item.name_en}
+                                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background/10" />
+                                            {/* Lanna decorative corner */}
+                                            <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-primary/30 opacity-60" />
+                                            <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-primary/30 opacity-60" />
+                                          </>
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center bg-muted">
+                                            <span className="text-muted-foreground text-sm">
+                                              {language === "th" ? "ไม่มีรูปภาพ" : "No image"}
+                                            </span>
+                                          </div>
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                          <h3 className="text-lg md:text-xl font-semibold text-foreground mb-1 break-words">
-                                            {language === "th" ? item.name_th : item.name_en}
-                                          </h3>
+                                      </div>
+
+                                      {/* Details Section - Right */}
+                                      <div className="flex-1 p-6 flex flex-col justify-between">
+                                        <div>
+                                          <div className="flex items-start justify-between gap-4 mb-3">
+                                            <div className="flex items-center gap-2">
+                                              {item.icon_url && (
+                                                <img
+                                                  src={item.icon_url}
+                                                  alt="icon"
+                                                  className="w-6 h-6 object-contain"
+                                                />
+                                              )}
+                                              <h3 className="text-xl md:text-2xl font-bold text-foreground">
+                                                {language === "th" ? item.name_th : item.name_en}
+                                              </h3>
+                                            </div>
+                                            <div className="text-2xl md:text-3xl font-bold text-primary flex-shrink-0">
+                                              ฿{item.price}
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Decorative divider */}
+                                          <div className="w-20 h-1 bg-gradient-to-r from-primary to-primary/30 mb-3" />
+                                          
                                           {(item.description_th || item.description_en) && (
-                                            <p className="text-sm md:text-base text-muted-foreground break-words">
+                                            <p className="text-base text-muted-foreground leading-relaxed">
                                               {language === "th" ? item.description_th : item.description_en}
                                             </p>
                                           )}
                                         </div>
-                                      </div>
-                                      <div className="text-xl md:text-2xl font-bold text-primary flex-shrink-0 self-start sm:self-center">
-                                        ฿{item.price}
+                                        
+                                        {/* Bottom decorative element */}
+                                        <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground/60">
+                                          <div className="w-3 h-3 rotate-45 border border-primary/40" />
+                                          <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
+                                        </div>
                                       </div>
                                     </div>
                                   </CardContent>
