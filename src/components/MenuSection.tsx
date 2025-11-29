@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
 import {
   Carousel,
@@ -37,6 +38,7 @@ interface Category {
 const MenuSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const navigate = useNavigate();
   const { menus: menuData, isLoading: loading } = useContentData();
   
   const menus = menuData?.menus || [];
@@ -44,8 +46,9 @@ const MenuSection = () => {
 
   const recommendedMenus = menus.filter((m) => m.is_recommended);
   
-  const getMenusByCategory = (categoryId: string) => {
-    return menus.filter((m) => m.category_id === categoryId);
+  const getMenusByCategory = (categoryId: string, limit?: number) => {
+    const filtered = menus.filter((m) => m.category_id === categoryId);
+    return limit ? filtered.slice(0, limit) : filtered;
   };
 
   if (loading) {
@@ -170,7 +173,7 @@ const MenuSection = () => {
               </div>
 
               {categories.map((cat) => {
-                const categoryMenus = getMenusByCategory(cat.id);
+                const categoryMenus = getMenusByCategory(cat.id, 5);
                 return (
                   <TabsContent key={cat.id} value={cat.id} className="space-y-4">
                     {categoryMenus.length > 0 ? (
@@ -224,7 +227,12 @@ const MenuSection = () => {
           )}
 
           <div className="text-center mt-10">
-            <Button variant="highlight" size="lg" className="font-semibold">
+            <Button 
+              variant="highlight" 
+              size="lg" 
+              className="font-semibold"
+              onClick={() => navigate('/menu')}
+            >
               {t.viewFullMenu}
             </Button>
           </div>
