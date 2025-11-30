@@ -189,7 +189,7 @@ const Forum = () => {
     e.preventDefault();
     
     if (!isAuthenticated || !user) {
-      toast.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
+      toast.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : language === 'zh' ? '请先登录' : 'Please login first');
       return;
     }
 
@@ -219,20 +219,20 @@ const Forum = () => {
       setNewTopicContent("");
       setNewTopicCategory("general");
       setIsDialogOpen(false);
-      toast.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : 'Topic created successfully');
+      toast.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : language === 'zh' ? '主题创建成功' : 'Topic created successfully');
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         toast.error(firstError.message);
       } else {
-        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
       }
     }
   };
 
   const handleLogout = () => {
     logout();
-    toast.success(language === 'th' ? 'ออกจากระบบสำเร็จ' : 'Logged out successfully');
+    toast.success(language === 'th' ? 'ออกจากระบบสำเร็จ' : language === 'zh' ? '成功登出' : 'Logged out successfully');
     navigate("/");
   };
 

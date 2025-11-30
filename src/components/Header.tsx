@@ -194,6 +194,20 @@ const Header = () => {
                 <span className="text-sm font-semibold">ไทย</span>
               </button>
               <button
+                onClick={() => setLanguage('zh')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                  language === 'zh'
+                    ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
+                    : isScrolled
+                    ? 'text-foreground hover:bg-background/50'
+                    : 'text-white hover:bg-white/10'
+                }`}
+                aria-label="Switch to Chinese"
+              >
+                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
+                <span className="text-sm font-semibold">中文</span>
+              </button>
+              <button
                 onClick={() => setLanguage('en')}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                   language === 'en'
@@ -313,6 +327,17 @@ const Header = () => {
                 >
                   <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
                   <span className="text-sm font-semibold">ไทย</span>
+                </button>
+                <button
+                  onClick={() => setLanguage('zh')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                    language === 'zh'
+                      ? 'bg-highlight text-highlight-foreground shadow-sm'
+                      : 'text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
+                  <span className="text-sm font-semibold">中文</span>
                 </button>
                 <button
                   onClick={() => setLanguage('en')}
