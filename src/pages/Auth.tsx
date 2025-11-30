@@ -49,20 +49,20 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
-        toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login successful');
+        toast.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : 'Login successful');
         // Delay to show success message before redirect
         setTimeout(() => {
           navigate("/");
         }, 1500);
       } else {
-        toast.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : 'Invalid email or password. Please check and try again.'));
+        toast.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : 'Invalid email or password. Please check and try again.'));
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         toast.error(firstError.message);
       } else {
-        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
       }
     } finally {
       // Always reset loading state
@@ -88,20 +88,20 @@ const Auth = () => {
       const result = await register(registerForm.name, registerForm.email, registerForm.password);
 
       if (result.success) {
-        toast.success(language === 'th' ? 'ยินดีต้อนรับ' : 'Welcome');
+        toast.success(language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : 'Welcome');
         // Delay to show success message before redirect
         setTimeout(() => {
           navigate("/");
         }, 1500);
       } else {
-        toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
+        toast.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : language === 'zh' ? '注册失败' : 'Registration failed'));
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         toast.error(firstError.message);
       } else {
-        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+        toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
       }
     } finally {
       // Always reset loading state

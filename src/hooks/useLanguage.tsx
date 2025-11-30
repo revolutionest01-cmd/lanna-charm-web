@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Language = 'th' | 'en';
+type Language = 'th' | 'en' | 'zh';
 
 interface LanguageStore {
   language: Language;
@@ -294,5 +294,142 @@ export const translations = {
     quickLinks: "Quick Links",
     followUs: "Follow Us",
     allRightsReserved: "All rights reserved",
+  },
+  zh: {
+    // Header
+    home: "首页",
+    about: "关于我们",
+    rooms: "客房",
+    menu: "菜单",
+    gallery: "画廊",
+    reviews: "评论",
+    contact: "联系我们",
+    forum: "论坛",
+    bookNow: "立即预订",
+    
+    // Hero
+    location: "泰国曼谷廊曼",
+    heroTitle: "Plern Ping 咖啡馆",
+    heroSubtitle: "体验传统兰纳魅力与现代舒适的完美融合",
+    heroDescription: "坐落在大自然的怀抱中，在宁静的花园环境中，特色美食与精品咖啡相遇",
+    exploreMenu: "探索菜单",
+    viewRooms: "查看客房",
+    
+    // Features
+    featuresTitle: "为什么选择 Plern Ping",
+    featuresSubtitle: "独特的体验等着您",
+    traditionalArchitecture: "传统建筑",
+    traditionalArchitectureDesc: "自然环境中美丽的兰纳风格木屋",
+    artisanCoffee: "精品咖啡",
+    artisanCoffeeDesc: "特色烘焙咖啡和泰式饮品",
+    authenticCuisine: "正宗美食",
+    authenticCuisineDesc: "来自当地厨师的正宗兰纳和泰国菜肴",
+    gardenSetting: "花园环境",
+    gardenSettingDesc: "郁郁葱葱的绿色植物中的室内外座位",
+    
+    // Events
+    eventsTitle: "会议室及活动",
+    eventsSubtitle: "支持各种形式的会议、演示和聚会的特殊活动空间",
+    eventsMainTitle: "兰纳咖啡馆和多功能厅",
+    eventsMainDesc: "配备所有设备的特殊房间设施，从会议和演示到社交聚会，提供完整的餐饮服务和设备",
+    ourServices: "我们的服务",
+    presentationRoom: "演示/研讨室",
+    presentationRoomDesc: "配备投影仪、音响系统和连接控制",
+    cateringService: "餐饮服务",
+    cateringServiceDesc: "优质的食品和饮料，可定制菜单",
+    privateEvents: "IT和私人活动",
+    privateEventsDesc: "非常适合商务用途、私人连接和个人活动",
+    inquirePrice: "咨询活动价格",
+    presentationRoomShort: "演示室",
+    presentationRoomShortDesc: "现代化设备齐全的研讨室",
+    cateringServiceShort: "餐饮",
+    cateringServiceShortDesc: "全方位活动餐饮服务",
+    
+    // Rooms
+    roomsTitle: "我们的客房",
+    roomsSubtitle: "在舒适和兰纳风格中放松",
+    perNight: "/ 晚",
+    deluxeRoom: "豪华客房",
+    deluxeRoomDesc: "宽敞的客房，装饰有现代兰纳风格",
+    familySuite: "家庭套房",
+    familySuiteDesc: "适合家庭的大房间，有2间卧室",
+    gardenView: "花园景观房",
+    gardenViewDesc: "舒适的客房，可欣赏郁郁葱葱的花园景色",
+    bookRoom: "预订客房",
+    
+    // Menu
+    menuTitle: "我们的菜单",
+    menuSubtitle: "用心制作的正宗泰国美食和精品咖啡",
+    coffeeAndDrinks: "咖啡和饮品",
+    food: "食物",
+    espresso: "浓缩咖啡",
+    espressoDesc: "浓郁大胆的单份咖啡",
+    cappuccino: "卡布奇诺",
+    cappuccinoDesc: "浓缩咖啡配蒸奶泡",
+    latte: "拿铁",
+    latteDesc: "顺滑的浓缩咖啡配奶油牛奶",
+    thaiIcedCoffee: "泰式冰咖啡",
+    thaiIcedCoffeeDesc: "传统风格配炼乳",
+    padThai: "泰式炒面",
+    padThaiDesc: "经典泰式炒面",
+    greenCurry: "绿咖喱",
+    greenCurryDesc: "芳香泰式绿咖喱配鸡肉",
+    somTam: "青木瓜沙拉",
+    somTamDesc: "兰纳风格的辣木瓜沙拉",
+    khaoSoi: "清迈咖喱面",
+    khaoSoiDesc: "泰北咖喱面汤",
+    viewFullMenu: "查看完整菜单",
+    recommended: "推荐菜单",
+    recommendedSubtitle: "您不应错过的特色菜肴",
+    
+    // Gallery
+    galleryTitle: "画廊",
+    gallerySubtitle: "一瞥我们宁静的圣地",
+    
+    // Reviews
+    reviewsTitle: "客户评论",
+    reviewsSubtitle: "来自访客的体验",
+    
+    // Contact
+    contactTitle: "联系我们",
+    contactSubtitle: "我们很乐意回答您的问题并协助预订客房",
+    phone: "电话",
+    email: "电子邮件",
+    socialMedia: "社交媒体",
+    address: "地址",
+    openingHours: "营业时间",
+    lineId: "Line ID",
+    sendMessageForm: "给我们发送消息",
+    nameLabel: "姓名",
+    emailLabel: "电子邮件",
+    phoneLabel: "电话",
+    topicLabel: "主题",
+    messageLabel: "消息",
+    sendMessage: "发送消息",
+    namePlaceholder: "请输入您的姓名",
+    emailPlaceholder: "请输入您的电子邮件",
+    phonePlaceholder: "请输入您的电话号码",
+    topicPlaceholder: "请输入主题",
+    messagePlaceholder: "请输入您的消息",
+    messageSent: "消息发送成功",
+    messageSuccess: "感谢您联系我们。我们会尽快回复您",
+    dailyOpen: "每天 08:00 - 21:00（当地时间）",
+    
+    // Forum
+    forumTitle: "论坛",
+    forumSubtitle: "分享您的经验",
+    latestTopics: "最新主题",
+    popularTopics: "热门主题",
+    replies: "回复",
+    views: "浏览",
+    lastPost: "最后发表",
+    startedBy: "发起人",
+    
+    // Footer
+    footerDescription: "在自然花园环境中体验正宗泰国美食与精品咖啡的完美融合",
+    contactUs: "联系我们",
+    quickLinks: "快速链接",
+    followUs: "关注我们",
+    allRightsReserved: "版权所有",
   },
 };
