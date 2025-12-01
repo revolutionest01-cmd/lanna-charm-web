@@ -27,11 +27,23 @@ const handler = async (req: Request): Promise<Response> => {
     // Get LINE credentials from environment
     const LINE_CHANNEL_ACCESS_TOKEN = Deno.env.get("LINE_CHANNEL_ACCESS_TOKEN");
     const LINE_TO_USER_ID = Deno.env.get("LINE_TO_USER_ID");
+    const LINE_TO_GROUP_ID = Deno.env.get("LINE_TO_GROUP_ID");
 
-    if (!LINE_CHANNEL_ACCESS_TOKEN || !LINE_TO_USER_ID) {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
       console.error("LINE credentials not configured");
       return new Response(
         JSON.stringify({ error: "LINE credentials not configured" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!LINE_TO_USER_ID && !LINE_TO_GROUP_ID) {
+      console.error("No LINE recipient configured (USER_ID or GROUP_ID)");
+      return new Response(
+        JSON.stringify({ error: "No LINE recipient configured" }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -52,31 +64,47 @@ const handler = async (req: Request): Promise<Response> => {
 ${message}
     `.trim();
 
-    // Send message to LINE Messaging API
-    const lineResponse = await fetch("https://api.line.me/v2/bot/message/push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({
-        to: LINE_TO_USER_ID,
-        messages: [
-          {
-            type: "text",
-            text: lineMessage,
-          },
-        ],
-      }),
+    // Send message to LINE Messaging API (to both user and group if configured)
+    const recipients = [];
+    if (LINE_TO_USER_ID) recipients.push(LINE_TO_USER_ID);
+    if (LINE_TO_GROUP_ID) recipients.push(LINE_TO_GROUP_ID);
+
+    const sendPromises = recipients.map(async (recipient) => {
+      const lineResponse = await fetch("https://api.line.me/v2/bot/message/push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          to: recipient,
+          messages: [
+            {
+              type: "text",
+              text: lineMessage,
+            },
+          ],
+        }),
+      });
+
+      if (!lineResponse.ok) {
+        const errorText = await lineResponse.text();
+        console.error(`LINE API error for ${recipient}:`, errorText);
+        throw new Error(`Failed to send to ${recipient}: ${errorText}`);
+      }
+
+      return recipient;
     });
 
-    if (!lineResponse.ok) {
-      const errorText = await lineResponse.text();
-      console.error("LINE API error:", errorText);
+    try {
+      const sentTo = await Promise.all(sendPromises);
+      console.log("LINE message sent successfully to:", sentTo);
+    } catch (error: any) {
+      console.error("Error sending LINE messages:", error);
       return new Response(
         JSON.stringify({ 
           error: "Failed to send LINE message",
-          details: errorText 
+          details: error.message 
         }),
         {
           status: 500,
@@ -84,8 +112,6 @@ ${message}
         }
       );
     }
-
-    console.log("LINE message sent successfully");
 
     return new Response(
       JSON.stringify({ success: true, message: "Message sent to LINE successfully" }),
