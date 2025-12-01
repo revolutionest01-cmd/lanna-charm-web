@@ -133,6 +133,21 @@ const ContactSection = () => {
       contactSchema.parse(formData);
       setErrors({});
 
+      // Send to LINE via edge function
+      const { error } = await supabase.functions.invoke("contact", {
+        body: formData,
+      });
+
+      if (error) {
+        console.error("Error sending contact form:", error);
+        toast.error(
+          language === "th"
+            ? "เกิดข้อผิดพลาดในการส่งข้อความ กรุณาลองใหม่อีกครั้ง"
+            : "Failed to send message. Please try again."
+        );
+        return;
+      }
+
       // Show success toast
       toast.success(t.messageSent, {
         description: t.messageSuccess,
