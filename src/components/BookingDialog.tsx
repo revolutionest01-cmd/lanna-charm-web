@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingDialogProps {
   children: React.ReactNode;
@@ -42,7 +43,19 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     }
 
     try {
-      // Mock booking submission
+      const { data, error } = await supabase.functions.invoke('booking', {
+        body: {
+          name,
+          email,
+          phone,
+          checkIn: format(checkIn, "yyyy-MM-dd"),
+          checkOut: format(checkOut, "yyyy-MM-dd"),
+          guests: parseInt(guests),
+        },
+      });
+
+      if (error) throw error;
+
       toast.success(
         language === 'th' 
           ? `ขอบคุณคุณ${name}! เราได้รับการจองของคุณแล้ว` 

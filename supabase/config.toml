@@ -1,5 +1,8 @@
 project_id = "gomjfnkzhxqfmbwmaphz"
 
+[functions.booking]
+verify_jwt = false
+
 [functions.contact]
 verify_jwt = false
 
