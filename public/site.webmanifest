@@ -1,0 +1,21 @@
+{
+  "name": "Plern Ping Cafe",
+  "short_name": "Plern Ping",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#8B6F47",
+  "background_color": "#F5F1E8",
+  "display": "standalone"
+}
