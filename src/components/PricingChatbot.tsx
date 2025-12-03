@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import sweetAlert from "@/lib/sweetAlert";
 
 interface Message {
   id: string;
@@ -78,7 +78,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error calling chatbot:', error);
-      toast.error(
+      sweetAlert.error(
         language === 'th'
           ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
           : 'An error occurred. Please try again.'

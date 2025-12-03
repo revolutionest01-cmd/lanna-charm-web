@@ -15,7 +15,7 @@ import {
   Send,
   Clock
 } from "lucide-react";
-import { toast } from "sonner";
+import sweetAlert from "@/lib/sweetAlert";
 
 interface Reply {
   id: number;
@@ -193,13 +193,13 @@ const TopicDetail = () => {
     e.preventDefault();
     
     if (!isAuthenticated || !user) {
-      toast.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
+      sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
       navigate('/auth');
       return;
     }
 
     if (!replyContent.trim()) {
-      toast.error(language === 'th' ? 'กรุณาใส่ข้อความ' : 'Please enter a message');
+      sweetAlert.error(language === 'th' ? 'กรุณาใส่ข้อความ' : 'Please enter a message');
       return;
     }
 
@@ -214,7 +214,7 @@ const TopicDetail = () => {
 
     setReplies([...replies, newReply]);
     setReplyContent("");
-    toast.success(language === 'th' ? 'ตอบกลับสำเร็จ' : 'Reply submitted successfully');
+    sweetAlert.success(language === 'th' ? 'ตอบกลับสำเร็จ' : 'Reply submitted successfully');
   };
 
   return (

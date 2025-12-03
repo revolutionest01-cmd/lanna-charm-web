@@ -16,7 +16,7 @@ import { CalendarIcon, Users } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { toast } from "sonner";
+import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BookingDialogProps {
@@ -38,7 +38,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     e.preventDefault();
     
     if (!checkIn || !checkOut || !name || !email || !phone) {
-      toast.error(language === 'th' ? 'กรุณากรอกข้อมูลให้ครบถ้วน' : 'Please fill in all fields');
+      sweetAlert.error(language === 'th' ? 'กรุณากรอกข้อมูลให้ครบถ้วน' : 'Please fill in all fields');
       return;
     }
 
@@ -56,7 +56,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
 
       if (error) throw error;
 
-      toast.success(
+      sweetAlert.success(
         language === 'th' 
           ? `ขอบคุณคุณ${name}! เราได้รับการจองของคุณแล้ว` 
           : `Thank you ${name}! We've received your booking.`
@@ -72,7 +72,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       setPhone("");
     } catch (error) {
       console.error('Booking submission error:', error);
-      toast.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+      sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
     }
   };
 

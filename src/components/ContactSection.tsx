@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Instagram, Facebook } from "lucide-react";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import sweetAlert from "@/lib/sweetAlert";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -140,7 +140,7 @@ const ContactSection = () => {
 
       if (error) {
         console.error("Error sending contact form:", error);
-        toast.error(
+        sweetAlert.error(
           language === "th"
             ? "เกิดข้อผิดพลาดในการส่งข้อความ กรุณาลองใหม่อีกครั้ง"
             : "Failed to send message. Please try again."
@@ -148,10 +148,8 @@ const ContactSection = () => {
         return;
       }
 
-      // Show success toast
-      toast.success(t.messageSent, {
-        description: t.messageSuccess,
-      });
+      // Show success alert
+      sweetAlert.success(t.messageSuccess, t.messageSent);
 
       // Reset form
       setFormData({
@@ -171,7 +169,7 @@ const ContactSection = () => {
         });
         setErrors(newErrors);
       } else {
-        toast.error(
+        sweetAlert.error(
           language === "th"
             ? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
             : "An error occurred. Please try again."

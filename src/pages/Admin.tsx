@@ -18,7 +18,7 @@ import {
   Shield,
   Phone
 } from "lucide-react";
-import { toast } from "sonner";
+import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
 import { HeroManagement } from "@/components/admin/HeroManagement";
 import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
@@ -108,10 +108,10 @@ const Admin = () => {
   useEffect(() => {
     if (!checkingAdmin && !isLoading) {
       if (!isAuthenticated) {
-        toast.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
+        sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
         navigate('/auth');
       } else if (!isAdmin) {
-        toast.error(language === 'th' ? 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้' : 'You do not have permission to access this page');
+        sweetAlert.error(language === 'th' ? 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้' : 'You do not have permission to access this page');
         navigate('/');
       }
     }
