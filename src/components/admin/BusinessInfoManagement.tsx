@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Loader2, Save } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import sweetAlert from "@/lib/sweetAlert";
 import { z } from "zod";
 import { format } from "date-fns";
 
@@ -122,13 +122,13 @@ const Reviews = () => {
     onError: (error: any) => {
       console.error("Error toggling like:", error);
       if (error.message === "Must be logged in") {
-        toast.error(
+        sweetAlert.error(
           language === "th" 
             ? "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ" 
             : "Please login to like reviews"
         );
       } else {
-        toast.error(
+        sweetAlert.error(
           language === "th" 
             ? "เกิดข้อผิดพลาด" 
             : "An error occurred"
@@ -156,7 +156,7 @@ const Reviews = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(
+      sweetAlert.success(
         language === "th" 
           ? "ส่งรีวิวสำเร็จ! รอการอนุมัติจากผู้ดูแล" 
           : "Review submitted! Pending admin approval"
@@ -172,9 +172,9 @@ const Reviews = () => {
     onError: (error: any) => {
       console.error("Error submitting review:", error);
       if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
+        sweetAlert.error(error.errors[0].message);
       } else {
-        toast.error(
+        sweetAlert.error(
           language === "th" 
             ? "เกิดข้อผิดพลาดในการส่งรีวิว" 
             : "Failed to submit review"
