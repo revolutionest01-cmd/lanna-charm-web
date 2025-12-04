@@ -42,6 +42,18 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       return;
     }
 
+    // Show confirmation dialog
+    const confirmed = await sweetAlert.modal.confirm(
+      language === 'th' ? 'ยืนยันการจอง' : 'Confirm Booking',
+      language === 'th' 
+        ? `คุณต้องการยืนยันการจองห้องพักใช่หรือไม่?\n\nวันเช็คอิน: ${format(checkIn, "PPP")}\nวันเช็คเอาท์: ${format(checkOut, "PPP")}\nจำนวนผู้เข้าพัก: ${guests} คน`
+        : `Do you want to confirm your booking?\n\nCheck-in: ${format(checkIn, "PPP")}\nCheck-out: ${format(checkOut, "PPP")}\nGuests: ${guests}`,
+      language === 'th' ? 'ยืนยัน' : 'Confirm',
+      language === 'th' ? 'ยกเลิก' : 'Cancel'
+    );
+
+    if (!confirmed) return;
+
     try {
       const { data, error } = await supabase.functions.invoke('booking', {
         body: {

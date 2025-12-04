@@ -133,6 +133,18 @@ const ContactSection = () => {
       contactSchema.parse(formData);
       setErrors({});
 
+      // Show confirmation dialog
+      const confirmed = await sweetAlert.modal.confirm(
+        language === "th" ? "ยืนยันการส่งข้อความ" : "Confirm Message",
+        language === "th"
+          ? `คุณต้องการส่งข้อความถึงเราใช่หรือไม่?\n\nหัวข้อ: ${formData.topic}`
+          : `Do you want to send this message?\n\nTopic: ${formData.topic}`,
+        language === "th" ? "ส่งข้อความ" : "Send",
+        language === "th" ? "ยกเลิก" : "Cancel"
+      );
+
+      if (!confirmed) return;
+
       // Send to LINE via edge function
       const { error } = await supabase.functions.invoke("contact", {
         body: formData,
