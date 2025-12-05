@@ -23,7 +23,10 @@ const businessInfoSchema = z.object({
   facebook: z.string().max(100).optional().nullable(),
   address_th: z.string().max(500).optional().nullable(),
   address_en: z.string().max(500).optional().nullable(),
-  google_maps_url: z.string().url("กรุณากรอก URL ที่ถูกต้อง").max(500).optional().nullable(),
+  google_maps_url: z.string().max(500).optional().nullable().refine(
+    (val) => !val || val === '' || /^https?:\/\/.+/.test(val),
+    { message: "กรุณากรอก URL ที่ถูกต้อง" }
+  ),
   opening_hours_th: z.string().max(200).optional().nullable(),
   opening_hours_en: z.string().max(200).optional().nullable(),
 });
