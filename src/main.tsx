@@ -12,7 +12,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // Clear old cache when app version changes
-const APP_VERSION = 'v1.0.0';
+const APP_VERSION = 'v1.0.1';
 const STORED_VERSION = localStorage.getItem('app_version');
 
 if (STORED_VERSION !== APP_VERSION) {

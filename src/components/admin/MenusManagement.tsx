@@ -478,8 +478,9 @@ export const MenusManagement = () => {
         );
       }
 
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["menus"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["menus"] });
+      await queryClient.refetchQueries({ queryKey: ["menus"] });
 
       setIsMenuDialogOpen(false);
       resetMenuForm();

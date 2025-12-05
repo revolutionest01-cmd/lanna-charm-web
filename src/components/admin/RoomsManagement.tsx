@@ -299,8 +299,9 @@ export const RoomsManagement = () => {
         );
       }
 
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      await queryClient.refetchQueries({ queryKey: ["rooms"] });
 
       setIsDialogOpen(false);
       resetForm();

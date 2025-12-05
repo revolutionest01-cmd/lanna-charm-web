@@ -214,8 +214,9 @@ export const ReviewsManagement = () => {
         toast.success(language === "th" ? "เพิ่มรีวิวสำเร็จ" : "Review added successfully");
       }
 
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      await queryClient.refetchQueries({ queryKey: ["reviews"] });
 
       setDialogOpen(false);
       resetForm();
@@ -276,8 +277,9 @@ export const ReviewsManagement = () => {
 
       toast.success(language === "th" ? "ลบรีวิวสำเร็จ" : "Review deleted successfully");
       
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      await queryClient.refetchQueries({ queryKey: ["reviews"] });
       
       fetchReviews();
     } catch (error: any) {
@@ -295,8 +297,9 @@ export const ReviewsManagement = () => {
 
       if (error) throw error;
       
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      await queryClient.refetchQueries({ queryKey: ["reviews"] });
       
       toast.success(
         language === "th"
