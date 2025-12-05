@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Add cache busting to image URLs
+const addCacheBuster = (url: string | null): string | null => {
+  if (!url) return null;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${Date.now()}`;
+};
+
 // Fetch all content data in parallel for better performance
 export const useContentData = () => {
   // Hero Content
@@ -16,9 +23,13 @@ export const useContentData = () => {
         .maybeSingle();
       
       if (error) throw error;
+      if (data) {
+        return { ...data, image_url: addCacheBuster(data.image_url) };
+      }
       return data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds - shorter for faster updates
+    refetchOnWindowFocus: true,
   });
 
   // Event Spaces
@@ -34,9 +45,13 @@ export const useContentData = () => {
         .maybeSingle();
       
       if (error) throw error;
+      if (data) {
+        return { ...data, image_url: addCacheBuster(data.image_url) };
+      }
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   // Rooms with Images (using JOIN)
@@ -53,9 +68,17 @@ export const useContentData = () => {
         .order("sort_order");
       
       if (error) throw error;
-      return data || [];
+      // Add cache buster to room images
+      return (data || []).map(room => ({
+        ...room,
+        images: (room.images || []).map((img: any) => ({
+          ...img,
+          image_url: addCacheBuster(img.image_url)
+        }))
+      }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   // Menu Categories and Items
@@ -79,10 +102,15 @@ export const useContentData = () => {
 
       return {
         categories: categoriesRes.data || [],
-        menus: menusRes.data || [],
+        menus: (menusRes.data || []).map(menu => ({
+          ...menu,
+          image_url: addCacheBuster(menu.image_url),
+          icon_url: addCacheBuster(menu.icon_url)
+        })),
       };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   // Gallery Images
@@ -96,9 +124,13 @@ export const useContentData = () => {
         .limit(9);
       
       if (error) throw error;
-      return data || [];
+      return (data || []).map(img => ({
+        ...img,
+        image_url: addCacheBuster(img.image_url)
+      }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   // Reviews
@@ -113,9 +145,13 @@ export const useContentData = () => {
         .limit(9);
       
       if (error) throw error;
-      return data || [];
+      return (data || []).map(review => ({
+        ...review,
+        image_url: addCacheBuster(review.image_url)
+      }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   return {

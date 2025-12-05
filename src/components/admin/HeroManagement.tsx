@@ -216,8 +216,9 @@ export const HeroManagement = () => {
         language === "th" ? "บันทึกสำเร็จ" : "Saved successfully"
       );
       
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["hero-content"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["hero-content"] });
+      await queryClient.refetchQueries({ queryKey: ["hero-content"] });
       
       loadHeroData();
       setImageFile(null);

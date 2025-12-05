@@ -150,6 +150,11 @@ export const GalleryManagement = () => {
       }
 
       toast.success(language === "th" ? `เพิ่มรูปภาพสำเร็จ ${formData.files.length} รูป` : `${formData.files.length} images added successfully`);
+      
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      await queryClient.refetchQueries({ queryKey: ["gallery"] });
+      
       setFormData({ title_en: "", title_th: "", files: [] });
       setPreviewUrls([]);
       fetchGalleryImages();
@@ -178,8 +183,9 @@ export const GalleryManagement = () => {
 
       toast.success(language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully");
       
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      await queryClient.refetchQueries({ queryKey: ["gallery"] });
       
       fetchGalleryImages();
     } catch (error: any) {

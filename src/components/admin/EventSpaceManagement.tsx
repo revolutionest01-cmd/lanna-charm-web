@@ -219,8 +219,9 @@ export const EventSpaceManagement = () => {
         language === "th" ? "บันทึกสำเร็จ" : "Saved successfully"
       );
       
-      // Invalidate queries to refresh data on homepage
-      queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
+      // Force refetch all queries to refresh data on homepage immediately
+      await queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
+      await queryClient.refetchQueries({ queryKey: ["event-spaces"] });
       
       loadEventSpaceData();
       setImageFile(null);
