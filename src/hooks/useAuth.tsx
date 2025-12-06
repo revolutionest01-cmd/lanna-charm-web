@@ -37,22 +37,36 @@ const setAuthState = (updates: Partial<AuthState>) => {
 // Initialize auth state
 const initializeAuth = async () => {
   // Set up auth state listener FIRST
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  supabase.auth.onAuthStateChange(async (_event, session) => {
     let user: User | null = null;
-    
+
     if (session?.user) {
-    // Fetch profile data
+      const metadata = session.user.user_metadata || {};
+      const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
+      const avatarUrl = metadata.avatar_url || metadata.picture;
+
+      // Ensure a profile row exists/updated for OAuth users (e.g., Google)
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
+          display_name: displayName,
+          avatar_url: avatarUrl,
+        })
+        .select()
+        .single();
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('display_name, avatar_url')
         .eq('id', session.user.id)
         .maybeSingle();
-      
+
       user = {
         id: session.user.id,
-        name: profile?.display_name || session.user.email?.split('@')[0] || 'User',
+        name: profile?.display_name || displayName,
         email: session.user.email || '',
-        avatar: profile?.avatar_url || session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+        avatar: profile?.avatar_url || avatarUrl,
       };
     }
     
@@ -70,8 +84,22 @@ const initializeAuth = async () => {
   let user: User | null = null;
   
   if (session?.user) {
-    // Defer profile fetch with setTimeout
+    // Defer profile fetch/upsert to avoid blocking initial render
     setTimeout(async () => {
+      const metadata = session.user.user_metadata || {};
+      const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
+      const avatarUrl = metadata.avatar_url || metadata.picture;
+
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
+          display_name: displayName,
+          avatar_url: avatarUrl,
+        })
+        .select()
+        .single();
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('display_name, avatar_url')
@@ -80,9 +108,9 @@ const initializeAuth = async () => {
       
       const updatedUser: User = {
         id: session.user.id,
-        name: profile?.display_name || session.user.email?.split('@')[0] || 'User',
+        name: profile?.display_name || displayName,
         email: session.user.email || '',
-        avatar: profile?.avatar_url || session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+        avatar: profile?.avatar_url || avatarUrl,
       };
       
       setAuthState({ user: updatedUser });
