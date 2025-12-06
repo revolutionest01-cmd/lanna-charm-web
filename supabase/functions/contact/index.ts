@@ -5,6 +5,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple rate limiting using in-memory store (resets on function cold start)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 5; // Max requests per window
+const RATE_WINDOW = 60 * 1000; // 1 minute window
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    return false;
+  }
+  
+  record.count++;
+  return record.count > RATE_LIMIT;
+}
+
+// Input validation functions
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
+function validatePhone(phone: string): boolean {
+  // Allow Thai phone formats: 0xx-xxx-xxxx, 0xxxxxxxxx, +66xxxxxxxxx
+  const phoneRegex = /^(\+66|0)[0-9]{8,9}$/;
+  const cleanPhone = phone.replace(/[-\s]/g, '');
+  return phoneRegex.test(cleanPhone) && cleanPhone.length <= 15;
+}
+
+function sanitizeString(str: string, maxLength: number = 500): string {
+  if (typeof str !== 'string') return '';
+  // Remove potentially dangerous characters and limit length
+  return str
+    .replace(/[<>]/g, '') // Remove HTML brackets
+    .trim()
+    .substring(0, maxLength);
+}
+
 interface ContactRequest {
   name: string;
   email: string;
@@ -20,9 +60,91 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, phone, topic, message }: ContactRequest = await req.json();
+    // Rate limiting check
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
     
-    console.log("Received contact form submission:", { name, email, phone, topic });
+    if (isRateLimited(clientIP)) {
+      console.warn(`Rate limit exceeded for IP: ${clientIP.substring(0, 8)}...`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const body = await req.json();
+    
+    // Validate required fields exist
+    const { name, email, phone, topic, message } = body as ContactRequest;
+    
+    if (!name || !email || !phone || !topic || !message) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Sanitize and validate inputs
+    const sanitizedName = sanitizeString(name, 100);
+    const sanitizedEmail = sanitizeString(email, 255);
+    const sanitizedPhone = sanitizeString(phone, 20);
+    const sanitizedTopic = sanitizeString(topic, 200);
+    const sanitizedMessage = sanitizeString(message, 1000);
+
+    // Validate input formats
+    if (sanitizedName.length < 2) {
+      return new Response(
+        JSON.stringify({ error: "Invalid name" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!validateEmail(sanitizedEmail)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!validatePhone(sanitizedPhone)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid phone format" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (sanitizedMessage.length < 10) {
+      return new Response(
+        JSON.stringify({ error: "Message too short" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
+    // Log only non-sensitive data
+    console.log("Contact form received:", { 
+      hasName: !!sanitizedName, 
+      topic: sanitizedTopic,
+      messageLength: sanitizedMessage.length 
+    });
 
     // Get LINE credentials from environment
     const LINE_CHANNEL_ACCESS_TOKEN = Deno.env.get("LINE_CHANNEL_ACCESS_TOKEN");
@@ -51,17 +173,17 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Format message for LINE
+    // Format message for LINE using sanitized inputs
     const lineMessage = `
 📬 ข้อความใหม่จากแบบฟอร์มติดต่อ
 
-👤 ชื่อ: ${name}
-📧 อีเมล: ${email}
-📱 เบอร์โทร: ${phone}
-📋 หัวข้อ: ${topic}
+👤 ชื่อ: ${sanitizedName}
+📧 อีเมล: ${sanitizedEmail}
+📱 เบอร์โทร: ${sanitizedPhone}
+📋 หัวข้อ: ${sanitizedTopic}
 
 💬 ข้อความ:
-${message}
+${sanitizedMessage}
     `.trim();
 
     // Send message to LINE Messaging API (to both user and group if configured)
@@ -89,22 +211,21 @@ ${message}
 
       if (!lineResponse.ok) {
         const errorText = await lineResponse.text();
-        console.error(`LINE API error for ${recipient}:`, errorText);
-        throw new Error(`Failed to send to ${recipient}: ${errorText}`);
+        console.error(`LINE API error for recipient:`, errorText);
+        throw new Error(`Failed to send LINE message`);
       }
 
       return recipient;
     });
 
     try {
-      const sentTo = await Promise.all(sendPromises);
-      console.log("LINE message sent successfully to:", sentTo);
+      await Promise.all(sendPromises);
+      console.log("LINE message sent successfully");
     } catch (error: any) {
-      console.error("Error sending LINE messages:", error);
+      console.error("Error sending LINE messages:", error.message);
       return new Response(
         JSON.stringify({ 
-          error: "Failed to send LINE message",
-          details: error.message 
+          error: "Failed to send LINE message"
         }),
         {
           status: 500,
@@ -121,9 +242,9 @@ ${message}
       }
     );
   } catch (error: any) {
-    console.error("Error in contact function:", error);
+    console.error("Error in contact function:", error.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An error occurred processing your request" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
