@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageCircle, LogIn, LogOut, Shield, Home, Info, Calendar, Bed, Coffee, Image, Star, Mail } from "lucide-react";
+import { Menu, X, MessageCircle, LogIn, LogOut, Shield, Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -146,6 +147,19 @@ const Header = () => {
             {/* Auth Buttons */}
             {isAuthenticated && user ? (
               <>
+                {/* User Profile Display */}
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border-2 border-highlight/30">
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarFallback className="bg-highlight/20 text-highlight text-xs">
+                      {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className={`text-sm font-medium ${!isScrolled ? "text-white" : "text-foreground"}`}>
+                    {user.name}
+                  </span>
+                </div>
+                
                 {isAdmin && (
                   <Button 
                     variant="outline" 
@@ -272,6 +286,19 @@ const Header = () => {
               
               {isAuthenticated && user ? (
                 <>
+                  {/* Mobile User Profile Display */}
+                  <div className="flex items-center gap-2 py-2">
+                    <Avatar className="h-8 w-8 border-2 border-highlight/30">
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarFallback className="bg-highlight/20 text-highlight text-xs">
+                        {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className={`text-sm font-medium ${!isScrolled ? "text-white" : "text-foreground"}`}>
+                      {user.name}
+                    </span>
+                  </div>
+                  
                   {isAdmin && (
                     <Button 
                       variant="outline" 
