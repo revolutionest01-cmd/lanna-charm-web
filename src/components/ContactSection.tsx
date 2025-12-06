@@ -145,9 +145,9 @@ const ContactSection = () => {
 
       if (!confirmed) return;
 
-      // Send to LINE via edge function
+      // Send to backend function (contact -> notifies LINE)
       const { error } = await supabase.functions.invoke("contact", {
-        body: formData,
+        body: { ...formData, language },
       });
 
       if (error) {
