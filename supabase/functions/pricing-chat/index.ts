@@ -7,14 +7,83 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple rate limiting using in-memory store
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10; // Max requests per window
+const RATE_WINDOW = 60 * 1000; // 1 minute window
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    return false;
+  }
+  
+  record.count++;
+  return record.count > RATE_LIMIT;
+}
+
+function sanitizeString(str: string, maxLength: number = 500): string {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/[<>]/g, '')
+    .trim()
+    .substring(0, maxLength);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, language = 'th' } = await req.json();
-    console.log('Received message:', message, 'Language:', language);
+    // Rate limiting check
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
+    
+    if (isRateLimited(clientIP)) {
+      console.warn(`Rate limit exceeded for IP: ${clientIP.substring(0, 8)}...`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const body = await req.json();
+    const rawMessage = body.message;
+    const language = body.language || 'th';
+
+    // Validate inputs
+    if (!rawMessage || typeof rawMessage !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Message is required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const message = sanitizeString(rawMessage, 500);
+    const sanitizedLanguage = ['th', 'en', 'zh'].includes(language) ? language : 'th';
+
+    if (message.length < 2) {
+      return new Response(
+        JSON.stringify({ error: "Message too short" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Chat request received:', { messageLength: message.length, language: sanitizedLanguage });
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -38,7 +107,7 @@ serve(async (req) => {
       
       if (rooms && rooms.length > 0) {
         context = `ข้อมูลห้องพัก:\n${rooms.map(r => 
-          `- ${language === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน\n  ${language === 'th' ? r.description_th : r.description_en}`
+          `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน\n  ${sanitizedLanguage === 'th' ? r.description_th : r.description_en}`
         ).join('\n')}`;
       }
     }
@@ -54,7 +123,7 @@ serve(async (req) => {
       
       if (events && events.length > 0) {
         context = `ข้อมูลห้องประชุม & งานเลี้ยง:\n${events.map(e => 
-          `- ${language === 'th' ? e.title_th : e.title_en}\n  ${language === 'th' ? e.description_th : e.description_en}`
+          `- ${sanitizedLanguage === 'th' ? e.title_th : e.title_en}\n  ${sanitizedLanguage === 'th' ? e.description_th : e.description_en}`
         ).join('\n')}`;
       }
     }
@@ -80,8 +149,8 @@ serve(async (req) => {
       if (menus && menus.length > 0) {
         context = `ข้อมูลเมนูอาหารและเครื่องดื่ม:\n${menus.map(m => {
           const category = Array.isArray(m.menu_categories) ? m.menu_categories[0] : m.menu_categories;
-          const categoryName = category ? (language === 'th' ? category.name_th : category.name_en) : 'ทั่วไป';
-          return `- ${language === 'th' ? m.name_th : m.name_en} (${categoryName}): ${m.price} บาท${m.description_th || m.description_en ? '\n  ' + (language === 'th' ? m.description_th : m.description_en) : ''}`;
+          const categoryName = category ? (sanitizedLanguage === 'th' ? category.name_th : category.name_en) : 'ทั่วไป';
+          return `- ${sanitizedLanguage === 'th' ? m.name_th : m.name_en} (${categoryName}): ${m.price} บาท${m.description_th || m.description_en ? '\n  ' + (sanitizedLanguage === 'th' ? m.description_th : m.description_en) : ''}`;
         }).join('\n')}`;
       }
     }
@@ -92,7 +161,7 @@ serve(async (req) => {
       intent = 'unsupported';
     }
 
-    console.log('Intent:', intent, 'Context length:', context.length);
+    console.log('Intent detected:', intent);
 
     // Call Lovable AI
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -100,7 +169,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = language === 'th' 
+    const systemPrompt = sanitizedLanguage === 'th' 
       ? `คุณเป็นผู้ช่วยตอบคำถามเกี่ยวกับราคาห้องพัก ห้องประชุม/งานเลี้ยง และเมนูอาหาร/เครื่องดื่มของ Plern Ping Cafe & Resort
 
 กฎการตอบ:
@@ -146,7 +215,7 @@ ${context}`;
     const aiData = await aiResponse.json();
     const reply = aiData.choices[0].message.content;
 
-    console.log('AI Response:', reply);
+    console.log('AI response generated successfully');
 
     return new Response(
       JSON.stringify({ reply, intent }),
@@ -154,14 +223,11 @@ ${context}`;
     );
 
   } catch (error) {
-    console.error('Error in pricing-chat:', error);
-    const { language: errorLang = 'th' } = await req.json().catch(() => ({ language: 'th' }));
+    console.error('Error in pricing-chat:', error instanceof Error ? error.message : 'Unknown error');
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        reply: errorLang === 'th' 
-          ? 'ขออภัยค่ะ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อเจ้าหน้าที่ค่ะ'
-          : 'Sorry, an error occurred. Please try again or contact our staff.'
+        error: 'An error occurred',
+        reply: 'ขออภัยค่ะ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อเจ้าหน้าที่ค่ะ'
       }),
       { 
         status: 500,
