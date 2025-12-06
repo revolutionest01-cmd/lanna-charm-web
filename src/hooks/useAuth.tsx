@@ -41,10 +41,10 @@ const initializeAuth = async () => {
     let user: User | null = null;
     
     if (session?.user) {
-      // Fetch profile data
+    // Fetch profile data
       const { data: profile } = await supabase
         .from('profiles')
-        .select('display_name')
+        .select('display_name, avatar_url')
         .eq('id', session.user.id)
         .maybeSingle();
       
@@ -52,6 +52,7 @@ const initializeAuth = async () => {
         id: session.user.id,
         name: profile?.display_name || session.user.email?.split('@')[0] || 'User',
         email: session.user.email || '',
+        avatar: profile?.avatar_url || session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
       };
     }
     
@@ -73,7 +74,7 @@ const initializeAuth = async () => {
     setTimeout(async () => {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('display_name')
+        .select('display_name, avatar_url')
         .eq('id', session.user.id)
         .maybeSingle();
       
@@ -81,6 +82,7 @@ const initializeAuth = async () => {
         id: session.user.id,
         name: profile?.display_name || session.user.email?.split('@')[0] || 'User',
         email: session.user.email || '',
+        avatar: profile?.avatar_url || session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
       };
       
       setAuthState({ user: updatedUser });
