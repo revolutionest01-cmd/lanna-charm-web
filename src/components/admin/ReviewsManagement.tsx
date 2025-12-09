@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
+import sweetAlert from "@/lib/sweetAlert";
 import { Loader2, Plus, Trash2, Edit, Star } from "lucide-react";
 import { z } from "zod";
 
@@ -246,9 +247,12 @@ export const ReviewsManagement = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(language === "th" ? "คุณต้องการลบรีวิวนี้หรือไม่?" : "Are you sure you want to delete this review?")) {
-      return;
-    }
+    const confirmed = await sweetAlert.modal.confirmDelete(
+      language === "th" ? "ยืนยันการลบ" : "Confirm Delete",
+      language === "th" ? "คุณต้องการลบรีวิวนี้หรือไม่?" : "Are you sure you want to delete this review?"
+    );
+    
+    if (!confirmed) return;
 
     try {
       // Get the review to delete its image

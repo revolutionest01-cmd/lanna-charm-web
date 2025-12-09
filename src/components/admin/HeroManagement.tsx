@@ -33,6 +33,7 @@ export const HeroManagement = () => {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentHero, setCurrentHero] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -162,7 +163,7 @@ export const HeroManagement = () => {
 
   const onSubmit = async (values: HeroFormValues) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
       // Upload image if there's a new one
       const imageUrl = await uploadImage();
@@ -228,7 +229,7 @@ export const HeroManagement = () => {
         language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save"
       );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -319,7 +320,7 @@ export const HeroManagement = () => {
                             ? "กรอกหัวข้อภาษาไทย"
                             : "Enter Thai title"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -345,7 +346,7 @@ export const HeroManagement = () => {
                             ? "กรอกหัวข้อภาษาอังกฤษ"
                             : "Enter English title"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -371,7 +372,7 @@ export const HeroManagement = () => {
                             ? "กรอกคำบรรยายภาษาไทย (ไม่บังคับ)"
                             : "Enter Thai subtitle (optional)"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -397,7 +398,7 @@ export const HeroManagement = () => {
                             ? "กรอกคำบรรยายภาษาอังกฤษ (ไม่บังคับ)"
                             : "Enter English subtitle (optional)"
                         }
-                        disabled={loading}
+                        disabled={submitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -411,10 +412,10 @@ export const HeroManagement = () => {
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={loading || uploading}
+              disabled={submitting || uploading}
               className="min-w-[120px]"
             >
-              {loading || uploading ? (
+              {submitting || uploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {language === "th" ? "กำลังบันทึก..." : "Saving..."}
