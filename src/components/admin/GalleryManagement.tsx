@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast";
+import sweetAlert from "@/lib/sweetAlert";
 import { Loader2, Plus, Trash2, Upload, X } from "lucide-react";
 import { z } from "zod";
 
@@ -167,9 +168,12 @@ export const GalleryManagement = () => {
   };
 
   const handleDelete = async (image: GalleryImage) => {
-    if (!confirm(language === "th" ? "คุณต้องการลบรูปภาพนี้หรือไม่?" : "Are you sure you want to delete this image?")) {
-      return;
-    }
+    const confirmed = await sweetAlert.modal.confirmDelete(
+      language === "th" ? "ยืนยันการลบ" : "Confirm Delete",
+      language === "th" ? "คุณต้องการลบรูปภาพนี้หรือไม่?" : "Are you sure you want to delete this image?"
+    );
+    
+    if (!confirmed) return;
 
     try {
       // Extract filename from URL

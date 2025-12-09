@@ -167,7 +167,7 @@ export const MenusManagement = () => {
   // Category CRUD
   const onSubmitCategory = async (values: CategoryFormValues) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
       if (selectedCategory) {
         const { error } = await supabase
@@ -200,7 +200,7 @@ export const MenusManagement = () => {
       console.error("Error saving category:", error);
       toast.error(language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
