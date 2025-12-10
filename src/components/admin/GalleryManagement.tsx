@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useQueryClient } from "@tanstack/react-query";
+import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -152,7 +153,8 @@ export const GalleryManagement = () => {
 
       toast.success(language === "th" ? `เพิ่มรูปภาพสำเร็จ ${formData.files.length} รูป` : `${formData.files.length} images added successfully`);
       
-      // Force refetch all queries to refresh data on homepage immediately
+      // Update cache version and force refetch
+      invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["gallery"] });
       await queryClient.refetchQueries({ queryKey: ["gallery"] });
       
@@ -187,7 +189,8 @@ export const GalleryManagement = () => {
 
       toast.success(language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully");
       
-      // Force refetch all queries to refresh data on homepage immediately
+      // Update cache version and force refetch
+      invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["gallery"] });
       await queryClient.refetchQueries({ queryKey: ["gallery"] });
       
