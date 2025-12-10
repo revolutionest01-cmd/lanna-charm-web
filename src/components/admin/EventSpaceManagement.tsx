@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -219,7 +220,8 @@ export const EventSpaceManagement = () => {
         language === "th" ? "บันทึกสำเร็จ" : "Saved successfully"
       );
       
-      // Force refetch all queries to refresh data on homepage immediately
+      // Update cache version and force refetch
+      invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
       await queryClient.refetchQueries({ queryKey: ["event-spaces"] });
       

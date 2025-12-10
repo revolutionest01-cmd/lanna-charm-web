@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useQueryClient } from "@tanstack/react-query";
+import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -215,7 +216,8 @@ export const ReviewsManagement = () => {
         toast.success(language === "th" ? "เพิ่มรีวิวสำเร็จ" : "Review added successfully");
       }
 
-      // Force refetch all queries to refresh data on homepage immediately
+      // Update cache version and force refetch
+      invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["reviews"] });
       await queryClient.refetchQueries({ queryKey: ["reviews"] });
 
@@ -281,7 +283,8 @@ export const ReviewsManagement = () => {
 
       toast.success(language === "th" ? "ลบรีวิวสำเร็จ" : "Review deleted successfully");
       
-      // Force refetch all queries to refresh data on homepage immediately
+      // Update cache version and force refetch
+      invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["reviews"] });
       await queryClient.refetchQueries({ queryKey: ["reviews"] });
       
@@ -301,7 +304,8 @@ export const ReviewsManagement = () => {
 
       if (error) throw error;
       
-      // Force refetch all queries to refresh data on homepage immediately
+      // Update cache version and force refetch
+      invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["reviews"] });
       await queryClient.refetchQueries({ queryKey: ["reviews"] });
       
