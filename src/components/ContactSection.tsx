@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Instagram, Facebook } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Instagram, Facebook, Twitter } from "lucide-react";
 import { useState, useEffect } from "react";
 import sweetAlert from "@/lib/sweetAlert";
 import { z } from "zod";
@@ -20,6 +20,7 @@ const ContactSection = () => {
     line_id?: string | null;
     instagram?: string | null;
     facebook?: string | null;
+    twitter?: string | null;
     address_th?: string | null;
     address_en?: string | null;
     opening_hours_th?: string | null;
@@ -320,21 +321,21 @@ const ContactSection = () => {
             )}
 
             {/* Social Media */}
-            {(businessInfo?.instagram || businessInfo?.facebook) && (
+            {(businessInfo?.instagram || businessInfo?.facebook || businessInfo?.line_id || businessInfo?.twitter) && (
               <div>
                 <h3 className="font-semibold text-xl mb-4 text-foreground">
                   {t.followUs}
                 </h3>
-                <div className="flex gap-4">
-                  {businessInfo.instagram && (
+                <div className="flex gap-4 flex-wrap">
+                  {businessInfo.line_id && (
                     <a
-                      href={`https://www.instagram.com/${businessInfo.instagram.replace('@', '')}`}
+                      href={`https://line.me/R/ti/p/${businessInfo.line_id.replace('@', '%40')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
-                      aria-label="Instagram"
+                      aria-label="LINE"
                     >
-                      <Instagram className="w-6 h-6 text-foreground" />
+                      <MessageCircle className="w-6 h-6 text-foreground" />
                     </a>
                   )}
                   {businessInfo.facebook && (
@@ -348,6 +349,30 @@ const ContactSection = () => {
                       aria-label="Facebook"
                     >
                       <Facebook className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                  {businessInfo.instagram && (
+                    <a
+                      href={`https://www.instagram.com/${businessInfo.instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                  {businessInfo.twitter && (
+                    <a
+                      href={businessInfo.twitter.startsWith('http') 
+                        ? businessInfo.twitter 
+                        : `https://x.com/${businessInfo.twitter.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      aria-label="X (Twitter)"
+                    >
+                      <Twitter className="w-6 h-6 text-foreground" />
                     </a>
                   )}
                 </div>
