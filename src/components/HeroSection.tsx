@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MapPin } from "lucide-react";
-import heroImage from "@/assets/hero-cafe.jpg";
+import { ArrowRight, MapPin, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useContentData } from "@/hooks/useContentData";
 
@@ -9,14 +8,26 @@ const HeroSection = () => {
   const t = translations[language];
   const { hero, isLoading } = useContentData();
   
-  // Use database content if available, fallback to translations
+  // Use database content - show loading if not ready
   const heroTitle = hero 
     ? (language === 'th' ? hero.title_th : hero.title_en)
-    : t.heroTitle;
+    : null;
   const heroSubtitle = hero
     ? (language === 'th' ? hero.subtitle_th : hero.subtitle_en)
-    : t.heroSubtitle;
-  const heroImageUrl = hero?.image_url || heroImage;
+    : null;
+  const heroImageUrl = hero?.image_url;
+
+  // Show loading state while fetching data
+  if (isLoading || !hero) {
+    return (
+      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-muted">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">{language === 'th' ? 'กำลังโหลด...' : 'Loading...'}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">

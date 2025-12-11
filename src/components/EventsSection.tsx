@@ -71,10 +71,10 @@ const EventsSection = () => {
 
           <div className="space-y-6 animate-fade-in">
             <h3 className="text-3xl font-bold text-foreground">
-              {title || t.eventsMainTitle}
+              {title || (language === "th" ? "ห้องประชุม" : "Meeting Room")}
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              {description || t.eventsMainDesc}
+              {description || (language === "th" ? "พื้นที่จัดงานประชุมและอีเวนต์" : "Space for meetings and events")}
             </p>
 
             <div className="space-y-4">

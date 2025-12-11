@@ -1,9 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useRef } from "react";
+import { useCallback, useState, useEffect } from "react";
 
-// Cache buster version - increment this when admin updates content
-// This is stored in localStorage to persist across page loads
+// Cache buster version - stored in localStorage
 const getCacheBusterVersion = (): string => {
   return localStorage.getItem('content_cache_version') || '1';
 };
@@ -12,6 +11,8 @@ const getCacheBusterVersion = (): string => {
 export const invalidateContentCache = (): void => {
   const newVersion = Date.now().toString();
   localStorage.setItem('content_cache_version', newVersion);
+  // Dispatch custom event to notify all components
+  window.dispatchEvent(new CustomEvent('content-cache-invalidated', { detail: newVersion }));
 };
 
 // Add cache busting to image URLs using stable version
@@ -25,22 +26,34 @@ const addCacheBuster = (url: string | null, version: string): string | null => {
 export const useContentData = () => {
   const queryClient = useQueryClient();
   
-  // Get stable cache version that only changes on admin updates
-  const cacheVersionRef = useRef(getCacheBusterVersion());
+  // Use state instead of ref to trigger re-renders when cache version changes
+  const [cacheVersion, setCacheVersion] = useState(getCacheBusterVersion);
+  
+  // Listen for cache invalidation events
+  useEffect(() => {
+    const handleCacheInvalidated = (event: CustomEvent) => {
+      setCacheVersion(event.detail);
+    };
+    
+    window.addEventListener('content-cache-invalidated', handleCacheInvalidated as EventListener);
+    return () => {
+      window.removeEventListener('content-cache-invalidated', handleCacheInvalidated as EventListener);
+    };
+  }, []);
   
   // Function to refresh all content (called after admin updates)
   const refreshContent = useCallback(() => {
     invalidateContentCache();
-    cacheVersionRef.current = getCacheBusterVersion();
     queryClient.invalidateQueries({ queryKey: ["hero-content"] });
     queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
     queryClient.invalidateQueries({ queryKey: ["rooms"] });
     queryClient.invalidateQueries({ queryKey: ["menus"] });
     queryClient.invalidateQueries({ queryKey: ["gallery"] });
     queryClient.invalidateQueries({ queryKey: ["reviews"] });
+    queryClient.invalidateQueries({ queryKey: ["menu_categories"] });
+    queryClient.invalidateQueries({ queryKey: ["business_info"] });
+    queryClient.invalidateQueries({ queryKey: ["business_info_footer"] });
   }, [queryClient]);
-
-  const cacheVersion = cacheVersionRef.current;
 
   // Hero Content
   const heroQuery = useQuery({
