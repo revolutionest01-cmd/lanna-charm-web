@@ -56,11 +56,7 @@ const ReviewsSection = () => {
           </p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">{language === "th" ? "กำลังโหลด..." : "Loading..."}</p>
-          </div>
-        ) : reviews.length === 0 ? (
+        {reviews.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">{language === "th" ? "ยังไม่มีรีวิว" : "No reviews yet"}</p>
           </div>
