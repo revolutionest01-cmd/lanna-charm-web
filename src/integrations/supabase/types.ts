@@ -65,6 +65,7 @@ export type Database = {
           opening_hours_th: string | null
           phone_primary: string
           phone_secondary: string | null
+          twitter: string | null
           updated_at: string
         }
         Insert: {
@@ -84,6 +85,7 @@ export type Database = {
           opening_hours_th?: string | null
           phone_primary: string
           phone_secondary?: string | null
+          twitter?: string | null
           updated_at?: string
         }
         Update: {
@@ -103,6 +105,7 @@ export type Database = {
           opening_hours_th?: string | null
           phone_primary?: string
           phone_secondary?: string | null
+          twitter?: string | null
           updated_at?: string
         }
         Relationships: []
