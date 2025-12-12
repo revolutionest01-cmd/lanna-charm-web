@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, MessageCircle, LogIn, LogOut, Shield, Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, User } from "lucide-react";
@@ -8,6 +8,7 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
 import { supabase } from "@/integrations/supabase/client";
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,13 +40,15 @@ const Header = () => {
 
     checkAdminStatus();
   }, [user]);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   const navItems = [{
     label: t.home,
     href: "/",
@@ -79,38 +82,48 @@ const Header = () => {
     href: "/#contact",
     icon: Mail
   }];
+
   const toggleLanguage = () => {
     setLanguage(language === 'th' ? 'en' : 'th');
   };
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const scrollToSection = useCallback((sectionId: string) => {
+    requestAnimationFrame(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }, []);
+
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
     
     if (href.startsWith('/#')) {
-      // Hash navigation within homepage
       const sectionId = href.substring(2);
       if (location.pathname === '/') {
-        // Already on homepage, just scroll
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
+        scrollToSection(sectionId);
       } else {
-        // Navigate to homepage first, then scroll
-        navigate('/');
-        setTimeout(() => {
-          const element = document.getElementById(sectionId);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
+        startTransition(() => {
+          navigate('/');
+        });
+        setTimeout(() => scrollToSection(sectionId), 150);
+      }
+    } else if (href === '/') {
+      if (location.pathname !== '/') {
+        startTransition(() => {
+          navigate('/');
+        });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } else {
-      // Regular page navigation
-      navigate(href);
+      startTransition(() => {
+        navigate(href);
+      });
     }
-  };
+  }, [location.pathname, navigate, scrollToSection]);
   return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-card/95 backdrop-blur-md shadow-lg" : "bg-black/30 backdrop-blur-sm"}`}>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
