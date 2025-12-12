@@ -21,14 +21,17 @@ const Index = () => {
   const [loadingComplete, setLoadingComplete] = useState(false);
   const { isLoading } = useContentData();
 
-  const showLoading = !loadingComplete || isLoading;
+  const isDataLoaded = !isLoading;
 
   return (
     <>
-      {showLoading && (
-        <LoadingScreen onLoadingComplete={() => setLoadingComplete(true)} />
+      {!loadingComplete && (
+        <LoadingScreen 
+          onLoadingComplete={() => setLoadingComplete(true)} 
+          isDataLoaded={isDataLoaded}
+        />
       )}
-      <div className={`relative min-h-screen ${showLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}>
+      <div className={`relative min-h-screen ${!loadingComplete ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}>
         <FallingLeaves />
         <AmbientSound />
         <Header />
