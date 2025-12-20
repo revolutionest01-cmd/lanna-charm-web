@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import plernpingLogo from "@/assets/plernping-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import VisitorCounter from "@/components/VisitorCounter";
 
 const Footer = () => {
   const { language } = useLanguage();
@@ -187,8 +188,13 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-border pt-8 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} {language === 'th' ? businessInfo.business_name_th : businessInfo.business_name_en}. {t.allRightsReserved}.</p>
+        <div className="border-t border-border pt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-muted-foreground text-center sm:text-left">
+              &copy; {new Date().getFullYear()} {language === 'th' ? businessInfo.business_name_th : businessInfo.business_name_en}. {t.allRightsReserved}.
+            </p>
+            <VisitorCounter />
+          </div>
         </div>
       </div>
     </footer>
