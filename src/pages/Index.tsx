@@ -23,11 +23,16 @@ const Index = () => {
 
   const isDataLoaded = !isLoading;
 
+  // Handle loading completion
+  const handleLoadingComplete = () => {
+    setLoadingComplete(true);
+  };
+
   return (
     <>
       {!loadingComplete && (
         <LoadingScreen 
-          onLoadingComplete={() => setLoadingComplete(true)} 
+          onLoadingComplete={handleLoadingComplete} 
           isDataLoaded={isDataLoaded}
         />
       )}

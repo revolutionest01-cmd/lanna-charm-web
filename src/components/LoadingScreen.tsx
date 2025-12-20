@@ -6,13 +6,27 @@ interface LoadingScreenProps {
   isDataLoaded?: boolean;
 }
 
+// Track if initial load has completed across component lifecycles
+let hasInitialLoadCompleted = false;
+
 const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
   const hasCompletedRef = useRef(false);
 
-  // Progress animation
+  // Skip loading screen if already shown once in this session
   useEffect(() => {
+    if (hasInitialLoadCompleted) {
+      // Immediately complete without showing loading screen
+      onLoadingComplete();
+      return;
+    }
+  }, [onLoadingComplete]);
+
+  // Progress animation - only runs if not already loaded
+  useEffect(() => {
+    if (hasInitialLoadCompleted) return;
+
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) return 100;
@@ -33,11 +47,13 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
     return () => clearInterval(timer);
   }, [isDataLoaded]);
 
-  // Complete loading when progress reaches 100 OR after max timeout
+  // Complete loading when progress reaches 100
   useEffect(() => {
-    // Complete when progress hits 100
+    if (hasInitialLoadCompleted) return;
+
     if (progress >= 100 && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
+      hasInitialLoadCompleted = true;
       setFadeOut(true);
       setTimeout(onLoadingComplete, 400);
     }
@@ -45,9 +61,12 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
 
   // Fallback timeout - force complete after 4 seconds max
   useEffect(() => {
+    if (hasInitialLoadCompleted) return;
+
     const timeout = setTimeout(() => {
       if (!hasCompletedRef.current) {
         hasCompletedRef.current = true;
+        hasInitialLoadCompleted = true;
         setProgress(100);
         setFadeOut(true);
         setTimeout(onLoadingComplete, 400);
@@ -56,6 +75,11 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
 
     return () => clearTimeout(timeout);
   }, [onLoadingComplete]);
+
+  // Don't render if already completed initial load
+  if (hasInitialLoadCompleted) {
+    return null;
+  }
 
   return (
     <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-400 ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
