@@ -6,26 +6,41 @@ interface LoadingScreenProps {
   isDataLoaded?: boolean;
 }
 
-// Track if initial load has completed across component lifecycles
-let hasInitialLoadCompleted = false;
+// Track if initial load has completed - using sessionStorage for persistence
+const getHasInitialLoadCompleted = (): boolean => {
+  try {
+    return sessionStorage.getItem('loadingScreenCompleted') === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const setHasInitialLoadCompleted = (): void => {
+  try {
+    sessionStorage.setItem('loadingScreenCompleted', 'true');
+  } catch {
+    // Ignore storage errors
+  }
+};
 
 const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
+  const [shouldRender, setShouldRender] = useState(true);
   const hasCompletedRef = useRef(false);
+  const initialLoadCompletedRef = useRef(getHasInitialLoadCompleted());
 
   // Skip loading screen if already shown once in this session
   useEffect(() => {
-    if (hasInitialLoadCompleted) {
-      // Immediately complete without showing loading screen
+    if (initialLoadCompletedRef.current) {
+      setShouldRender(false);
       onLoadingComplete();
-      return;
     }
   }, [onLoadingComplete]);
 
   // Progress animation - only runs if not already loaded
   useEffect(() => {
-    if (hasInitialLoadCompleted) return;
+    if (initialLoadCompletedRef.current) return;
 
     const timer = setInterval(() => {
       setProgress((prev) => {
@@ -49,27 +64,33 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
 
   // Complete loading when progress reaches 100
   useEffect(() => {
-    if (hasInitialLoadCompleted) return;
+    if (initialLoadCompletedRef.current) return;
 
     if (progress >= 100 && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
-      hasInitialLoadCompleted = true;
+      setHasInitialLoadCompleted();
       setFadeOut(true);
-      setTimeout(onLoadingComplete, 400);
+      setTimeout(() => {
+        setShouldRender(false);
+        onLoadingComplete();
+      }, 400);
     }
   }, [progress, onLoadingComplete]);
 
   // Fallback timeout - force complete after 4 seconds max
   useEffect(() => {
-    if (hasInitialLoadCompleted) return;
+    if (initialLoadCompletedRef.current) return;
 
     const timeout = setTimeout(() => {
       if (!hasCompletedRef.current) {
         hasCompletedRef.current = true;
-        hasInitialLoadCompleted = true;
+        setHasInitialLoadCompleted();
         setProgress(100);
         setFadeOut(true);
-        setTimeout(onLoadingComplete, 400);
+        setTimeout(() => {
+          setShouldRender(false);
+          onLoadingComplete();
+        }, 400);
       }
     }, 4000);
 
@@ -77,7 +98,7 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
   }, [onLoadingComplete]);
 
   // Don't render if already completed initial load
-  if (hasInitialLoadCompleted) {
+  if (!shouldRender) {
     return null;
   }
 
