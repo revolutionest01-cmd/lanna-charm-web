@@ -63,25 +63,25 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-card border-t border-border py-12">
-      <div className="container mx-auto px-4">
+    <footer className="bg-card border-t border-border py-8 sm:py-10 lg:py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Logo Section */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-6 sm:mb-8">
           <img 
             src={plernpingLogo} 
             alt="Plern Ping Cafe Logo" 
-            className="h-24 w-auto opacity-90"
+            className="h-16 sm:h-20 lg:h-24 w-auto opacity-90"
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
           {/* Contact Info */}
-          <div>
-            <h3 className="text-xl font-semibold text-foreground mb-4 font-serif">{t.contactUs}</h3>
-            <div className="space-y-3 text-muted-foreground">
+          <div className="text-center sm:text-left">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4 font-serif">{t.contactUs}</h3>
+            <div className="space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground">
               {address && (
-                <div className="flex items-start gap-2">
-                  <MapPin size={20} className="text-primary mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-2 justify-center sm:justify-start">
+                  <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
                   {businessInfo.google_maps_url ? (
                     <a 
                       href={businessInfo.google_maps_url} 
@@ -97,8 +97,8 @@ const Footer = () => {
                 </div>
               )}
               {businessInfo.phone_primary && (
-                <div className="flex items-center gap-2">
-                  <Phone size={20} className="text-primary flex-shrink-0" />
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
+                  <Phone size={18} className="text-primary flex-shrink-0" />
                   <a href={`tel:${businessInfo.phone_primary}`} className="hover:text-primary transition-colors">
                     {businessInfo.phone_primary}
                     {businessInfo.phone_secondary && `, ${businessInfo.phone_secondary}`}
@@ -106,16 +106,16 @@ const Footer = () => {
                 </div>
               )}
               {businessInfo.email && (
-                <div className="flex items-center gap-2">
-                  <Mail size={20} className="text-primary flex-shrink-0" />
-                  <a href={`mailto:${businessInfo.email}`} className="hover:text-primary transition-colors">
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
+                  <Mail size={18} className="text-primary flex-shrink-0" />
+                  <a href={`mailto:${businessInfo.email}`} className="hover:text-primary transition-colors break-all">
                     {businessInfo.email}
                   </a>
                 </div>
               )}
               {businessInfo.line_id && (
-                <div className="flex items-center gap-2">
-                  <MessageCircle size={20} className="text-primary flex-shrink-0" />
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
+                  <MessageCircle size={18} className="text-primary flex-shrink-0" />
                   <span>LINE: {businessInfo.line_id}</span>
                 </div>
               )}
@@ -123,30 +123,30 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h3 className="text-xl font-semibold text-foreground mb-4 font-serif">{t.quickLinks}</h3>
-            <ul className="space-y-2 text-muted-foreground">
-              <li><a href="#home" className="hover:text-primary transition-colors">{t.home}</a></li>
-              <li><a href="#features" className="hover:text-primary transition-colors">{t.about}</a></li>
-              <li><a href="#rooms" className="hover:text-primary transition-colors">{t.rooms}</a></li>
-              <li><a href="#menu" className="hover:text-primary transition-colors">{t.menu}</a></li>
-              <li><a href="#gallery" className="hover:text-primary transition-colors">{t.gallery}</a></li>
+          <div className="text-center sm:text-left">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4 font-serif">{t.quickLinks}</h3>
+            <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-muted-foreground">
+              <li><a href="#home" className="hover:text-primary transition-colors inline-block">{t.home}</a></li>
+              <li><a href="#features" className="hover:text-primary transition-colors inline-block">{t.about}</a></li>
+              <li><a href="#rooms" className="hover:text-primary transition-colors inline-block">{t.rooms}</a></li>
+              <li><a href="#menu" className="hover:text-primary transition-colors inline-block">{t.menu}</a></li>
+              <li><a href="#gallery" className="hover:text-primary transition-colors inline-block">{t.gallery}</a></li>
             </ul>
           </div>
 
           {/* Social Media */}
-          <div>
-            <h3 className="text-xl font-semibold text-foreground mb-4 font-serif">{t.followUs}</h3>
-            <div className="flex gap-4 flex-wrap">
+          <div className="text-center sm:text-left sm:col-span-2 lg:col-span-1">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4 font-serif">{t.followUs}</h3>
+            <div className="flex gap-3 sm:gap-4 flex-wrap justify-center sm:justify-start">
               {businessInfo.line_id && (
                 <a
                   href={`https://line.me/R/ti/p/${businessInfo.line_id.replace('@', '%40')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                   aria-label="LINE"
                 >
-                  <MessageCircle size={20} />
+                  <MessageCircle size={18} />
                 </a>
               )}
               {businessInfo.facebook && (
@@ -154,10 +154,10 @@ const Footer = () => {
                   href={businessInfo.facebook.startsWith('http') ? businessInfo.facebook : `https://facebook.com/${businessInfo.facebook}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                   aria-label="Facebook"
                 >
-                  <Facebook size={20} />
+                  <Facebook size={18} />
                 </a>
               )}
               {businessInfo.instagram && (
@@ -165,10 +165,10 @@ const Footer = () => {
                   href={`https://instagram.com/${businessInfo.instagram.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                   aria-label="Instagram"
                 >
-                  <Instagram size={20} />
+                  <Instagram size={18} />
                 </a>
               )}
               {(businessInfo as any).twitter && (
@@ -178,19 +178,19 @@ const Footer = () => {
                     : `https://x.com/${(businessInfo as any).twitter.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                   aria-label="X (Twitter)"
                 >
-                  <Twitter size={20} />
+                  <Twitter size={18} />
                 </a>
               )}
             </div>
           </div>
         </div>
 
-        <div className="border-t border-border pt-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-muted-foreground text-center sm:text-left">
+        <div className="border-t border-border pt-6 sm:pt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
               &copy; {new Date().getFullYear()} {language === 'th' ? businessInfo.business_name_th : businessInfo.business_name_en}. {t.allRightsReserved}.
             </p>
             <VisitorCounter />
