@@ -15,7 +15,7 @@ const FloatingChatButton = () => {
   return (
     <>
       <TooltipProvider>
-        <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-3 items-end">
+        <div className="fixed top-1/2 -translate-y-1/2 right-4 sm:right-6 z-50 flex flex-col gap-3 items-end">
           {isExpanded && (
             <div className="flex flex-col gap-2 animate-fade-in">
               {/* Call Now Button */}
@@ -92,10 +92,10 @@ const FloatingChatButton = () => {
               <Button
                 size="icon"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all bg-[#c65539] hover:bg-[#8B6F47]"
+                className="h-11 w-11 sm:h-14 sm:w-14 rounded-full shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
               >
                 <MessageCircle
-                  size={24}
+                  size={22}
                   className={
                     isExpanded ? "rotate-90 transition-transform" : "transition-transform"
                   }
