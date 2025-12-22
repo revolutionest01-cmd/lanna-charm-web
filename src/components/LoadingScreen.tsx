@@ -6,18 +6,33 @@ interface LoadingScreenProps {
   isDataLoaded?: boolean;
 }
 
-// Global variable to track if loading screen has been shown in this browser session
-let hasShownLoadingScreen = false;
+// Check sessionStorage for persistence across page refreshes within the same session
+const getHasShownLoading = (): boolean => {
+  try {
+    return sessionStorage.getItem('plernping_loading_shown') === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const setHasShownLoading = (): void => {
+  try {
+    sessionStorage.setItem('plernping_loading_shown', 'true');
+  } catch {
+    // Ignore storage errors
+  }
+};
 
 const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
-  const [shouldRender, setShouldRender] = useState(!hasShownLoadingScreen);
   const hasCompletedRef = useRef(false);
+  const alreadyShownRef = useRef(getHasShownLoading());
+  const [shouldRender, setShouldRender] = useState(!alreadyShownRef.current);
 
-  // Skip loading screen if already shown once in this browser session
+  // Skip loading screen if already shown once in this session
   useEffect(() => {
-    if (hasShownLoadingScreen) {
+    if (alreadyShownRef.current) {
       setShouldRender(false);
       onLoadingComplete();
     }
@@ -25,7 +40,7 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
 
   // Progress animation - only runs if not already loaded
   useEffect(() => {
-    if (hasShownLoadingScreen) return;
+    if (alreadyShownRef.current) return;
 
     const timer = setInterval(() => {
       setProgress((prev) => {
@@ -49,11 +64,11 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
 
   // Complete loading when progress reaches 100
   useEffect(() => {
-    if (hasShownLoadingScreen) return;
+    if (alreadyShownRef.current) return;
 
     if (progress >= 100 && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
-      hasShownLoadingScreen = true;
+      setHasShownLoading();
       setFadeOut(true);
       setTimeout(() => {
         setShouldRender(false);
@@ -64,12 +79,12 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
 
   // Fallback timeout - force complete after 4 seconds max
   useEffect(() => {
-    if (hasShownLoadingScreen) return;
+    if (alreadyShownRef.current) return;
 
     const timeout = setTimeout(() => {
       if (!hasCompletedRef.current) {
         hasCompletedRef.current = true;
-        hasShownLoadingScreen = true;
+        setHasShownLoading();
         setProgress(100);
         setFadeOut(true);
         setTimeout(() => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -17,8 +17,18 @@ import LoadingScreen from "@/components/LoadingScreen";
 import { Toaster } from "@/components/ui/sonner";
 import { useContentData } from "@/hooks/useContentData";
 
+// Check if loading screen was already shown in this session
+const checkLoadingAlreadyShown = (): boolean => {
+  try {
+    return sessionStorage.getItem('plernping_loading_shown') === 'true';
+  } catch {
+    return false;
+  }
+};
+
 const Index = () => {
-  const [loadingComplete, setLoadingComplete] = useState(false);
+  // Initialize loadingComplete based on sessionStorage
+  const [loadingComplete, setLoadingComplete] = useState(checkLoadingAlreadyShown);
   const { isLoading } = useContentData();
 
   const isDataLoaded = !isLoading;
