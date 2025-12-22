@@ -56,22 +56,40 @@ const AmbientSound = () => {
       }
     }
   };
-  return <div className="fixed bottom-24 left-6 z-50 flex flex-col items-start gap-2">
+  return (
+    <div className="fixed top-1/2 -translate-y-1/2 left-4 sm:left-6 z-50 flex flex-col items-start gap-3">
       {/* Volume Control - shows when hovering */}
-      <div className={`transition-all duration-300 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`} onMouseEnter={() => setShowControls(true)}>
+      <div 
+        className={`transition-all duration-300 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`} 
+        onMouseEnter={() => setShowControls(true)}
+      >
         <div className="bg-card/95 backdrop-blur-md border border-border rounded-lg p-3 shadow-lg">
           <div className="flex items-center gap-3 min-w-[120px]">
             <VolumeX className="w-4 h-4 text-muted-foreground" />
-            <Slider value={[volume * 100]} onValueChange={value => setVolume(value[0] / 100)} max={100} step={1} className="flex-1" />
+            <Slider 
+              value={[volume * 100]} 
+              onValueChange={value => setVolume(value[0] / 100)} 
+              max={100} 
+              step={1} 
+              className="flex-1" 
+            />
             <Volume2 className="w-4 h-4 text-muted-foreground" />
           </div>
         </div>
       </div>
 
       {/* Play/Pause Button */}
-      <Button size="icon" onClick={togglePlay} onMouseEnter={() => setShowControls(true)} onMouseLeave={() => setTimeout(() => setShowControls(false), 1000)} variant={isPlaying ? "default" : "secondary"} className="w-12 h-12 rounded-full shadow-lg bg-[#c65539]">
+      <Button 
+        size="icon" 
+        onClick={togglePlay} 
+        onMouseEnter={() => setShowControls(true)} 
+        onMouseLeave={() => setTimeout(() => setShowControls(false), 1000)} 
+        variant={isPlaying ? "default" : "secondary"} 
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
+      >
         {isPlaying ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
       </Button>
-    </div>;
+    </div>
+  );
 };
 export default AmbientSound;
