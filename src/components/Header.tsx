@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, startTransition } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, MessageCircle, LogIn, LogOut, Shield, Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, User } from "lucide-react";
@@ -8,7 +8,6 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
 import { supabase } from "@/integrations/supabase/client";
-
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,15 +39,13 @@ const Header = () => {
 
     checkAdminStatus();
   }, [user]);
-
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
   const navItems = [{
     label: t.home,
     href: "/",
@@ -82,58 +79,48 @@ const Header = () => {
     href: "/#contact",
     icon: Mail
   }];
-
   const toggleLanguage = () => {
     setLanguage(language === 'th' ? 'en' : 'th');
   };
 
-  const scrollToSection = useCallback((sectionId: string) => {
-    requestAnimationFrame(() => {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-  }, []);
-
-  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
     
     if (href.startsWith('/#')) {
+      // Hash navigation within homepage
       const sectionId = href.substring(2);
       if (location.pathname === '/') {
-        scrollToSection(sectionId);
+        // Already on homepage, just scroll
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
       } else {
-        startTransition(() => {
-          navigate('/');
-        });
-        setTimeout(() => scrollToSection(sectionId), 150);
-      }
-    } else if (href === '/') {
-      if (location.pathname !== '/') {
-        startTransition(() => {
-          navigate('/');
-        });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Navigate to homepage first, then scroll
+        navigate('/');
+        setTimeout(() => {
+          const element = document.getElementById(sectionId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
       }
     } else {
-      startTransition(() => {
-        navigate(href);
-      });
+      // Regular page navigation
+      navigate(href);
     }
-  }, [location.pathname, navigate, scrollToSection]);
+  };
   return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-card/95 backdrop-blur-md shadow-lg" : "bg-black/30 backdrop-blur-sm"}`}>
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
-        <div className="flex items-center justify-between gap-2">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-            <img src={logo} alt="Plern Ping Cafe Logo" className="h-10 sm:h-11 lg:h-12 w-auto drop-shadow-[0_0_8px_rgba(198,85,57,0.3)] hover:drop-shadow-[0_0_15px_rgba(198,85,57,0.7)] transition-all duration-300" />
+          <Link to="/" className="flex items-center space-x-3">
+            <img src={logo} alt="Plern Ping Cafe Logo" className="h-12 w-auto drop-shadow-[0_0_8px_rgba(198,85,57,0.3)] hover:drop-shadow-[0_0_15px_rgba(198,85,57,0.7)] transition-all duration-300" />
           </Link>
 
-          {/* Desktop Navigation - Hidden on mobile/tablet */}
-          <nav className="hidden xl:flex items-center space-x-1 2xl:space-x-2">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-2">
             {navItems.map(item => {
               const IconComponent = item.icon;
               return (
@@ -141,20 +128,20 @@ const Header = () => {
                   key={item.label} 
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
-                  className={`relative flex items-center gap-1.5 ${isScrolled ? "text-foreground hover:text-highlight" : "text-white"} font-medium transition-all duration-200 px-2.5 2xl:px-3 py-2 rounded-lg hover:bg-[#8B6F47]/20 hover:backdrop-blur-sm cursor-pointer text-sm 2xl:text-base`}
+                  className={`relative flex items-center gap-2 ${isScrolled ? "text-foreground hover:text-highlight" : "text-white"} font-medium transition-all duration-200 px-4 py-2.5 rounded-lg hover:bg-[#8B6F47]/20 hover:backdrop-blur-sm cursor-pointer`}
                 >
-                  <IconComponent size={16} className="flex-shrink-0" />
+                  <IconComponent size={18} className="flex-shrink-0" />
                   <span className="whitespace-nowrap">{item.label}</span>
                 </a>
               );
             })}
           </nav>
 
-          {/* Desktop Actions - Hidden on mobile/tablet */}
-          <div className="hidden xl:flex items-center gap-2 2xl:gap-3">
-            {!isForumPage && <Button variant="ghost" size="sm" onClick={() => navigate('/forum')} className={`${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""} text-sm`}>
-                <MessageCircle className="mr-1.5 h-4 w-4" />
-                <span className="hidden 2xl:inline">{t.forum}</span>
+          {/* Language Toggle & CTA Button */}
+          <div className="hidden md:flex items-center gap-4">
+            {!isForumPage && <Button variant="ghost" size="sm" onClick={() => navigate('/forum')} className={`${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {t.forum}
               </Button>}
             
             {/* Auth Buttons */}
@@ -162,13 +149,13 @@ const Header = () => {
               <>
                 {/* User Profile Display */}
                 <div className="flex items-center gap-2">
-                  <Avatar className="h-7 w-7 2xl:h-8 2xl:w-8 border-2 border-highlight/30">
+                  <Avatar className="h-8 w-8 border-2 border-highlight/30">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback className="bg-highlight/20 text-highlight text-xs">
-                      {user.name?.charAt(0)?.toUpperCase() || <User className="h-3 w-3" />}
+                      {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
-                  <span className={`text-sm font-medium hidden 2xl:block ${!isScrolled ? "text-white" : "text-foreground"}`}>
+                  <span className={`text-sm font-medium ${!isScrolled ? "text-white" : "text-foreground"}`}>
                     {user.name}
                   </span>
                 </div>
@@ -178,20 +165,20 @@ const Header = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => navigate('/admin')}
-                    className="gap-1.5 text-sm"
+                    className="gap-2"
                   >
                     <Shield className="h-4 w-4" />
-                    <span className="hidden 2xl:inline">{language === 'th' ? 'Admin' : 'Admin'}</span>
+                    {language === 'th' ? 'Admin Panel' : 'Admin Panel'}
                   </Button>
                 )}
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => logout()}
-                  className={`gap-1.5 text-sm ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
+                  className={`gap-2 ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden 2xl:inline">{language === 'th' ? 'ออก' : 'Logout'}</span>
+                  {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
                 </Button>
               </>
             ) : (
@@ -199,18 +186,16 @@ const Header = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/auth')}
-                className={`gap-1.5 text-sm ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
+                className={`gap-2 ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
               >
                 <LogIn className="h-4 w-4" />
-                <span className="hidden 2xl:inline">{language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}</span>
+                {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
               </Button>
             )}
-            
-            {/* Language Toggle */}
-            <div className={`inline-flex items-center rounded-full p-0.5 gap-0.5 transition-all duration-300 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
+            <div className={`inline-flex items-center rounded-full p-1 gap-1 transition-all duration-300 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
               <button
                 onClick={() => setLanguage('th')}
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                   language === 'th'
                     ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
                     : isScrolled
@@ -219,12 +204,12 @@ const Header = () => {
                 }`}
                 aria-label="Switch to Thai"
               >
-                <span className="text-sm transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
-                <span className="text-xs font-semibold hidden 2xl:inline">ไทย</span>
+                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
+                <span className="text-sm font-semibold">ไทย</span>
               </button>
               <button
                 onClick={() => setLanguage('zh')}
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                   language === 'zh'
                     ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
                     : isScrolled
@@ -233,12 +218,12 @@ const Header = () => {
                 }`}
                 aria-label="Switch to Chinese"
               >
-                <span className="text-sm transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
-                <span className="text-xs font-semibold hidden 2xl:inline">中文</span>
+                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
+                <span className="text-sm font-semibold">中文</span>
               </button>
               <button
                 onClick={() => setLanguage('en')}
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                   language === 'en'
                     ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
                     : isScrolled
@@ -247,193 +232,157 @@ const Header = () => {
                 }`}
                 aria-label="Switch to English"
               >
-                <span className="text-sm transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
-                <span className="text-xs font-semibold hidden 2xl:inline">EN</span>
+                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
+                <span className="text-sm font-semibold">EN</span>
               </button>
             </div>
             <BookingDialog>
-              <Button variant="default" size="default" className="font-semibold shadow-lg hover:shadow-xl transition-shadow bg-[#c65539] text-sm">
+              <Button variant="default" size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow bg-[#c65539]">
                 {t.bookNow}
               </Button>
             </BookingDialog>
           </div>
 
-          {/* Tablet Actions - Show compact version */}
-          <div className="hidden md:flex xl:hidden items-center gap-2">
-            {/* Language Toggle Compact */}
-            <div className={`inline-flex items-center rounded-full p-0.5 gap-0.5 transition-all duration-300 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
-              <button
-                onClick={() => setLanguage('th')}
-                className={`inline-flex items-center px-2 py-1 rounded-full transition-all duration-300 ${
-                  language === 'th' ? 'bg-highlight text-highlight-foreground shadow-sm' : isScrolled ? 'text-foreground' : 'text-white'
-                }`}
-              >
-                <span className="text-sm">🇹🇭</span>
-              </button>
-              <button
-                onClick={() => setLanguage('zh')}
-                className={`inline-flex items-center px-2 py-1 rounded-full transition-all duration-300 ${
-                  language === 'zh' ? 'bg-highlight text-highlight-foreground shadow-sm' : isScrolled ? 'text-foreground' : 'text-white'
-                }`}
-              >
-                <span className="text-sm">🇨🇳</span>
-              </button>
-              <button
-                onClick={() => setLanguage('en')}
-                className={`inline-flex items-center px-2 py-1 rounded-full transition-all duration-300 ${
-                  language === 'en' ? 'bg-highlight text-highlight-foreground shadow-sm' : isScrolled ? 'text-foreground' : 'text-white'
-                }`}
-              >
-                <span className="text-sm">🇬🇧</span>
-              </button>
-            </div>
-            <BookingDialog>
-              <Button variant="default" size="sm" className="font-semibold shadow-lg bg-[#c65539]">
-                {t.bookNow}
-              </Button>
-            </BookingDialog>
-          </div>
-
-          {/* Mobile/Tablet Menu Button */}
-          <button className={`xl:hidden ${isScrolled ? "text-foreground" : "text-white"} p-2 -mr-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
-            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          {/* Mobile Menu Button */}
+          <button className={`md:hidden ${isScrolled ? "text-foreground" : "text-white"}`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
+            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
 
-        {/* Mobile/Tablet Menu */}
-        {isMobileMenuOpen && <nav className="xl:hidden mt-4 pb-4 animate-fade-in">
-            {/* Navigation Grid for Tablet */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-4">
-              {navItems.map((item, index) => {
-                const IconComponent = item.icon;
-                return (
-                  <a 
-                    key={item.label} 
-                    href={item.href}
-                    onClick={(e) => handleNavClick(e, item.href)}
-                    className={`flex items-center gap-2 ${isScrolled ? "text-foreground bg-secondary/50" : "text-white bg-white/10"} hover:bg-highlight/20 transition-all duration-300 font-medium p-3 rounded-lg cursor-pointer text-sm`}
-                    style={{ animationDelay: `${index * 30}ms` }}
-                  >
-                    <IconComponent size={18} className="flex-shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                  </a>
-                );
-              })}
-            </div>
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 animate-fade-in">
+            {navItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <a 
+                  key={item.label} 
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className={`flex items-center gap-2 ${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] transition-all duration-300 font-medium transform hover:translate-x-2 cursor-pointer`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <IconComponent size={18} />
+                  {item.label}
+                </a>
+              );
+            })}
             
-            {/* Mobile Auth Section */}
-            <div className="flex flex-col gap-3 pt-4 border-t border-border/50">
-              {/* User Info & Actions Row */}
-              <div className="flex flex-wrap items-center gap-2">
-                {!isForumPage && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      navigate('/forum');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex-1 sm:flex-none justify-center sm:justify-start"
-                  >
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {t.forum}
-                  </Button>
-                )}
-                
-                {isAuthenticated && user ? (
-                  <>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-secondary/30 rounded-lg">
-                      <Avatar className="h-7 w-7 border-2 border-highlight/30">
-                        <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback className="bg-highlight/20 text-highlight text-xs">
-                          {user.name?.charAt(0)?.toUpperCase() || <User className="h-3 w-3" />}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className={`text-sm font-medium ${!isScrolled ? "text-white" : "text-foreground"}`}>
-                        {user.name}
-                      </span>
-                    </div>
-                    
-                    {isAdmin && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          navigate('/admin');
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="gap-2"
-                      >
-                        <Shield className="h-4 w-4" />
-                        Admin
-                      </Button>
-                    )}
+            {/* Mobile Auth Buttons */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-border">
+              {!isForumPage && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    navigate('/forum');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="justify-start"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {t.forum}
+                </Button>
+              )}
+              
+              {isAuthenticated && user ? (
+                <>
+                  {/* Mobile User Profile Display */}
+                  <div className="flex items-center gap-2 py-2">
+                    <Avatar className="h-8 w-8 border-2 border-highlight/30">
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarFallback className="bg-highlight/20 text-highlight text-xs">
+                        {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className={`text-sm font-medium ${!isScrolled ? "text-white" : "text-foreground"}`}>
+                      {user.name}
+                    </span>
+                  </div>
+                  
+                  {isAdmin && (
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm" 
                       onClick={() => {
-                        logout();
+                        navigate('/admin');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="gap-2"
+                      className="justify-start gap-2"
                     >
-                      <LogOut className="h-4 w-4" />
-                      {language === 'th' ? 'ออก' : 'Logout'}
+                      <Shield className="h-4 w-4" />
+                      {language === 'th' ? 'Admin Panel' : 'Admin Panel'}
                     </Button>
-                  </>
-                ) : (
+                  )}
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={() => {
-                      navigate('/auth');
+                      logout();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="gap-2"
+                    className="justify-start gap-2"
                   >
-                    <LogIn className="h-4 w-4" />
-                    {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                    <LogOut className="h-4 w-4" />
+                    {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
                   </Button>
-                )}
+                </>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    navigate('/auth');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="justify-start gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <div className="inline-flex items-center bg-secondary rounded-full p-1 gap-1">
+                <button
+                  onClick={() => setLanguage('th')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                    language === 'th'
+                      ? 'bg-highlight text-highlight-foreground shadow-sm'
+                      : 'text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
+                  <span className="text-sm font-semibold">ไทย</span>
+                </button>
+                <button
+                  onClick={() => setLanguage('zh')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                    language === 'zh'
+                      ? 'bg-highlight text-highlight-foreground shadow-sm'
+                      : 'text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
+                  <span className="text-sm font-semibold">中文</span>
+                </button>
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                    language === 'en'
+                      ? 'bg-highlight text-highlight-foreground shadow-sm'
+                      : 'text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
+                  <span className="text-sm font-semibold">EN</span>
+                </button>
               </div>
-              
-              {/* Language & Book Row for Mobile only (hidden on tablet) */}
-              <div className="flex gap-2 md:hidden">
-                <div className="inline-flex items-center bg-secondary rounded-full p-1 gap-1">
-                  <button
-                    onClick={() => setLanguage('th')}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full font-medium transition-all duration-300 ${
-                      language === 'th' ? 'bg-highlight text-highlight-foreground shadow-sm' : 'text-foreground hover:bg-background/50'
-                    }`}
-                  >
-                    <span className="text-sm">🇹🇭</span>
-                    <span className="text-xs font-semibold">ไทย</span>
-                  </button>
-                  <button
-                    onClick={() => setLanguage('zh')}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full font-medium transition-all duration-300 ${
-                      language === 'zh' ? 'bg-highlight text-highlight-foreground shadow-sm' : 'text-foreground hover:bg-background/50'
-                    }`}
-                  >
-                    <span className="text-sm">🇨🇳</span>
-                    <span className="text-xs font-semibold">中文</span>
-                  </button>
-                  <button
-                    onClick={() => setLanguage('en')}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full font-medium transition-all duration-300 ${
-                      language === 'en' ? 'bg-highlight text-highlight-foreground shadow-sm' : 'text-foreground hover:bg-background/50'
-                    }`}
-                  >
-                    <span className="text-sm">🇬🇧</span>
-                    <span className="text-xs font-semibold">EN</span>
-                  </button>
-                </div>
-                <BookingDialog>
-                  <Button variant="default" size="default" className="flex-1 font-semibold bg-[#c65539]">
-                    {t.bookNow}
-                  </Button>
-                </BookingDialog>
-              </div>
+              <BookingDialog>
+                <Button variant="default" size="lg" className="flex-1 font-semibold">
+                  {t.bookNow}
+                </Button>
+              </BookingDialog>
             </div>
           </nav>}
       </div>

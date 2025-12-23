@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -9,59 +8,33 @@ import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import ContactSection from "@/components/ContactSection";
 import FallingLeaves from "@/components/FallingLeaves";
+import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import FloatingActions from "@/components/FloatingActions";
-import LoadingScreen from "@/components/LoadingScreen";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import { Toaster } from "@/components/ui/sonner";
-import { useContentData } from "@/hooks/useContentData";
-
-// Storage key - must match LoadingScreen
-const STORAGE_KEY = 'plernping_loaded';
-
-// Check if loading screen was already shown in this session
-const wasLoadingShown = (): boolean => {
-  try {
-    return sessionStorage.getItem(STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
-};
 
 const Index = () => {
-  // Initialize loadingComplete based on sessionStorage
-  const [loadingComplete, setLoadingComplete] = useState(wasLoadingShown);
-  const { isLoading } = useContentData();
-
-  const isDataLoaded = !isLoading;
-
   return (
-    <>
-      {!loadingComplete && (
-        <LoadingScreen 
-          onLoadingComplete={() => setLoadingComplete(true)} 
-          isDataLoaded={isDataLoaded}
-        />
-      )}
-      <div className={`relative min-h-screen transition-opacity duration-300 ${!loadingComplete ? 'opacity-0' : 'opacity-100'}`}>
-        <FallingLeaves />
-        <Header />
-        <main className="relative z-10">
-          <HeroSection />
-          <FeaturesSection />
-          <EventsSection />
-          <RoomsSection />
-          <MenuSection />
-          <GallerySection />
-          <ReviewsSection />
-          <ContactSection />
-        </main>
-        <Footer />
-        <BackToTop />
-        <FloatingActions />
-        <Toaster />
-      </div>
-    </>
+    <div className="relative min-h-screen">
+      <FallingLeaves />
+      <AmbientSound />
+      <Header />
+      <main className="relative z-10">
+        <HeroSection />
+        <FeaturesSection />
+        <EventsSection />
+        <RoomsSection />
+        <MenuSection />
+        <GallerySection />
+        <ReviewsSection />
+        <ContactSection />
+      </main>
+      <Footer />
+      <BackToTop />
+      <FloatingChatButton />
+      <Toaster />
+    </div>
   );
 };
 
