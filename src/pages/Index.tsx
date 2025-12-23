@@ -9,10 +9,9 @@ import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import ContactSection from "@/components/ContactSection";
 import FallingLeaves from "@/components/FallingLeaves";
-import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import FloatingChatButton from "@/components/FloatingChatButton";
+import FloatingActions from "@/components/FloatingActions";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Toaster } from "@/components/ui/sonner";
 import { useContentData } from "@/hooks/useContentData";
@@ -48,7 +47,6 @@ const Index = () => {
       )}
       <div className={`relative min-h-screen ${!loadingComplete ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}>
         <FallingLeaves />
-        <AmbientSound />
         <Header />
         <main className="relative z-10">
           <HeroSection />
@@ -62,7 +60,7 @@ const Index = () => {
         </main>
         <Footer />
         <BackToTop />
-        <FloatingChatButton />
+        <FloatingActions />
         <Toaster />
       </div>
     </>
