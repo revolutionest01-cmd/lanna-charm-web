@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -16,10 +16,13 @@ import LoadingScreen from "@/components/LoadingScreen";
 import { Toaster } from "@/components/ui/sonner";
 import { useContentData } from "@/hooks/useContentData";
 
+// Storage key - must match LoadingScreen
+const STORAGE_KEY = 'plernping_loaded';
+
 // Check if loading screen was already shown in this session
-const checkLoadingAlreadyShown = (): boolean => {
+const wasLoadingShown = (): boolean => {
   try {
-    return sessionStorage.getItem('plernping_loading_shown') === 'true';
+    return sessionStorage.getItem(STORAGE_KEY) === 'true';
   } catch {
     return false;
   }
@@ -27,25 +30,20 @@ const checkLoadingAlreadyShown = (): boolean => {
 
 const Index = () => {
   // Initialize loadingComplete based on sessionStorage
-  const [loadingComplete, setLoadingComplete] = useState(checkLoadingAlreadyShown);
+  const [loadingComplete, setLoadingComplete] = useState(wasLoadingShown);
   const { isLoading } = useContentData();
 
   const isDataLoaded = !isLoading;
-
-  // Handle loading completion
-  const handleLoadingComplete = () => {
-    setLoadingComplete(true);
-  };
 
   return (
     <>
       {!loadingComplete && (
         <LoadingScreen 
-          onLoadingComplete={handleLoadingComplete} 
+          onLoadingComplete={() => setLoadingComplete(true)} 
           isDataLoaded={isDataLoaded}
         />
       )}
-      <div className={`relative min-h-screen ${!loadingComplete ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}>
+      <div className={`relative min-h-screen transition-opacity duration-300 ${!loadingComplete ? 'opacity-0' : 'opacity-100'}`}>
         <FallingLeaves />
         <Header />
         <main className="relative z-10">
