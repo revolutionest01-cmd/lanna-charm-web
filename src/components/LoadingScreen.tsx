@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import plernpingLogo from "@/assets/plernping-logo.png";
 
 interface LoadingScreenProps {
@@ -6,104 +6,107 @@ interface LoadingScreenProps {
   isDataLoaded?: boolean;
 }
 
-// Check sessionStorage for persistence across page refreshes within the same session
-const getHasShownLoading = (): boolean => {
+// Storage key constant
+const STORAGE_KEY = 'plernping_loaded';
+
+// Check if loading was already shown in this session
+const wasLoadingShown = (): boolean => {
   try {
-    return sessionStorage.getItem('plernping_loading_shown') === 'true';
+    return sessionStorage.getItem(STORAGE_KEY) === 'true';
   } catch {
     return false;
   }
 };
 
-const setHasShownLoading = (): void => {
+// Mark loading as shown
+const markLoadingShown = (): void => {
   try {
-    sessionStorage.setItem('plernping_loading_shown', 'true');
+    sessionStorage.setItem(STORAGE_KEY, 'true');
   } catch {
     // Ignore storage errors
   }
 };
 
 const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScreenProps) => {
-  const [progress, setProgress] = useState(0);
+  // Check on initial render if we should skip
+  const shouldSkip = useRef(wasLoadingShown());
+  const [progress, setProgress] = useState(shouldSkip.current ? 100 : 0);
   const [fadeOut, setFadeOut] = useState(false);
-  const hasCompletedRef = useRef(false);
-  const alreadyShownRef = useRef(getHasShownLoading());
-  const [shouldRender, setShouldRender] = useState(!alreadyShownRef.current);
+  const [isVisible, setIsVisible] = useState(!shouldSkip.current);
+  const hasCompletedRef = useRef(shouldSkip.current);
 
-  // Skip loading screen if already shown once in this session
+  const completeLoading = useCallback(() => {
+    if (hasCompletedRef.current) return;
+    hasCompletedRef.current = true;
+    markLoadingShown();
+    setProgress(100);
+    setFadeOut(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onLoadingComplete();
+    }, 300);
+  }, [onLoadingComplete]);
+
+  // If already shown, immediately complete
   useEffect(() => {
-    if (alreadyShownRef.current) {
-      setShouldRender(false);
+    if (shouldSkip.current) {
+      setIsVisible(false);
       onLoadingComplete();
     }
   }, [onLoadingComplete]);
 
-  // Progress animation - only runs if not already loaded
+  // Progress animation
   useEffect(() => {
-    if (alreadyShownRef.current) return;
+    if (shouldSkip.current || hasCompletedRef.current) return;
 
     const timer = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) return 100;
+        if (prev >= 100) {
+          clearInterval(timer);
+          return 100;
+        }
         
         // Speed up when data is loaded
         if (isDataLoaded) {
-          return Math.min(prev + 15, 100);
+          return Math.min(prev + 20, 100);
         }
         
-        // Normal progress - go to 85% then slow down
-        if (prev >= 85) {
-          return prev + 1;
+        // Normal progress - go to 80% then slow down
+        if (prev >= 80) {
+          return prev + 2;
         }
-        return prev + 8;
+        return prev + 10;
       });
-    }, 150);
+    }, 120);
 
     return () => clearInterval(timer);
   }, [isDataLoaded]);
 
-  // Complete loading when progress reaches 100
+  // Complete when progress reaches 100
   useEffect(() => {
-    if (alreadyShownRef.current) return;
-
     if (progress >= 100 && !hasCompletedRef.current) {
-      hasCompletedRef.current = true;
-      setHasShownLoading();
-      setFadeOut(true);
-      setTimeout(() => {
-        setShouldRender(false);
-        onLoadingComplete();
-      }, 400);
+      completeLoading();
     }
-  }, [progress, onLoadingComplete]);
+  }, [progress, completeLoading]);
 
-  // Fallback timeout - force complete after 4 seconds max
+  // Fallback timeout - force complete after 3 seconds max
   useEffect(() => {
-    if (alreadyShownRef.current) return;
+    if (shouldSkip.current) return;
 
     const timeout = setTimeout(() => {
-      if (!hasCompletedRef.current) {
-        hasCompletedRef.current = true;
-        setHasShownLoading();
-        setProgress(100);
-        setFadeOut(true);
-        setTimeout(() => {
-          setShouldRender(false);
-          onLoadingComplete();
-        }, 400);
-      }
-    }, 4000);
+      completeLoading();
+    }, 3000);
 
     return () => clearTimeout(timeout);
-  }, [onLoadingComplete]);
+  }, [completeLoading]);
 
-  // Don't render if already completed initial load
-  if (!shouldRender) {
+  // Don't render if skipped or completed
+  if (!isVisible) {
     return null;
   }
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-400 ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-300 ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
@@ -133,7 +136,7 @@ const LoadingScreen = ({ onLoadingComplete, isDataLoaded = false }: LoadingScree
       <div className="relative w-64 md:w-72">
         <div className="w-full h-2 bg-secondary/50 rounded-full overflow-hidden backdrop-blur-sm">
           <div
-            className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary rounded-full transition-all duration-200 ease-out"
+            className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary rounded-full transition-all duration-150 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
