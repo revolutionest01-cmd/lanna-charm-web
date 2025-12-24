@@ -2,17 +2,30 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useState, useEffect } from "react";
 
-// Cache buster version - stored in localStorage
+// Cache buster version - stored in localStorage (with SSR safety)
 const getCacheBusterVersion = (): string => {
-  return localStorage.getItem('content_cache_version') || '1';
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('content_cache_version') || '1';
+    }
+  } catch (e) {
+    // localStorage might not be available (private browsing, SSR, etc.)
+  }
+  return '1';
 };
 
 // Function to update cache version (called from admin panel after updates)
 export const invalidateContentCache = (): void => {
-  const newVersion = Date.now().toString();
-  localStorage.setItem('content_cache_version', newVersion);
-  // Dispatch custom event to notify all components
-  window.dispatchEvent(new CustomEvent('content-cache-invalidated', { detail: newVersion }));
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const newVersion = Date.now().toString();
+      localStorage.setItem('content_cache_version', newVersion);
+      // Dispatch custom event to notify all components
+      window.dispatchEvent(new CustomEvent('content-cache-invalidated', { detail: newVersion }));
+    }
+  } catch (e) {
+    // localStorage might not be available
+  }
 };
 
 // Add cache busting to image URLs using stable version
