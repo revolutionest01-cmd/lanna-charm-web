@@ -1,13 +1,15 @@
-import { Facebook, Instagram, Mail, MapPin, Phone, MessageCircle, Twitter } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, Phone, MessageCircle, Twitter, Users } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import plernpingLogo from "@/assets/plernping-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useRef } from "react";
 
 const Footer = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const hasIncremented = useRef(false);
 
   // Fetch business info from database
   const { data: businessInfo, isLoading } = useQuery({
@@ -24,6 +26,51 @@ const Footer = () => {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  // Fetch visitor stats
+  const { data: visitorStats, refetch: refetchStats } = useQuery({
+    queryKey: ['visitor_stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('visitor_stats')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  // Increment visitor count on first render (once per session)
+  useEffect(() => {
+    const incrementVisitorCount = async () => {
+      const sessionKey = 'visitor_counted';
+      if (sessionStorage.getItem(sessionKey) || hasIncremented.current) return;
+      
+      hasIncremented.current = true;
+      sessionStorage.setItem(sessionKey, 'true');
+      
+      const { data: currentStats } = await supabase
+        .from('visitor_stats')
+        .select('total_visits')
+        .single();
+      
+      if (currentStats) {
+        await supabase
+          .from('visitor_stats')
+          .update({ 
+            total_visits: currentStats.total_visits + 1,
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', '539f0f9f-a118-4e34-8ea7-0ab3cd4e5950');
+        
+        refetchStats();
+      }
+    };
+
+    incrementVisitorCount();
+  }, [refetchStats]);
 
   const address = language === 'th' ? businessInfo?.address_th : businessInfo?.address_en;
 
@@ -184,6 +231,19 @@ const Footer = () => {
                 </a>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Visitor Counter */}
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-2 bg-primary/5 rounded-full px-4 py-2">
+            <Users size={18} className="text-primary" />
+            <span className="text-muted-foreground text-sm">
+              {language === 'th' ? 'ผู้เยี่ยมชม' : 'Visitors'}: {' '}
+              <span className="font-semibold text-foreground">
+                {visitorStats?.total_visits?.toLocaleString() || '...'}
+              </span>
+            </span>
           </div>
         </div>
 
