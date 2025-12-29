@@ -1,22 +1,62 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 
-// Function to invalidate all content caches
-export const invalidateContentCache = (): void => {
-  // Dispatch custom event to notify all components
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('content-cache-invalidated'));
+// Cache buster version - stored in localStorage (with SSR safety)
+const getCacheBusterVersion = (): string => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('content_cache_version') || '1';
+    }
+  } catch (e) {
+    // localStorage might not be available (private browsing, SSR, etc.)
   }
+  return '1';
+};
+
+// Function to update cache version (called from admin panel after updates)
+export const invalidateContentCache = (): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const newVersion = Date.now().toString();
+      localStorage.setItem('content_cache_version', newVersion);
+      // Dispatch custom event to notify all components
+      window.dispatchEvent(new CustomEvent('content-cache-invalidated', { detail: newVersion }));
+    }
+  } catch (e) {
+    // localStorage might not be available
+  }
+};
+
+// Add cache busting to image URLs using stable version
+const addCacheBuster = (url: string | null, version: string): string | null => {
+  if (!url) return null;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${version}`;
 };
 
 // Fetch all content data in parallel for better performance
 export const useContentData = () => {
   const queryClient = useQueryClient();
   
+  // Use state instead of ref to trigger re-renders when cache version changes
+  const [cacheVersion, setCacheVersion] = useState(getCacheBusterVersion);
+  
+  // Listen for cache invalidation events
+  useEffect(() => {
+    const handleCacheInvalidated = (event: CustomEvent) => {
+      setCacheVersion(event.detail);
+    };
+    
+    window.addEventListener('content-cache-invalidated', handleCacheInvalidated as EventListener);
+    return () => {
+      window.removeEventListener('content-cache-invalidated', handleCacheInvalidated as EventListener);
+    };
+  }, []);
+  
   // Function to refresh all content (called after admin updates)
   const refreshContent = useCallback(() => {
-    // Invalidate all queries to force refetch
+    invalidateContentCache();
     queryClient.invalidateQueries({ queryKey: ["hero-content"] });
     queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
     queryClient.invalidateQueries({ queryKey: ["rooms"] });
@@ -26,21 +66,11 @@ export const useContentData = () => {
     queryClient.invalidateQueries({ queryKey: ["menu_categories"] });
     queryClient.invalidateQueries({ queryKey: ["business_info"] });
     queryClient.invalidateQueries({ queryKey: ["business_info_footer"] });
-    queryClient.invalidateQueries({ queryKey: ["visitor_stats"] });
   }, [queryClient]);
-
-  // Common query options for faster loading
-  const queryOptions = {
-    staleTime: 30 * 1000, // 30 seconds - data is fresh
-    gcTime: 5 * 60 * 1000, // 5 minutes - keep in cache
-    refetchOnMount: true, // Always refetch on mount
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    retry: 2, // Retry failed requests twice
-  };
 
   // Hero Content
   const heroQuery = useQuery({
-    queryKey: ["hero-content"],
+    queryKey: ["hero-content", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("hero_content")
@@ -51,14 +81,19 @@ export const useContentData = () => {
         .maybeSingle();
       
       if (error) throw error;
+      if (data) {
+        return { ...data, image_url: addCacheBuster(data.image_url, cacheVersion) };
+      }
       return data;
     },
-    ...queryOptions,
+    staleTime: 5 * 60 * 1000, // 5 minutes - stable cache
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus to prevent flickering
   });
 
   // Event Spaces
   const eventsQuery = useQuery({
-    queryKey: ["event-spaces"],
+    queryKey: ["event-spaces", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_spaces")
@@ -69,14 +104,19 @@ export const useContentData = () => {
         .maybeSingle();
       
       if (error) throw error;
+      if (data) {
+        return { ...data, image_url: addCacheBuster(data.image_url, cacheVersion) };
+      }
       return data;
     },
-    ...queryOptions,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Rooms with Images (using JOIN)
   const roomsQuery = useQuery({
-    queryKey: ["rooms"],
+    queryKey: ["rooms", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
@@ -88,14 +128,23 @@ export const useContentData = () => {
         .order("sort_order");
       
       if (error) throw error;
-      return data || [];
+      // Add cache buster to room images
+      return (data || []).map(room => ({
+        ...room,
+        images: (room.images || []).map((img: any) => ({
+          ...img,
+          image_url: addCacheBuster(img.image_url, cacheVersion)
+        }))
+      }));
     },
-    ...queryOptions,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Menu Categories and Items
   const menusQuery = useQuery({
-    queryKey: ["menus"],
+    queryKey: ["menus", cacheVersion],
     queryFn: async () => {
       const [categoriesRes, menusRes] = await Promise.all([
         supabase
@@ -114,15 +163,21 @@ export const useContentData = () => {
 
       return {
         categories: categoriesRes.data || [],
-        menus: menusRes.data || [],
+        menus: (menusRes.data || []).map(menu => ({
+          ...menu,
+          image_url: addCacheBuster(menu.image_url, cacheVersion),
+          icon_url: addCacheBuster(menu.icon_url, cacheVersion)
+        })),
       };
     },
-    ...queryOptions,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Gallery Images
   const galleryQuery = useQuery({
-    queryKey: ["gallery"],
+    queryKey: ["gallery", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gallery_images")
@@ -131,14 +186,19 @@ export const useContentData = () => {
         .limit(9);
       
       if (error) throw error;
-      return data || [];
+      return (data || []).map(img => ({
+        ...img,
+        image_url: addCacheBuster(img.image_url, cacheVersion)
+      }));
     },
-    ...queryOptions,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Reviews
   const reviewsQuery = useQuery({
-    queryKey: ["reviews"],
+    queryKey: ["reviews", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
@@ -148,9 +208,14 @@ export const useContentData = () => {
         .limit(9);
       
       if (error) throw error;
-      return data || [];
+      return (data || []).map(review => ({
+        ...review,
+        image_url: addCacheBuster(review.image_url, cacheVersion)
+      }));
     },
-    ...queryOptions,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   return {
@@ -174,6 +239,6 @@ export const useContentData = () => {
       menusQuery.isError || 
       galleryQuery.isError || 
       reviewsQuery.isError,
-    refreshContent,
+    refreshContent, // Export refresh function for admin panel
   };
 };
