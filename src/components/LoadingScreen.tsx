@@ -1,15 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import plernpingLogo from "@/assets/plernping-logo.png";
 
 const LoadingScreen = ({ onLoadingComplete }: { onLoadingComplete: () => void }) => {
   const [progress, setProgress] = useState(0);
+  const hasCompleted = useRef(false);
+  const onLoadingCompleteRef = useRef(onLoadingComplete);
+
+  // Keep ref updated
+  onLoadingCompleteRef.current = onLoadingComplete;
 
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(timer);
-          setTimeout(onLoadingComplete, 300);
+          if (!hasCompleted.current) {
+            hasCompleted.current = true;
+            setTimeout(() => onLoadingCompleteRef.current(), 300);
+          }
           return 100;
         }
         return prev + 10;
@@ -17,7 +25,7 @@ const LoadingScreen = ({ onLoadingComplete }: { onLoadingComplete: () => void })
     }, 300);
 
     return () => clearInterval(timer);
-  }, [onLoadingComplete]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
