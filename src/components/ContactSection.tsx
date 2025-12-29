@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import sweetAlert from "@/lib/sweetAlert";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import FacebookPagePlugin from "@/components/FacebookPagePlugin";
 
 const ContactSection = () => {
   const { language } = useLanguage();
@@ -220,9 +221,9 @@ const ContactSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Left side - Contact Information */}
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-8 animate-fade-in lg:col-span-1">
             {/* Address */}
             {businessInfo && (businessInfo.address_th || businessInfo.address_en) && (
               <div className="flex gap-4 items-start">
@@ -380,8 +381,8 @@ const ContactSection = () => {
             )}
           </div>
 
-          {/* Right side - Contact Form */}
-          <Card className="p-8 animate-fade-in bg-card/50">
+          {/* Center - Contact Form */}
+          <Card className="p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1">
             <h3 className="text-2xl font-bold mb-6 text-foreground">
               {t.sendMessageForm}
             </h3>
@@ -504,6 +505,11 @@ const ContactSection = () => {
               </Button>
             </form>
           </Card>
+
+          {/* Right side - Facebook Page Plugin */}
+          <div className="lg:col-span-1 md:col-span-2 lg:md:col-span-1">
+            <FacebookPagePlugin />
+          </div>
         </div>
       </div>
     </section>
