@@ -5,6 +5,30 @@ import { supabase } from "@/integrations/supabase/client";
 import plernpingLogo from "@/assets/plernping-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef } from "react";
+import { useCountUp } from "@/hooks/useCountUp";
+
+// Animated Visitor Counter Component
+const VisitorCounterAnimated = ({ totalVisits, language }: { totalVisits: number; language: string }) => {
+  const { count } = useCountUp({
+    end: totalVisits,
+    duration: 2000,
+    delay: 300
+  });
+
+  return (
+    <div className="flex justify-center mb-6">
+      <div className="flex items-center gap-2 bg-primary/5 rounded-full px-4 py-2">
+        <Users size={18} className="text-primary" />
+        <span className="text-muted-foreground text-sm">
+          {language === 'th' ? 'ผู้เยี่ยมชม' : 'Visitors'}: {' '}
+          <span className="font-semibold text-foreground tabular-nums">
+            {count.toLocaleString()}
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const Footer = () => {
   const { language } = useLanguage();
@@ -234,18 +258,11 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Visitor Counter */}
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-2 bg-primary/5 rounded-full px-4 py-2">
-            <Users size={18} className="text-primary" />
-            <span className="text-muted-foreground text-sm">
-              {language === 'th' ? 'ผู้เยี่ยมชม' : 'Visitors'}: {' '}
-              <span className="font-semibold text-foreground">
-                {visitorStats?.total_visits?.toLocaleString() || '...'}
-              </span>
-            </span>
-          </div>
-        </div>
+        {/* Visitor Counter with Animation */}
+        <VisitorCounterAnimated 
+          totalVisits={visitorStats?.total_visits || 0} 
+          language={language} 
+        />
 
         <div className="border-t border-border pt-8 text-center text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} {language === 'th' ? businessInfo.business_name_th : businessInfo.business_name_en}. {t.allRightsReserved}.</p>
