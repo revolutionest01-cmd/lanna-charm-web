@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import Gallery from "./pages/Gallery";
 import Reviews from "./pages/Reviews";
 import Menu from "./pages/Menu";
 import ErrorBoundary from "./components/ErrorBoundary";
+import LoadingScreen from "./components/LoadingScreen";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +28,21 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [isLoading, setIsLoading] = useState(() => {
+    // Check sessionStorage to prevent loading on page refresh/navigation
+    const hasLoaded = sessionStorage.getItem('app_loaded');
+    return !hasLoaded;
+  });
+
+  const handleLoadingComplete = useCallback(() => {
+    sessionStorage.setItem('app_loaded', 'true');
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
