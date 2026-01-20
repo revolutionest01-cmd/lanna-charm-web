@@ -244,147 +244,175 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button className={`md:hidden ${isScrolled ? "text-foreground" : "text-white"}`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          <button 
+            className={`md:hidden p-2 rounded-lg transition-colors ${isScrolled ? "text-foreground hover:bg-muted" : "text-white hover:bg-white/10"}`} 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 animate-fade-in">
-            {navItems.map((item, index) => {
-              const IconComponent = item.icon;
-              return (
-                <a 
-                  key={item.label} 
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                  className={`flex items-center gap-2 ${isScrolled ? "text-foreground" : "text-white"} hover:text-highlight hover:[text-shadow:0_0_12px_rgba(198,85,57,0.8)] transition-all duration-300 font-medium transform hover:translate-x-2 cursor-pointer`}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <IconComponent size={18} />
-                  {item.label}
-                </a>
-              );
-            })}
-            
-            {/* Mobile Auth Buttons */}
-            <div className="flex flex-col gap-2 pt-2 border-t border-border">
-              {!isForumPage && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    navigate('/forum');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="justify-start"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  {t.forum}
-                </Button>
-              )}
-              
-              {isAuthenticated && user ? (
-                <>
-                  {/* Mobile User Profile Display */}
-                  <div className="flex items-center gap-2 py-2">
-                    <Avatar className="h-8 w-8 border-2 border-highlight/30">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="bg-highlight/20 text-highlight text-xs">
-                        {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className={`text-sm font-medium ${!isScrolled ? "text-white" : "text-foreground"}`}>
-                      {user.name}
-                    </span>
-                  </div>
-                  
-                  {isAdmin && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => {
-                        navigate('/admin');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="justify-start gap-2"
+        {/* Mobile Menu - Full Screen Overlay */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 top-[72px] bg-card/98 backdrop-blur-lg z-50 animate-fade-in overflow-y-auto">
+            <nav className="container mx-auto px-6 py-6 flex flex-col min-h-full">
+              {/* Navigation Links */}
+              <div className="space-y-1">
+                {navItems.map((item, index) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <a 
+                      key={item.label} 
+                      href={item.href}
+                      onClick={(e) => handleNavClick(e, item.href)}
+                      className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted hover:text-highlight transition-all duration-200 active:scale-[0.98] cursor-pointer"
+                      style={{ animationDelay: `${index * 30}ms` }}
                     >
-                      <Shield className="h-4 w-4" />
-                      {language === 'th' ? 'Admin Panel' : 'Admin Panel'}
-                    </Button>
-                  )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <IconComponent size={20} className="text-highlight" />
+                      </div>
+                      <span className="text-base font-medium">{item.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+              
+              {/* Divider */}
+              <div className="my-6 border-t border-border" />
+              
+              {/* User Section */}
+              <div className="space-y-3">
+                {!isForumPage && (
+                  <button 
                     onClick={() => {
-                      logout();
+                      navigate('/forum');
                       setIsMobileMenuOpen(false);
                     }}
-                    className="justify-start gap-2"
+                    className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted transition-colors w-full text-left"
                   >
-                    <LogOut className="h-4 w-4" />
-                    {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    navigate('/auth');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="justify-start gap-2"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex gap-2">
-              <div className="inline-flex items-center bg-secondary rounded-full p-1 gap-1">
-                <button
-                  onClick={() => setLanguage('th')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                    language === 'th'
-                      ? 'bg-highlight text-highlight-foreground shadow-sm'
-                      : 'text-foreground hover:bg-background/50'
-                  }`}
-                >
-                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
-                  <span className="text-sm font-semibold">ไทย</span>
-                </button>
-                <button
-                  onClick={() => setLanguage('zh')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                    language === 'zh'
-                      ? 'bg-highlight text-highlight-foreground shadow-sm'
-                      : 'text-foreground hover:bg-background/50'
-                  }`}
-                >
-                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
-                  <span className="text-sm font-semibold">中文</span>
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                    language === 'en'
-                      ? 'bg-highlight text-highlight-foreground shadow-sm'
-                      : 'text-foreground hover:bg-background/50'
-                  }`}
-                >
-                  <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
-                  <span className="text-sm font-semibold">EN</span>
-                </button>
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                      <MessageCircle size={20} className="text-highlight" />
+                    </div>
+                    <span className="text-base font-medium">{t.forum}</span>
+                  </button>
+                )}
+                
+                {isAuthenticated && user ? (
+                  <>
+                    {/* Mobile User Profile Display */}
+                    <div className="flex items-center gap-4 px-4 py-4 bg-muted/50 rounded-xl">
+                      <Avatar className="h-12 w-12 border-2 border-highlight/30">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback className="bg-highlight/20 text-highlight">
+                          {user.name?.charAt(0)?.toUpperCase() || <User className="h-5 w-5" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="text-base font-semibold text-foreground block">
+                          {user.name}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {language === 'th' ? 'ผู้ใช้งาน' : 'User'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted transition-colors w-full text-left"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Shield size={20} className="text-primary" />
+                        </div>
+                        <span className="text-base font-medium">{language === 'th' ? 'Admin Panel' : 'Admin Panel'}</span>
+                      </button>
+                    )}
+                    
+                    <button 
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-destructive/10 transition-colors w-full text-left"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                        <LogOut size={20} className="text-destructive" />
+                      </div>
+                      <span className="text-base font-medium">{language === 'th' ? 'ออกจากระบบ' : 'Logout'}</span>
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      navigate('/auth');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted transition-colors w-full text-left"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                      <LogIn size={20} className="text-highlight" />
+                    </div>
+                    <span className="text-base font-medium">{language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}</span>
+                  </button>
+                )}
               </div>
-              <BookingDialog>
-                <Button variant="default" size="lg" className="flex-1 font-semibold">
-                  {t.bookNow}
-                </Button>
-              </BookingDialog>
-            </div>
-          </nav>}
+              
+              {/* Bottom Actions - Fixed at bottom */}
+              <div className="mt-auto pt-6 space-y-4">
+                {/* Language Switcher */}
+                <div className="flex justify-center">
+                  <div className="inline-flex items-center bg-muted rounded-full p-1.5 gap-1">
+                    <button
+                      onClick={() => setLanguage('th')}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full font-medium transition-all duration-300 ${
+                        language === 'th'
+                          ? 'bg-highlight text-highlight-foreground shadow-sm'
+                          : 'text-foreground hover:bg-background/50'
+                      }`}
+                    >
+                      <span className="text-lg">🇹🇭</span>
+                      <span className="text-sm font-semibold">ไทย</span>
+                    </button>
+                    <button
+                      onClick={() => setLanguage('zh')}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full font-medium transition-all duration-300 ${
+                        language === 'zh'
+                          ? 'bg-highlight text-highlight-foreground shadow-sm'
+                          : 'text-foreground hover:bg-background/50'
+                      }`}
+                    >
+                      <span className="text-lg">🇨🇳</span>
+                      <span className="text-sm font-semibold">中文</span>
+                    </button>
+                    <button
+                      onClick={() => setLanguage('en')}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full font-medium transition-all duration-300 ${
+                        language === 'en'
+                          ? 'bg-highlight text-highlight-foreground shadow-sm'
+                          : 'text-foreground hover:bg-background/50'
+                      }`}
+                    >
+                      <span className="text-lg">🇬🇧</span>
+                      <span className="text-sm font-semibold">EN</span>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Book Now Button - Full Width */}
+                <BookingDialog>
+                  <Button variant="default" size="lg" className="w-full h-14 text-base font-semibold bg-[#c65539] hover:bg-[#b34a2f] rounded-xl">
+                    {t.bookNow}
+                  </Button>
+                </BookingDialog>
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
     </header>;
 };

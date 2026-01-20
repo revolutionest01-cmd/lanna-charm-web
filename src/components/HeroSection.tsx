@@ -51,29 +51,29 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 text-center animate-fade-in">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <MapPin className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" size={24} />
-          <p className="text-lg text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{t.location}</p>
+      <div className="relative z-10 container mx-auto px-5 sm:px-6 text-center animate-fade-in pt-20 sm:pt-0">
+        <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
+          <MapPin className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" size={20} />
+          <p className="text-sm sm:text-lg text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{t.location}</p>
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 font-serif drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 font-serif drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] leading-tight">
           {heroTitle}
         </h1>
         
-        <p className="text-xl md:text-2xl text-white mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-4 sm:mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] px-2">
           {heroSubtitle}
         </p>
         
-        <p className="text-lg text-white mb-10 max-w-xl mx-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+        <p className="text-sm sm:text-base md:text-lg text-white mb-8 sm:mb-10 max-w-xl mx-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] px-2">
           {t.heroDescription}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 sm:px-0">
           <Button 
             variant="highlight" 
             size="lg" 
-            className="font-semibold group"
+            className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold group rounded-xl"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.exploreMenu}
@@ -82,7 +82,7 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40 text-white border-white/40 hover:text-white"
+            className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40 text-white border-white/40 hover:text-white rounded-xl"
             onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.viewRooms}
@@ -90,8 +90,8 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+      {/* Scroll Indicator - Hide on mobile */}
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce hidden sm:block">
         <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-2">
           <div className="w-1 h-3 bg-foreground/30 rounded-full" />
         </div>
