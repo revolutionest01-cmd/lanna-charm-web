@@ -45,13 +45,13 @@ const ReviewsSection = () => {
   }
 
   return (
-    <section id="reviews" className="py-20 bg-gradient-to-b from-background to-secondary/20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
+    <section id="reviews" className="py-16 sm:py-20 bg-gradient-to-b from-background to-secondary/20">
+      <div className="container mx-auto px-5 sm:px-6">
+        <div className="text-center mb-10 sm:mb-16 animate-fade-in">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-3 sm:mb-4 text-foreground">
             {t.reviewsTitle}
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-2">
             {t.reviewsSubtitle}
           </p>
         </div>
@@ -73,21 +73,21 @@ const ReviewsSection = () => {
             ]}
             className="w-full max-w-7xl mx-auto"
           >
-            <CarouselContent>
+            <CarouselContent className="-ml-3 sm:-ml-4">
               {reviews.map((review, index) => (
-                <CarouselItem key={review.id} className="md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={review.id} className="pl-3 sm:pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
                   <Card
                     className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in border-border/50 h-full"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-lg text-foreground">{review.customer_name}</h3>
-                        <div className="flex gap-1">
+                    <CardContent className="p-5 sm:p-6">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+                        <h3 className="font-semibold text-base sm:text-lg text-foreground truncate">{review.customer_name}</h3>
+                        <div className="flex gap-0.5 flex-shrink-0">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-4 h-4 ${
+                              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${
                                 i < review.rating
                                   ? "fill-amber-400 text-amber-400"
                                   : "fill-muted text-muted"
@@ -96,10 +96,10 @@ const ReviewsSection = () => {
                           ))}
                         </div>
                       </div>
-                      <p className="text-muted-foreground mb-4 leading-relaxed">
+                      <p className="text-muted-foreground mb-3 sm:mb-4 leading-relaxed text-sm line-clamp-4">
                         {language === "th" ? review.review_text_th : review.review_text_en}
                       </p>
-                      <p className="text-sm text-muted-foreground/70">
+                      <p className="text-xs sm:text-sm text-muted-foreground/70">
                         {new Date(review.created_at).toLocaleDateString(
                           language === "th" ? "th-TH" : "en-US",
                           { year: "numeric", month: "long", day: "numeric" }
@@ -110,18 +110,18 @@ const ReviewsSection = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-4" />
-            <CarouselNext className="right-4" />
+            <CarouselPrevious className="left-2 sm:left-4 hidden sm:flex" />
+            <CarouselNext className="right-2 sm:right-4 hidden sm:flex" />
           </Carousel>
         )}
 
         {/* View All Reviews Button */}
         {reviews.length > 0 && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-10 sm:mt-12">
             <Link to="/reviews">
               <Button 
                 size="lg" 
-                className="group hover:shadow-lg transition-all duration-300"
+                className="group hover:shadow-lg transition-all duration-300 w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg"
               >
                 {language === "th" ? "ดูรีวิวทั้งหมด" : "View All Reviews"}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />

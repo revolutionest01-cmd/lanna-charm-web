@@ -210,31 +210,31 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="py-20 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+    <section id="contact" className="py-16 sm:py-20 bg-background">
+      <div className="container mx-auto px-5 sm:px-6">
+        <div className="text-center mb-10 sm:mb-16 animate-fade-in">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-foreground">
             {t.contactTitle}
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-2">
             {t.contactSubtitle}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto">
           {/* Left side - Contact Information */}
-          <div className="space-y-8 animate-fade-in lg:col-span-1">
+          <div className="space-y-5 sm:space-y-8 animate-fade-in lg:col-span-1 order-2 lg:order-1">
             {/* Address */}
             {businessInfo && (businessInfo.address_th || businessInfo.address_en) && (
-              <div className="flex gap-4 items-start">
-                <div className="bg-muted p-3 rounded-lg">
-                  <MapPin className="w-6 h-6 text-highlight" />
+              <div className="flex gap-3 sm:gap-4 items-start">
+                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-xl mb-2 text-foreground">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
                     {t.address}
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     {language === 'th' ? businessInfo.address_th : businessInfo.address_en}
                   </p>
                 </div>
@@ -243,24 +243,24 @@ const ContactSection = () => {
 
             {/* Phone Numbers */}
             {businessInfo && (
-              <div className="flex gap-4 items-start">
-                <div className="bg-muted p-3 rounded-lg">
-                  <Phone className="w-6 h-6 text-highlight" />
+              <div className="flex gap-3 sm:gap-4 items-start">
+                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-xl mb-2 text-foreground">
+                  <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
                     {t.phone}
                   </h3>
                   <a
                     href={`tel:+66${businessInfo.phone_primary}`}
-                    className="block text-muted-foreground hover:text-highlight transition-colors"
+                    className="block text-muted-foreground hover:text-highlight transition-colors text-sm sm:text-base"
                   >
                     {businessInfo.phone_primary}
                   </a>
                   {businessInfo.phone_secondary && (
                     <a
                       href={`tel:+66${businessInfo.phone_secondary}`}
-                      className="block text-muted-foreground hover:text-highlight transition-colors"
+                      className="block text-muted-foreground hover:text-highlight transition-colors text-sm sm:text-base"
                     >
                       {businessInfo.phone_secondary}
                     </a>
@@ -271,17 +271,17 @@ const ContactSection = () => {
 
             {/* Email */}
             {businessInfo?.email && (
-              <div className="flex gap-4 items-start">
-                <div className="bg-muted p-3 rounded-lg">
-                  <Mail className="w-6 h-6 text-highlight" />
+              <div className="flex gap-3 sm:gap-4 items-start">
+                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-xl mb-2 text-foreground">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
                     {t.email}
                   </h3>
                   <a
                     href={`mailto:${businessInfo.email}`}
-                    className="text-muted-foreground hover:text-highlight transition-colors"
+                    className="text-muted-foreground hover:text-highlight transition-colors text-sm sm:text-base break-all"
                   >
                     {businessInfo.email}
                   </a>
@@ -291,30 +291,30 @@ const ContactSection = () => {
 
             {/* LINE ID */}
             {businessInfo?.line_id && (
-              <div className="flex gap-4 items-start">
-                <div className="bg-muted p-3 rounded-lg">
-                  <MessageCircle className="w-6 h-6 text-highlight" />
+              <div className="flex gap-3 sm:gap-4 items-start">
+                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-xl mb-2 text-foreground">
+                  <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
                     LINE ID
                   </h3>
-                  <p className="text-muted-foreground">{businessInfo.line_id}</p>
+                  <p className="text-muted-foreground text-sm sm:text-base">{businessInfo.line_id}</p>
                 </div>
               </div>
             )}
 
             {/* Opening Hours */}
             {businessInfo && (businessInfo.opening_hours_th || businessInfo.opening_hours_en) && (
-              <div className="flex gap-4 items-start">
-                <div className="bg-muted p-3 rounded-lg">
-                  <Clock className="w-6 h-6 text-highlight" />
+              <div className="flex gap-3 sm:gap-4 items-start">
+                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-xl mb-2 text-foreground">
+                  <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
                     {t.openingHours}
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     {language === 'th' ? businessInfo.opening_hours_th : businessInfo.opening_hours_en}
                   </p>
                 </div>
@@ -324,19 +324,19 @@ const ContactSection = () => {
             {/* Social Media */}
             {(businessInfo?.instagram || businessInfo?.facebook || businessInfo?.line_id || businessInfo?.twitter) && (
               <div>
-                <h3 className="font-semibold text-xl mb-4 text-foreground">
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-foreground">
                   {t.followUs}
                 </h3>
-                <div className="flex gap-4 flex-wrap">
+                <div className="flex gap-3 sm:gap-4 flex-wrap">
                   {businessInfo.line_id && (
                     <a
                       href={`https://line.me/R/ti/p/${businessInfo.line_id.replace('@', '%40')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      className="bg-muted hover:bg-highlight/20 p-2.5 sm:p-3 rounded-lg transition-colors"
                       aria-label="LINE"
                     >
-                      <MessageCircle className="w-6 h-6 text-foreground" />
+                      <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
                     </a>
                   )}
                   {businessInfo.facebook && (
@@ -346,10 +346,10 @@ const ContactSection = () => {
                         : `https://www.facebook.com/${businessInfo.facebook}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      className="bg-muted hover:bg-highlight/20 p-2.5 sm:p-3 rounded-lg transition-colors"
                       aria-label="Facebook"
                     >
-                      <Facebook className="w-6 h-6 text-foreground" />
+                      <Facebook className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
                     </a>
                   )}
                   {businessInfo.instagram && (
@@ -357,10 +357,10 @@ const ContactSection = () => {
                       href={`https://www.instagram.com/${businessInfo.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      className="bg-muted hover:bg-highlight/20 p-2.5 sm:p-3 rounded-lg transition-colors"
                       aria-label="Instagram"
                     >
-                      <Instagram className="w-6 h-6 text-foreground" />
+                      <Instagram className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
                     </a>
                   )}
                   {businessInfo.twitter && (
@@ -370,10 +370,10 @@ const ContactSection = () => {
                         : `https://x.com/${businessInfo.twitter.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-muted hover:bg-highlight/20 p-3 rounded-lg transition-colors"
+                      className="bg-muted hover:bg-highlight/20 p-2.5 sm:p-3 rounded-lg transition-colors"
                       aria-label="X (Twitter)"
                     >
-                      <Twitter className="w-6 h-6 text-foreground" />
+                      <Twitter className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
                     </a>
                   )}
                 </div>
@@ -382,124 +382,52 @@ const ContactSection = () => {
           </div>
 
           {/* Center - Contact Form */}
-          <Card className="p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1">
-            <h3 className="text-2xl font-bold mb-6 text-foreground">
+          <Card className="p-5 sm:p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1 order-1 lg:order-2">
+            <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-foreground">
               {t.sendMessageForm}
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium mb-2 text-foreground"
-                >
+                <label htmlFor="name" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.nameLabel}
                 </label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder={t.namePlaceholder}
-                  className={errors.name ? "border-destructive" : ""}
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive mt-1">{errors.name}</p>
-                )}
+                <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder={t.namePlaceholder} className={`h-11 sm:h-10 ${errors.name ? "border-destructive" : ""}`} />
+                {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
               </div>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium mb-2 text-foreground"
-                >
+                <label htmlFor="email" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.emailLabel}
                 </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder={t.emailPlaceholder}
-                  className={errors.email ? "border-destructive" : ""}
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive mt-1">{errors.email}</p>
-                )}
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder={t.emailPlaceholder} className={`h-11 sm:h-10 ${errors.email ? "border-destructive" : ""}`} />
+                {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
               </div>
 
               <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium mb-2 text-foreground"
-                >
+                <label htmlFor="phone" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.phoneLabel}
                 </label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder={t.phonePlaceholder}
-                  className={errors.phone ? "border-destructive" : ""}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-destructive mt-1">{errors.phone}</p>
-                )}
+                <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder={t.phonePlaceholder} className={`h-11 sm:h-10 ${errors.phone ? "border-destructive" : ""}`} />
+                {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
               </div>
 
               <div>
-                <label
-                  htmlFor="topic"
-                  className="block text-sm font-medium mb-2 text-foreground"
-                >
+                <label htmlFor="topic" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.topicLabel}
                 </label>
-                <Input
-                  id="topic"
-                  name="topic"
-                  type="text"
-                  value={formData.topic}
-                  onChange={handleChange}
-                  placeholder={t.topicPlaceholder}
-                  className={errors.topic ? "border-destructive" : ""}
-                />
-                {errors.topic && (
-                  <p className="text-sm text-destructive mt-1">{errors.topic}</p>
-                )}
+                <Input id="topic" name="topic" type="text" value={formData.topic} onChange={handleChange} placeholder={t.topicPlaceholder} className={`h-11 sm:h-10 ${errors.topic ? "border-destructive" : ""}`} />
+                {errors.topic && <p className="text-sm text-destructive mt-1">{errors.topic}</p>}
               </div>
 
               <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium mb-2 text-foreground"
-                >
+                <label htmlFor="message" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.messageLabel}
                 </label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder={t.messagePlaceholder}
-                  rows={4}
-                  className={errors.message ? "border-destructive" : ""}
-                />
-                {errors.message && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.message}
-                  </p>
-                )}
+                <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder={t.messagePlaceholder} rows={4} className={errors.message ? "border-destructive" : ""} />
+                {errors.message && <p className="text-sm text-destructive mt-1">{errors.message}</p>}
               </div>
 
-              <Button
-                type="submit"
-                variant="highlight"
-                size="lg"
-                className="w-full"
-              >
+              <Button type="submit" variant="highlight" size="lg" className="w-full h-12 sm:h-11 text-base rounded-xl sm:rounded-lg">
                 <Send className="mr-2 h-5 w-5" />
                 {t.sendMessage}
               </Button>
@@ -507,7 +435,7 @@ const ContactSection = () => {
           </Card>
 
           {/* Right side - Facebook Page Plugin */}
-          <div className="lg:col-span-1 md:col-span-2 lg:md:col-span-1">
+          <div className="lg:col-span-1 order-3">
             <FacebookPagePlugin />
           </div>
         </div>
