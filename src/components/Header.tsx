@@ -256,7 +256,7 @@ const Header = () => {
                 <Menu size={24} />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] max-w-sm p-0 pt-6">
+            <SheetContent side="right" className="w-[85vw] max-w-sm p-0 pt-6 bg-card/95 backdrop-blur-xl border-l border-border/50 shadow-2xl">
               <nav className="px-6 py-4 flex flex-col h-full overflow-y-auto">
                 {/* Navigation Links */}
                 <div className="space-y-1">
@@ -267,9 +267,10 @@ const Header = () => {
                         key={item.label} 
                         href={item.href}
                         onClick={(e) => handleNavClick(e, item.href)}
-                        className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted hover:text-highlight transition-all duration-200 active:scale-[0.98] cursor-pointer"
+                        className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-[#8B6F47]/20 hover:text-highlight transition-all duration-300 active:scale-[0.98] cursor-pointer animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
                       >
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6F47]/20 to-[#c65539]/20 flex items-center justify-center flex-shrink-0 shadow-sm">
                           <IconComponent size={20} className="text-highlight" />
                         </div>
                         <span className="text-base font-medium">{item.label}</span>
