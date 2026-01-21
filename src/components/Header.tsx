@@ -267,11 +267,11 @@ const Header = () => {
                         key={item.label} 
                         href={item.href}
                         onClick={(e) => handleNavClick(e, item.href)}
-                        className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-[#8B6F47]/20 hover:text-highlight transition-all duration-300 active:scale-[0.98] cursor-pointer animate-fade-in"
+                        className="group flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-[#8B6F47]/20 hover:text-highlight transition-all duration-300 active:scale-[0.98] cursor-pointer animate-fade-in hover:shadow-[0_0_20px_rgba(198,85,57,0.3)] hover:scale-[1.02]"
                         style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
                       >
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6F47]/20 to-[#c65539]/20 flex items-center justify-center flex-shrink-0 shadow-sm">
-                          <IconComponent size={20} className="text-highlight" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6F47]/20 to-[#c65539]/20 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:shadow-[0_0_15px_rgba(198,85,57,0.4)] transition-all duration-300">
+                          <IconComponent size={20} className="text-highlight group-hover:scale-110 transition-transform duration-300" />
                         </div>
                         <span className="text-base font-medium">{item.label}</span>
                       </a>
@@ -290,10 +290,10 @@ const Header = () => {
                         navigate('/forum');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted transition-colors w-full text-left"
+                      className="group flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-[#8B6F47]/20 hover:text-highlight transition-all duration-300 w-full text-left hover:shadow-[0_0_20px_rgba(198,85,57,0.3)] hover:scale-[1.02]"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                        <MessageCircle size={20} className="text-highlight" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6F47]/20 to-[#c65539]/20 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(198,85,57,0.4)] transition-all duration-300">
+                        <MessageCircle size={20} className="text-highlight group-hover:scale-110 transition-transform duration-300" />
                       </div>
                       <span className="text-base font-medium">{t.forum}</span>
                     </button>
@@ -325,10 +325,10 @@ const Header = () => {
                             navigate('/admin');
                             setIsMobileMenuOpen(false);
                           }}
-                          className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted transition-colors w-full text-left"
+                          className="group flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 w-full text-left hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:scale-[1.02]"
                         >
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Shield size={20} className="text-primary" />
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(var(--primary),0.4)] transition-all duration-300">
+                            <Shield size={20} className="text-primary group-hover:scale-110 transition-transform duration-300" />
                           </div>
                           <span className="text-base font-medium">{language === 'th' ? 'Admin Panel' : 'Admin Panel'}</span>
                         </button>
@@ -339,10 +339,10 @@ const Header = () => {
                           logout();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-destructive/10 transition-colors w-full text-left"
+                        className="group flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full text-left hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:scale-[1.02]"
                       >
-                        <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                          <LogOut size={20} className="text-destructive" />
+                        <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300">
+                          <LogOut size={20} className="text-destructive group-hover:scale-110 transition-transform duration-300" />
                         </div>
                         <span className="text-base font-medium">{language === 'th' ? 'ออกจากระบบ' : 'Logout'}</span>
                       </button>
@@ -353,10 +353,10 @@ const Header = () => {
                         navigate('/auth');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-muted transition-colors w-full text-left"
+                      className="group flex items-center gap-4 px-4 py-4 rounded-xl text-foreground hover:bg-[#8B6F47]/20 hover:text-highlight transition-all duration-300 w-full text-left hover:shadow-[0_0_20px_rgba(198,85,57,0.3)] hover:scale-[1.02]"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                        <LogIn size={20} className="text-highlight" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6F47]/20 to-[#c65539]/20 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(198,85,57,0.4)] transition-all duration-300">
+                        <LogIn size={20} className="text-highlight group-hover:scale-110 transition-transform duration-300" />
                       </div>
                       <span className="text-base font-medium">{language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}</span>
                     </button>
