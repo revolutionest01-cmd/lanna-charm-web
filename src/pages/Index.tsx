@@ -12,17 +12,14 @@ import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import FloatingChatButton from "@/components/FloatingChatButton";
+import ParallaxBackground from "@/components/ParallaxBackground";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   return (
     <div className="relative min-h-screen page-gradient-bg">
-      {/* Decorative gradient orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-[hsl(var(--highlight)/0.05)] to-transparent blur-3xl" />
-        <div className="absolute top-[60%] right-[5%] w-[400px] h-[400px] rounded-full bg-gradient-to-tl from-[hsl(var(--lanna-leaf)/0.04)] to-transparent blur-3xl" />
-        <div className="absolute bottom-[10%] left-[20%] w-[600px] h-[300px] rounded-full bg-gradient-to-tr from-[hsl(var(--gradient-accent)/0.06)] to-transparent blur-3xl" />
-      </div>
+      {/* Parallax gradient orbs */}
+      <ParallaxBackground />
       
       <FallingLeaves />
       <AmbientSound />
