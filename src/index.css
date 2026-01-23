@@ -101,6 +101,12 @@ All colors MUST be HSL.
     /* Highlight/Accent color - Terracotta */
     --highlight: 12 55% 50%;
     --highlight-foreground: 30 20% 96%;
+    
+    /* Premium gradient backgrounds */
+    --gradient-start: 30 25% 94%;
+    --gradient-mid: 28 20% 88%;
+    --gradient-end: 25 18% 85%;
+    --gradient-accent: 20 30% 80%;
   }
 
   .dark {
@@ -153,6 +159,12 @@ All colors MUST be HSL.
     --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.15), 0 4px 6px -1px hsl(0 0% 0% / 0.15);
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.15), 0 8px 10px -1px hsl(0 0% 0% / 0.15);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.3);
+    
+    /* Dark mode gradient backgrounds */
+    --gradient-start: 20 18% 18%;
+    --gradient-mid: 22 15% 14%;
+    --gradient-end: 25 12% 10%;
+    --gradient-accent: 18 20% 22%;
   }
 }
 
@@ -256,4 +268,46 @@ html {
 /* Custom gradient overlays */
 .gradient-overlay {
   background: linear-gradient(to bottom, transparent, hsl(var(--background) / 0.9));
+}
+
+/* Premium page gradient background */
+.page-gradient-bg {
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 40%, hsl(var(--gradient-accent) / 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, hsl(var(--highlight) / 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse 70% 60% at 70% 80%, hsl(var(--gradient-mid) / 0.2) 0%, transparent 45%),
+    radial-gradient(ellipse 50% 30% at 10% 90%, hsl(var(--lanna-leaf) / 0.05) 0%, transparent 35%),
+    linear-gradient(
+      180deg, 
+      hsl(var(--gradient-start)) 0%, 
+      hsl(var(--background)) 15%,
+      hsl(var(--background)) 50%,
+      hsl(var(--gradient-mid) / 0.3) 75%,
+      hsl(var(--gradient-end) / 0.4) 100%
+    );
+}
+
+/* Section gradient separators */
+.section-gradient-top {
+  background: linear-gradient(180deg, hsl(var(--gradient-mid) / 0.2) 0%, transparent 100%);
+}
+
+.section-gradient-bottom {
+  background: linear-gradient(0deg, hsl(var(--gradient-mid) / 0.2) 0%, transparent 100%);
+}
+
+/* Subtle glow effect for sections */
+.section-glow {
+  position: relative;
+}
+
+.section-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--highlight) / 0.3), transparent);
 }

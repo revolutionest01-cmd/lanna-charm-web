@@ -16,17 +16,30 @@ import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen page-gradient-bg">
+      {/* Decorative gradient orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-[hsl(var(--highlight)/0.05)] to-transparent blur-3xl" />
+        <div className="absolute top-[60%] right-[5%] w-[400px] h-[400px] rounded-full bg-gradient-to-tl from-[hsl(var(--lanna-leaf)/0.04)] to-transparent blur-3xl" />
+        <div className="absolute bottom-[10%] left-[20%] w-[600px] h-[300px] rounded-full bg-gradient-to-tr from-[hsl(var(--gradient-accent)/0.06)] to-transparent blur-3xl" />
+      </div>
+      
       <FallingLeaves />
       <AmbientSound />
       <Header />
       <main className="relative z-10">
         <HeroSection />
-        <FeaturesSection />
+        <div className="section-glow">
+          <FeaturesSection />
+        </div>
         <EventsSection />
-        <RoomsSection />
+        <div className="section-glow">
+          <RoomsSection />
+        </div>
         <MenuSection />
-        <GallerySection />
+        <div className="section-glow">
+          <GallerySection />
+        </div>
         <ReviewsSection />
         <ContactSection />
       </main>
