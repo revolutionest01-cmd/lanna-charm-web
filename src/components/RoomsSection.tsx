@@ -13,6 +13,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useContentData } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
+import MagneticButton from "@/components/MagneticButton";
 
 interface Room {
   id: string;
@@ -120,11 +121,13 @@ const RoomsSection = () => {
                     </CardContent>
 
                     <CardFooter className="p-4 sm:p-6 pt-0">
-                      <BookingDialog>
-                        <Button variant="highlight" className="w-full font-semibold h-11 sm:h-10 rounded-xl sm:rounded-lg">
-                          {t.bookRoom}
-                        </Button>
-                      </BookingDialog>
+                      <MagneticButton strength={0.35} radius={100} className="w-full">
+                        <BookingDialog>
+                          <Button variant="highlight" className="w-full font-semibold h-11 sm:h-10 rounded-xl sm:rounded-lg">
+                            {t.bookRoom}
+                          </Button>
+                        </BookingDialog>
+                      </MagneticButton>
                     </CardFooter>
                   </Card>
                 </CarouselItem>

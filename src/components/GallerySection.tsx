@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { GallerySkeleton } from "@/components/SkeletonCard";
+import MagneticButton from "@/components/MagneticButton";
 
 type GalleryImage = {
   id: string;
@@ -98,15 +99,17 @@ const GallerySection = () => {
         {/* View All Button */}
         {images.length > 0 && (
           <div className="text-center mt-10 sm:mt-12">
-            <Link to="/gallery">
-              <Button 
-                size="lg" 
-                className="group hover:shadow-lg transition-all duration-300 w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg"
-              >
-                {language === "th" ? "ดูรูปภาพทั้งหมด" : "View All Images"}
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            <MagneticButton strength={0.4} radius={120}>
+              <Link to="/gallery">
+                <Button 
+                  size="lg" 
+                  className="group hover:shadow-lg transition-all duration-300 w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg"
+                >
+                  {language === "th" ? "ดูรูปภาพทั้งหมด" : "View All Images"}
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </MagneticButton>
           </div>
         )}
       </div>
