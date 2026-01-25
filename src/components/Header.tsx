@@ -8,6 +8,7 @@ import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
+import LanguageDropdown from "./LanguageDropdown";
 import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
@@ -195,50 +196,7 @@ const Header = () => {
                 {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
               </Button>
             )}
-            <div className={`inline-flex items-center rounded-full p-1 gap-1 transition-all duration-300 ${isScrolled ? "bg-secondary" : "bg-white/20 backdrop-blur-sm"}`}>
-              <button
-                onClick={() => setLanguage('th')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                  language === 'th'
-                    ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
-                    : isScrolled
-                    ? 'text-foreground hover:bg-background/50'
-                    : 'text-white hover:bg-white/10'
-                }`}
-                aria-label="Switch to Thai"
-              >
-                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇹🇭</span>
-                <span className="text-sm font-semibold">ไทย</span>
-              </button>
-              <button
-                onClick={() => setLanguage('zh')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                  language === 'zh'
-                    ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
-                    : isScrolled
-                    ? 'text-foreground hover:bg-background/50'
-                    : 'text-white hover:bg-white/10'
-                }`}
-                aria-label="Switch to Chinese"
-              >
-                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇨🇳</span>
-                <span className="text-sm font-semibold">中文</span>
-              </button>
-              <button
-                onClick={() => setLanguage('en')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                  language === 'en'
-                    ? 'bg-highlight text-highlight-foreground shadow-sm scale-100'
-                    : isScrolled
-                    ? 'text-foreground hover:bg-background/50'
-                    : 'text-white hover:bg-white/10'
-                }`}
-                aria-label="Switch to English"
-              >
-                <span className="text-base transition-transform duration-300 inline-block hover:rotate-12">🇬🇧</span>
-                <span className="text-sm font-semibold">EN</span>
-              </button>
-            </div>
+            <LanguageDropdown variant={isScrolled ? 'dark' : 'light'} />
             <BookingDialog>
               <Button variant="default" size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow bg-[#c65539]">
                 {t.bookNow}
@@ -367,41 +325,7 @@ const Header = () => {
                 <div className="mt-auto pt-6 space-y-4">
                   {/* Language Switcher */}
                   <div className="flex justify-center">
-                    <div className="inline-flex items-center bg-muted rounded-full p-1.5 gap-1">
-                      <button
-                        onClick={() => setLanguage('th')}
-                        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full font-medium transition-all duration-300 ${
-                          language === 'th'
-                            ? 'bg-highlight text-highlight-foreground shadow-sm'
-                            : 'text-foreground hover:bg-background/50'
-                        }`}
-                      >
-                        <span className="text-lg">🇹🇭</span>
-                        <span className="text-sm font-semibold">ไทย</span>
-                      </button>
-                      <button
-                        onClick={() => setLanguage('zh')}
-                        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full font-medium transition-all duration-300 ${
-                          language === 'zh'
-                            ? 'bg-highlight text-highlight-foreground shadow-sm'
-                            : 'text-foreground hover:bg-background/50'
-                        }`}
-                      >
-                        <span className="text-lg">🇨🇳</span>
-                        <span className="text-sm font-semibold">中文</span>
-                      </button>
-                      <button
-                        onClick={() => setLanguage('en')}
-                        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full font-medium transition-all duration-300 ${
-                          language === 'en'
-                            ? 'bg-highlight text-highlight-foreground shadow-sm'
-                            : 'text-foreground hover:bg-background/50'
-                        }`}
-                      >
-                        <span className="text-lg">🇬🇧</span>
-                        <span className="text-sm font-semibold">EN</span>
-                      </button>
-                    </div>
+                    <LanguageDropdown variant="dark" />
                   </div>
                   
                   {/* Book Now Button - Full Width */}
