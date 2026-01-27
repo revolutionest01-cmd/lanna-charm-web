@@ -172,7 +172,7 @@ const Header = () => {
                     className="gap-2"
                   >
                     <Shield className="h-4 w-4" />
-                    {language === 'th' ? 'Admin Panel' : 'Admin Panel'}
+                    {language === 'th' ? 'แผงควบคุม' : language === 'zh' ? '管理面板' : 'Admin Panel'}
                   </Button>
                 )}
                 <Button 
@@ -182,7 +182,7 @@ const Header = () => {
                   className={`gap-2 ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
                 >
                   <LogOut className="h-4 w-4" />
-                  {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
+                  {language === 'th' ? 'ออกจากระบบ' : language === 'zh' ? '退出登录' : 'Logout'}
                 </Button>
               </>
             ) : (
@@ -193,7 +193,7 @@ const Header = () => {
                 className={`gap-2 ${!isScrolled ? "text-white hover:text-white hover:bg-white/20" : ""}`}
               >
                 <LogIn className="h-4 w-4" />
-                {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
               </Button>
             )}
             <LanguageDropdown variant={isScrolled ? 'dark' : 'light'} />
@@ -272,7 +272,7 @@ const Header = () => {
                             {user.name}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            {language === 'th' ? 'ผู้ใช้งาน' : 'User'}
+                            {language === 'th' ? 'ผู้ใช้งาน' : language === 'zh' ? '用户' : 'User'}
                           </span>
                         </div>
                       </div>
@@ -288,7 +288,7 @@ const Header = () => {
                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(var(--primary),0.4)] transition-all duration-300">
                             <Shield size={20} className="text-primary group-hover:scale-110 transition-transform duration-300" />
                           </div>
-                          <span className="text-base font-medium">{language === 'th' ? 'Admin Panel' : 'Admin Panel'}</span>
+                          <span className="text-base font-medium">{language === 'th' ? 'แผงควบคุม' : language === 'zh' ? '管理面板' : 'Admin Panel'}</span>
                         </button>
                       )}
                       
@@ -302,7 +302,7 @@ const Header = () => {
                         <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300">
                           <LogOut size={20} className="text-destructive group-hover:scale-110 transition-transform duration-300" />
                         </div>
-                        <span className="text-base font-medium">{language === 'th' ? 'ออกจากระบบ' : 'Logout'}</span>
+                        <span className="text-base font-medium">{language === 'th' ? 'ออกจากระบบ' : language === 'zh' ? '退出登录' : 'Logout'}</span>
                       </button>
                     </>
                   ) : (
@@ -316,7 +316,7 @@ const Header = () => {
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6F47]/20 to-[#c65539]/20 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(198,85,57,0.4)] transition-all duration-300">
                         <LogIn size={20} className="text-highlight group-hover:scale-110 transition-transform duration-300" />
                       </div>
-                      <span className="text-base font-medium">{language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}</span>
+                      <span className="text-base font-medium">{language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}</span>
                     </button>
                   )}
                 </div>

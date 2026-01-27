@@ -84,7 +84,7 @@ const Gallery = () => {
           ) : images.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-muted-foreground text-lg">
-                {language === "th" ? "ไม่มีรูปภาพในขณะนี้" : "No images available"}
+                {language === "th" ? "ไม่มีรูปภาพในขณะนี้" : language === "zh" ? "暂无图片" : "No images available"}
               </p>
             </div>
           ) : (

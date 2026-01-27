@@ -115,7 +115,7 @@ const RoomsSection = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Wifi size={16} />
-                          <span>Free WiFi</span>
+                          <span>{language === 'th' ? 'WiFi ฟรี' : language === 'zh' ? '免费WiFi' : 'Free WiFi'}</span>
                         </div>
                       </div>
                     </CardContent>
