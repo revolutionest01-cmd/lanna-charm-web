@@ -28,6 +28,8 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
 
   const welcomeMessage = language === 'th'
     ? "สวัสดีค่ะ 😊 สามารถพิมพ์ถามราคาห้องพัก ห้องประชุม หรือราคาอาหาร/เครื่องดื่มได้เลยนะคะ"
+    : language === 'zh'
+    ? "您好 😊 您可以询问房价、会议室价格或餐饮菜单价格。"
     : "Hello 😊 You can ask about room prices, meeting/event space prices, or food/beverage menu prices.";
 
   useEffect(() => {
@@ -81,6 +83,8 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
       sweetAlert.error(
         language === 'th'
           ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+          : language === 'zh'
+          ? '发生错误，请重试'
           : 'An error occurred. Please try again.'
       );
     } finally {
@@ -104,7 +108,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
         <div className="flex items-center gap-2">
           <MessageCircle className="text-white" size={20} />
           <h3 className="font-bold text-white">
-            {language === 'th' ? 'ผู้ช่วยตอบราคา' : 'Price Assistant'}
+            {language === 'th' ? 'ผู้ช่วยตอบราคา' : language === 'zh' ? '价格助手' : 'Price Assistant'}
           </h3>
         </div>
         <Button
@@ -134,7 +138,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 <p className="text-xs opacity-70 mt-1">
-                  {msg.timestamp.toLocaleTimeString(language === 'th' ? 'th-TH' : 'en-US', {
+                  {msg.timestamp.toLocaleTimeString(language === 'th' ? 'th-TH' : language === 'zh' ? 'zh-CN' : 'en-US', {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
@@ -162,6 +166,8 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
             placeholder={
               language === 'th'
                 ? 'พิมพ์คำถามของคุณ...'
+                : language === 'zh'
+                ? '输入您的问题...'
                 : 'Type your question...'
             }
             disabled={isLoading}
