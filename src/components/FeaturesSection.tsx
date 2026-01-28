@@ -1,5 +1,6 @@
 import { Coffee, Home, Leaf, UtensilsCrossed } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import StaggerReveal from "@/components/StaggerReveal";
 
 const FeaturesSection = () => {
   const { language } = useLanguage();
@@ -59,12 +60,15 @@ const FeaturesSection = () => {
         </div>
 
         {/* Premium feature cards - 2 columns on mobile */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
+        <StaggerReveal 
+          animation="fade-up" 
+          staggerDelay={150} 
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8"
+        >
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group relative animate-scale-in"
-              style={{ animationDelay: `${index * 150}ms` }}
+              className="group relative"
             >
               {/* Card with premium styling */}
               <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 h-full transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 sm:hover:-translate-y-3">
@@ -103,7 +107,7 @@ const FeaturesSection = () => {
               </div>
             </div>
           ))}
-        </div>
+        </StaggerReveal>
 
         {/* Bottom decorative element */}
         <div className="flex justify-center mt-10 sm:mt-16">
