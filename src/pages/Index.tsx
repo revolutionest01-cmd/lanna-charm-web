@@ -14,6 +14,7 @@ import BackToTop from "@/components/BackToTop";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import CustomCursor from "@/components/CustomCursor";
+import ScrollReveal from "@/components/ScrollReveal";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
@@ -30,19 +31,40 @@ const Index = () => {
       <Header />
       <main className="relative z-10">
         <HeroSection />
-        <div className="section-glow">
-          <FeaturesSection />
-        </div>
-        <EventsSection />
-        <div className="section-glow">
-          <RoomsSection />
-        </div>
-        <MenuSection />
-        <div className="section-glow">
-          <GallerySection />
-        </div>
-        <ReviewsSection />
-        <ContactSection />
+        
+        <ScrollReveal animation="fade-up" delay={0}>
+          <div className="section-glow">
+            <FeaturesSection />
+          </div>
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={100}>
+          <EventsSection />
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={0}>
+          <div className="section-glow">
+            <RoomsSection />
+          </div>
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={100}>
+          <MenuSection />
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={0}>
+          <div className="section-glow">
+            <GallerySection />
+          </div>
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={100}>
+          <ReviewsSection />
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={0}>
+          <ContactSection />
+        </ScrollReveal>
       </main>
       <Footer />
       <BackToTop />
