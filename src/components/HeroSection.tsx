@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useContentData } from "@/hooks/useContentData";
-import MagneticButton from "@/components/MagneticButton";
+
 
 const HeroSection = () => {
   const { language } = useLanguage();
@@ -71,27 +71,23 @@ const HeroSection = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 sm:px-0">
-          <MagneticButton strength={0.4} radius={120}>
-            <Button 
-              variant="highlight" 
-              size="lg" 
-              className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold group rounded-xl"
-              onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              {t.exploreMenu}
-              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
-            </Button>
-          </MagneticButton>
-          <MagneticButton strength={0.4} radius={120}>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40 text-white border-white/40 hover:text-white rounded-xl"
-              onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              {t.viewRooms}
-            </Button>
-          </MagneticButton>
+          <Button 
+            variant="highlight" 
+            size="lg" 
+            className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold group rounded-xl"
+            onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            {t.exploreMenu}
+            <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40 text-white border-white/40 hover:text-white rounded-xl"
+            onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            {t.viewRooms}
+          </Button>
         </div>
       </div>
 
