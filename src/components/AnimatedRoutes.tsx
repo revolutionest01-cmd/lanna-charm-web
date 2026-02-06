@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef, ReactElement, cloneElement } from "react";
+import { useState, useEffect, useRef } from "react";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
@@ -9,6 +9,9 @@ import Admin from "@/pages/Admin";
 import Gallery from "@/pages/Gallery";
 import Reviews from "@/pages/Reviews";
 import Menu from "@/pages/Menu";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/AppSidebar";
+import SidebarTriggerButton from "@/components/SidebarTriggerButton";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -61,19 +64,28 @@ const AnimatedRoutes = () => {
   };
 
   return (
-    <div className={`page-transition-content ${getAnimationClass()}`}>
-      <Routes location={displayLocation}>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/forum" element={<Forum />} />
-        <Route path="/forum/:id" element={<TopicDetail />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/reviews" element={<Reviews />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarTriggerButton />
+        
+        <SidebarInset className="flex-1">
+          <div className={`page-transition-content ${getAnimationClass()}`}>
+            <Routes location={displayLocation}>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/forum/:id" element={<TopicDetail />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/reviews" element={<Reviews />} />
+              <Route path="/menu" element={<Menu />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 

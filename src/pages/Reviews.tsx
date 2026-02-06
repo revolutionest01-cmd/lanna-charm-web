@@ -3,7 +3,6 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Loader2, Star, Send, ThumbsUp } from "lucide-react";
@@ -226,9 +225,7 @@ const Reviews = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="pt-24 pb-20">
+      <main className="pt-8 pb-20">
         <div className="container mx-auto px-4">
           {/* Page Header */}
           <div className="text-center mb-12">
