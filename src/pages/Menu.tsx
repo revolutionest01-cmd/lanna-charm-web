@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,8 +21,7 @@ const Menu = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
-      <main className="relative z-10 pt-20">
+      <main className="relative z-10 pt-8">
         {/* Hero Header */}
         <section className="py-16 bg-gradient-to-b from-primary/10 to-transparent">
           <div className="container mx-auto px-4 text-center">

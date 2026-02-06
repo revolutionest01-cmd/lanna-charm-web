@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import EventsSection from "@/components/EventsSection";
@@ -28,7 +27,6 @@ const Index = () => {
       
       <FallingLeaves />
       <AmbientSound />
-      <Header />
       <main className="relative z-10">
         <HeroSection />
         
