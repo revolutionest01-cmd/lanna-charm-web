@@ -109,9 +109,9 @@ const CustomCursor = () => {
 
   return (
     <>
-      {/* Main cursor dot */}
+      {/* Main cursor dot - black with white stroke */}
       <div
-        className="fixed pointer-events-none z-[9999] mix-blend-difference"
+        className="fixed pointer-events-none z-[9999]"
         style={{
           left: position.x,
           top: position.y,
@@ -121,10 +121,11 @@ const CustomCursor = () => {
         }}
       >
         <div
-          className="rounded-full bg-white transition-all duration-150 ease-out"
+          className="rounded-full bg-black transition-all duration-150 ease-out"
           style={{
             width: isClicking ? '8px' : isHovering ? '6px' : '10px',
             height: isClicking ? '8px' : isHovering ? '6px' : '10px',
+            boxShadow: '0 0 0 2px white, 0 0 8px rgba(0,0,0,0.3)',
           }}
         />
       </div>
