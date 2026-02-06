@@ -2,11 +2,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
-  MessageCircle, LogIn, LogOut, Shield, User, ChevronLeft
+  MessageCircle, LogIn, LogOut, Shield, User
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo.png";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
@@ -18,7 +17,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -27,6 +25,12 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const AppSidebar = () => {
   const navigate = useNavigate();
@@ -103,54 +107,16 @@ const AppSidebar = () => {
   };
 
   return (
-    <Sidebar 
-      variant="floating" 
-      collapsible="icon"
-      className="border-none"
-    >
-      {/* Glassmorphism background */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-xl border-r border-border/30 rounded-r-2xl" />
-      
-      <div className="relative z-10 flex flex-col h-full">
-        {/* Header with Logo */}
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => handleNavClick('/')}
-              className={cn(
-                "flex items-center gap-3 transition-all duration-300",
-                isCollapsed && "justify-center"
-              )}
-            >
-              <img 
-                src={logo} 
-                alt="Logo" 
-                className={cn(
-                  "drop-shadow-[0_0_8px_rgba(198,85,57,0.4)] transition-all duration-300",
-                  isCollapsed ? "h-8 w-8" : "h-10 w-auto"
-                )} 
-              />
-              {!isCollapsed && (
-                <span className="text-lg font-semibold text-foreground tracking-wide animate-fade-in">
-                  Plern Ping
-                </span>
-              )}
-            </button>
-            
-            {!isCollapsed && !isMobile && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </SidebarHeader>
-
-        <SidebarSeparator className="opacity-30" />
+    <TooltipProvider delayDuration={0}>
+      <Sidebar 
+        variant="sidebar" 
+        collapsible="icon"
+        className="border-none top-14 h-[calc(100vh-3.5rem)]"
+      >
+        {/* Glassmorphism background */}
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-xl border-r border-border/30" />
+        
+        <div className="relative z-10 flex flex-col h-full">
 
         {/* Navigation */}
         <SidebarContent className="px-2">
@@ -363,8 +329,9 @@ const AppSidebar = () => {
             </BookingDialog>
           )}
         </SidebarFooter>
-      </div>
-    </Sidebar>
+        </div>
+      </Sidebar>
+    </TooltipProvider>
   );
 };
 

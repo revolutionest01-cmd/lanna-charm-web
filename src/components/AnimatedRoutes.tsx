@@ -11,7 +11,7 @@ import Reviews from "@/pages/Reviews";
 import Menu from "@/pages/Menu";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
-import SidebarTriggerButton from "@/components/SidebarTriggerButton";
+import Secondbar from "@/components/Secondbar";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -64,12 +64,12 @@ const AnimatedRoutes = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
+        <Secondbar />
         <AppSidebar />
-        <SidebarTriggerButton />
         
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 pt-14">
           <div className={`page-transition-content ${getAnimationClass()}`}>
             <Routes location={displayLocation}>
               <Route path="/" element={<Index />} />
