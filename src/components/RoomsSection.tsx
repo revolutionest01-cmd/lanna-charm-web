@@ -10,7 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { useContentData } from "@/hooks/useContentData";
+import { useRooms } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
 
@@ -36,7 +36,7 @@ interface RoomImage {
 const RoomsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { rooms = [], isLoading: loading } = useContentData();
+  const { data: rooms = [], isLoading: loading } = useRooms();
 
   if (loading) {
     return (

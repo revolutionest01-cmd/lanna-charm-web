@@ -4,13 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Toaster } from "@/components/ui/sonner";
-import { useContentData } from "@/hooks/useContentData";
+import { useMenus } from "@/hooks/useContentData";
 import { MenuSkeleton } from "@/components/SkeletonCard";
 
 const Menu = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { menus: menuData, isLoading: loading } = useContentData();
+  const { data: menuData, isLoading: loading } = useMenus();
   
   const menus = menuData?.menus || [];
   const categories = menuData?.categories || [];
