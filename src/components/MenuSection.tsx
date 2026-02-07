@@ -12,7 +12,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { useMenus } from "@/hooks/useContentData";
+import { useContentData } from "@/hooks/useContentData";
 import { MenuSkeleton } from "@/components/SkeletonCard";
 
 interface Menu {
@@ -39,7 +39,7 @@ const MenuSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const navigate = useNavigate();
-  const { data: menuData, isLoading: loading } = useMenus();
+  const { menus: menuData, isLoading: loading } = useContentData();
   
   const menus = menuData?.menus || [];
   const categories = menuData?.categories || [];

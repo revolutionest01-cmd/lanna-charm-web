@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Star, ArrowRight } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { useReviews } from "@/hooks/useContentData";
+import { useContentData } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ReviewSkeleton } from "@/components/SkeletonCard";
@@ -20,7 +20,7 @@ type Review = {
 const ReviewsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { data: reviews = [], isLoading: loading } = useReviews(9);
+  const { reviews = [], isLoading: loading } = useContentData();
 
   if (loading) {
     return (
