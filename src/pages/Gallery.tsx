@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -61,7 +62,9 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="pt-8 pb-20">
+      <Header />
+      
+      <main className="pt-24 pb-20">
         <div className="container mx-auto px-4">
           {/* Page Header */}
           <div className="text-center mb-12">
@@ -81,7 +84,7 @@ const Gallery = () => {
           ) : images.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-muted-foreground text-lg">
-                {language === "th" ? "ไม่มีรูปภาพในขณะนี้" : language === "zh" ? "暂无图片" : "No images available"}
+                {language === "th" ? "ไม่มีรูปภาพในขณะนี้" : "No images available"}
               </p>
             </div>
           ) : (

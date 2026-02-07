@@ -3,6 +3,7 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Loader2, Star, Send, ThumbsUp } from "lucide-react";
@@ -124,16 +125,12 @@ const Reviews = () => {
         sweetAlert.error(
           language === "th" 
             ? "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ" 
-            : language === "zh"
-            ? "请登录后点赞"
             : "Please login to like reviews"
         );
       } else {
         sweetAlert.error(
           language === "th" 
             ? "เกิดข้อผิดพลาด" 
-            : language === "zh"
-            ? "发生错误"
             : "An error occurred"
         );
       }
@@ -162,8 +159,6 @@ const Reviews = () => {
       sweetAlert.success(
         language === "th" 
           ? "ส่งรีวิวสำเร็จ! รอการอนุมัติจากผู้ดูแล" 
-          : language === "zh"
-          ? "评论已提交！等待管理员审核"
           : "Review submitted! Pending admin approval"
       );
       setFormData({
@@ -182,8 +177,6 @@ const Reviews = () => {
         sweetAlert.error(
           language === "th" 
             ? "เกิดข้อผิดพลาดในการส่งรีวิว" 
-            : language === "zh"
-            ? "提交评论失败"
             : "Failed to submit review"
         );
       }
@@ -225,18 +218,18 @@ const Reviews = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="pt-8 pb-20">
+      <Header />
+      
+      <main className="pt-24 pb-20">
         <div className="container mx-auto px-4">
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif">
-              {language === "th" ? "รีวิวจากลูกค้า" : language === "zh" ? "客户评价" : "Customer Reviews"}
+              {language === "th" ? "รีวิวจากลูกค้า" : "Customer Reviews"}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {language === "th" 
                 ? "ความคิดเห็นและประสบการณ์จากลูกค้าของเรา" 
-                : language === "zh"
-                ? "来自尊贵客户的反馈和体验"
                 : "Feedback and experiences from our valued customers"}
             </p>
           </div>
@@ -246,18 +239,18 @@ const Reviews = () => {
             <Card className="mb-12 max-w-3xl mx-auto">
               <CardContent className="pt-6">
                 <h2 className="text-2xl font-bold mb-6">
-                  {language === "th" ? "เขียนรีวิว" : language === "zh" ? "撰写评价" : "Write a Review"}
+                  {language === "th" ? "เขียนรีวิว" : "Write a Review"}
                 </h2>
                 <form onSubmit={handleSubmitReview} className="space-y-4">
                   <div>
                     <Label htmlFor="customer_name">
-                      {language === "th" ? "ชื่อของคุณ" : language === "zh" ? "您的姓名" : "Your Name"}
+                      {language === "th" ? "ชื่อของคุณ" : "Your Name"}
                     </Label>
                     <Input
                       id="customer_name"
                       value={formData.customer_name}
                       onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                      placeholder={language === "th" ? "กรอกชื่อของคุณ" : language === "zh" ? "请输入您的姓名" : "Enter your name"}
+                      placeholder={language === "th" ? "กรอกชื่อของคุณ" : "Enter your name"}
                       maxLength={100}
                       required
                     />
@@ -265,7 +258,7 @@ const Reviews = () => {
 
                   <div>
                     <Label>
-                      {language === "th" ? "คะแนน" : language === "zh" ? "评分" : "Rating"}
+                      {language === "th" ? "คะแนน" : "Rating"}
                     </Label>
                     {renderStars(formData.rating, true, (rating) => 
                       setFormData({ ...formData, rating })
@@ -274,13 +267,13 @@ const Reviews = () => {
 
                   <div>
                     <Label htmlFor="review_text_th">
-                      {language === "th" ? "รีวิว (ภาษาไทย)" : language === "zh" ? "评价（泰语）" : "Review (Thai)"}
+                      {language === "th" ? "รีวิว (ภาษาไทย)" : "Review (Thai)"}
                     </Label>
                     <Textarea
                       id="review_text_th"
                       value={formData.review_text_th}
                       onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
-                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาไทย..." : language === "zh" ? "用泰语撰写您的评价..." : "Write your review in Thai..."}
+                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาไทย..." : "Write your review in Thai..."}
                       rows={4}
                       maxLength={500}
                       required
@@ -292,13 +285,13 @@ const Reviews = () => {
 
                   <div>
                     <Label htmlFor="review_text_en">
-                      {language === "th" ? "รีวิว (ภาษาอังกฤษ)" : language === "zh" ? "评价（英语）" : "Review (English)"}
+                      {language === "th" ? "รีวิว (ภาษาอังกฤษ)" : "Review (English)"}
                     </Label>
                     <Textarea
                       id="review_text_en"
                       value={formData.review_text_en}
                       onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
-                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาอังกฤษ..." : language === "zh" ? "用英语撰写您的评价..." : "Write your review in English..."}
+                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาอังกฤษ..." : "Write your review in English..."}
                       rows={4}
                       maxLength={500}
                       required
@@ -322,15 +315,13 @@ const Reviews = () => {
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        {language === "th" ? "ส่งรีวิว" : language === "zh" ? "提交评价" : "Submit Review"}
+                        {language === "th" ? "ส่งรีวิว" : "Submit Review"}
                       </>
                     )}
                   </Button>
                   <p className="text-sm text-muted-foreground text-center">
                     {language === "th" 
                       ? "รีวิวของคุณจะแสดงหลังจากได้รับการอนุมัติ" 
-                      : language === "zh"
-                      ? "您的评价将在审核后显示"
                       : "Your review will be displayed after approval"}
                   </p>
                 </form>
@@ -342,12 +333,10 @@ const Reviews = () => {
                 <p className="text-lg text-muted-foreground mb-4">
                   {language === "th" 
                     ? "กรุณาเข้าสู่ระบบเพื่อเขียนรีวิว" 
-                    : language === "zh"
-                    ? "请登录后撰写评价"
                     : "Please login to write a review"}
                 </p>
                 <Button onClick={() => window.location.href = "/auth"}>
-                  {language === "th" ? "เข้าสู่ระบบ" : language === "zh" ? "登录" : "Login"}
+                  {language === "th" ? "เข้าสู่ระบบ" : "Login"}
                 </Button>
               </CardContent>
             </Card>
@@ -362,7 +351,7 @@ const Reviews = () => {
             >
               <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="all">
-                  {language === "th" ? "ทั้งหมด" : language === "zh" ? "全部" : "All"}
+                  {language === "th" ? "ทั้งหมด" : "All"}
                 </TabsTrigger>
                 {[5, 4, 3, 2, 1].map((rating) => (
                   <TabsTrigger key={rating} value={rating.toString()}>
@@ -428,23 +417,23 @@ const Reviews = () => {
 
                       {/* Helpful Button */}
                       <div className="flex items-center justify-between pt-4 border-t border-border">
-                          <Button
-                            variant={isLiked ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked })}
-                            disabled={toggleLikeMutation.isPending || !isAuthenticated}
-                            className="gap-2"
-                          >
-                            <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-                            {language === "th" ? "เป็นประโยชน์" : language === "zh" ? "有帮助" : "Helpful"}
+                        <Button
+                          variant={isLiked ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked })}
+                          disabled={toggleLikeMutation.isPending || !isAuthenticated}
+                          className="gap-2"
+                        >
+                          <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                          {language === "th" ? "เป็นประโยชน์" : "Helpful"}
                           {review.helpful_count > 0 && (
                             <span className="font-semibold">({review.helpful_count})</span>
                           )}
                         </Button>
-                          {!isAuthenticated && (
-                            <p className="text-xs text-muted-foreground">
-                              {language === "th" ? "เข้าสู่ระบบเพื่อกดถูกใจ" : language === "zh" ? "登录后可点赞" : "Login to like"}
-                            </p>
+                        {!isAuthenticated && (
+                          <p className="text-xs text-muted-foreground">
+                            {language === "th" ? "เข้าสู่ระบบเพื่อกดถูกใจ" : "Login to like"}
+                          </p>
                         )}
                       </div>
                     </CardContent>

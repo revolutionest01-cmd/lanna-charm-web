@@ -89,7 +89,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
               <MessageCircle className="w-5 h-5 text-background" />
             </div>
             <h2 className="text-xl font-bold text-background">
-              {language === 'th' ? 'ข้อมูลเบื้องต้น' : language === 'zh' ? '快速信息' : 'Quick Information'}
+              {language === 'th' ? 'ข้อมูลเบื้องต้น' : 'Quick Information'}
             </h2>
           </div>
           <Button
@@ -109,7 +109,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                 <div className="flex flex-col items-center gap-3">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'th' ? 'กำลังโหลด...' : language === 'zh' ? '加载中...' : 'Loading...'}
+                    {language === 'th' ? 'กำลังโหลด...' : 'Loading...'}
                   </p>
                 </div>
               </div>
@@ -122,7 +122,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                       {data.businessInfo.name}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎光临' : 'Welcome'}
+                      {language === 'th' ? 'ยินดีต้อนรับ' : 'Welcome'}
                     </p>
                   </div>
                 )}
@@ -139,7 +139,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                           </div>
                           <div className="flex-1">
                             <p className="font-semibold text-foreground text-sm mb-1">
-                              {language === 'th' ? 'เวลาทำการ' : language === 'zh' ? '营业时间' : 'Opening Hours'}
+                              {language === 'th' ? 'เวลาทำการ' : 'Opening Hours'}
                             </p>
                             <p className="text-muted-foreground text-sm">{data.businessInfo.openingHours}</p>
                           </div>
@@ -154,9 +154,9 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                           <Phone className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1">
-                            <p className="font-semibold text-foreground text-sm mb-1">
-                              {language === 'th' ? 'เบอร์โทรศัพท์' : language === 'zh' ? '电话' : 'Phone'}
-                            </p>
+                          <p className="font-semibold text-foreground text-sm mb-1">
+                            {language === 'th' ? 'เบอร์โทรศัพท์' : 'Phone'}
+                          </p>
                           <a href={`tel:${data.businessInfo.phone}`} className="text-muted-foreground hover:text-primary transition-colors text-sm block">
                             {data.businessInfo.phone}
                           </a>
@@ -178,7 +178,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                           </div>
                           <div className="flex-1">
                             <p className="font-semibold text-foreground text-sm mb-1">
-                              {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
+                              {language === 'th' ? 'อีเมล' : 'Email'}
                             </p>
                             <a href={`mailto:${data.businessInfo.email}`} className="text-muted-foreground hover:text-primary transition-colors text-sm">
                               {data.businessInfo.email}
@@ -258,7 +258,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                           </div>
                           <div className="flex-1">
                             <p className="font-semibold text-foreground text-sm mb-1">
-                              {language === 'th' ? 'ที่อยู่' : language === 'zh' ? '地址' : 'Address'}
+                              {language === 'th' ? 'ที่อยู่' : 'Address'}
                             </p>
                             <p className="text-muted-foreground text-sm mb-2">{data.businessInfo.address}</p>
                             {data.businessInfo.googleMaps && (
@@ -268,7 +268,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
                               >
-                                {language === 'th' ? 'ดูแผนที่' : language === 'zh' ? '查看地图' : 'View Map'}
+                                {language === 'th' ? 'ดูแผนที่' : 'View Map'}
                                 <span>→</span>
                               </a>
                             )}
@@ -287,26 +287,26 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                         <DollarSign className="w-5 h-5 text-primary" />
                       </div>
                       <p className="font-bold text-foreground">
-                        {language === 'th' ? 'ข้อมูลห้องพัก' : language === 'zh' ? '客房信息' : 'Room Information'}
+                        {language === 'th' ? 'ข้อมูลห้องพัก' : 'Room Information'}
                       </p>
                     </div>
                     <div className="ml-12 space-y-3">
                       <div>
                         <p className="text-muted-foreground text-sm mb-1">
-                          {language === 'th' ? 'จำนวนห้องพัก' : language === 'zh' ? '房间总数' : 'Total Rooms'}
+                          {language === 'th' ? 'จำนวนห้องพัก' : 'Total Rooms'}
                         </p>
                         <p className="text-lg font-bold text-foreground">
-                          {data.roomStats.count} {language === 'th' ? 'ห้อง' : language === 'zh' ? '间' : 'rooms'}
+                          {data.roomStats.count} {language === 'th' ? 'ห้อง' : 'rooms'}
                         </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-sm mb-1">
-                          {language === 'th' ? 'ช่วงราคา' : language === 'zh' ? '价格范围' : 'Price Range'}
+                          {language === 'th' ? 'ช่วงราคา' : 'Price Range'}
                         </p>
                         <p className="text-2xl font-bold text-primary">
                           ฿{data.roomStats.minPrice.toLocaleString()} - ฿{data.roomStats.maxPrice.toLocaleString()}
                           <span className="text-sm font-normal text-muted-foreground ml-2">
-                            {language === 'th' ? 'ต่อคืน' : language === 'zh' ? '每晚' : 'per night'}
+                            {language === 'th' ? 'ต่อคืน' : 'per night'}
                           </span>
                         </p>
                       </div>
@@ -320,7 +320,7 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                     <div className="flex items-center gap-2 mb-3">
                       <Coffee className="w-5 h-5 text-primary" />
                       <h4 className="font-bold text-foreground">
-                        {language === 'th' ? 'เมนูแนะนำ' : language === 'zh' ? '推荐菜单' : 'Recommended Menu'}
+                        {language === 'th' ? 'เมนูแนะนำ' : 'Recommended Menu'}
                       </h4>
                     </div>
                     <div className="space-y-2">
@@ -347,8 +347,6 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
                   <p className="text-muted-foreground">
                     {language === 'th' 
                       ? 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง' 
-                      : language === 'zh'
-                      ? '无法加载信息，请重试'
                       : 'Unable to load information. Please try again.'}
                   </p>
                 </div>

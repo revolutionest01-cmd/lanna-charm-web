@@ -3,7 +3,6 @@ import { ArrowRight, MapPin, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useContentData } from "@/hooks/useContentData";
 
-
 const HeroSection = () => {
   const { language } = useLanguage();
   const t = translations[language];

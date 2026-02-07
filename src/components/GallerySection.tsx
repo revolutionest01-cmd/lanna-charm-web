@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { GallerySkeleton } from "@/components/SkeletonCard";
 
-
 type GalleryImage = {
   id: string;
   image_url: string;

@@ -14,7 +14,6 @@ import { useContentData } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
 
-
 interface Room {
   id: string;
   name_th: string;
@@ -115,7 +114,7 @@ const RoomsSection = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Wifi size={16} />
-                          <span>{language === 'th' ? 'WiFi ฟรี' : language === 'zh' ? '免费WiFi' : 'Free WiFi'}</span>
+                          <span>Free WiFi</span>
                         </div>
                       </div>
                     </CardContent>

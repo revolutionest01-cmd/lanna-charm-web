@@ -1,3 +1,4 @@
+import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import EventsSection from "@/components/EventsSection";
@@ -11,58 +12,23 @@ import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import FloatingChatButton from "@/components/FloatingChatButton";
-import ParallaxBackground from "@/components/ParallaxBackground";
-import CustomCursor from "@/components/CustomCursor";
-import ScrollReveal from "@/components/ScrollReveal";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   return (
-    <div className="relative min-h-screen page-gradient-bg">
-      {/* Custom cursor - desktop only */}
-      <CustomCursor />
-      
-      {/* Parallax gradient orbs */}
-      <ParallaxBackground />
-      
+    <div className="relative min-h-screen">
       <FallingLeaves />
       <AmbientSound />
+      <Header />
       <main className="relative z-10">
         <HeroSection />
-        
-        <ScrollReveal animation="fade-up" delay={0}>
-          <div className="section-glow">
-            <FeaturesSection />
-          </div>
-        </ScrollReveal>
-        
-        <ScrollReveal animation="fade-up" delay={100}>
-          <EventsSection />
-        </ScrollReveal>
-        
-        <ScrollReveal animation="fade-up" delay={0}>
-          <div className="section-glow">
-            <RoomsSection />
-          </div>
-        </ScrollReveal>
-        
-        <ScrollReveal animation="fade-up" delay={100}>
-          <MenuSection />
-        </ScrollReveal>
-        
-        <ScrollReveal animation="fade-up" delay={0}>
-          <div className="section-glow">
-            <GallerySection />
-          </div>
-        </ScrollReveal>
-        
-        <ScrollReveal animation="fade-up" delay={100}>
-          <ReviewsSection />
-        </ScrollReveal>
-        
-        <ScrollReveal animation="fade-up" delay={0}>
-          <ContactSection />
-        </ScrollReveal>
+        <FeaturesSection />
+        <EventsSection />
+        <RoomsSection />
+        <MenuSection />
+        <GallerySection />
+        <ReviewsSection />
+        <ContactSection />
       </main>
       <Footer />
       <BackToTop />
