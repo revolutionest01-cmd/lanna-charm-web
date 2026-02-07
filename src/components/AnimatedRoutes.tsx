@@ -9,9 +9,33 @@ import Admin from "@/pages/Admin";
 import Gallery from "@/pages/Gallery";
 import Reviews from "@/pages/Reviews";
 import Menu from "@/pages/Menu";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
 import Secondbar from "@/components/Secondbar";
+import { cn } from "@/lib/utils";
+
+// Wrapper component to access sidebar state
+const MainContent = ({ children, animationClass }: { children: React.ReactNode; animationClass: string }) => {
+  const { state, isMobile, openMobile } = useSidebar();
+  const isOpen = state === "expanded" || (isMobile && openMobile);
+
+  return (
+    <SidebarInset className="flex-1 pt-14">
+      {/* Blur overlay when sidebar is open */}
+      <div 
+        className={cn(
+          "fixed inset-0 top-14 z-10 pointer-events-none transition-all duration-500 ease-out",
+          isOpen 
+            ? "backdrop-blur-sm bg-black/10 opacity-100" 
+            : "backdrop-blur-none bg-transparent opacity-0"
+        )}
+      />
+      <div className={cn("page-transition-content relative z-0", animationClass)}>
+        {children}
+      </div>
+    </SidebarInset>
+  );
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -69,21 +93,19 @@ const AnimatedRoutes = () => {
         <Secondbar />
         <AppSidebar />
         
-        <SidebarInset className="flex-1 pt-14">
-          <div className={`page-transition-content ${getAnimationClass()}`}>
-            <Routes location={displayLocation}>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/forum" element={<Forum />} />
-              <Route path="/forum/:id" element={<TopicDetail />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/reviews" element={<Reviews />} />
-              <Route path="/menu" element={<Menu />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </SidebarInset>
+        <MainContent animationClass={getAnimationClass()}>
+          <Routes location={displayLocation}>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/forum" element={<Forum />} />
+            <Route path="/forum/:id" element={<TopicDetail />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MainContent>
       </div>
     </SidebarProvider>
   );
