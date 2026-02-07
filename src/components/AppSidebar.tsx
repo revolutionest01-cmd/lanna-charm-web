@@ -44,39 +44,39 @@ const AppSidebar = () => {
   const t = translations[language];
   const isCollapsed = state === "collapsed";
 
-  // Theme-based styling for sidebar
+  // Theme-based styling for sidebar - improved text contrast
   const getThemeStyles = (theme: SectionTheme) => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/15',
-          border: 'border-white/10',
-          text: 'text-white',
-          muted: 'text-white/60',
-          hover: 'hover:bg-white/10',
-          active: 'bg-white/15',
-          separator: 'bg-white/10',
+          bg: 'bg-black/30',
+          border: 'border-white/20',
+          text: 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]',
+          muted: 'text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]',
+          hover: 'hover:bg-white/15',
+          active: 'bg-white/20',
+          separator: 'bg-white/20',
         };
       case 'warm':
         return {
-          bg: 'bg-highlight/5',
-          border: 'border-highlight/15',
-          text: 'text-foreground',
-          muted: 'text-muted-foreground',
-          hover: 'hover:bg-highlight/10',
-          active: 'bg-highlight/15',
-          separator: 'bg-highlight/20',
+          bg: 'bg-background/40',
+          border: 'border-highlight/25',
+          text: 'text-foreground drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]',
+          muted: 'text-foreground/80',
+          hover: 'hover:bg-highlight/15',
+          active: 'bg-highlight/20',
+          separator: 'bg-highlight/30',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-background/20',
-          border: 'border-border/15',
+          bg: 'bg-background/50',
+          border: 'border-border/25',
           text: 'text-foreground',
-          muted: 'text-muted-foreground',
-          hover: 'hover:bg-muted/30',
-          active: 'bg-muted/40',
-          separator: 'bg-border/20',
+          muted: 'text-foreground/70',
+          hover: 'hover:bg-muted/40',
+          active: 'bg-muted/50',
+          separator: 'bg-border/30',
         };
     }
   };
