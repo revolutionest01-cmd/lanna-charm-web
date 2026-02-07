@@ -19,32 +19,32 @@ const Secondbar = () => {
   const [volume, setVolume] = useState(0.3);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Theme-based styling
+  // Theme-based styling - improved text contrast
   const getThemeStyles = (theme: SectionTheme) => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/20',
-          border: 'border-white/10',
-          text: 'text-white',
-          buttonBg: 'bg-white/10 hover:bg-white/20',
-          buttonText: 'text-white',
+          bg: 'bg-black/30',
+          border: 'border-white/20',
+          text: 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]',
+          buttonBg: 'bg-white/15 hover:bg-white/25',
+          buttonText: 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]',
         };
       case 'warm':
         return {
-          bg: 'bg-highlight/10',
-          border: 'border-highlight/20',
-          text: 'text-foreground',
-          buttonBg: 'bg-highlight/10 hover:bg-highlight/20',
+          bg: 'bg-background/40',
+          border: 'border-highlight/25',
+          text: 'text-foreground drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]',
+          buttonBg: 'bg-highlight/15 hover:bg-highlight/25',
           buttonText: 'text-foreground',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-background/30',
-          border: 'border-border/20',
+          bg: 'bg-background/50',
+          border: 'border-border/25',
           text: 'text-foreground',
-          buttonBg: 'bg-muted/30 hover:bg-muted/50',
+          buttonBg: 'bg-muted/40 hover:bg-muted/60',
           buttonText: 'text-foreground',
         };
     }
