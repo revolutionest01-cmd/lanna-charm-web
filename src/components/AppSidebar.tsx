@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
 
 const AppSidebar = () => {
   const navigate = useNavigate();
@@ -39,8 +40,48 @@ const AppSidebar = () => {
   const { language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
+  const { activeTheme } = useActiveSection();
   const t = translations[language];
   const isCollapsed = state === "collapsed";
+
+  // Theme-based styling for sidebar
+  const getThemeStyles = (theme: SectionTheme) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          bg: 'bg-black/15',
+          border: 'border-white/10',
+          text: 'text-white',
+          muted: 'text-white/60',
+          hover: 'hover:bg-white/10',
+          active: 'bg-white/15',
+          separator: 'bg-white/10',
+        };
+      case 'warm':
+        return {
+          bg: 'bg-highlight/5',
+          border: 'border-highlight/15',
+          text: 'text-foreground',
+          muted: 'text-muted-foreground',
+          hover: 'hover:bg-highlight/10',
+          active: 'bg-highlight/15',
+          separator: 'bg-highlight/20',
+        };
+      case 'light':
+      default:
+        return {
+          bg: 'bg-background/20',
+          border: 'border-border/15',
+          text: 'text-foreground',
+          muted: 'text-muted-foreground',
+          hover: 'hover:bg-muted/30',
+          active: 'bg-muted/40',
+          separator: 'bg-border/20',
+        };
+    }
+  };
+
+  const themeStyles = getThemeStyles(activeTheme);
 
   // Check if user is admin
   useEffect(() => {
@@ -113,8 +154,14 @@ const AppSidebar = () => {
         collapsible="icon"
         className="border-none top-14 h-[calc(100vh-3.5rem)]"
       >
-        {/* Glassmorphism background */}
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-xl border-r border-border/30" />
+        {/* Ultra transparent glassmorphism background */}
+        <div 
+          className={cn(
+            "absolute inset-0 backdrop-blur-2xl border-r transition-all duration-700 ease-out",
+            themeStyles.bg,
+            themeStyles.border
+          )} 
+        />
         
         <div className="relative z-10 flex flex-col h-full">
 
@@ -130,39 +177,39 @@ const AppSidebar = () => {
                     
                     return (
                       <SidebarMenuItem key={item.label}>
-                        <SidebarMenuButton
+                      <SidebarMenuButton
                           onClick={() => handleNavClick(item.href)}
                           isActive={active}
                           tooltip={item.label}
                           className={cn(
-                            "group relative transition-all duration-300",
-                            "hover:bg-highlight/10 hover:text-highlight",
-                            active && "bg-highlight/15 text-highlight font-medium",
+                            "group relative transition-all duration-500",
+                            themeStyles.hover,
+                            active && cn(themeStyles.active, "font-medium"),
                             "animate-fade-in"
                           )}
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <div className={cn(
-                            "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300",
+                            "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-500 backdrop-blur-sm",
                             active 
-                              ? "bg-highlight/20 shadow-[0_0_12px_rgba(198,85,57,0.3)]" 
-                              : "bg-muted/30 group-hover:bg-highlight/15 group-hover:shadow-[0_0_8px_rgba(198,85,57,0.2)]"
+                              ? "bg-highlight/25 shadow-[0_0_12px_rgba(198,85,57,0.4)]" 
+                              : cn("bg-white/5 group-hover:bg-highlight/15 group-hover:shadow-[0_0_8px_rgba(198,85,57,0.2)]")
                           )}>
                             <IconComponent className={cn(
-                              "h-4 w-4 transition-all duration-300",
-                              active ? "text-highlight" : "text-muted-foreground group-hover:text-highlight"
+                              "h-4 w-4 transition-all duration-500",
+                              active ? "text-highlight" : cn(themeStyles.muted, "group-hover:text-highlight")
                             )} />
                           </div>
                           <span className={cn(
-                            "transition-colors duration-300",
-                            active ? "text-highlight" : "text-foreground group-hover:text-highlight"
+                            "transition-colors duration-500",
+                            active ? "text-highlight" : cn(themeStyles.text, "group-hover:text-highlight")
                           )}>
                             {item.label}
                           </span>
                           
                           {/* Active indicator line */}
                           {active && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-highlight rounded-r-full" />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-highlight rounded-r-full shadow-[0_0_8px_rgba(198,85,57,0.5)]" />
                           )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -172,7 +219,7 @@ const AppSidebar = () => {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarSeparator className="opacity-30 my-2" />
+            <SidebarSeparator className={cn("my-2 transition-colors duration-500", themeStyles.separator)} />
 
             {/* Forum Link */}
             <SidebarGroup>
@@ -184,20 +231,20 @@ const AppSidebar = () => {
                       isActive={location.pathname === '/forum'}
                       tooltip={t.forum}
                       className={cn(
-                        "group transition-all duration-300",
-                        "hover:bg-highlight/10 hover:text-highlight",
-                        location.pathname === '/forum' && "bg-highlight/15 text-highlight font-medium"
+                        "group transition-all duration-500",
+                        themeStyles.hover,
+                        location.pathname === '/forum' && cn(themeStyles.active, "font-medium")
                       )}
                     >
                       <div className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300",
+                        "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-500 backdrop-blur-sm",
                         location.pathname === '/forum'
-                          ? "bg-highlight/20 shadow-[0_0_12px_rgba(198,85,57,0.3)]"
-                          : "bg-muted/30 group-hover:bg-highlight/15"
+                          ? "bg-highlight/25 shadow-[0_0_12px_rgba(198,85,57,0.4)]"
+                          : "bg-white/5 group-hover:bg-highlight/15"
                       )}>
-                        <MessageCircle className="h-4 w-4" />
+                        <MessageCircle className={cn("h-4 w-4 transition-colors duration-500", themeStyles.muted)} />
                       </div>
-                      <span>{t.forum}</span>
+                      <span className={cn("transition-colors duration-500", themeStyles.text)}>{t.forum}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -208,17 +255,19 @@ const AppSidebar = () => {
 
         {/* Footer with User & Actions */}
         <SidebarFooter className="p-3 mt-auto">
-          <SidebarSeparator className="opacity-30 mb-3" />
+          <SidebarSeparator className={cn("mb-3 transition-colors duration-500", themeStyles.separator)} />
           
           {/* User Section */}
           {isAuthenticated && user ? (
             <div className="space-y-2">
               {/* User Profile */}
               <div className={cn(
-                "flex items-center gap-3 p-2 rounded-xl bg-muted/30 backdrop-blur-sm",
+                "flex items-center gap-3 p-2 rounded-xl backdrop-blur-sm transition-colors duration-500",
+                "bg-white/5 border",
+                themeStyles.border,
                 isCollapsed && "justify-center p-2"
               )}>
-                <Avatar className={cn("border-2 border-highlight/30", isCollapsed ? "h-8 w-8" : "h-10 w-10")}>
+                <Avatar className={cn("border-2 border-highlight/40", isCollapsed ? "h-8 w-8" : "h-10 w-10")}>
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback className="bg-highlight/20 text-highlight text-sm">
                     {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
@@ -226,8 +275,8 @@ const AppSidebar = () => {
                 </Avatar>
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className={cn("text-sm font-medium truncate transition-colors duration-500", themeStyles.text)}>{user.name}</p>
+                    <p className={cn("text-xs transition-colors duration-500", themeStyles.muted)}>
                       {language === 'th' ? 'ผู้ใช้งาน' : language === 'zh' ? '用户' : 'User'}
                     </p>
                   </div>
@@ -294,7 +343,7 @@ const AppSidebar = () => {
             </SidebarMenu>
           )}
 
-          <SidebarSeparator className="opacity-30 my-2" />
+          <SidebarSeparator className={cn("my-2 transition-colors duration-500", themeStyles.separator)} />
 
           {/* Language & Booking */}
           <div className={cn(

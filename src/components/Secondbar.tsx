@@ -6,16 +6,51 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import natureSound from "@/assets/nature-ambient.m4a";
+import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
 
 const Secondbar = () => {
   const { toggleSidebar, state } = useSidebar();
   const isOpen = state === "expanded";
+  const { activeTheme } = useActiveSection();
   
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.3);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+
+  // Theme-based styling
+  const getThemeStyles = (theme: SectionTheme) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          bg: 'bg-black/20',
+          border: 'border-white/10',
+          text: 'text-white',
+          buttonBg: 'bg-white/10 hover:bg-white/20',
+          buttonText: 'text-white',
+        };
+      case 'warm':
+        return {
+          bg: 'bg-highlight/10',
+          border: 'border-highlight/20',
+          text: 'text-foreground',
+          buttonBg: 'bg-highlight/10 hover:bg-highlight/20',
+          buttonText: 'text-foreground',
+        };
+      case 'light':
+      default:
+        return {
+          bg: 'bg-background/30',
+          border: 'border-border/20',
+          text: 'text-foreground',
+          buttonBg: 'bg-muted/30 hover:bg-muted/50',
+          buttonText: 'text-foreground',
+        };
+    }
+  };
+
+  const themeStyles = getThemeStyles(activeTheme);
 
   useEffect(() => {
     const audio = new Audio(natureSound);
@@ -65,8 +100,14 @@ const Secondbar = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-14">
-      {/* Glassmorphism background */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-xl border-b border-border/30" />
+      {/* Ultra transparent glassmorphism background */}
+      <div 
+        className={cn(
+          "absolute inset-0 backdrop-blur-2xl border-b transition-all duration-700 ease-out",
+          themeStyles.bg,
+          themeStyles.border
+        )} 
+      />
       
       <div className="relative z-10 h-full flex items-center justify-between px-4">
         {/* Left side - Menu Toggle & Logo */}
@@ -76,16 +117,18 @@ const Secondbar = () => {
             size="icon"
             onClick={toggleSidebar}
             className={cn(
-              "h-10 w-10 rounded-xl transition-all duration-300",
-              "hover:bg-highlight/10 hover:scale-105",
-              "border border-border/30 bg-background/40"
+              "h-10 w-10 rounded-xl transition-all duration-500",
+              "hover:scale-105 border backdrop-blur-sm",
+              themeStyles.buttonBg,
+              themeStyles.border,
+              themeStyles.buttonText
             )}
             aria-label="Toggle sidebar"
           >
             {isOpen ? (
-              <X className="h-5 w-5 text-foreground transition-transform duration-300" />
+              <X className={cn("h-5 w-5 transition-transform duration-300", themeStyles.buttonText)} />
             ) : (
-              <Menu className="h-5 w-5 text-foreground transition-transform duration-300" />
+              <Menu className={cn("h-5 w-5 transition-transform duration-300", themeStyles.buttonText)} />
             )}
           </Button>
           
@@ -93,9 +136,12 @@ const Secondbar = () => {
             <img 
               src={logo} 
               alt="Plern Ping" 
-              className="h-8 w-auto drop-shadow-[0_0_8px_rgba(198,85,57,0.4)]" 
+              className="h-8 w-auto drop-shadow-[0_0_12px_rgba(198,85,57,0.5)]" 
             />
-            <span className="text-lg font-semibold text-foreground tracking-wide hidden sm:block">
+            <span className={cn(
+              "text-lg font-semibold tracking-wide hidden sm:block transition-colors duration-500",
+              themeStyles.text
+            )}>
               Plern Ping
             </span>
           </div>
@@ -126,10 +172,11 @@ const Secondbar = () => {
             onMouseEnter={() => setShowVolumeSlider(true)}
             onMouseLeave={() => setTimeout(() => setShowVolumeSlider(false), 2000)}
             className={cn(
-              "h-10 w-10 rounded-xl transition-all duration-300",
-              "hover:bg-highlight/10 hover:scale-105",
-              "border border-border/30",
-              isPlaying ? "bg-highlight/20 text-highlight" : "bg-background/40"
+              "h-10 w-10 rounded-xl transition-all duration-500",
+              "hover:scale-105 border backdrop-blur-sm",
+              themeStyles.buttonBg,
+              themeStyles.border,
+              isPlaying ? "bg-highlight/30 text-highlight" : themeStyles.buttonText
             )}
             aria-label={isPlaying ? "Mute sound" : "Play sound"}
           >
