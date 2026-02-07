@@ -254,13 +254,8 @@ const Header = () => {
         </div>
 
         {/* Mobile Menu - Full Screen Overlay */}
-        <div 
-          className={`md:hidden fixed left-0 right-0 top-[72px] bottom-0 bg-card border-t border-border shadow-2xl z-[100] overflow-y-auto transition-all duration-300 ${
-            isMobileMenuOpen 
-              ? 'opacity-100 translate-y-0 pointer-events-auto' 
-              : 'opacity-0 -translate-y-4 pointer-events-none'
-          }`}
-        >
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 top-[72px] bg-card/98 backdrop-blur-lg z-50 animate-fade-in overflow-y-auto">
             <nav className="container mx-auto px-6 py-6 flex flex-col min-h-full">
               {/* Navigation Links */}
               <div className="space-y-1">
@@ -417,6 +412,7 @@ const Header = () => {
               </div>
             </nav>
           </div>
+        )}
       </div>
     </header>;
 };
