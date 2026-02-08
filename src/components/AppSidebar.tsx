@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
-  MessageCircle, LogIn, LogOut, Shield, User
+  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -25,13 +26,8 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
+import logo from "@/assets/logo.png";
 
 const AppSidebar = () => {
   const navigate = useNavigate();
@@ -148,68 +144,105 @@ const AppSidebar = () => {
   };
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <Sidebar 
-        variant="sidebar" 
-        collapsible="icon"
-        className="border-none top-14 h-[calc(100vh-3.5rem)]"
-      >
-        {/* Ultra transparent glassmorphism background */}
-        <div 
-          className={cn(
-            "absolute inset-0 backdrop-blur-2xl border-r transition-all duration-700 ease-out",
-            themeStyles.bg,
-            themeStyles.border
-          )} 
-        />
-        
-        <div className="relative z-10 flex flex-col h-full">
+    <Sidebar 
+      variant="sidebar" 
+      collapsible="offcanvas"
+      className="border-none top-0 h-screen z-50"
+    >
+      {/* Premium glassmorphism background */}
+      <div 
+        className={cn(
+          "absolute inset-0 backdrop-blur-2xl border-r transition-all duration-700 ease-out",
+          themeStyles.bg,
+          themeStyles.border
+        )} 
+      />
+      
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Header with Logo & Close */}
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <img 
+                src={logo} 
+                alt="Plern Ping" 
+                className="h-10 w-auto drop-shadow-[0_0_15px_rgba(198,85,57,0.5)]" 
+              />
+              <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-highlight animate-pulse" />
+            </div>
+            <div>
+              <h2 className={cn("text-lg font-bold tracking-wide", themeStyles.text)}>
+                Plern Ping
+              </h2>
+              <p className={cn("text-xs", themeStyles.muted)}>
+                {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => isMobile ? setOpenMobile(false) : toggleSidebar()}
+            className={cn(
+              "h-9 w-9 rounded-xl transition-all duration-300",
+              "hover:bg-white/10",
+              themeStyles.text
+            )}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
         {/* Navigation */}
-        <SidebarContent className="px-2">
+        <SidebarContent className="px-3 py-4">
           <ScrollArea className="flex-1">
+            {/* Main Navigation */}
             <SidebarGroup>
+              <SidebarGroupLabel className={cn("text-xs font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
+                {language === 'th' ? 'นำทาง' : language === 'zh' ? '导航' : 'Navigation'}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="space-y-1">
                   {navItems.map((item, index) => {
                     const IconComponent = item.icon;
                     const active = isActive(item.href);
                     
                     return (
                       <SidebarMenuItem key={item.label}>
-                      <SidebarMenuButton
+                        <SidebarMenuButton
                           onClick={() => handleNavClick(item.href)}
                           isActive={active}
-                          tooltip={item.label}
                           className={cn(
-                            "group relative transition-all duration-500",
-                            themeStyles.hover,
-                            active && cn(themeStyles.active, "font-medium"),
+                            "group relative w-full px-3 py-2.5 rounded-xl transition-all duration-300",
+                            "hover:translate-x-1",
+                            active 
+                              ? cn(themeStyles.active, "shadow-lg shadow-highlight/10")
+                              : themeStyles.hover,
                             "animate-fade-in"
                           )}
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <div className={cn(
-                            "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-500 backdrop-blur-sm",
+                            "flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300",
                             active 
-                              ? "bg-highlight/25 shadow-[0_0_12px_rgba(198,85,57,0.4)]" 
-                              : cn("bg-white/5 group-hover:bg-highlight/15 group-hover:shadow-[0_0_8px_rgba(198,85,57,0.2)]")
+                              ? "bg-highlight/30 shadow-[0_0_15px_rgba(198,85,57,0.4)]" 
+                              : "bg-white/5 group-hover:bg-highlight/20"
                           )}>
                             <IconComponent className={cn(
-                              "h-4 w-4 transition-all duration-500",
+                              "h-4.5 w-4.5 transition-all duration-300",
                               active ? "text-highlight" : cn(themeStyles.muted, "group-hover:text-highlight")
                             )} />
                           </div>
                           <span className={cn(
-                            "transition-colors duration-500",
+                            "font-medium transition-colors duration-300",
                             active ? "text-highlight" : cn(themeStyles.text, "group-hover:text-highlight")
                           )}>
                             {item.label}
                           </span>
                           
-                          {/* Active indicator line */}
+                          {/* Active indicator */}
                           {active && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-highlight rounded-r-full shadow-[0_0_8px_rgba(198,85,57,0.5)]" />
+                            <div className="absolute right-3 w-2 h-2 rounded-full bg-highlight shadow-[0_0_8px_rgba(198,85,57,0.6)]" />
                           )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -219,32 +252,44 @@ const AppSidebar = () => {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarSeparator className={cn("my-2 transition-colors duration-500", themeStyles.separator)} />
+            <SidebarSeparator className={cn("my-4", themeStyles.separator)} />
 
-            {/* Forum Link */}
+            {/* Community Section */}
             <SidebarGroup>
+              <SidebarGroupLabel className={cn("text-xs font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
+                {language === 'th' ? 'ชุมชน' : language === 'zh' ? '社区' : 'Community'}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => handleNavClick('/forum')}
                       isActive={location.pathname === '/forum'}
-                      tooltip={t.forum}
                       className={cn(
-                        "group transition-all duration-500",
-                        themeStyles.hover,
-                        location.pathname === '/forum' && cn(themeStyles.active, "font-medium")
+                        "group w-full px-3 py-2.5 rounded-xl transition-all duration-300",
+                        "hover:translate-x-1",
+                        location.pathname === '/forum' 
+                          ? cn(themeStyles.active, "shadow-lg")
+                          : themeStyles.hover
                       )}
                     >
                       <div className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-500 backdrop-blur-sm",
+                        "flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300",
                         location.pathname === '/forum'
-                          ? "bg-highlight/25 shadow-[0_0_12px_rgba(198,85,57,0.4)]"
-                          : "bg-white/5 group-hover:bg-highlight/15"
+                          ? "bg-highlight/30 shadow-[0_0_15px_rgba(198,85,57,0.4)]"
+                          : "bg-white/5 group-hover:bg-highlight/20"
                       )}>
-                        <MessageCircle className={cn("h-4 w-4 transition-colors duration-500", themeStyles.muted)} />
+                        <MessageCircle className={cn(
+                          "h-4.5 w-4.5 transition-colors duration-300",
+                          location.pathname === '/forum' ? "text-highlight" : themeStyles.muted
+                        )} />
                       </div>
-                      <span className={cn("transition-colors duration-500", themeStyles.text)}>{t.forum}</span>
+                      <span className={cn(
+                        "font-medium transition-colors duration-300",
+                        location.pathname === '/forum' ? "text-highlight" : themeStyles.text
+                      )}>
+                        {t.forum}
+                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -253,134 +298,99 @@ const AppSidebar = () => {
           </ScrollArea>
         </SidebarContent>
 
-        {/* Footer with User & Actions */}
-        <SidebarFooter className="p-3 mt-auto">
-          <SidebarSeparator className={cn("mb-3 transition-colors duration-500", themeStyles.separator)} />
-          
+        {/* Footer */}
+        <SidebarFooter className="p-4 mt-auto border-t border-white/10">
           {/* User Section */}
           {isAuthenticated && user ? (
-            <div className="space-y-2">
-              {/* User Profile */}
+            <div className="space-y-3">
+              {/* User Profile Card */}
               <div className={cn(
-                "flex items-center gap-3 p-2 rounded-xl backdrop-blur-sm transition-colors duration-500",
-                "bg-white/5 border",
-                themeStyles.border,
-                isCollapsed && "justify-center p-2"
+                "flex items-center gap-3 p-3 rounded-2xl backdrop-blur-sm transition-all duration-300",
+                "bg-gradient-to-r from-white/10 to-white/5 border",
+                themeStyles.border
               )}>
-                <Avatar className={cn("border-2 border-highlight/40", isCollapsed ? "h-8 w-8" : "h-10 w-10")}>
+                <Avatar className="h-11 w-11 ring-2 ring-highlight/40 ring-offset-2 ring-offset-transparent">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-highlight/20 text-highlight text-sm">
-                    {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
+                  <AvatarFallback className="bg-highlight/20 text-highlight font-semibold">
+                    {user.name?.charAt(0)?.toUpperCase() || <User className="h-5 w-5" />}
                   </AvatarFallback>
                 </Avatar>
-                {!isCollapsed && (
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-sm font-medium truncate transition-colors duration-500", themeStyles.text)}>{user.name}</p>
-                    <p className={cn("text-xs transition-colors duration-500", themeStyles.muted)}>
-                      {language === 'th' ? 'ผู้ใช้งาน' : language === 'zh' ? '用户' : 'User'}
-                    </p>
-                  </div>
-                )}
+                <div className="flex-1 min-w-0">
+                  <p className={cn("font-semibold truncate", themeStyles.text)}>{user.name}</p>
+                  <p className={cn("text-xs", themeStyles.muted)}>
+                    {isAdmin 
+                      ? (language === 'th' ? 'ผู้ดูแลระบบ' : language === 'zh' ? '管理员' : 'Administrator')
+                      : (language === 'th' ? 'สมาชิก' : language === 'zh' ? '会员' : 'Member')
+                    }
+                  </p>
+                </div>
               </div>
 
-              {/* Admin Button */}
-              {isAdmin && (
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => {
-                        if (isMobile) setOpenMobile(false);
-                        navigate('/admin');
-                      }}
-                      tooltip={language === 'th' ? 'แผงควบคุม' : 'Admin Panel'}
-                      className="hover:bg-primary/10 hover:text-primary"
-                    >
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                        <Shield className="h-4 w-4 text-primary" />
-                      </div>
-                      <span>{language === 'th' ? 'แผงควบคุม' : language === 'zh' ? '管理面板' : 'Admin Panel'}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              )}
-
-              {/* Logout */}
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
+              {/* Admin & Logout Buttons */}
+              <div className="flex gap-2">
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       if (isMobile) setOpenMobile(false);
-                      logout();
+                      navigate('/admin');
                     }}
-                    tooltip={language === 'th' ? 'ออกจากระบบ' : 'Logout'}
-                    className="hover:bg-destructive/10 hover:text-destructive"
+                    className="flex-1 gap-2 rounded-xl bg-primary/10 border-primary/20 hover:bg-primary/20 text-primary"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-destructive/10">
-                      <LogOut className="h-4 w-4 text-destructive" />
-                    </div>
-                    <span>{language === 'th' ? 'ออกจากระบบ' : language === 'zh' ? '退出登录' : 'Logout'}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </div>
-          ) : (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
+                    <Shield className="h-4 w-4" />
+                    <span className="text-xs">Admin</span>
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     if (isMobile) setOpenMobile(false);
-                    navigate('/auth');
+                    logout();
                   }}
-                  tooltip={language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
-                  className="hover:bg-highlight/10 hover:text-highlight"
+                  className={cn(
+                    "gap-2 rounded-xl bg-destructive/10 border-destructive/20 hover:bg-destructive/20 text-destructive",
+                    isAdmin ? "" : "flex-1"
+                  )}
                 >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted/30">
-                    <LogIn className="h-4 w-4" />
-                  </div>
-                  <span>{language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-xs">
+                    {language === 'th' ? 'ออก' : language === 'zh' ? '退出' : 'Logout'}
+                  </span>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              onClick={() => {
+                if (isMobile) setOpenMobile(false);
+                navigate('/auth');
+              }}
+              className="w-full gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>{language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}</span>
+            </Button>
           )}
 
-          <SidebarSeparator className={cn("my-2 transition-colors duration-500", themeStyles.separator)} />
+          <SidebarSeparator className={cn("my-3", themeStyles.separator)} />
 
           {/* Language & Booking */}
-          <div className={cn(
-            "flex gap-2",
-            isCollapsed ? "flex-col items-center" : "items-center"
-          )}>
+          <div className="flex gap-2">
             <LanguageDropdown variant="dark" />
-            
-            {!isCollapsed && (
-              <BookingDialog>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="flex-1 font-semibold bg-[#c65539] hover:bg-[#b34a2f] shadow-lg"
-                >
-                  {t.bookNow}
-                </Button>
-              </BookingDialog>
-            )}
-          </div>
-          
-          {isCollapsed && (
             <BookingDialog>
               <Button 
-                variant="default" 
-                size="icon" 
-                className="w-full h-10 font-semibold bg-[#c65539] hover:bg-[#b34a2f] shadow-lg"
-                title={t.bookNow}
+                className="flex-1 gap-2 font-semibold rounded-xl bg-gradient-to-r from-highlight to-primary hover:opacity-90 shadow-lg shadow-highlight/20"
               >
                 <Bed className="h-4 w-4" />
+                {t.bookNow}
               </Button>
             </BookingDialog>
-          )}
+          </div>
         </SidebarFooter>
-        </div>
-      </Sidebar>
-    </TooltipProvider>
+      </div>
+    </Sidebar>
   );
 };
 
