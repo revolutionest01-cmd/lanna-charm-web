@@ -18,28 +18,28 @@ const BottomBar = () => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/40',
-          border: 'border-white/15',
-          text: 'text-white/60',
+          bg: 'bg-black/70',
+          border: 'border-white/20',
+          text: 'text-white/70',
           activeText: 'text-white',
           activeBg: 'bg-white/20',
         };
       case 'warm':
         return {
-          bg: 'bg-background/50',
-          border: 'border-highlight/20',
-          text: 'text-foreground/60',
+          bg: 'bg-background/80',
+          border: 'border-highlight/25',
+          text: 'text-foreground/70',
           activeText: 'text-highlight',
           activeBg: 'bg-highlight/20',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-background/60',
-          border: 'border-border/20',
-          text: 'text-foreground/60',
+          bg: 'bg-background/90',
+          border: 'border-border/25',
+          text: 'text-foreground/70',
           activeText: 'text-foreground',
-          activeBg: 'bg-muted/50',
+          activeBg: 'bg-muted/60',
         };
     }
   };

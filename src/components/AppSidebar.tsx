@@ -40,25 +40,25 @@ const AppSidebar = () => {
   const t = translations[language];
   const isCollapsed = state === "collapsed";
 
-  // Theme-based styling for sidebar - improved text contrast
+  // Theme-based styling - high contrast for visibility
   const getThemeStyles = (theme: SectionTheme) => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/30',
+          bg: 'bg-black/70',
           border: 'border-white/20',
-          text: 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]',
-          muted: 'text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]',
+          text: 'text-white',
+          muted: 'text-white/70',
           hover: 'hover:bg-white/15',
           active: 'bg-white/20',
           separator: 'bg-white/20',
         };
       case 'warm':
         return {
-          bg: 'bg-background/40',
-          border: 'border-highlight/25',
-          text: 'text-foreground drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]',
-          muted: 'text-foreground/80',
+          bg: 'bg-background/80',
+          border: 'border-highlight/30',
+          text: 'text-foreground',
+          muted: 'text-foreground/70',
           hover: 'hover:bg-highlight/15',
           active: 'bg-highlight/20',
           separator: 'bg-highlight/30',
@@ -66,13 +66,13 @@ const AppSidebar = () => {
       case 'light':
       default:
         return {
-          bg: 'bg-background/50',
-          border: 'border-border/25',
+          bg: 'bg-background/90',
+          border: 'border-border/30',
           text: 'text-foreground',
-          muted: 'text-foreground/70',
-          hover: 'hover:bg-muted/40',
-          active: 'bg-muted/50',
-          separator: 'bg-border/30',
+          muted: 'text-foreground/60',
+          hover: 'hover:bg-muted/50',
+          active: 'bg-muted/60',
+          separator: 'bg-border/40',
         };
     }
   };
