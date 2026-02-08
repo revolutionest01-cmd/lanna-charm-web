@@ -27,31 +27,31 @@ const TabBar = () => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/20',
-          border: 'border-white/10',
-          text: 'text-white/70',
+          bg: 'bg-black/60',
+          border: 'border-white/20',
+          text: 'text-white/80',
           activeText: 'text-white',
-          activeBg: 'bg-white/20',
-          hoverBg: 'hover:bg-white/10',
+          activeBg: 'bg-white/25',
+          hoverBg: 'hover:bg-white/15',
         };
       case 'warm':
         return {
-          bg: 'bg-background/30',
-          border: 'border-highlight/20',
-          text: 'text-foreground/70',
+          bg: 'bg-background/70',
+          border: 'border-highlight/25',
+          text: 'text-foreground/80',
           activeText: 'text-highlight',
-          activeBg: 'bg-highlight/20',
-          hoverBg: 'hover:bg-highlight/10',
+          activeBg: 'bg-highlight/25',
+          hoverBg: 'hover:bg-highlight/15',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-background/40',
-          border: 'border-border/20',
-          text: 'text-foreground/70',
+          bg: 'bg-background/80',
+          border: 'border-border/25',
+          text: 'text-foreground/80',
           activeText: 'text-foreground',
-          activeBg: 'bg-muted/50',
-          hoverBg: 'hover:bg-muted/30',
+          activeBg: 'bg-muted/60',
+          hoverBg: 'hover:bg-muted/40',
         };
     }
   };
@@ -86,8 +86,9 @@ const TabBar = () => {
     return location.pathname === href;
   };
 
+  // Hide on desktop (md and above)
   return (
-    <div className="fixed top-14 left-0 right-0 z-40 h-11">
+    <div className="fixed top-14 left-0 right-0 z-40 h-11 md:hidden">
       {/* Glassmorphism background */}
       <div 
         className={cn(

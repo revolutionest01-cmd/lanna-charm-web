@@ -22,7 +22,7 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
   const isOpen = state === "expanded" || (isMobile && openMobile);
 
   return (
-    <SidebarInset className="flex-1 pt-[6.25rem] pb-20 md:pb-0">
+    <SidebarInset className="flex-1 pt-[6.25rem] md:pt-14 pb-20 md:pb-0">
       {/* Blur overlay when sidebar is open */}
       <div 
         className={cn(
