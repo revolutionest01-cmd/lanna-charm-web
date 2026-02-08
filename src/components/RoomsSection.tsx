@@ -10,9 +10,10 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { useContentData } from "@/hooks/useContentData";
+import { useRooms } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
+
 
 interface Room {
   id: string;
@@ -35,7 +36,7 @@ interface RoomImage {
 const RoomsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { rooms = [], isLoading: loading } = useContentData();
+  const { data: rooms = [], isLoading: loading } = useRooms();
 
   if (loading) {
     return (
@@ -114,7 +115,7 @@ const RoomsSection = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Wifi size={16} />
-                          <span>Free WiFi</span>
+                          <span>{language === 'th' ? 'WiFi ฟรี' : language === 'zh' ? '免费WiFi' : 'Free WiFi'}</span>
                         </div>
                       </div>
                     </CardContent>

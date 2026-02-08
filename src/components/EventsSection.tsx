@@ -2,8 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Presentation, Utensils, Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useContentData } from "@/hooks/useContentData";
+import { useEventSpaces } from "@/hooks/useContentData";
 import { EventSkeleton } from "@/components/SkeletonCard";
+import StaggerReveal from "@/components/StaggerReveal";
 
 interface EventSpace {
   id: string;
@@ -20,7 +21,7 @@ interface EventSpace {
 const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { events: eventSpace, isLoading: loading } = useContentData();
+  const { data: eventSpace, isLoading: loading } = useEventSpaces();
 
   if (loading) {
     return (
@@ -131,8 +132,12 @@ const EventsSection = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
-          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow animate-fade-in bg-card">
+        <StaggerReveal 
+          animation="zoom-in" 
+          staggerDelay={150} 
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
+        >
+          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow bg-card">
             <div className="bg-muted w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <Presentation className="w-7 h-7 sm:w-8 sm:h-8 text-highlight" />
             </div>
@@ -144,7 +149,7 @@ const EventsSection = () => {
             </p>
           </Card>
 
-          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow animate-fade-in bg-card">
+          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow bg-card">
             <div className="bg-muted w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <Utensils className="w-7 h-7 sm:w-8 sm:h-8 text-highlight" />
             </div>
@@ -156,7 +161,7 @@ const EventsSection = () => {
             </p>
           </Card>
 
-          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow animate-fade-in bg-card">
+          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow bg-card">
             <div className="bg-muted w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <Wifi className="w-7 h-7 sm:w-8 sm:h-8 text-highlight" />
             </div>
@@ -167,7 +172,7 @@ const EventsSection = () => {
               {t.privateEventsDesc}
             </p>
           </Card>
-        </div>
+        </StaggerReveal>
       </div>
     </section>
   );

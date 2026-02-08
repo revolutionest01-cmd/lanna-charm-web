@@ -35,14 +35,10 @@ const addCacheBuster = (url: string | null, version: string): string | null => {
   return `${url}${separator}v=${version}`;
 };
 
-// Fetch all content data in parallel for better performance
-export const useContentData = () => {
-  const queryClient = useQueryClient();
-  
-  // Use state instead of ref to trigger re-renders when cache version changes
+// Hook for cache version state management
+const useCacheVersion = () => {
   const [cacheVersion, setCacheVersion] = useState(getCacheBusterVersion);
   
-  // Listen for cache invalidation events
   useEffect(() => {
     const handleCacheInvalidated = (event: CustomEvent) => {
       setCacheVersion(event.detail);
@@ -54,22 +50,15 @@ export const useContentData = () => {
     };
   }, []);
   
-  // Function to refresh all content (called after admin updates)
-  const refreshContent = useCallback(() => {
-    invalidateContentCache();
-    queryClient.invalidateQueries({ queryKey: ["hero-content"] });
-    queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
-    queryClient.invalidateQueries({ queryKey: ["rooms"] });
-    queryClient.invalidateQueries({ queryKey: ["menus"] });
-    queryClient.invalidateQueries({ queryKey: ["gallery"] });
-    queryClient.invalidateQueries({ queryKey: ["reviews"] });
-    queryClient.invalidateQueries({ queryKey: ["menu_categories"] });
-    queryClient.invalidateQueries({ queryKey: ["business_info"] });
-    queryClient.invalidateQueries({ queryKey: ["business_info_footer"] });
-  }, [queryClient]);
+  return cacheVersion;
+};
 
-  // Hero Content
-  const heroQuery = useQuery({
+// Individual hooks for each data type - load only when needed
+
+export const useHeroContent = () => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
     queryKey: ["hero-content", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -86,13 +75,16 @@ export const useContentData = () => {
       }
       return data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - stable cache
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus to prevent flickering
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
+};
 
-  // Event Spaces
-  const eventsQuery = useQuery({
+export const useEventSpaces = () => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
     queryKey: ["event-spaces", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -113,9 +105,12 @@ export const useContentData = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+};
 
-  // Rooms with Images (using JOIN)
-  const roomsQuery = useQuery({
+export const useRooms = () => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
     queryKey: ["rooms", cacheVersion],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -128,7 +123,6 @@ export const useContentData = () => {
         .order("sort_order");
       
       if (error) throw error;
-      // Add cache buster to room images
       return (data || []).map(room => ({
         ...room,
         images: (room.images || []).map((img: any) => ({
@@ -141,9 +135,12 @@ export const useContentData = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+};
 
-  // Menu Categories and Items
-  const menusQuery = useQuery({
+export const useMenus = () => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
     queryKey: ["menus", cacheVersion],
     queryFn: async () => {
       const [categoriesRes, menusRes] = await Promise.all([
@@ -174,16 +171,19 @@ export const useContentData = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+};
 
-  // Gallery Images
-  const galleryQuery = useQuery({
-    queryKey: ["gallery", cacheVersion],
+export const useGalleryImages = (limit: number = 9) => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
+    queryKey: ["gallery", cacheVersion, limit],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gallery_images")
         .select("*")
         .order("sort_order", { ascending: true })
-        .limit(9);
+        .limit(limit);
       
       if (error) throw error;
       return (data || []).map(img => ({
@@ -195,17 +195,20 @@ export const useContentData = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+};
 
-  // Reviews
-  const reviewsQuery = useQuery({
-    queryKey: ["reviews", cacheVersion],
+export const useReviews = (limit: number = 9) => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
+    queryKey: ["reviews", cacheVersion, limit],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
         .select("*")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(9);
+        .limit(limit);
       
       if (error) throw error;
       return (data || []).map(review => ({
@@ -217,6 +220,55 @@ export const useContentData = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+};
+
+export const useBusinessInfo = () => {
+  const cacheVersion = useCacheVersion();
+  
+  return useQuery({
+    queryKey: ["business_info", cacheVersion],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("business_info")
+        .select("*")
+        .eq("is_active", true)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+// Utility hook to invalidate all content caches
+export const useRefreshContent = () => {
+  const queryClient = useQueryClient();
+  
+  return useCallback(() => {
+    invalidateContentCache();
+    queryClient.invalidateQueries({ queryKey: ["hero-content"] });
+    queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
+    queryClient.invalidateQueries({ queryKey: ["rooms"] });
+    queryClient.invalidateQueries({ queryKey: ["menus"] });
+    queryClient.invalidateQueries({ queryKey: ["gallery"] });
+    queryClient.invalidateQueries({ queryKey: ["reviews"] });
+    queryClient.invalidateQueries({ queryKey: ["menu_categories"] });
+    queryClient.invalidateQueries({ queryKey: ["business_info"] });
+  }, [queryClient]);
+};
+
+// Legacy hook for backward compatibility - but now each section should use individual hooks
+export const useContentData = () => {
+  const heroQuery = useHeroContent();
+  const eventsQuery = useEventSpaces();
+  const roomsQuery = useRooms();
+  const menusQuery = useMenus();
+  const galleryQuery = useGalleryImages();
+  const reviewsQuery = useReviews();
+  const refreshContent = useRefreshContent();
 
   return {
     hero: heroQuery.data,
@@ -239,6 +291,6 @@ export const useContentData = () => {
       menusQuery.isError || 
       galleryQuery.isError || 
       reviewsQuery.isError,
-    refreshContent, // Export refresh function for admin panel
+    refreshContent,
   };
 };

@@ -146,27 +146,29 @@ const Auth = () => {
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {language === 'th' ? 'กลับหน้าแรก' : 'Back to Home'}
+          {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : 'Back to Home'}
         </Button>
 
         <div className="text-center mb-8 animate-fade-in">
           <img src={logo} alt="Plern Ping Cafe" className="h-20 mx-auto mb-4" />
           <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-            {language === 'th' ? 'ยินดีต้อนรับ' : 'Welcome'}
+            {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : 'Welcome'}
           </h1>
           <p className="text-muted-foreground">
-            {language === 'th' ? 'เข้าสู่ระบบเพื่อใช้งานเว็บบอร์ด' : 'Login to access the forum'}
+            {language === 'th' ? 'เข้าสู่ระบบเพื่อใช้งานเว็บบอร์ด' : language === 'zh' ? '登录以访问论坛' : 'Login to access the forum'}
           </p>
         </div>
 
         <Card className="animate-fade-in border-border/50 shadow-xl">
           <CardHeader>
             <CardTitle className="text-center">
-              {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : 'Login / Register'}
+              {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : 'Login / Register'}
             </CardTitle>
             <CardDescription className="text-center">
               {language === 'th' 
                 ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ' 
+                : language === 'zh'
+                ? '加入我们的社区，分享您的体验'
                 : 'Join our community and share your experiences'}
             </CardDescription>
           </CardHeader>
@@ -174,10 +176,10 @@ const Auth = () => {
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">
-                  {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                  {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
                 </TabsTrigger>
                 <TabsTrigger value="register">
-                  {language === 'th' ? 'สมัครสมาชิก' : 'Register'}
+                  {language === 'th' ? 'สมัครสมาชิก' : language === 'zh' ? '注册' : 'Register'}
                 </TabsTrigger>
               </TabsList>
 
@@ -185,12 +187,12 @@ const Auth = () => {
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">
-                      {language === 'th' ? 'อีเมล' : 'Email'}
+                      {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
                     </Label>
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder={language === 'th' ? 'กรอกอีเมล' : 'Enter your email'}
+                      placeholder={language === 'th' ? 'กรอกอีเมล' : language === 'zh' ? '请输入电子邮件' : 'Enter your email'}
                       value={loginForm.email}
                       onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       required
@@ -198,13 +200,13 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">
-                      {language === 'th' ? 'รหัสผ่าน' : 'Password'}
+                      {language === 'th' ? 'รหัสผ่าน' : language === 'zh' ? '密码' : 'Password'}
                     </Label>
                     <div className="relative">
                       <Input
                         id="login-password"
                         type={showLoginPassword ? "text" : "password"}
-                        placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : 'Enter your password'}
+                        placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : language === 'zh' ? '请输入密码' : 'Enter your password'}
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                         required
@@ -274,12 +276,12 @@ const Auth = () => {
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="register-name">
-                      {language === 'th' ? 'ชื่อ' : 'Name'}
+                      {language === 'th' ? 'ชื่อ' : language === 'zh' ? '姓名' : 'Name'}
                     </Label>
                     <Input
                       id="register-name"
                       type="text"
-                      placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : 'Enter your name'}
+                      placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : language === 'zh' ? '请输入您的姓名' : 'Enter your name'}
                       value={registerForm.name}
                       onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
                       required
@@ -287,12 +289,12 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-email">
-                      {language === 'th' ? 'อีเมล' : 'Email'}
+                      {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
                     </Label>
                     <Input
                       id="register-email"
                       type="email"
-                      placeholder={language === 'th' ? 'กรอกอีเมล' : 'Enter your email'}
+                      placeholder={language === 'th' ? 'กรอกอีเมล' : language === 'zh' ? '请输入电子邮件' : 'Enter your email'}
                       value={registerForm.email}
                       onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                       required
@@ -300,13 +302,13 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-password">
-                      {language === 'th' ? 'รหัสผ่าน' : 'Password'}
+                      {language === 'th' ? 'รหัสผ่าน' : language === 'zh' ? '密码' : 'Password'}
                     </Label>
                     <div className="relative">
                       <Input
                         id="register-password"
                         type={showRegisterPassword ? "text" : "password"}
-                        placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : 'Enter your password'}
+                        placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : language === 'zh' ? '请输入密码' : 'Enter your password'}
                         value={registerForm.password}
                         onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                         required
@@ -378,6 +380,8 @@ const Auth = () => {
         <p className="text-center text-sm text-muted-foreground mt-4">
           {language === 'th' 
             ? '* นี่คือระบบ mockup สำหรับทดสอบการใช้งาน' 
+            : language === 'zh'
+            ? '* 这是一个用于测试的模拟系统'
             : '* This is a mockup system for testing purposes'}
         </p>
       </div>

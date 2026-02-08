@@ -1,17 +1,16 @@
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Toaster } from "@/components/ui/sonner";
-import { useContentData } from "@/hooks/useContentData";
+import { useMenus } from "@/hooks/useContentData";
 import { MenuSkeleton } from "@/components/SkeletonCard";
 
 const Menu = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { menus: menuData, isLoading: loading } = useContentData();
+  const { data: menuData, isLoading: loading } = useMenus();
   
   const menus = menuData?.menus || [];
   const categories = menuData?.categories || [];
@@ -22,8 +21,7 @@ const Menu = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
-      <main className="relative z-10 pt-20">
+      <main className="relative z-10 pt-8">
         {/* Hero Header */}
         <section className="py-16 bg-gradient-to-b from-primary/10 to-transparent">
           <div className="container mx-auto px-4 text-center">
@@ -120,7 +118,7 @@ const Menu = () => {
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <span className="text-muted-foreground text-sm">
-                                              {language === "th" ? "ไม่มีรูปภาพ" : "No image"}
+                                              {language === "th" ? "ไม่มีรูปภาพ" : language === "zh" ? "无图片" : "No image"}
                                             </span>
                                           </div>
                                         )}
@@ -170,7 +168,7 @@ const Menu = () => {
                             </>
                           ) : (
                             <p className="text-center text-muted-foreground py-8">
-                              {language === "th" ? "ไม่มีเมนูในหมวดหมู่นี้" : "No items in this category"}
+                              {language === "th" ? "ไม่มีเมนูในหมวดหมู่นี้" : language === "zh" ? "此类别暂无菜品" : "No items in this category"}
                             </p>
                           )}
                         </TabsContent>
@@ -179,7 +177,7 @@ const Menu = () => {
                   </Tabs>
                 ) : (
                   <p className="text-center text-muted-foreground py-12">
-                    {language === "th" ? "ยังไม่มีเมนู" : "No menus available"}
+                    {language === "th" ? "ยังไม่มีเมนู" : language === "zh" ? "暂无菜单" : "No menus available"}
                   </p>
                 )}
               </div>

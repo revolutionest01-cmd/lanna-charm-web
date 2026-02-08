@@ -6,6 +6,7 @@ import plernpingLogo from "@/assets/plernping-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef } from "react";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useBusinessInfo } from "@/hooks/useContentData";
 
 // Animated Visitor Counter Component
 const VisitorCounterAnimated = ({ totalVisits, language }: { totalVisits: number; language: string }) => {
@@ -20,7 +21,7 @@ const VisitorCounterAnimated = ({ totalVisits, language }: { totalVisits: number
       <div className="flex items-center gap-2 bg-primary/5 rounded-full px-4 py-2">
         <Users size={18} className="text-primary" />
         <span className="text-muted-foreground text-sm">
-          {language === 'th' ? 'ผู้เยี่ยมชม' : 'Visitors'}: {' '}
+          {language === 'th' ? 'ผู้เยี่ยมชม' : language === 'zh' ? '访客' : 'Visitors'}: {' '}
           <span className="font-semibold text-foreground tabular-nums">
             {count.toLocaleString()}
           </span>
@@ -35,21 +36,8 @@ const Footer = () => {
   const t = translations[language];
   const hasIncremented = useRef(false);
 
-  // Fetch business info from database
-  const { data: businessInfo, isLoading } = useQuery({
-    queryKey: ['business_info_footer'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_info')
-        .select('*')
-        .eq('is_active', true)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  // Use the individual hook for business info
+  const { data: businessInfo, isLoading } = useBusinessInfo();
 
   // Fetch visitor stats
   const { data: visitorStats, refetch: refetchStats } = useQuery({
@@ -125,7 +113,7 @@ const Footer = () => {
       <footer className="bg-card border-t border-border py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground">
-            {language === 'th' ? 'กำลังโหลดข้อมูล...' : 'Loading...'}
+            {language === 'th' ? 'กำลังโหลดข้อมูล...' : language === 'zh' ? '加载中...' : 'Loading...'}
           </p>
         </div>
       </footer>

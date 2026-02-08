@@ -1,11 +1,12 @@
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { useContentData } from "@/hooks/useContentData";
+import { useGalleryImages } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { GallerySkeleton } from "@/components/SkeletonCard";
+
 
 type GalleryImage = {
   id: string;
@@ -17,7 +18,7 @@ type GalleryImage = {
 const GallerySection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { gallery: images = [], isLoading: loading } = useContentData();
+  const { data: images = [], isLoading: loading } = useGalleryImages(9);
 
   if (loading) {
     return (
