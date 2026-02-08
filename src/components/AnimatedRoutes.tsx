@@ -12,6 +12,8 @@ import Menu from "@/pages/Menu";
 import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
 import Secondbar from "@/components/Secondbar";
+import TabBar from "@/components/TabBar";
+import BottomBar from "@/components/BottomBar";
 import { cn } from "@/lib/utils";
 
 // Wrapper component to access sidebar state
@@ -20,15 +22,21 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
   const isOpen = state === "expanded" || (isMobile && openMobile);
 
   return (
-    <SidebarInset className="flex-1 pt-14">
+    <SidebarInset className="flex-1 pt-[6.25rem] pb-20 md:pb-0">
       {/* Blur overlay when sidebar is open */}
       <div 
         className={cn(
-          "fixed inset-0 top-14 z-10 pointer-events-none transition-all duration-500 ease-out",
+          "fixed inset-0 z-30 pointer-events-none transition-all duration-500 ease-out",
           isOpen 
-            ? "backdrop-blur-sm bg-black/10 opacity-100" 
+            ? "backdrop-blur-md bg-black/20 opacity-100 pointer-events-auto" 
             : "backdrop-blur-none bg-transparent opacity-0"
         )}
+        onClick={() => {
+          // Close sidebar when clicking overlay
+          if (isOpen && isMobile) {
+            // This will be handled by sidebar context
+          }
+        }}
       />
       <div className={cn("page-transition-content relative z-0", animationClass)}>
         {children}
@@ -91,6 +99,7 @@ const AnimatedRoutes = () => {
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <Secondbar />
+        <TabBar />
         <AppSidebar />
         
         <MainContent animationClass={getAnimationClass()}>
@@ -106,6 +115,9 @@ const AnimatedRoutes = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MainContent>
+        
+        {/* Bottom Bar for mobile */}
+        <BottomBar />
       </div>
     </SidebarProvider>
   );
