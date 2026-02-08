@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Presentation, Utensils, Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useEventSpaces } from "@/hooks/useContentData";
+import { useContentData } from "@/hooks/useContentData";
 import { EventSkeleton } from "@/components/SkeletonCard";
 import StaggerReveal from "@/components/StaggerReveal";
 
@@ -21,7 +21,7 @@ interface EventSpace {
 const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { data: eventSpace, isLoading: loading } = useEventSpaces();
+  const { events: eventSpace, isLoading: loading } = useContentData();
 
   if (loading) {
     return (

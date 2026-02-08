@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin, Loader2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useHeroContent } from "@/hooks/useContentData";
+import { useContentData } from "@/hooks/useContentData";
 
 
 const HeroSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { data: hero, isLoading } = useHeroContent();
+  const { hero, isLoading } = useContentData();
   
   // Use database content - show loading if not ready
   const heroTitle = hero 
