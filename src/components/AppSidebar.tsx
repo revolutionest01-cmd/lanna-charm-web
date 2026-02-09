@@ -149,32 +149,33 @@ const AppSidebar = () => {
       collapsible="offcanvas"
       className="border-none top-0 h-screen z-50"
     >
-      {/* Premium glassmorphism background */}
+      {/* Premium glassmorphism background with enhanced shadow */}
       <div 
         className={cn(
           "absolute inset-0 backdrop-blur-2xl border-r transition-all duration-700 ease-out",
+          "shadow-2xl shadow-black/20",
           themeStyles.bg,
           themeStyles.border
         )} 
       />
       
       <div className="relative z-10 flex flex-col h-full">
-        {/* Header with Logo & Close */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <div className="flex items-center gap-3">
+        {/* Header with Logo & Close - responsive sizing */}
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/10">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative">
               <img 
                 src={logo} 
                 alt="Plern Ping" 
-                className="h-10 w-auto drop-shadow-[0_0_15px_rgba(198,85,57,0.5)]" 
+                className="h-8 sm:h-10 w-auto drop-shadow-[0_0_15px_rgba(198,85,57,0.5)]" 
               />
-              <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-highlight animate-pulse" />
+              <Sparkles className="absolute -top-1 -right-1 h-2.5 sm:h-3 w-2.5 sm:w-3 text-highlight animate-pulse" />
             </div>
             <div>
-              <h2 className={cn("text-lg font-bold tracking-wide", themeStyles.text)}>
+              <h2 className={cn("text-base sm:text-lg font-bold tracking-wide", themeStyles.text)}>
                 Plern Ping
               </h2>
-              <p className={cn("text-xs", themeStyles.muted)}>
+              <p className={cn("text-[10px] sm:text-xs", themeStyles.muted)}>
                 {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
               </p>
             </div>
@@ -184,25 +185,25 @@ const AppSidebar = () => {
             size="icon"
             onClick={() => isMobile ? setOpenMobile(false) : toggleSidebar()}
             className={cn(
-              "h-9 w-9 rounded-xl transition-all duration-300",
-              "hover:bg-white/10",
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-xl transition-all duration-300",
+              "hover:bg-white/10 active:scale-95",
               themeStyles.text
             )}
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
 
-        {/* Navigation */}
-        <SidebarContent className="px-3 py-4">
+        {/* Navigation - responsive padding */}
+        <SidebarContent className="px-2 sm:px-3 py-3 sm:py-4">
           <ScrollArea className="flex-1">
             {/* Main Navigation */}
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-xs font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
+              <SidebarGroupLabel className={cn("text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1.5 sm:mb-2", themeStyles.muted)}>
                 {language === 'th' ? 'นำทาง' : language === 'zh' ? '导航' : 'Navigation'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-1">
+                <SidebarMenu className="space-y-0.5 sm:space-y-1">
                   {navItems.map((item, index) => {
                     const IconComponent = item.icon;
                     const active = isActive(item.href);
@@ -213,7 +214,8 @@ const AppSidebar = () => {
                           onClick={() => handleNavClick(item.href)}
                           isActive={active}
                           className={cn(
-                            "group relative w-full px-3 py-2.5 rounded-xl transition-all duration-300",
+                            "group relative w-full px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl",
+                            "transition-all duration-300 active:scale-[0.98]",
                             "hover:translate-x-1",
                             active 
                               ? cn(themeStyles.active, "shadow-lg shadow-highlight/10")
@@ -223,18 +225,18 @@ const AppSidebar = () => {
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <div className={cn(
-                            "flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300",
+                            "flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl transition-all duration-300",
                             active 
                               ? "bg-highlight/30 shadow-[0_0_15px_rgba(198,85,57,0.4)]" 
                               : "bg-white/5 group-hover:bg-highlight/20"
                           )}>
                             <IconComponent className={cn(
-                              "h-4.5 w-4.5 transition-all duration-300",
+                              "h-3.5 w-3.5 sm:h-4 sm:w-4 transition-all duration-300",
                               active ? "text-highlight" : cn(themeStyles.muted, "group-hover:text-highlight")
                             )} />
                           </div>
                           <span className={cn(
-                            "font-medium transition-colors duration-300",
+                            "text-sm sm:text-base font-medium transition-colors duration-300",
                             active ? "text-highlight" : cn(themeStyles.text, "group-hover:text-highlight")
                           )}>
                             {item.label}
@@ -242,7 +244,7 @@ const AppSidebar = () => {
                           
                           {/* Active indicator */}
                           {active && (
-                            <div className="absolute right-3 w-2 h-2 rounded-full bg-highlight shadow-[0_0_8px_rgba(198,85,57,0.6)]" />
+                            <div className="absolute right-2 sm:right-3 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-highlight shadow-[0_0_8px_rgba(198,85,57,0.6)]" />
                           )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -252,11 +254,11 @@ const AppSidebar = () => {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarSeparator className={cn("my-4", themeStyles.separator)} />
+            <SidebarSeparator className={cn("my-3 sm:my-4", themeStyles.separator)} />
 
             {/* Community Section */}
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-xs font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
+              <SidebarGroupLabel className={cn("text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1.5 sm:mb-2", themeStyles.muted)}>
                 {language === 'th' ? 'ชุมชน' : language === 'zh' ? '社区' : 'Community'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -266,7 +268,8 @@ const AppSidebar = () => {
                       onClick={() => handleNavClick('/forum')}
                       isActive={location.pathname === '/forum'}
                       className={cn(
-                        "group w-full px-3 py-2.5 rounded-xl transition-all duration-300",
+                        "group w-full px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl",
+                        "transition-all duration-300 active:scale-[0.98]",
                         "hover:translate-x-1",
                         location.pathname === '/forum' 
                           ? cn(themeStyles.active, "shadow-lg")
@@ -274,18 +277,18 @@ const AppSidebar = () => {
                       )}
                     >
                       <div className={cn(
-                        "flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300",
+                        "flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl transition-all duration-300",
                         location.pathname === '/forum'
                           ? "bg-highlight/30 shadow-[0_0_15px_rgba(198,85,57,0.4)]"
                           : "bg-white/5 group-hover:bg-highlight/20"
                       )}>
                         <MessageCircle className={cn(
-                          "h-4.5 w-4.5 transition-colors duration-300",
+                          "h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors duration-300",
                           location.pathname === '/forum' ? "text-highlight" : themeStyles.muted
                         )} />
                       </div>
                       <span className={cn(
-                        "font-medium transition-colors duration-300",
+                        "text-sm sm:text-base font-medium transition-colors duration-300",
                         location.pathname === '/forum' ? "text-highlight" : themeStyles.text
                       )}>
                         {t.forum}
@@ -298,26 +301,26 @@ const AppSidebar = () => {
           </ScrollArea>
         </SidebarContent>
 
-        {/* Footer */}
-        <SidebarFooter className="p-4 mt-auto border-t border-white/10">
+        {/* Footer - responsive sizing */}
+        <SidebarFooter className="p-3 sm:p-4 mt-auto border-t border-white/10">
           {/* User Section */}
           {isAuthenticated && user ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {/* User Profile Card */}
               <div className={cn(
-                "flex items-center gap-3 p-3 rounded-2xl backdrop-blur-sm transition-all duration-300",
+                "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl backdrop-blur-sm transition-all duration-300",
                 "bg-gradient-to-r from-white/10 to-white/5 border",
                 themeStyles.border
               )}>
-                <Avatar className="h-11 w-11 ring-2 ring-highlight/40 ring-offset-2 ring-offset-transparent">
+                <Avatar className="h-9 w-9 sm:h-11 sm:w-11 ring-2 ring-highlight/40 ring-offset-2 ring-offset-transparent">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-highlight/20 text-highlight font-semibold">
-                    {user.name?.charAt(0)?.toUpperCase() || <User className="h-5 w-5" />}
+                  <AvatarFallback className="bg-highlight/20 text-highlight font-semibold text-sm sm:text-base">
+                    {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className={cn("font-semibold truncate", themeStyles.text)}>{user.name}</p>
-                  <p className={cn("text-xs", themeStyles.muted)}>
+                  <p className={cn("text-sm sm:text-base font-semibold truncate", themeStyles.text)}>{user.name}</p>
+                  <p className={cn("text-[10px] sm:text-xs", themeStyles.muted)}>
                     {isAdmin 
                       ? (language === 'th' ? 'ผู้ดูแลระบบ' : language === 'zh' ? '管理员' : 'Administrator')
                       : (language === 'th' ? 'สมาชิก' : language === 'zh' ? '会员' : 'Member')
@@ -327,7 +330,7 @@ const AppSidebar = () => {
               </div>
 
               {/* Admin & Logout Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2">
                 {isAdmin && (
                   <Button
                     variant="outline"
@@ -336,10 +339,10 @@ const AppSidebar = () => {
                       if (isMobile) setOpenMobile(false);
                       navigate('/admin');
                     }}
-                    className="flex-1 gap-2 rounded-xl bg-primary/10 border-primary/20 hover:bg-primary/20 text-primary"
+                    className="flex-1 gap-1.5 sm:gap-2 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-primary/10 border-primary/20 hover:bg-primary/20 text-primary"
                   >
-                    <Shield className="h-4 w-4" />
-                    <span className="text-xs">Admin</span>
+                    <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[10px] sm:text-xs">Admin</span>
                   </Button>
                 )}
                 <Button
@@ -350,12 +353,12 @@ const AppSidebar = () => {
                     logout();
                   }}
                   className={cn(
-                    "gap-2 rounded-xl bg-destructive/10 border-destructive/20 hover:bg-destructive/20 text-destructive",
+                    "gap-1.5 sm:gap-2 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-destructive/10 border-destructive/20 hover:bg-destructive/20 text-destructive",
                     isAdmin ? "" : "flex-1"
                   )}
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span className="text-xs">
+                  <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-[10px] sm:text-xs">
                     {language === 'th' ? 'ออก' : language === 'zh' ? '退出' : 'Logout'}
                   </span>
                 </Button>
@@ -367,23 +370,23 @@ const AppSidebar = () => {
                 if (isMobile) setOpenMobile(false);
                 navigate('/auth');
               }}
-              className="w-full gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10"
+              className="w-full gap-2 h-9 sm:h-10 rounded-lg sm:rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-sm"
             >
               <LogIn className="h-4 w-4" />
               <span>{language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}</span>
             </Button>
           )}
 
-          <SidebarSeparator className={cn("my-3", themeStyles.separator)} />
+          <SidebarSeparator className={cn("my-2 sm:my-3", themeStyles.separator)} />
 
           {/* Language & Booking */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <LanguageDropdown variant="dark" />
             <BookingDialog>
               <Button 
-                className="flex-1 gap-2 font-semibold rounded-xl bg-gradient-to-r from-highlight to-primary hover:opacity-90 shadow-lg shadow-highlight/20"
+                className="flex-1 gap-1.5 sm:gap-2 h-9 sm:h-10 text-sm font-semibold rounded-lg sm:rounded-xl bg-gradient-to-r from-highlight to-primary hover:opacity-90 shadow-lg shadow-highlight/20"
               >
-                <Bed className="h-4 w-4" />
+                <Bed className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {t.bookNow}
               </Button>
             </BookingDialog>

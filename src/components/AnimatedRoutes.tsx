@@ -22,7 +22,15 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
   const isOpen = state === "expanded" || (isMobile && openMobile);
 
   return (
-    <SidebarInset className="flex-1 pt-[6.25rem] md:pt-14 pb-20 md:pb-0">
+    <SidebarInset className={cn(
+      "flex-1 transition-all duration-300",
+      // Mobile: top padding for Secondbar (14) + TabBar (10) = 24 = 6rem, bottom for BottomBar
+      "pt-24 pb-16 sm:pb-18",
+      // Tablet: slightly larger spacing
+      "sm:pt-[6.5rem]",
+      // Desktop: only Secondbar (16 = 4rem), no bottom bar
+      "md:pt-16 md:pb-0"
+    )}>
       {/* Blur overlay when sidebar is open */}
       <div 
         className={cn(
@@ -32,10 +40,7 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
             : "backdrop-blur-none bg-transparent opacity-0"
         )}
         onClick={() => {
-          // Close sidebar when clicking overlay
-          if (isOpen && isMobile) {
-            // This will be handled by sidebar context
-          }
+          // Close sidebar when clicking overlay - handled by sidebar context
         }}
       />
       <div className={cn("page-transition-content relative z-0", animationClass)}>
