@@ -36,11 +36,11 @@ const LanguageDropdown = ({ variant = 'dark', className = '' }: LanguageDropdown
         <button
           className={`
             inline-flex items-center gap-2 px-3 py-2 rounded-xl
-            border transition-all duration-300
+            border transition-colors duration-300
             focus:outline-none focus:ring-2 focus:ring-highlight/50
             ${variant === 'light' 
-              ? 'bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20' 
-              : 'bg-card/80 backdrop-blur-md border-border/50 text-foreground hover:bg-muted hover:border-highlight/30'
+              ? 'bg-white/20 border-white/20 text-white hover:bg-white/30' 
+              : 'bg-card border-border/50 text-foreground hover:bg-muted hover:border-highlight/30'
             }
             ${className}
           `}
@@ -57,7 +57,7 @@ const LanguageDropdown = ({ variant = 'dark', className = '' }: LanguageDropdown
         sideOffset={8}
         className="
           min-w-[180px] p-2 
-          bg-card/95 backdrop-blur-xl 
+          bg-card 
           border border-border/50 
           rounded-xl shadow-2xl
           animate-in fade-in-0 zoom-in-95

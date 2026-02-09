@@ -71,7 +71,7 @@ const FeaturesSection = () => {
               className="group relative"
             >
               {/* Card with premium styling */}
-              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 h-full transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 sm:hover:-translate-y-3">
+              <div className="relative bg-card border border-border/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 h-full transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 sm:hover:-translate-y-3">
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl sm:rounded-2xl`} />
                 

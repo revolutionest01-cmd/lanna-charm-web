@@ -149,10 +149,10 @@ const AppSidebar = () => {
       collapsible="offcanvas"
       className="border-none top-0 h-screen z-50"
     >
-      {/* Premium glassmorphism background with enhanced shadow */}
+      {/* Solid background with enhanced shadow */}
       <div 
         className={cn(
-          "absolute inset-0 backdrop-blur-2xl border-r transition-all duration-700 ease-out",
+          "absolute inset-0 border-r transition-colors duration-500",
           "shadow-2xl shadow-black/20",
           themeStyles.bg,
           themeStyles.border
@@ -308,7 +308,7 @@ const AppSidebar = () => {
             <div className="space-y-2 sm:space-y-3">
               {/* User Profile Card */}
               <div className={cn(
-                "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl backdrop-blur-sm transition-all duration-300",
+                "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-300",
                 "bg-gradient-to-r from-white/10 to-white/5 border",
                 themeStyles.border
               )}>
