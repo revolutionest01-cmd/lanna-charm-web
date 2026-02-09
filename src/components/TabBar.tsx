@@ -27,31 +27,31 @@ const TabBar = () => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/60',
-          border: 'border-white/20',
-          text: 'text-white/80',
-          activeText: 'text-white',
-          activeBg: 'bg-white/25',
-          hoverBg: 'hover:bg-white/15',
+          bg: 'bg-stone-800/95',
+          border: 'border-stone-700/50',
+          text: 'text-stone-300',
+          activeText: 'text-stone-100',
+          activeBg: 'bg-stone-700/80',
+          hoverBg: 'hover:bg-stone-700/60',
         };
       case 'warm':
         return {
-          bg: 'bg-background/70',
-          border: 'border-highlight/25',
-          text: 'text-foreground/80',
+          bg: 'bg-amber-100/95',
+          border: 'border-amber-200/60',
+          text: 'text-stone-600',
           activeText: 'text-highlight',
-          activeBg: 'bg-highlight/25',
-          hoverBg: 'hover:bg-highlight/15',
+          activeBg: 'bg-amber-200/80',
+          hoverBg: 'hover:bg-amber-200/60',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-background/80',
-          border: 'border-border/25',
-          text: 'text-foreground/80',
-          activeText: 'text-foreground',
-          activeBg: 'bg-muted/60',
-          hoverBg: 'hover:bg-muted/40',
+          bg: 'bg-stone-100/95',
+          border: 'border-stone-200/60',
+          text: 'text-stone-500',
+          activeText: 'text-stone-800',
+          activeBg: 'bg-stone-200/80',
+          hoverBg: 'hover:bg-stone-200/60',
         };
     }
   };

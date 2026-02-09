@@ -19,33 +19,33 @@ const Secondbar = () => {
   const [volume, setVolume] = useState(0.3);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Theme-based styling - high contrast for visibility
+  // Theme-based styling - high contrast with warm tones
   const getThemeStyles = (theme: SectionTheme) => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-black/60',
-          border: 'border-white/20',
-          text: 'text-white',
-          buttonBg: 'bg-white/20 hover:bg-white/30',
-          buttonText: 'text-white',
+          bg: 'bg-stone-900/95',
+          border: 'border-stone-700/50',
+          text: 'text-stone-100',
+          buttonBg: 'bg-stone-800/80 hover:bg-stone-700/80',
+          buttonText: 'text-stone-100',
         };
       case 'warm':
         return {
-          bg: 'bg-background/70',
-          border: 'border-highlight/30',
-          text: 'text-foreground',
-          buttonBg: 'bg-highlight/20 hover:bg-highlight/30',
-          buttonText: 'text-foreground',
+          bg: 'bg-amber-50/95',
+          border: 'border-amber-200/60',
+          text: 'text-stone-800',
+          buttonBg: 'bg-amber-100/80 hover:bg-amber-200/80',
+          buttonText: 'text-stone-700',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-background/80',
-          border: 'border-border/30',
-          text: 'text-foreground',
-          buttonBg: 'bg-muted/50 hover:bg-muted/70',
-          buttonText: 'text-foreground',
+          bg: 'bg-stone-50/95',
+          border: 'border-stone-200/60',
+          text: 'text-stone-800',
+          buttonBg: 'bg-stone-100/80 hover:bg-stone-200/80',
+          buttonText: 'text-stone-700',
         };
     }
   };
