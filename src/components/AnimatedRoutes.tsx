@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef, ReactElement, cloneElement } from "react";
+import { useState, useEffect, useRef } from "react";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
@@ -9,6 +9,41 @@ import Admin from "@/pages/Admin";
 import Gallery from "@/pages/Gallery";
 import Reviews from "@/pages/Reviews";
 import Menu from "@/pages/Menu";
+import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/AppSidebar";
+import Secondbar from "@/components/Secondbar";
+import TabBar from "@/components/TabBar";
+import BottomBar from "@/components/BottomBar";
+import { cn } from "@/lib/utils";
+
+// Wrapper component to access sidebar state
+const MainContent = ({ children, animationClass }: { children: React.ReactNode; animationClass: string }) => {
+  const { state, isMobile, openMobile } = useSidebar();
+  const isOpen = state === "expanded" || (isMobile && openMobile);
+
+  return (
+    <SidebarInset className="flex-1 pt-[6.25rem] md:pt-14 pb-20 md:pb-0">
+      {/* Blur overlay when sidebar is open */}
+      <div 
+        className={cn(
+          "fixed inset-0 z-30 pointer-events-none transition-all duration-500 ease-out",
+          isOpen 
+            ? "backdrop-blur-md bg-black/20 opacity-100 pointer-events-auto" 
+            : "backdrop-blur-none bg-transparent opacity-0"
+        )}
+        onClick={() => {
+          // Close sidebar when clicking overlay
+          if (isOpen && isMobile) {
+            // This will be handled by sidebar context
+          }
+        }}
+      />
+      <div className={cn("page-transition-content relative z-0", animationClass)}>
+        {children}
+      </div>
+    </SidebarInset>
+  );
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -61,19 +96,30 @@ const AnimatedRoutes = () => {
   };
 
   return (
-    <div className={`page-transition-content ${getAnimationClass()}`}>
-      <Routes location={displayLocation}>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/forum" element={<Forum />} />
-        <Route path="/forum/:id" element={<TopicDetail />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/reviews" element={<Reviews />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
+    <SidebarProvider defaultOpen={false}>
+      <div className="min-h-screen flex w-full">
+        <Secondbar />
+        <TabBar />
+        <AppSidebar />
+        
+        <MainContent animationClass={getAnimationClass()}>
+          <Routes location={displayLocation}>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/forum" element={<Forum />} />
+            <Route path="/forum/:id" element={<TopicDetail />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MainContent>
+        
+        {/* Bottom Bar for mobile */}
+        <BottomBar />
+      </div>
+    </SidebarProvider>
   );
 };
 

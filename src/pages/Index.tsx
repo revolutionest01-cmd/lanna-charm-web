@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import EventsSection from "@/components/EventsSection";
@@ -8,7 +7,6 @@ import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import ContactSection from "@/components/ContactSection";
 import FallingLeaves from "@/components/FallingLeaves";
-import AmbientSound from "@/components/AmbientSound";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import FloatingChatButton from "@/components/FloatingChatButton";
@@ -27,8 +25,6 @@ const Index = () => {
       <ParallaxBackground />
       
       <FallingLeaves />
-      <AmbientSound />
-      <Header />
       <main className="relative z-10">
         <HeroSection />
         

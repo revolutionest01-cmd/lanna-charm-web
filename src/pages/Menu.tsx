@@ -1,17 +1,16 @@
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { Toaster } from "@/components/ui/sonner";
-import { useContentData } from "@/hooks/useContentData";
+import { useMenus } from "@/hooks/useContentData";
 import { MenuSkeleton } from "@/components/SkeletonCard";
 
 const Menu = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { menus: menuData, isLoading: loading } = useContentData();
+  const { data: menuData, isLoading: loading } = useMenus();
   
   const menus = menuData?.menus || [];
   const categories = menuData?.categories || [];
@@ -22,8 +21,7 @@ const Menu = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
-      <main className="relative z-10 pt-20">
+      <main className="relative z-10 pt-8">
         {/* Hero Header */}
         <section className="py-16 bg-gradient-to-b from-primary/10 to-transparent">
           <div className="container mx-auto px-4 text-center">
