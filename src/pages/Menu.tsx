@@ -49,7 +49,7 @@ const Menu = () => {
               <div className="max-w-4xl mx-auto">
                 {categories.length > 0 ? (
                   <Tabs defaultValue={categories[0]?.id} className="w-full">
-                    <div className="overflow-x-auto mb-8 -mx-4 px-4 sticky top-20 bg-card/95 backdrop-blur-sm z-10 py-4 border-b border-border">
+                    <div className="overflow-x-auto mb-8 -mx-4 px-4 sticky top-20 bg-card z-10 py-4 border-b border-border">
                       <TabsList 
                         className="inline-flex w-auto min-w-full justify-start md:grid md:w-full md:grid-cols-2 lg:grid-cols-4 gap-2"
                       >

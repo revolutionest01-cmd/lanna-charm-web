@@ -100,7 +100,7 @@ const Gallery = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="bg-background/95 backdrop-blur-sm px-6 py-3 rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <div className="bg-background px-6 py-3 rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 shadow-lg">
                       <p className="text-foreground font-medium text-sm">
                         {language === "th" ? image.title_th : image.title_en}
                       </p>
@@ -165,7 +165,7 @@ const Gallery = () => {
 
               {/* Image Title */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
-                <div className="bg-background/90 backdrop-blur-sm px-6 py-3 rounded-full">
+                <div className="bg-background px-6 py-3 rounded-full shadow-lg">
                   <p className="text-foreground font-medium">
                     {language === "th" 
                       ? images[selectedImageIndex].title_th 
