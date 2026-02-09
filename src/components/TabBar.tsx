@@ -86,20 +86,21 @@ const TabBar = () => {
     return location.pathname === href;
   };
 
-  // Hide on desktop (md and above)
+  // Hide on desktop (md and above), show on mobile/tablet
   return (
-    <div className="fixed top-14 left-0 right-0 z-40 h-11 md:hidden">
-      {/* Glassmorphism background */}
+    <div className="fixed top-14 left-0 right-0 z-40 h-10 sm:h-11 md:hidden">
+      {/* Premium glassmorphism background with subtle shadow */}
       <div 
         className={cn(
           "absolute inset-0 backdrop-blur-xl border-b transition-all duration-700",
+          "shadow-md shadow-black/5",
           themeStyles.bg,
           themeStyles.border
         )} 
       />
       
       <ScrollArea className="relative z-10 h-full w-full">
-        <div className="flex items-center h-full px-2 gap-1 min-w-max">
+        <div className="flex items-center h-full px-2 sm:px-3 gap-1 sm:gap-1.5 min-w-max">
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
             const active = isActive(tab.href);
@@ -109,20 +110,22 @@ const TabBar = () => {
                 key={tab.href}
                 onClick={() => handleTabClick(tab.href)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",
+                  "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full",
+                  "text-[10px] sm:text-xs font-medium",
                   "transition-all duration-300 whitespace-nowrap",
+                  "active:scale-95",
                   active 
                     ? cn(themeStyles.activeBg, themeStyles.activeText, "shadow-sm")
                     : cn(themeStyles.text, themeStyles.hoverBg)
                 )}
               >
-                <IconComponent className="h-3.5 w-3.5" />
+                <IconComponent className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 <span>{tab.label}</span>
               </button>
             );
           })}
         </div>
-        <ScrollBar orientation="horizontal" className="h-1" />
+        <ScrollBar orientation="horizontal" className="h-0.5 sm:h-1" />
       </ScrollArea>
     </div>
   );
