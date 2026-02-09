@@ -82,18 +82,18 @@ const BottomBar = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden safe-area-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       {/* Premium glassmorphism background with top shadow */}
       <div 
         className={cn(
           "absolute inset-0 backdrop-blur-2xl border-t transition-all duration-700",
-          "shadow-[0_-4px_20px_rgba(0,0,0,0.1)]",
+          "shadow-[0_-8px_30px_rgba(0,0,0,0.12)]",
           themeStyles.bg,
           themeStyles.border
         )} 
       />
       
-      <div className="relative z-10 flex items-center justify-around h-14 sm:h-16 px-1 sm:px-2">
+      <div className="relative z-10 flex items-center justify-around h-16 sm:h-18 px-2 sm:px-4 pb-safe">
         {quickLinks.map((item) => {
           const IconComponent = item.icon;
           const active = isActive(item.href);
@@ -103,41 +103,41 @@ const BottomBar = () => {
               key={item.href}
               onClick={() => handleNavClick(item.href)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-xl",
-                "min-w-[52px] sm:min-w-[60px]",
-                "transition-all duration-300 active:scale-95",
+                "flex flex-col items-center justify-center gap-0.5 sm:gap-1 p-2 sm:p-2.5 rounded-xl",
+                "min-w-[56px] sm:min-w-[64px]",
+                "transition-all duration-300 active:scale-90 touch-manipulation",
                 active 
                   ? cn(themeStyles.activeBg, themeStyles.activeText)
                   : themeStyles.text
               )}
             >
               <div className={cn(
-                "flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg transition-all duration-300",
-                active && "bg-highlight/20 shadow-[0_0_10px_rgba(198,85,57,0.3)]"
+                "flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl transition-all duration-300",
+                active && "bg-highlight/20 shadow-[0_0_12px_rgba(198,85,57,0.35)]"
               )}>
                 <IconComponent className={cn(
-                  "h-4 w-4 sm:h-5 sm:w-5 transition-all duration-300",
+                  "h-5 w-5 sm:h-5.5 sm:w-5.5 transition-all duration-300",
                   active && "text-highlight scale-110"
                 )} />
               </div>
-              <span className="text-[9px] sm:text-[10px] font-medium leading-tight">{item.label}</span>
+              <span className="text-[10px] sm:text-[11px] font-medium leading-tight">{item.label}</span>
             </button>
           );
         })}
         
         {/* Book Now Button - Center - Elevated design */}
         <BookingDialog>
-          <button className="flex flex-col items-center justify-center gap-0.5 p-1 sm:p-2 min-w-[52px] sm:min-w-[60px]">
+          <button className="flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 min-w-[56px] sm:min-w-[64px] touch-manipulation">
             <div className={cn(
-              "flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full",
+              "flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full",
               "bg-gradient-to-br from-highlight to-primary",
-              "shadow-lg shadow-highlight/40 -mt-5 sm:-mt-6",
-              "border-4 border-background/80",
-              "transition-all duration-300 active:scale-95"
+              "shadow-xl shadow-highlight/50 -mt-6 sm:-mt-7",
+              "border-4 border-background/90",
+              "transition-all duration-300 active:scale-90"
             )}>
               <Bed className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-semibold text-highlight leading-tight">{t.bookNow}</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-highlight leading-tight">{t.bookNow}</span>
           </button>
         </BookingDialog>
         
@@ -145,16 +145,16 @@ const BottomBar = () => {
         <button
           onClick={toggleSidebar}
           className={cn(
-            "flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-xl",
-            "min-w-[52px] sm:min-w-[60px]",
-            "transition-all duration-300 active:scale-95",
+            "flex flex-col items-center justify-center gap-0.5 sm:gap-1 p-2 sm:p-2.5 rounded-xl",
+            "min-w-[56px] sm:min-w-[64px]",
+            "transition-all duration-300 active:scale-90 touch-manipulation",
             themeStyles.text
           )}
         >
-          <div className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg">
-            <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl">
+            <Menu className="h-5 w-5 sm:h-5.5 sm:w-5.5" />
           </div>
-          <span className="text-[9px] sm:text-[10px] font-medium leading-tight">
+          <span className="text-[10px] sm:text-[11px] font-medium leading-tight">
             {language === 'th' ? 'เมนู' : language === 'zh' ? '菜单' : 'Menu'}
           </span>
         </button>
