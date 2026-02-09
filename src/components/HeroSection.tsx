@@ -74,16 +74,16 @@ const HeroSection = () => {
           <Button 
             variant="highlight" 
             size="lg" 
-            className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold group rounded-xl"
+            className="w-full sm:w-auto h-11 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.exploreMenu}
-            <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+            <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
           </Button>
           <Button 
             variant="outline" 
             size="lg" 
-            className="w-full sm:w-auto h-12 sm:h-11 text-base font-semibold bg-background/20 backdrop-blur-sm hover:bg-background/40 text-white border-white/40 hover:text-white rounded-xl"
+            className="w-full sm:w-auto h-11 sm:h-12 text-sm sm:text-base font-semibold bg-white/10 hover:bg-white/20 text-white border-white/30 hover:text-white rounded-xl"
             onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.viewRooms}

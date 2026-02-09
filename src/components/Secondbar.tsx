@@ -100,26 +100,26 @@ const Secondbar = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-12 sm:h-14 md:h-16 safe-area-top">
-      {/* Premium glassmorphism background with shadow for separation */}
+      {/* Solid background with shadow for separation */}
       <div 
         className={cn(
-          "absolute inset-0 backdrop-blur-2xl border-b transition-all duration-700 ease-out",
-          "shadow-lg shadow-black/10",
+          "absolute inset-0 border-b transition-colors duration-300",
+          "shadow-md shadow-black/10",
           themeStyles.bg,
           themeStyles.border
         )} 
       />
       
-      <div className="relative z-10 h-full flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="relative z-10 h-full flex items-center justify-between px-2 sm:px-4 md:px-6 lg:px-8">
         {/* Left side - Menu Toggle & Logo */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-xl transition-all duration-500",
-              "hover:scale-105 active:scale-95 border backdrop-blur-sm",
+              "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-lg sm:rounded-xl transition-colors duration-200",
+              "active:scale-95 border",
               themeStyles.buttonBg,
               themeStyles.border,
               themeStyles.buttonText
@@ -127,20 +127,20 @@ const Secondbar = () => {
             aria-label="Toggle sidebar"
           >
             {isOpen ? (
-              <X className={cn("h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5 transition-transform duration-300", themeStyles.buttonText)} />
+              <X className={cn("h-4 w-4 md:h-5 md:w-5", themeStyles.buttonText)} />
             ) : (
-              <Menu className={cn("h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5 transition-transform duration-300", themeStyles.buttonText)} />
+              <Menu className={cn("h-4 w-4 md:h-5 md:w-5", themeStyles.buttonText)} />
             )}
           </Button>
           
-          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
             <img 
               src={logo} 
               alt="Plern Ping" 
-              className="h-6 sm:h-7 md:h-9 w-auto drop-shadow-[0_0_12px_rgba(198,85,57,0.5)]" 
+              className="h-5 sm:h-6 md:h-8 w-auto" 
             />
             <span className={cn(
-              "text-sm sm:text-base md:text-xl font-semibold tracking-wide transition-colors duration-500",
+              "text-xs sm:text-sm md:text-lg font-semibold tracking-wide transition-colors duration-300",
               themeStyles.text
             )}>
               Plern Ping
@@ -149,12 +149,12 @@ const Secondbar = () => {
         </div>
 
         {/* Right side - Volume Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-          {/* Volume Slider - shows on hover/click - hidden on small mobile */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Volume Slider - shows on hover/click - hidden on mobile */}
           <div 
             className={cn(
-              "hidden sm:flex items-center gap-2 transition-all duration-300 overflow-hidden",
-              showVolumeSlider ? "w-20 sm:w-24 md:w-32 opacity-100" : "w-0 opacity-0"
+              "hidden md:flex items-center gap-2 transition-all duration-300 overflow-hidden",
+              showVolumeSlider ? "w-24 opacity-100" : "w-0 opacity-0"
             )}
           >
             <Slider
@@ -162,7 +162,7 @@ const Secondbar = () => {
               onValueChange={(value) => setVolume(value[0] / 100)}
               max={100}
               step={1}
-              className="w-16 sm:w-20 md:w-24"
+              className="w-20"
             />
           </div>
           
@@ -173,8 +173,8 @@ const Secondbar = () => {
             onMouseEnter={() => setShowVolumeSlider(true)}
             onMouseLeave={() => setTimeout(() => setShowVolumeSlider(false), 2000)}
             className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-xl transition-all duration-500",
-              "hover:scale-105 active:scale-95 border backdrop-blur-sm",
+              "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-lg sm:rounded-xl transition-colors duration-200",
+              "active:scale-95 border",
               themeStyles.buttonBg,
               themeStyles.border,
               isPlaying ? "bg-highlight/30 text-highlight" : themeStyles.buttonText
@@ -182,9 +182,9 @@ const Secondbar = () => {
             aria-label={isPlaying ? "Mute sound" : "Play sound"}
           >
             {isPlaying ? (
-              <Volume2 className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
+              <Volume2 className="h-4 w-4 md:h-5 md:w-5" />
             ) : (
-              <VolumeX className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
+              <VolumeX className="h-4 w-4 md:h-5 md:w-5" />
             )}
           </Button>
         </div>
