@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Menu, Volume2, VolumeX, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
@@ -8,6 +9,8 @@ import natureSound from "@/assets/nature-ambient.m4a";
 import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
 
 const Secondbar = () => {
+  const { toggleSidebar, state } = useSidebar();
+  const isOpen = state === "expanded";
   const { activeTheme } = useActiveSection();
   
   // Audio state
@@ -106,8 +109,25 @@ const Secondbar = () => {
       />
       
       <div className="relative z-10 h-full flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
-        {/* Left side - Logo & Brand */}
+        {/* Left side - Menu Toggle & Logo */}
         <div className="flex items-center gap-2 sm:gap-2.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className={cn(
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-colors duration-200 active:scale-95",
+              themeStyles.buttonBg,
+              themeStyles.buttonText
+            )}
+            aria-label="Toggle sidebar"
+          >
+            {isOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
+          </Button>
           <img 
             src={logo} 
             alt="Plern Ping" 
