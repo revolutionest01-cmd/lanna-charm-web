@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, Volume2, VolumeX, X } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import natureSound from "@/assets/nature-ambient.m4a";
 import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
 
 const Secondbar = () => {
-  const { toggleSidebar, state } = useSidebar();
-  const isOpen = state === "expanded";
   const { activeTheme } = useActiveSection();
   
   // Audio state
@@ -19,32 +16,31 @@ const Secondbar = () => {
   const [volume, setVolume] = useState(0.3);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Theme-based styling - high contrast with warm tones
   const getThemeStyles = (theme: SectionTheme) => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-stone-900/95',
-          border: 'border-stone-700/50',
+          bg: 'bg-stone-900',
+          border: 'border-stone-700/60',
           text: 'text-stone-100',
-          buttonBg: 'bg-stone-800/80 hover:bg-stone-700/80',
-          buttonText: 'text-stone-100',
+          buttonBg: 'bg-stone-800 hover:bg-stone-700',
+          buttonText: 'text-stone-200',
         };
       case 'warm':
         return {
-          bg: 'bg-amber-50/95',
+          bg: 'bg-amber-50',
           border: 'border-amber-200/60',
           text: 'text-stone-800',
-          buttonBg: 'bg-amber-100/80 hover:bg-amber-200/80',
+          buttonBg: 'bg-amber-100 hover:bg-amber-200',
           buttonText: 'text-stone-700',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-stone-50/95',
+          bg: 'bg-stone-50',
           border: 'border-stone-200/60',
           text: 'text-stone-800',
-          buttonBg: 'bg-stone-100/80 hover:bg-stone-200/80',
+          buttonBg: 'bg-stone-100 hover:bg-stone-200',
           buttonText: 'text-stone-700',
         };
     }
@@ -99,58 +95,42 @@ const Secondbar = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-12 sm:h-14 md:h-16 safe-area-top">
-      {/* Solid background with shadow for separation */}
+    <div className="fixed top-0 left-0 right-0 z-50 h-12 sm:h-14 md:h-14 safe-area-top">
       <div 
         className={cn(
-          "absolute inset-0 border-b transition-colors duration-300",
-          "shadow-md shadow-black/10",
+          "absolute inset-0 border-b transition-colors duration-500",
+          "shadow-sm",
           themeStyles.bg,
           themeStyles.border
         )} 
       />
       
-      <div className="relative z-10 h-full flex items-center justify-between px-2 sm:px-4 md:px-6 lg:px-8">
-        {/* Left side - Menu Toggle & Logo */}
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-lg sm:rounded-xl transition-colors duration-200",
-              "active:scale-95 border",
-              themeStyles.buttonBg,
-              themeStyles.border,
-              themeStyles.buttonText
-            )}
-            aria-label="Toggle sidebar"
-          >
-            {isOpen ? (
-              <X className={cn("h-4 w-4 md:h-5 md:w-5", themeStyles.buttonText)} />
-            ) : (
-              <Menu className={cn("h-4 w-4 md:h-5 md:w-5", themeStyles.buttonText)} />
-            )}
-          </Button>
-          
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-            <img 
-              src={logo} 
-              alt="Plern Ping" 
-              className="h-5 sm:h-6 md:h-8 w-auto" 
-            />
+      <div className="relative z-10 h-full flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
+        {/* Left side - Logo & Brand */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          <img 
+            src={logo} 
+            alt="Plern Ping" 
+            className="h-6 sm:h-7 md:h-8 w-auto" 
+          />
+          <div className="flex flex-col">
             <span className={cn(
-              "text-xs sm:text-sm md:text-lg font-semibold tracking-wide transition-colors duration-300",
+              "text-sm sm:text-base md:text-lg font-bold tracking-wide leading-tight transition-colors duration-300",
               themeStyles.text
             )}>
               Plern Ping
+            </span>
+            <span className={cn(
+              "text-[9px] sm:text-[10px] md:text-xs font-medium leading-tight opacity-60 transition-colors duration-300",
+              themeStyles.text
+            )}>
+              Cafe & Stay
             </span>
           </div>
         </div>
 
         {/* Right side - Volume Controls */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Volume Slider - shows on hover/click - hidden on mobile */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <div 
             className={cn(
               "hidden md:flex items-center gap-2 transition-all duration-300 overflow-hidden",
@@ -173,18 +153,17 @@ const Secondbar = () => {
             onMouseEnter={() => setShowVolumeSlider(true)}
             onMouseLeave={() => setTimeout(() => setShowVolumeSlider(false), 2000)}
             className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-lg sm:rounded-xl transition-colors duration-200",
-              "active:scale-95 border",
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-colors duration-200",
+              "active:scale-95",
               themeStyles.buttonBg,
-              themeStyles.border,
-              isPlaying ? "bg-highlight/30 text-highlight" : themeStyles.buttonText
+              isPlaying ? "text-highlight ring-1 ring-highlight/30" : themeStyles.buttonText
             )}
             aria-label={isPlaying ? "Mute sound" : "Play sound"}
           >
             {isPlaying ? (
-              <Volume2 className="h-4 w-4 md:h-5 md:w-5" />
+              <Volume2 className="h-4 w-4" />
             ) : (
-              <VolumeX className="h-4 w-4 md:h-5 md:w-5" />
+              <VolumeX className="h-4 w-4" />
             )}
           </Button>
         </div>

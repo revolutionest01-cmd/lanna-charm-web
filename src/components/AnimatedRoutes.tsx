@@ -31,13 +31,13 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
       // Desktop: only Secondbar (16 = 4rem), no bottom bar
       "md:pt-16 md:pb-0"
     )}>
-      {/* Blur overlay when sidebar is open */}
+      {/* Overlay when sidebar is open - no blur for performance */}
       <div 
         className={cn(
-          "fixed inset-0 z-30 pointer-events-none transition-all duration-500 ease-out",
+          "fixed inset-0 z-30 pointer-events-none transition-opacity duration-300 ease-out",
           isOpen 
-            ? "backdrop-blur-md bg-black/20 opacity-100 pointer-events-auto" 
-            : "backdrop-blur-none bg-transparent opacity-0"
+            ? "bg-black/30 opacity-100 pointer-events-auto" 
+            : "bg-transparent opacity-0"
         )}
         onClick={() => {
           // Close sidebar when clicking overlay - handled by sidebar context
