@@ -321,11 +321,12 @@ const AppSidebar = () => {
           ) : (
             /* Login Button - clearly visible */
             <Button
+              variant="highlight"
               onClick={() => {
                 if (isMobile) setOpenMobile(false);
                 navigate('/auth');
               }}
-              className="w-full gap-2 h-10 rounded-lg bg-highlight hover:bg-highlight/90 text-white font-semibold shadow-md"
+              className="w-full gap-2 h-10 rounded-lg font-semibold shadow-md"
             >
               <LogIn className="h-4 w-4" />
               {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
