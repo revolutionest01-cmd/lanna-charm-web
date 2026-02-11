@@ -23,7 +23,7 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
 
   return (
     <SidebarInset className={cn(
-      "flex-1 transition-all duration-300 overflow-x-hidden",
+      "flex-1 overflow-x-hidden",
       // Mobile: Secondbar (12) + TabBar (10) = 22 = ~5.5rem, bottom for BottomBar (14)
       "pt-[5.5rem] pb-16",
       // Tablet (sm): Secondbar (14) + TabBar (11) = 25 = ~6.25rem
