@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Phone, DollarSign, MessageSquare, X, HelpCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -11,6 +11,25 @@ const FloatingChatButton = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = useState(false);
   const { language } = useLanguage();
+
+  // Hide on scroll down, show on scroll up (like TabBar)
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsVisible(false);
+        if (isOpen) setIsOpen(false);
+      } else {
+        setIsVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
 
   const actions = [
     {
@@ -50,7 +69,9 @@ const FloatingChatButton = () => {
           "hover:px-4 active:scale-95",
           // Position: vertically centered, move left when panel is open
           "top-1/2 -translate-y-1/2",
-          isOpen ? "right-[15rem] sm:right-[17rem]" : "right-0"
+          isOpen ? "right-[15rem] sm:right-[17rem]" : "right-0",
+          // Hide on scroll down
+          !isVisible && !isOpen && "translate-x-full opacity-0 pointer-events-none"
         )}
         aria-label="Toggle help menu"
       >
