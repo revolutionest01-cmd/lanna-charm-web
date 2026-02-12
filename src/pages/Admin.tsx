@@ -16,7 +16,8 @@ import {
   MessageSquare,
   Loader2,
   Shield,
-  Phone
+  Phone,
+  UserCog
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -27,6 +28,7 @@ import { MenusManagement } from "@/components/admin/MenusManagement";
 import { GalleryManagement } from "@/components/admin/GalleryManagement";
 import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
 import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
+import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -218,7 +220,7 @@ const Admin = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="hero" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-6">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-6">
                 <TabsTrigger value="hero" className="gap-2">
                   <Image className="w-4 h-4" />
                   {language === 'th' ? 'Hero' : 'Hero'}
@@ -246,6 +248,10 @@ const Admin = () => {
                 <TabsTrigger value="business" className="gap-2">
                   <Phone className="w-4 h-4" />
                   {language === 'th' ? 'ข้อมูลธุรกิจ' : 'Business Info'}
+                </TabsTrigger>
+                <TabsTrigger value="roles" className="gap-2">
+                  <UserCog className="w-4 h-4" />
+                  {language === 'th' ? 'บทบาท' : 'Roles'}
                 </TabsTrigger>
               </TabsList>
 
@@ -275,6 +281,10 @@ const Admin = () => {
 
               <TabsContent value="business" className="space-y-4">
                 <BusinessInfoManagement />
+              </TabsContent>
+
+              <TabsContent value="roles" className="space-y-4">
+                <UserRolesManagement />
               </TabsContent>
             </Tabs>
           </CardContent>
