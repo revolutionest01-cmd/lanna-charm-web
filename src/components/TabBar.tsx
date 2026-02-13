@@ -47,31 +47,37 @@ const TabBar = () => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-stone-800',
-          border: 'border-stone-700/60',
-          text: 'text-stone-400',
+          bg: 'bg-stone-900/95',
+          border: 'border-stone-700/20',
+          text: 'text-stone-500',
           activeText: 'text-stone-100',
-          activeBg: 'bg-stone-700',
-          hoverBg: 'hover:bg-stone-700/60',
+          activeBg: 'bg-stone-700/50',
+          activeRing: 'ring-1 ring-stone-500/20',
+          hoverBg: 'hover:bg-stone-800/60',
+          hoverText: 'hover:text-stone-300',
         };
       case 'warm':
         return {
-          bg: 'bg-amber-100',
-          border: 'border-amber-200/60',
-          text: 'text-stone-500',
-          activeText: 'text-highlight',
-          activeBg: 'bg-amber-200',
-          hoverBg: 'hover:bg-amber-200/60',
+          bg: 'bg-amber-50/95',
+          border: 'border-amber-200/30',
+          text: 'text-stone-400',
+          activeText: 'text-stone-800',
+          activeBg: 'bg-amber-100/70',
+          activeRing: 'ring-1 ring-amber-300/30',
+          hoverBg: 'hover:bg-amber-100/50',
+          hoverText: 'hover:text-stone-600',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-stone-100',
-          border: 'border-stone-200/60',
-          text: 'text-stone-500',
+          bg: 'bg-stone-50/95',
+          border: 'border-stone-200/30',
+          text: 'text-stone-400',
           activeText: 'text-stone-800',
-          activeBg: 'bg-stone-200',
-          hoverBg: 'hover:bg-stone-200/60',
+          activeBg: 'bg-stone-200/50',
+          activeRing: 'ring-1 ring-stone-300/30',
+          hoverBg: 'hover:bg-stone-100/60',
+          hoverText: 'hover:text-stone-600',
         };
     }
   };
@@ -106,8 +112,7 @@ const TabBar = () => {
     <div
       className={cn(
         "fixed left-0 right-0 z-40 md:hidden overflow-hidden",
-        "transition-all duration-300 ease-in-out",
-        // Position below Secondbar with proper spacing
+        "transition-all duration-300 ease-out",
         "top-12 sm:top-14",
         isVisible
           ? "translate-y-0 opacity-100"
@@ -116,14 +121,18 @@ const TabBar = () => {
     >
       <div
         className={cn(
-          "absolute inset-0 border-b transition-colors duration-300 shadow-sm",
+          "absolute inset-0 transition-colors duration-500",
           themeStyles.bg,
-          themeStyles.border
         )}
       />
+      {/* Subtle bottom line */}
+      <div className={cn(
+        "absolute bottom-0 left-0 right-0 h-px border-b",
+        themeStyles.border
+      )} />
 
       <ScrollArea className="relative z-10 h-10 sm:h-11 w-full">
-        <div className="flex items-center h-full px-2 sm:px-3 gap-1 sm:gap-1.5">
+        <div className="flex items-center h-full px-2 sm:px-3 gap-0.5 sm:gap-1">
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
             const active = isActive(tab.href);
@@ -134,12 +143,12 @@ const TabBar = () => {
                 onClick={() => handleTabClick(tab.href)}
                 className={cn(
                   "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full shrink-0",
-                  "text-[10px] sm:text-xs font-medium",
-                  "transition-colors duration-200 whitespace-nowrap",
+                  "text-[10px] sm:text-xs font-medium tracking-wide",
+                  "transition-all duration-200 whitespace-nowrap",
                   "active:scale-95 touch-manipulation",
                   active
-                    ? cn(themeStyles.activeBg, themeStyles.activeText, "shadow-sm")
-                    : cn(themeStyles.text, themeStyles.hoverBg)
+                    ? cn(themeStyles.activeBg, themeStyles.activeText, themeStyles.activeRing)
+                    : cn(themeStyles.text, themeStyles.hoverBg, themeStyles.hoverText)
                 )}
               >
                 <IconComponent className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
@@ -148,7 +157,7 @@ const TabBar = () => {
             );
           })}
         </div>
-        <ScrollBar orientation="horizontal" className="h-0.5" />
+        <ScrollBar orientation="horizontal" className="h-0" />
       </ScrollArea>
     </div>
   );
