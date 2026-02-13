@@ -23,18 +23,18 @@ const Secondbar = () => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-stone-900/[0.97]',
-          border: 'border-stone-700/30',
-          text: 'text-stone-100',
-          subText: 'text-stone-400',
-          buttonBg: 'hover:bg-stone-700/50',
-          buttonText: 'text-stone-300',
-          divider: 'bg-stone-600/30',
+          bg: 'bg-[hsl(25,15%,12%)]/[0.97]',
+          bottomLine: 'bg-amber-700/20',
+          text: 'text-amber-50',
+          subText: 'text-amber-200/60',
+          buttonBg: 'hover:bg-amber-900/40',
+          buttonText: 'text-amber-100/80',
+          divider: 'bg-amber-600/20',
         };
       case 'warm':
         return {
           bg: 'bg-amber-50/[0.97]',
-          border: 'border-amber-200/40',
+          bottomLine: 'bg-amber-300/30',
           text: 'text-stone-800',
           subText: 'text-stone-500',
           buttonBg: 'hover:bg-amber-100/70',
@@ -44,13 +44,13 @@ const Secondbar = () => {
       case 'light':
       default:
         return {
-          bg: 'bg-stone-50/[0.97]',
-          border: 'border-stone-200/40',
+          bg: 'bg-[hsl(30,18%,95%)]/[0.97]',
+          bottomLine: 'bg-stone-300/30',
           text: 'text-stone-800',
           subText: 'text-stone-500',
-          buttonBg: 'hover:bg-stone-100/70',
+          buttonBg: 'hover:bg-stone-200/50',
           buttonText: 'text-stone-600',
-          divider: 'bg-stone-200/50',
+          divider: 'bg-stone-300/30',
         };
     }
   };
@@ -112,11 +112,10 @@ const Secondbar = () => {
         )} 
       />
 
-      {/* Subtle bottom accent line */}
+      {/* Subtle warm bottom accent line */}
       <div className={cn(
         "absolute bottom-0 left-0 right-0 h-px",
-        themeStyles.border,
-        "border-b"
+        themeStyles.bottomLine
       )} />
       
       <div className="relative z-10 h-full flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
