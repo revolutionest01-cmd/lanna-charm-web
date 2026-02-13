@@ -23,28 +23,34 @@ const Secondbar = () => {
     switch (theme) {
       case 'dark':
         return {
-          bg: 'bg-stone-900',
-          border: 'border-stone-700/60',
+          bg: 'bg-stone-900/[0.97]',
+          border: 'border-stone-700/30',
           text: 'text-stone-100',
-          buttonBg: 'bg-stone-800 hover:bg-stone-700',
-          buttonText: 'text-stone-200',
+          subText: 'text-stone-400',
+          buttonBg: 'hover:bg-stone-700/50',
+          buttonText: 'text-stone-300',
+          divider: 'bg-stone-600/30',
         };
       case 'warm':
         return {
-          bg: 'bg-amber-50',
-          border: 'border-amber-200/60',
+          bg: 'bg-amber-50/[0.97]',
+          border: 'border-amber-200/40',
           text: 'text-stone-800',
-          buttonBg: 'bg-amber-100 hover:bg-amber-200',
-          buttonText: 'text-stone-700',
+          subText: 'text-stone-500',
+          buttonBg: 'hover:bg-amber-100/70',
+          buttonText: 'text-stone-600',
+          divider: 'bg-amber-300/30',
         };
       case 'light':
       default:
         return {
-          bg: 'bg-stone-50',
-          border: 'border-stone-200/60',
+          bg: 'bg-stone-50/[0.97]',
+          border: 'border-stone-200/40',
           text: 'text-stone-800',
-          buttonBg: 'bg-stone-100 hover:bg-stone-200',
-          buttonText: 'text-stone-700',
+          subText: 'text-stone-500',
+          buttonBg: 'hover:bg-stone-100/70',
+          buttonText: 'text-stone-600',
+          divider: 'bg-stone-200/50',
         };
     }
   };
@@ -101,24 +107,30 @@ const Secondbar = () => {
     <div className="fixed top-0 left-0 right-0 z-50 h-12 sm:h-14 md:h-14 safe-area-top">
       <div 
         className={cn(
-          "absolute inset-0 border-b transition-colors duration-500",
-          "shadow-sm",
+          "absolute inset-0 transition-colors duration-500",
           themeStyles.bg,
-          themeStyles.border
         )} 
       />
+
+      {/* Subtle bottom accent line */}
+      <div className={cn(
+        "absolute bottom-0 left-0 right-0 h-px",
+        themeStyles.border,
+        "border-b"
+      )} />
       
       <div className="relative z-10 h-full flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Left side - Menu Toggle & Logo */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-colors duration-200 active:scale-95",
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95",
               themeStyles.buttonBg,
-              themeStyles.buttonText
+              themeStyles.buttonText,
+              "border-0 shadow-none"
             )}
             aria-label="Toggle sidebar"
           >
@@ -128,24 +140,30 @@ const Secondbar = () => {
               <Menu className="h-4 w-4" />
             )}
           </Button>
-          <img 
-            src={logo} 
-            alt="Plern Ping" 
-            className="h-6 sm:h-7 md:h-8 w-auto" 
-          />
-          <div className="flex flex-col">
-            <span className={cn(
-              "text-sm sm:text-base md:text-lg font-bold tracking-wide leading-tight transition-colors duration-300",
-              themeStyles.text
-            )}>
-              Plern Ping
-            </span>
-            <span className={cn(
-              "text-[9px] sm:text-[10px] md:text-xs font-medium leading-tight opacity-60 transition-colors duration-300",
-              themeStyles.text
-            )}>
-              Cafe & Stay
-            </span>
+
+          {/* Subtle vertical divider */}
+          <div className={cn("w-px h-6 sm:h-7", themeStyles.divider)} />
+
+          <div className="flex items-center gap-2">
+            <img 
+              src={logo} 
+              alt="Plern Ping" 
+              className="h-6 sm:h-7 md:h-8 w-auto" 
+            />
+            <div className="flex flex-col">
+              <span className={cn(
+                "text-sm sm:text-base md:text-lg font-semibold tracking-wide leading-tight transition-colors duration-300",
+                themeStyles.text
+              )}>
+                Plern Ping
+              </span>
+              <span className={cn(
+                "text-[8px] sm:text-[9px] md:text-[10px] font-medium tracking-[0.15em] uppercase leading-tight transition-colors duration-300",
+                themeStyles.subText
+              )}>
+                Cafe & Stay
+              </span>
+            </div>
           </div>
         </div>
 
@@ -173,10 +191,10 @@ const Secondbar = () => {
             onMouseEnter={() => setShowVolumeSlider(true)}
             onMouseLeave={() => setTimeout(() => setShowVolumeSlider(false), 2000)}
             className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-colors duration-200",
-              "active:scale-95",
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200",
+              "active:scale-95 border-0 shadow-none",
               themeStyles.buttonBg,
-              isPlaying ? "text-highlight ring-1 ring-highlight/30" : themeStyles.buttonText
+              isPlaying ? "text-highlight" : themeStyles.buttonText
             )}
             aria-label={isPlaying ? "Mute sound" : "Play sound"}
           >
