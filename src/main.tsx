@@ -27,11 +27,6 @@ if (STORED_VERSION !== APP_VERSION) {
   
   // Update stored version
   localStorage.setItem('app_version', APP_VERSION);
-  
-  // Force reload to get fresh content
-  if (STORED_VERSION !== null) {
-    window.location.reload();
-  }
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
