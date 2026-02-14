@@ -24,7 +24,20 @@ const LoadingScreen = ({ onLoadingComplete }: { onLoadingComplete: () => void })
       });
     }, 300);
 
-    return () => clearInterval(timer);
+    // Fallback: force complete after 5 seconds no matter what
+    const fallback = setTimeout(() => {
+      if (!hasCompleted.current) {
+        hasCompleted.current = true;
+        clearInterval(timer);
+        setProgress(100);
+        onLoadingCompleteRef.current();
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(fallback);
+    };
   }, []);
 
   return (
