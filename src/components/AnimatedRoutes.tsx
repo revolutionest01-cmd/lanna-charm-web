@@ -18,8 +18,16 @@ import { cn } from "@/lib/utils";
 
 // Wrapper component to access sidebar state
 const MainContent = ({ children, animationClass }: { children: React.ReactNode; animationClass: string }) => {
-  const { state, isMobile, openMobile } = useSidebar();
+  const { state, isMobile, openMobile, setOpen, setOpenMobile } = useSidebar();
   const isOpen = state === "expanded" || (isMobile && openMobile);
+
+  const handleOverlayClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    } else {
+      setOpen(false);
+    }
+  };
 
   return (
     <SidebarInset className={cn(
@@ -39,9 +47,7 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
             ? "bg-black/30 opacity-100 pointer-events-auto" 
             : "bg-black/30 opacity-0 pointer-events-none"
         )}
-        onClick={() => {
-          // Close sidebar when clicking overlay - handled by sidebar context
-        }}
+        onClick={handleOverlayClick}
       />
       <div className={cn("page-transition-content relative z-0", animationClass)}>
         {children}
