@@ -289,13 +289,13 @@ const AppSidebar = () => {
               <div className="flex gap-2">
                 {isAdmin && (
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => {
                       if (isMobile) setOpenMobile(false);
                       navigate('/admin');
                     }}
-                    className="flex-1 gap-2 h-9 rounded-lg bg-primary/10 border-primary/20 hover:bg-primary/20 text-primary text-xs"
+                    className="flex-1 gap-2 h-9 rounded-lg bg-highlight text-white hover:bg-highlight/90 font-semibold text-xs shadow-md"
                   >
                     <Shield className="h-3.5 w-3.5" />
                     Admin
