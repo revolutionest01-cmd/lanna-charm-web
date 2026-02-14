@@ -34,125 +34,101 @@ const setAuthState = (updates: Partial<AuthState>) => {
   notifyListeners();
 };
 
-const buildUserFromSession = (session: Session): User => {
-  const metadata = session.user?.user_metadata || {};
-  return {
-    id: session.user.id,
-    name: metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User',
-    email: session.user.email || '',
-    avatar: metadata.avatar_url || metadata.picture,
-  };
-};
-
-const fetchAndEnrichUser = async (session: Session): Promise<User> => {
-  const baseUser = buildUserFromSession(session);
-  try {
-    const metadata = session.user?.user_metadata || {};
-    const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
-    const avatarUrl = metadata.avatar_url || metadata.picture;
-
-    await supabase
-      .from('profiles')
-      .upsert({
-        id: session.user.id,
-        display_name: displayName,
-        avatar_url: avatarUrl,
-      })
-      .select()
-      .single();
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('display_name, avatar_url')
-      .eq('id', session.user.id)
-      .maybeSingle();
-
-    return {
-      ...baseUser,
-      name: profile?.display_name || displayName,
-      avatar: profile?.avatar_url || avatarUrl,
-    };
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    return baseUser;
-  }
-};
-
 // Initialize auth state
 const initializeAuth = async () => {
-  try {
-    // Set up auth state listener FIRST
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      try {
-        if (session?.user) {
-          // Set basic user immediately so isLoading clears
-          const basicUser = buildUserFromSession(session);
-          setAuthState({
-            user: basicUser,
-            session,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-
-          // Enrich with profile data in background
-          const enrichedUser = await fetchAndEnrichUser(session);
-          setAuthState({ user: enrichedUser });
-        } else {
-          setAuthState({
-            user: null,
-            session: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      } catch (error) {
-        console.error('Auth state change error:', error);
-        setAuthState({
-          user: null,
-          session,
-          isAuthenticated: !!session,
-          isLoading: false,
-        });
-      }
-    });
-
-    // THEN check for existing session
-    const { data: { session }, error } = await supabase.auth.getSession();
-
-    if (error) {
-      console.error('Error getting session:', error);
-    }
+  // Set up auth state listener FIRST
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    let user: User | null = null;
 
     if (session?.user) {
-      const basicUser = buildUserFromSession(session);
-      setAuthState({
-        user: basicUser,
-        session,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      const metadata = session.user.user_metadata || {};
+      const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
+      const avatarUrl = metadata.avatar_url || metadata.picture;
 
-      // Enrich in background
-      fetchAndEnrichUser(session).then(enrichedUser => {
-        setAuthState({ user: enrichedUser });
-      });
-    } else {
-      setAuthState({
-        user: null,
-        session: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      // Ensure a profile row exists/updated for OAuth users (e.g., Google)
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
+          display_name: displayName,
+          avatar_url: avatarUrl,
+        })
+        .select()
+        .single();
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, avatar_url')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      user = {
+        id: session.user.id,
+        name: profile?.display_name || displayName,
+        email: session.user.email || '',
+        avatar: profile?.avatar_url || avatarUrl,
+      };
     }
-  } catch (error) {
-    console.error('Auth initialization error:', error);
+    
     setAuthState({
-      user: null,
-      session: null,
-      isAuthenticated: false,
+      user,
+      session,
+      isAuthenticated: !!session,
       isLoading: false,
     });
+  });
+
+  // THEN check for existing session
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  let user: User | null = null;
+  
+  if (session?.user) {
+    // Defer profile fetch/upsert to avoid blocking initial render
+    setTimeout(async () => {
+      const metadata = session.user.user_metadata || {};
+      const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
+      const avatarUrl = metadata.avatar_url || metadata.picture;
+
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
+          display_name: displayName,
+          avatar_url: avatarUrl,
+        })
+        .select()
+        .single();
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, avatar_url')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      
+      const updatedUser: User = {
+        id: session.user.id,
+        name: profile?.display_name || displayName,
+        email: session.user.email || '',
+        avatar: profile?.avatar_url || avatarUrl,
+      };
+      
+      setAuthState({ user: updatedUser });
+    }, 0);
+    
+    user = {
+      id: session.user.id,
+      name: session.user.email?.split('@')[0] || 'User',
+      email: session.user.email || '',
+    };
   }
+  
+  setAuthState({
+    user,
+    session,
+    isAuthenticated: !!session,
+    isLoading: false,
+  });
 };
 
 // Initialize on module load
@@ -163,8 +139,6 @@ export const useAuth = () => {
 
   useEffect(() => {
     listeners.add(setState);
-    // Sync with current state in case it changed before subscription
-    setState({ ...authState });
     return () => {
       listeners.delete(setState);
     };
