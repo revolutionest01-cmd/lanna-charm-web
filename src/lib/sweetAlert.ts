@@ -98,6 +98,9 @@ export const sweetAlert = {
         cancelButtonColor: '#6b7280',
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,
+        customClass: {
+          container: '!z-[9999]',
+        },
       });
       return result.isConfirmed;
     },
