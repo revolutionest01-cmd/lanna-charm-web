@@ -63,21 +63,11 @@ const Footer = () => {
       hasIncremented.current = true;
       sessionStorage.setItem(sessionKey, 'true');
       
-      const { data: currentStats } = await supabase
-        .from('visitor_stats')
-        .select('total_visits')
-        .single();
-      
-      if (currentStats) {
-        await supabase
-          .from('visitor_stats')
-          .update({ 
-            total_visits: currentStats.total_visits + 1,
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', '539f0f9f-a118-4e34-8ea7-0ab3cd4e5950');
-        
+      try {
+        await supabase.rpc('increment_visitor_stats');
         refetchStats();
+      } catch (error) {
+        console.error('Failed to increment visitor stats:', error);
       }
     };
 
