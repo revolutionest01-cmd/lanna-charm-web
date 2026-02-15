@@ -521,6 +521,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_visitor_stats: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "staff" | "user"
