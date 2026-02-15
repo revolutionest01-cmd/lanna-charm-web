@@ -122,7 +122,7 @@ const RoomsSection = () => {
 
                     <CardFooter className="p-4 sm:p-6 pt-0">
                       <BookingDialog>
-                        <Button variant="highlight" className="w-full font-semibold h-11 sm:h-10 rounded-xl sm:rounded-lg">
+                        <Button variant="highlight" className="w-full font-bold h-12 sm:h-11 rounded-xl text-base tracking-wide">
                           {t.bookRoom}
                         </Button>
                       </BookingDialog>

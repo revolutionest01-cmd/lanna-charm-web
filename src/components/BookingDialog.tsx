@@ -7,15 +7,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Users } from "lucide-react";
+import { CalendarIcon, Users, User, Mail, Phone, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/use-mobile";
 import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +35,7 @@ interface BookingDialogProps {
 const BookingDialog = ({ children }: BookingDialogProps) => {
   const { language } = useLanguage();
   const t = translations[language];
+  const isMobile = useIsMobile();
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
   const [guests, setGuests] = useState("2");
@@ -42,7 +52,6 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       return;
     }
 
-    // Show confirmation dialog
     const confirmed = await sweetAlert.modal.confirm(
       language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking',
       language === 'th' 
@@ -79,7 +88,6 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       );
       
       setOpen(false);
-      // Reset form
       setCheckIn(undefined);
       setCheckOut(undefined);
       setGuests("2");
@@ -92,147 +100,205 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     }
   };
 
+  const bookingForm = (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Date pickers */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="checkIn" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {language === 'th' ? 'เช็คอิน' : language === 'zh' ? '入住' : 'Check-in'}
+          </Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border",
+                  !checkIn && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 text-[hsl(var(--highlight))]" />
+                {checkIn ? format(checkIn, "dd MMM") : <span className="text-xs">{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick date'}</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-[60]" align="start">
+              <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="checkOut" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {language === 'th' ? 'เช็คเอาท์' : language === 'zh' ? '退房' : 'Check-out'}
+          </Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border",
+                  !checkOut && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 text-[hsl(var(--highlight))]" />
+                {checkOut ? format(checkOut, "dd MMM") : <span className="text-xs">{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick date'}</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-[60]" align="start">
+              <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      {/* Guests */}
+      <div className="space-y-1.5">
+        <Label htmlFor="guests" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {language === 'th' ? 'จำนวนผู้เข้าพัก' : language === 'zh' ? '人数' : 'Guests'}
+        </Label>
+        <div className="relative">
+          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="guests"
+            type="number"
+            min="1"
+            max="10"
+            value={guests}
+            onChange={(e) => setGuests(e.target.value)}
+            className="pl-10 h-11 rounded-xl"
+          />
+        </div>
+      </div>
+
+      {/* Name */}
+      <div className="space-y-1.5">
+        <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {language === 'th' ? 'ชื่อ-นามสกุล' : language === 'zh' ? '姓名' : 'Full Name'}
+        </Label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="name"
+            placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : language === 'zh' ? '请输入您的姓名' : 'Enter your name'}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="pl-10 h-11 rounded-xl"
+          />
+        </div>
+      </div>
+
+      {/* Email */}
+      <div className="space-y-1.5">
+        <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
+        </Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="email"
+            type="email"
+            placeholder="example@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="pl-10 h-11 rounded-xl"
+          />
+        </div>
+      </div>
+
+      {/* Phone */}
+      <div className="space-y-1.5">
+        <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {language === 'th' ? 'เบอร์โทรศัพท์' : language === 'zh' ? '电话号码' : 'Phone'}
+        </Label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="081-234-5678"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+            className="pl-10 h-11 rounded-xl"
+          />
+        </div>
+      </div>
+
+      {/* Submit */}
+      <Button type="submit" variant="highlight" className="w-full h-12 rounded-xl text-base font-bold tracking-wide" size="lg">
+        <Sparkles className="h-4 w-4 mr-1" />
+        {language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking'}
+      </Button>
+    </form>
+  );
+
+  const headerContent = (
+    <>
+      <div className="text-xl sm:text-2xl font-bold font-serif">
+        {language === 'th' ? 'จองที่พักของคุณ' : language === 'zh' ? '预订您的住宿' : 'Book Your Stay'}
+      </div>
+      <p className="text-sm text-muted-foreground mt-1">
+        {language === 'th'
+          ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
+          : language === 'zh'
+          ? '填写详细信息以预订房间'
+          : 'Fill in the details to reserve your room'}
+      </p>
+    </>
+  );
+
+  // Mobile: use Drawer (bottom sheet)
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          {children}
+        </DrawerTrigger>
+        <DrawerContent className="max-h-[92dvh]">
+          <DrawerHeader className="text-left pb-2">
+            <DrawerTitle className="text-xl font-bold font-serif">
+              {language === 'th' ? 'จองที่พักของคุณ' : language === 'zh' ? '预订您的住宿' : 'Book Your Stay'}
+            </DrawerTitle>
+            <DrawerDescription className="text-sm text-muted-foreground">
+              {language === 'th'
+                ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
+                : language === 'zh'
+                ? '填写详细信息以预订房间'
+                : 'Fill in the details to reserve your room'}
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto">
+            {bookingForm}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // Desktop: use Dialog
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[480px] rounded-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
+          <DialogTitle className="text-2xl font-serif">
             {language === 'th' ? 'จองที่พักของคุณ' : language === 'zh' ? '预订您的住宿' : 'Book Your Stay'}
           </DialogTitle>
           <DialogDescription>
-            {language === 'th' 
-              ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping Cafe & Resort' 
+            {language === 'th'
+              ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
               : language === 'zh'
-              ? '填写详细信息以在 Plern Ping 咖啡馆和度假村预订房间'
-              : 'Fill in the details to reserve your room at Plern Ping Cafe & Resort'}
+              ? '填写详细信息以预订房间'
+              : 'Fill in the details to reserve your room'}
           </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="checkIn">
-                {language === 'th' ? 'วันเช็คอิน' : language === 'zh' ? '入住日期' : 'Check-in'}
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !checkIn && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {checkIn ? format(checkIn, "PPP") : <span>{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick a date'}</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={checkIn}
-                    onSelect={setCheckIn}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="checkOut">
-                {language === 'th' ? 'วันเช็คเอาท์' : language === 'zh' ? '退房日期' : 'Check-out'}
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !checkOut && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {checkOut ? format(checkOut, "PPP") : <span>{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick a date'}</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={checkOut}
-                    onSelect={setCheckOut}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="guests">
-              {language === 'th' ? 'จำนวนผู้เข้าพัก' : language === 'zh' ? '人数' : 'Number of Guests'}
-            </Label>
-            <div className="relative">
-              <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="guests"
-                type="number"
-                min="1"
-                max="10"
-                value={guests}
-                onChange={(e) => setGuests(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              {language === 'th' ? 'ชื่อ-นามสกุล' : language === 'zh' ? '姓名' : 'Full Name'}
-            </Label>
-            <Input
-              id="name"
-              placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : language === 'zh' ? '请输入您的姓名' : 'Enter your name'}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder={language === 'th' ? 'example@email.com' : 'example@email.com'}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">
-              {language === 'th' ? 'เบอร์โทรศัพท์' : language === 'zh' ? '电话号码' : 'Phone Number'}
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder={language === 'th' ? '0812345678' : '0812345678'}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button type="submit" variant="highlight" className="w-full" size="lg">
-            {language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking'}
-          </Button>
-        </form>
+        <div className="mt-2">
+          {bookingForm}
+        </div>
       </DialogContent>
     </Dialog>
   );
