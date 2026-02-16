@@ -104,7 +104,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   return (
     <div className="fixed inset-0 md:inset-auto md:bottom-24 md:right-8 z-50 w-full md:w-96 h-[100dvh] md:h-[500px] md:max-h-[600px] bg-background border-t md:border border-border md:rounded-lg shadow-2xl flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-[#8B6F47] to-[#c65539]">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border bg-gradient-to-r from-[#8B6F47] to-[#c65539] shrink-0">
         <div className="flex items-center gap-2">
           <MessageCircle className="text-white" size={20} />
           <h3 className="font-bold text-white">
@@ -122,7 +122,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.map((msg) => (
             <div
@@ -156,8 +156,8 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
         </div>
       </ScrollArea>
 
-      {/* Input */}
-      <div className="p-4 border-t border-border">
+      {/* Input - with bottom padding for mobile BottomBar */}
+      <div className="p-3 sm:p-4 pb-[calc(0.75rem+3.5rem+env(safe-area-inset-bottom))] md:pb-4 border-t border-border shrink-0">
         <div className="flex gap-2">
           <Input
             value={input}
