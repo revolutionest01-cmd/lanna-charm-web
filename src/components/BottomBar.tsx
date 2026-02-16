@@ -130,14 +130,14 @@ const BottomBar = () => {
           <button className="flex flex-col items-center justify-center gap-0.5 p-1 min-w-[48px] sm:min-w-[56px] touch-manipulation">
             <div className={cn(
               "flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full",
-              "bg-gradient-to-br from-highlight to-primary",
-              "shadow-lg shadow-highlight/40 -mt-4 sm:-mt-5",
+              "bg-gradient-to-br from-primary to-primary/80",
+              "shadow-lg shadow-primary/40 -mt-4 sm:-mt-5",
               "border-3 sm:border-4 border-background",
               "transition-transform duration-200 active:scale-95"
             )}>
-              <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+              <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-semibold text-highlight leading-tight">{t.bookNow}</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-primary leading-tight">{t.bookNow}</span>
           </button>
         </BookingDialog>
         
