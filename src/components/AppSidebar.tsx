@@ -295,7 +295,7 @@ const AppSidebar = () => {
                       if (isMobile) setOpenMobile(false);
                       navigate('/admin');
                     }}
-                    className="flex-1 gap-2 h-9 rounded-lg bg-highlight text-white hover:bg-highlight/90 font-semibold text-xs shadow-md"
+                    className="flex-1 gap-2 h-9 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs shadow-md ring-1 ring-primary/30"
                   >
                     <Shield className="h-3.5 w-3.5" />
                     Admin
