@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MapPin, Loader2 } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useHeroContent } from "@/hooks/useContentData";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const HeroSection = () => {
@@ -18,14 +19,32 @@ const HeroSection = () => {
     : null;
   const heroImageUrl = hero?.image_url;
 
-  // Show loading state while fetching data
-  if (isLoading || !hero) {
+  // Show skeleton state while fetching data
+  if (isLoading) {
     return (
       <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-muted">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">{language === 'th' ? 'กำลังโหลด...' : 'Loading...'}</p>
+        <div className="absolute inset-0 z-0">
+          <Skeleton className="w-full h-full rounded-none" />
         </div>
+        <div className="relative z-10 container mx-auto px-5 sm:px-6 text-center pt-20 sm:pt-0">
+          <Skeleton className="h-5 w-48 mx-auto mb-6" />
+          <Skeleton className="h-12 sm:h-16 w-3/4 mx-auto mb-6" />
+          <Skeleton className="h-6 sm:h-8 w-2/3 mx-auto mb-4" />
+          <Skeleton className="h-5 w-1/2 mx-auto mb-10" />
+          <div className="flex gap-4 justify-center">
+            <Skeleton className="h-12 w-36 rounded-xl" />
+            <Skeleton className="h-12 w-36 rounded-xl" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // No data available after loading
+  if (!hero) {
+    return (
+      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-muted">
+        <p className="text-muted-foreground">{language === 'th' ? 'ไม่พบข้อมูล' : 'No content available'}</p>
       </section>
     );
   }
