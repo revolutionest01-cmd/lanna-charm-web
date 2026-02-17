@@ -1,75 +1,34 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import plernpingLogo from "@/assets/plernping-logo.png";
 
 const LoadingScreen = ({ onLoadingComplete }: { onLoadingComplete: () => void }) => {
-  const [progress, setProgress] = useState(0);
-  const hasCompleted = useRef(false);
-  const onLoadingCompleteRef = useRef(onLoadingComplete);
-
-  // Keep ref updated
-  onLoadingCompleteRef.current = onLoadingComplete;
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          if (!hasCompleted.current) {
-            hasCompleted.current = true;
-            setTimeout(() => onLoadingCompleteRef.current(), 300);
-          }
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
-
-    // Fallback: force complete after 5 seconds no matter what
-    const fallback = setTimeout(() => {
-      if (!hasCompleted.current) {
-        hasCompleted.current = true;
-        clearInterval(timer);
-        setProgress(100);
-        onLoadingCompleteRef.current();
-      }
-    }, 5000);
-
-    return () => {
-      clearInterval(timer);
-      clearTimeout(fallback);
-    };
-  }, []);
+    // Show splash for 1 second, then fade out over 400ms
+    const timer = setTimeout(() => setFadeOut(true), 1000);
+    const done = setTimeout(() => onLoadingComplete(), 1400);
+    return () => { clearTimeout(timer); clearTimeout(done); };
+  }, [onLoadingComplete]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
-      {/* Logo */}
-      <div className="mb-8 animate-scale-in">
-        <img 
-          src={plernpingLogo} 
-          alt="Plern Ping Cafe" 
-          className="w-40 h-40 object-contain animate-pulse"
+    <div
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-400 ${
+        fadeOut ? "opacity-0" : "opacity-100"
+      }`}
+    >
+      <div className="mb-6 animate-scale-in">
+        <img
+          src={plernpingLogo}
+          alt="Plern Ping Cafe"
+          className="w-32 h-32 object-contain"
         />
       </div>
-
-      {/* Loading Text */}
-      <h2 className="text-2xl font-semibold mb-2 animate-fade-in">
-        Loading
+      <h2 className="text-lg font-semibold text-foreground animate-fade-in">
+        Plern Ping
       </h2>
-      <p className="text-muted-foreground mb-8 animate-fade-in">
-        Please wait...
-      </p>
-
-      {/* Progress Bar */}
-      <div className="w-64 h-2 bg-secondary rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Progress Percentage */}
-      <p className="mt-4 text-sm text-muted-foreground">
-        {progress}%
+      <p className="text-xs text-muted-foreground mt-1 animate-fade-in">
+        CAFE & STAY
       </p>
     </div>
   );
