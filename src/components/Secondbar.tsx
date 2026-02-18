@@ -18,6 +18,7 @@ const Secondbar = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.3);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
 
   const getThemeStyles = (theme: SectionTheme) => {
     switch (theme) {
@@ -62,17 +63,7 @@ const Secondbar = () => {
     audio.loop = true;
     audio.volume = volume;
     audioRef.current = audio;
-
-    const attemptAutoplay = async () => {
-      try {
-        await audio.play();
-        setIsPlaying(true);
-      } catch (error) {
-        console.log('Autoplay prevented, waiting for user interaction');
-      }
-    };
-
-    setTimeout(attemptAutoplay, 1000);
+    setAudioReady(true);
 
     return () => {
       if (audioRef.current) {
@@ -166,12 +157,13 @@ const Secondbar = () => {
           </div>
         </div>
 
-        {/* Right side - Volume Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Right side - Sound Controls */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Volume slider - visible on hover on md+ */}
           <div 
             className={cn(
               "hidden md:flex items-center gap-2 transition-all duration-300 overflow-hidden",
-              showVolumeSlider ? "w-24 opacity-100" : "w-0 opacity-0"
+              showVolumeSlider && isPlaying ? "w-24 opacity-100" : "w-0 opacity-0"
             )}
           >
             <Slider
@@ -182,20 +174,30 @@ const Secondbar = () => {
               className="w-20"
             />
           </div>
-          
+
+          {/* Label text */}
+          <span className={cn(
+            "hidden sm:block text-[10px] md:text-xs font-medium leading-tight text-right transition-colors duration-300 max-w-[80px] md:max-w-[120px]",
+            isPlaying ? "text-primary" : themeStyles.subText
+          )}>
+            {isPlaying ? "กำลังเล่น\nเสียงธรรมชาติ" : "กดเปิด/ปิด\nเพื่อฟังเสียงธรรมชาติ"}
+          </span>
+
+          {/* Sound Toggle Button - more prominent */}
           <Button
-            variant="ghost"
+            variant={isPlaying ? "default" : "outline"}
             size="icon"
             onClick={togglePlay}
             onMouseEnter={() => setShowVolumeSlider(true)}
             onMouseLeave={() => setTimeout(() => setShowVolumeSlider(false), 2000)}
             className={cn(
-              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200",
-              "active:scale-95 border-0 shadow-none",
-              themeStyles.buttonBg,
-              isPlaying ? "text-highlight" : themeStyles.buttonText
+              "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-200 active:scale-95 flex-shrink-0",
+              isPlaying
+                ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+                : cn("border-2 shadow-sm", themeStyles.buttonBg, themeStyles.buttonText,
+                    "border-current opacity-80 hover:opacity-100")
             )}
-            aria-label={isPlaying ? "Mute sound" : "Play sound"}
+            aria-label={isPlaying ? "ปิดเสียง" : "เปิดเสียงธรรมชาติ"}
           >
             {isPlaying ? (
               <Volume2 className="h-4 w-4" />
