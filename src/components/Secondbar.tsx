@@ -177,10 +177,14 @@ const Secondbar = () => {
 
           {/* Label text */}
           <span className={cn(
-            "hidden sm:block text-[10px] md:text-xs font-medium leading-tight text-right transition-colors duration-300 max-w-[80px] md:max-w-[120px]",
-            isPlaying ? "text-primary" : themeStyles.subText
+            "hidden sm:flex flex-col text-[10px] md:text-xs font-semibold leading-tight text-right transition-colors duration-300 max-w-[90px] md:max-w-[130px]",
+            isPlaying ? "text-primary" : themeStyles.text
           )}>
-            {isPlaying ? "กำลังเล่น\nเสียงธรรมชาติ" : "กดเปิด/ปิด\nเพื่อฟังเสียงธรรมชาติ"}
+            {isPlaying ? (
+              <><span>กำลังเล่น</span><span className={cn("text-[9px] font-normal mt-0.5", themeStyles.subText)}>เสียงธรรมชาติ</span></>
+            ) : (
+              <><span>กดเปิด / ปิด</span><span className={cn("text-[9px] font-normal mt-0.5", themeStyles.text, "opacity-70")}>เพื่อฟังเสียงธรรมชาติ</span></>
+            )}
           </span>
 
           {/* Sound Toggle Button - more prominent */}
