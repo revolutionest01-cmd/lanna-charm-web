@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, Volume2, VolumeX, X } from "lucide-react";
+import { Menu, Volume2, VolumeX, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
@@ -7,9 +7,24 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import natureSound from "@/assets/nature-ambient.m4a";
 import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
+import { useLanguage, Language } from "@/hooks/useLanguage";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const languages = [
+  { code: 'th' as Language, flag: '🇹🇭', nativeName: 'ไทย' },
+  { code: 'zh' as Language, flag: '🇨🇳', nativeName: '中文' },
+  { code: 'en' as Language, flag: '🇬🇧', nativeName: 'EN' },
+];
 
 const Secondbar = () => {
   const { toggleSidebar, state } = useSidebar();
+  const { language, setLanguage } = useLanguage();
+  const currentLang = languages.find(l => l.code === language) || languages[0];
   const isOpen = state === "expanded";
   const { activeTheme } = useActiveSection();
   
@@ -157,8 +172,8 @@ const Secondbar = () => {
           </div>
         </div>
 
-        {/* Right side - Sound Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Right side - Language + Sound Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Volume slider - visible on hover on md+ */}
           <div 
             className={cn(
@@ -177,7 +192,7 @@ const Secondbar = () => {
 
           {/* Label text */}
           <span className={cn(
-            "hidden sm:flex flex-col text-[10px] md:text-xs font-semibold leading-tight text-right transition-colors duration-300 max-w-[90px] md:max-w-[130px]",
+            "hidden md:flex flex-col text-[10px] font-semibold leading-tight text-right transition-colors duration-300 max-w-[100px]",
             isPlaying ? "text-primary" : themeStyles.text
           )}>
             {isPlaying ? (
@@ -187,28 +202,87 @@ const Secondbar = () => {
             )}
           </span>
 
-          {/* Sound Toggle Button - more prominent */}
+          {/* Sound Toggle Button */}
           <Button
-            variant={isPlaying ? "default" : "outline"}
+            variant={isPlaying ? "default" : "ghost"}
             size="icon"
             onClick={togglePlay}
             onMouseEnter={() => setShowVolumeSlider(true)}
             onMouseLeave={() => setTimeout(() => setShowVolumeSlider(false), 2000)}
             className={cn(
-              "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-200 active:scale-95 flex-shrink-0",
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0",
               isPlaying
                 ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                : cn("border-2 shadow-sm", themeStyles.buttonBg, themeStyles.buttonText,
-                    "border-current opacity-80 hover:opacity-100")
+                : cn(themeStyles.buttonBg, themeStyles.buttonText, "border border-current/20")
             )}
             aria-label={isPlaying ? "ปิดเสียง" : "เปิดเสียงธรรมชาติ"}
           >
             {isPlaying ? (
-              <Volume2 className="h-4 w-4" />
+              <Volume2 className="h-3.5 w-3.5" />
             ) : (
-              <VolumeX className="h-4 w-4" />
+              <VolumeX className="h-3.5 w-3.5" />
             )}
           </Button>
+
+          {/* Divider */}
+          <div className={cn("w-px h-5", themeStyles.divider)} />
+
+          {/* Language Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg",
+                  "border transition-all duration-200 active:scale-95",
+                  "focus:outline-none focus:ring-2 focus:ring-primary/30",
+                  activeTheme === 'dark'
+                    ? "bg-amber-900/30 border-amber-700/30 hover:bg-amber-900/50"
+                    : "bg-white/40 border-stone-300/50 hover:bg-white/70",
+                  themeStyles.text
+                )}
+              >
+                <span className="text-base leading-none">{currentLang.flag}</span>
+                <span className={cn(
+                  "text-[10px] sm:text-xs font-semibold tracking-wide hidden sm:inline",
+                  themeStyles.text
+                )}>
+                  {currentLang.nativeName}
+                </span>
+                <ChevronDown className={cn("h-3 w-3 opacity-60", themeStyles.text)} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="min-w-[160px] p-1.5 bg-card border border-border/50 rounded-xl shadow-2xl z-[200]"
+            >
+              {languages.map((lang, i) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200",
+                    language === lang.code
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-muted text-foreground",
+                    "animate-in fade-in-0 slide-in-from-top-1"
+                  )}
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
+                  <span className="text-xl">{lang.flag}</span>
+                  <span className={cn(
+                    "font-semibold text-sm",
+                    language === lang.code ? "text-primary" : ""
+                  )}>
+                    {lang.nativeName}
+                  </span>
+                  {language === lang.code && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>
