@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, Edit, Trash2, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ImageUploadZone } from "./ImageUploadZone";
+import { RoomStats } from "./RoomStats";
+import { calculateRoomStats } from "./roomManagementUtils";
 
 const roomFormSchema = z.object({
   name_th: z.string().min(1, "กรุณากรอกชื่อภาษาไทย"),
@@ -38,6 +41,9 @@ const roomFormSchema = z.object({
   description_th: z.string().optional(),
   description_en: z.string().optional(),
   price: z.string().min(1, "กรุณากรอกราคา"),
+  capacity: z.string().optional(),
+  amenities_th: z.string().optional(),
+  amenities_en: z.string().optional(),
 });
 
 type RoomFormValues = z.infer<typeof roomFormSchema>;
@@ -83,6 +89,9 @@ export const RoomsManagement = () => {
       description_th: "",
       description_en: "",
       price: "",
+      capacity: "",
+      amenities_th: "",
+      amenities_en: "",
     },
   });
 
@@ -124,34 +133,25 @@ export const RoomsManagement = () => {
     }
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleImageSelect = (files: File[]) => {
+    const MAX_IMAGES = 10;
     
-    // Validate files
-    const validFiles = files.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error(
-          language === "th"
-            ? `${file.name} ไม่ใช่ไฟล์รูปภาพ`
-            : `${file.name} is not an image file`
-        );
-        return false;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(
-          language === "th"
-            ? `${file.name} มีขนาดเกิน 5MB`
-            : `${file.name} exceeds 5MB`
-        );
-        return false;
-      }
-      return true;
-    });
+    // Validate total image count
+    const totalImages = imageFiles.length + imagePreviews.length + files.length;
+    if (totalImages > MAX_IMAGES) {
+      toast.error(
+        language === "th"
+          ? `จำนวนรูปภาพไม่เกิน ${MAX_IMAGES} ภาพ`
+          : `Maximum ${MAX_IMAGES} images allowed`
+      );
+      return;
+    }
 
-    setImageFiles((prev) => [...prev, ...validFiles]);
+    // Add new files
+    setImageFiles((prev) => [...prev, ...files]);
     
     // Create previews
-    validFiles.forEach((file) => {
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviews((prev) => [...prev, reader.result as string]);
@@ -165,7 +165,7 @@ export const RoomsManagement = () => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const uploadImages = async (roomId: string): Promise<boolean> => {
+  const uploadImages = async (roomId: string, startOrder: number = 0): Promise<boolean> => {
     if (imageFiles.length === 0) return true;
 
     try {
@@ -192,13 +192,13 @@ export const RoomsManagement = () => {
           data: { publicUrl },
         } = supabase.storage.from("rooms").getPublicUrl(filePath);
 
-        // Save to database
+        // Save to database with sort order
         const { error: dbError } = await supabase
           .from("room_images")
           .insert([{
             room_id: roomId,
             image_url: publicUrl,
-            sort_order: i,
+            sort_order: startOrder + i,
           }]);
 
         if (dbError) throw dbError;
@@ -275,7 +275,10 @@ export const RoomsManagement = () => {
         if (error) throw error;
 
         // Upload new images if any
-        await uploadImages(selectedRoom.id);
+        const existingImageCount = selectedRoom.images?.length || 0;
+        if (imageFiles.length > 0) {
+          await uploadImages(selectedRoom.id, existingImageCount);
+        }
 
         toast.success(
           language === "th" ? "แก้ไขสำเร็จ" : "Updated successfully"
@@ -291,8 +294,8 @@ export const RoomsManagement = () => {
         if (error) throw error;
 
         // Upload images
-        if (newRoom) {
-          await uploadImages(newRoom.id);
+        if (newRoom && imageFiles.length > 0) {
+          await uploadImages(newRoom.id, 0);
         }
 
         toast.success(
@@ -326,6 +329,9 @@ export const RoomsManagement = () => {
       description_th: room.description_th || "",
       description_en: room.description_en || "",
       price: room.price.toString(),
+      capacity: "",
+      amenities_th: "",
+      amenities_en: "",
     });
     setIsDialogOpen(true);
   };
@@ -384,6 +390,9 @@ export const RoomsManagement = () => {
       description_th: "",
       description_en: "",
       price: "",
+      capacity: "",
+      amenities_th: "",
+      amenities_en: "",
     });
     setImageFiles([]);
     setImagePreviews([]);
@@ -399,6 +408,7 @@ export const RoomsManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">
@@ -445,7 +455,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (ไทย)" : "Room Name (Thai)"}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={submitting} />
+                          <Input placeholder="เช่น ห้องประชุมเล็ก" {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -461,7 +471,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (อังกฤษ)" : "Room Name (English)"}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={submitting} />
+                          <Input placeholder="e.g. Small Conference Room" {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -469,26 +479,50 @@ export const RoomsManagement = () => {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {language === "th" ? "ราคา (บาท)" : "Price (THB)"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          step="0.01"
-                          disabled={submitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {language === "th" ? "ราคา (บาท)" : "Price (THB)"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            step="100"
+                            placeholder="2000"
+                            disabled={submitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="capacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {language === "th" ? "จำนวนคน" : "Capacity"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            placeholder="10-15"
+                            disabled={submitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
@@ -499,7 +533,7 @@ export const RoomsManagement = () => {
                         {language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={submitting} rows={3} />
+                        <Textarea {...field} disabled={submitting} rows={3} placeholder="เช่น ห้องประชุมสำหรับ 10-15 คน พร้อมเอก สารและห้องค้นหา..." />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -517,8 +551,58 @@ export const RoomsManagement = () => {
                           : "Description (English)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={submitting} rows={3} />
+                        <Textarea {...field} disabled={submitting} rows={3} placeholder="e.g. Conference room for 10-15 people with projector..." />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="amenities_th"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {language === "th" ? "สิ่งอำนวยความสะดวก (ไทย)" : "Amenities (Thai)"}
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          disabled={submitting} 
+                          rows={2} 
+                          placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน" 
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {language === "th" ? "แยกด้วยจุลภาค" : "Separate with commas"}
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="amenities_en"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {language === "th"
+                          ? "สิ่งอำนวยความสะดวก (อังกฤษ)"
+                          : "Amenities (English)"}
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          disabled={submitting} 
+                          rows={2} 
+                          placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs" 
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {language === "th" ? "แยกด้วยจุลภาค" : "Separate with commas"}
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -526,67 +610,53 @@ export const RoomsManagement = () => {
 
                 {/* Existing Images */}
                 {selectedRoom && selectedRoom.images && selectedRoom.images.length > 0 && (
-                  <div className="space-y-2">
-                    <FormLabel>
+                  <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border">
+                    <FormLabel className="text-base">
                       {language === "th" ? "รูปภาพปัจจุบัน" : "Current Images"}
+                      <span className="text-xs font-normal text-muted-foreground ml-2">
+                        ({selectedRoom.images.length})
+                      </span>
                     </FormLabel>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {selectedRoom.images.map((image) => (
-                        <div key={image.id} className="relative group">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {selectedRoom.images.map((image, idx) => (
+                        <div key={image.id} className="group relative aspect-square rounded-lg overflow-hidden bg-background border border-border">
                           <img
                             src={image.image_url}
                             alt="Room"
-                            className="w-full h-32 object-cover rounded-lg"
+                            className="w-full h-full object-cover"
                           />
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </div>
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={() => setImageToDelete(image)}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* New Images Upload */}
+                {/* New Images Upload Zone */}
                 <div className="space-y-2">
-                  <FormLabel>
-                    {language === "th" ? "เพิ่มรูปภาพ" : "Add Images"}
+                  <FormLabel className="text-base">
+                    {language === "th" ? "อัพโหลดรูปภาพ" : "Upload Images"}
                   </FormLabel>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageSelect}
+                  <ImageUploadZone
+                    onFilesSelected={handleImageSelect}
+                    previews={imagePreviews}
+                    onRemovePreview={removeImagePreview}
                     disabled={submitting || uploadingImages}
+                    maxImages={10}
+                    language={language}
                   />
-                  {imagePreviews.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                      {imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={preview}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeImagePreview(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -618,7 +688,15 @@ export const RoomsManagement = () => {
         </Dialog>
       </div>
 
-      {/* Rooms Grid */}
+      {/* Room Statistics */}
+      {rooms.length > 0 && (
+        <RoomStats 
+          stats={calculateRoomStats(rooms)} 
+          language={language}
+        />
+      )}
+
+      {/* Rooms List */}
       {rooms.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -633,29 +711,45 @@ export const RoomsManagement = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rooms.map((room) => (
-            <Card key={room.id} className="overflow-hidden">
-              {room.images && room.images.length > 0 && (
-                <img
-                  src={room.images[0].image_url}
-                  alt={room.name_en}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <CardHeader>
-                <CardTitle className="flex items-start justify-between">
-                  <div>
-                    <div className="text-lg">
+            <Card key={room.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+              {/* Image Container */}
+              <div className="relative h-48 bg-muted overflow-hidden">
+                {room.images && room.images.length > 0 ? (
+                  <>
+                    <img
+                      src={room.images[0].image_url}
+                      alt={room.name_en}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {room.images.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
+                        {room.images.length} {language === "th" ? "รูป" : "photos"}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                    <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
+
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg line-clamp-2">
                       {language === "th" ? room.name_th : room.name_en}
-                    </div>
-                    <div className="text-sm font-normal text-primary mt-1">
+                    </CardTitle>
+                    <div className="text-sm font-semibold text-primary mt-2">
                       ฿{room.price.toLocaleString()}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 flex-shrink-0">
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(room)}
+                      className="h-8 w-8"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -663,25 +757,21 @@ export const RoomsManagement = () => {
                       variant="destructive"
                       size="icon"
                       onClick={() => setRoomToDelete(room)}
+                      className="h-8 w-8"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </CardTitle>
+                </div>
               </CardHeader>
+
               {(room.description_th || room.description_en) && (
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {language === "th"
                       ? room.description_th
                       : room.description_en}
                   </p>
-                  {room.images && room.images.length > 1 && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {room.images.length}{" "}
-                      {language === "th" ? "รูปภาพ" : "images"}
-                    </p>
-                  )}
                 </CardContent>
               )}
             </Card>
