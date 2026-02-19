@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +10,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import AppUpdateNotifier from "./components/AppUpdateNotifier";
 import DataLoadError from "./components/DataLoadError";
 import { useGAPageTracking } from "./lib/googleAnalytics";
+import { setGlobalQueryClient } from "./hooks/useContentData";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Set global QueryClient for cache invalidation from admin components
+setGlobalQueryClient(queryClient);
 
 // Component to track page views
 const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; onLoadingComplete: () => void }) => {

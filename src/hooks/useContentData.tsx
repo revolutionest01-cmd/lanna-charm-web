@@ -1,6 +1,13 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
+
+// Global QueryClient instance for cache invalidation (set by App.tsx)
+let globalQueryClient: QueryClient | null = null;
+
+export const setGlobalQueryClient = (client: QueryClient) => {
+  globalQueryClient = client;
+};
 
 // Individual hooks for each data type - load only when needed
 
@@ -140,7 +147,27 @@ export const useBusinessInfo = () => {
 
 // Function to invalidate all content caches (called from admin panel after updates)
 export const invalidateContentCache = (): void => {
-  // No-op — admin components call useRefreshContent().refreshContent() directly
+  if (!globalQueryClient) {
+    console.warn('[Cache] globalQueryClient not initialized. Make sure App.tsx calls setGlobalQueryClient()');
+    return;
+  }
+
+  console.log('[Cache] Invalidating all content caches...');
+  
+  try {
+    globalQueryClient.invalidateQueries({ queryKey: ["hero-content"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["event-spaces"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["rooms"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["menus"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["gallery"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["reviews"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["menu_categories"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["business_info"] });
+    
+    console.log('[Cache] ✓ All content caches invalidated successfully');
+  } catch (error) {
+    console.error('[Cache] Error invalidating caches:', error);
+  }
 };
 
 // Utility hook to invalidate all content caches
