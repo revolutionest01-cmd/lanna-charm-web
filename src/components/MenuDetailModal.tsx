@@ -142,10 +142,17 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      {/* Modal Container - Centered on viewport */}
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div
-          className="relative bg-background rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+          className="relative bg-background rounded-xl sm:rounded-xl md:rounded-2xl shadow-2xl w-full max-w-4xl md:max-w-5xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Action Buttons */}
