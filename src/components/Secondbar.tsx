@@ -19,6 +19,7 @@ const languages = [
   { code: 'th' as Language, flag: '🇹🇭', nativeName: 'ไทย' },
   { code: 'zh' as Language, flag: '🇨🇳', nativeName: '中文' },
   { code: 'en' as Language, flag: '🇬🇧', nativeName: 'EN' },
+  { code: 'ja' as Language, flag: '🇯🇵', nativeName: '日本語' },
 ];
 
 const Secondbar = () => {
