@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wifi } from "lucide-react";
@@ -13,6 +14,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useRooms } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
+import RoomDetailModal from "@/components/RoomDetailModal";
 
 
 interface Room {
@@ -37,6 +39,18 @@ const RoomsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: rooms = [], isLoading: loading } = useRooms();
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleRoomClick = (room: Room) => {
+    setSelectedRoom(room);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRoom(null);
+  };
 
   if (loading) {
     return (
@@ -88,46 +102,49 @@ const RoomsSection = () => {
             <CarouselContent className="-ml-3 sm:-ml-4">
               {rooms.map((room) => (
                 <CarouselItem key={room.id} className="pl-3 sm:pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
-                  <Card className="overflow-hidden border-border hover:shadow-2xl transition-all duration-300 h-full">
-                    <div className="relative h-48 sm:h-64 overflow-hidden">
-                      <img
-                        src={room.images[0]?.image_url || "/placeholder.svg"}
-                        alt={language === "th" ? room.name_th : room.name_en}
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                      />
-                    </div>
-                    
-                    <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                      <CardTitle className="text-xl sm:text-2xl font-serif">
-                        {language === "th" ? room.name_th : room.name_en}
-                      </CardTitle>
-                      <div className="flex items-baseline gap-2 mt-1 sm:mt-2">
-                        <span className="text-2xl sm:text-3xl font-bold text-primary">฿{room.price}</span>
-                        <span className="text-muted-foreground text-sm">{t.perNight}</span>
+                  <button
+                    onClick={() => handleRoomClick(room)}
+                    className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all"
+                  >
+                    <Card className="overflow-hidden border-border hover:shadow-2xl transition-all duration-300 h-full cursor-pointer transform hover:scale-105">
+                      <div className="relative h-48 sm:h-64 overflow-hidden">
+                        <img
+                          src={room.images[0]?.image_url || "/placeholder.svg"}
+                          alt={language === "th" ? room.name_th : room.name_en}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        />
                       </div>
-                    </CardHeader>
-
-                    <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {language === "th" ? room.description_th : room.description_en}
-                      </p>
-
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Wifi size={16} />
-                          <span>{language === 'th' ? 'WiFi ฟรี' : language === 'zh' ? '免费WiFi' : 'Free WiFi'}</span>
+                      
+                      <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+                        <CardTitle className="text-xl sm:text-2xl font-serif">
+                          {language === "th" ? room.name_th : room.name_en}
+                        </CardTitle>
+                        <div className="flex items-baseline gap-2 mt-1 sm:mt-2">
+                          <span className="text-2xl sm:text-3xl font-bold text-primary">฿{room.price}</span>
+                          <span className="text-muted-foreground text-sm">{t.perNight}</span>
                         </div>
-                      </div>
-                    </CardContent>
+                      </CardHeader>
 
-                    <CardFooter className="p-4 sm:p-6 pt-0">
-                      <BookingDialog>
-                        <Button variant="highlight" className="w-full font-bold h-12 sm:h-11 rounded-xl text-base tracking-wide">
-                          {t.bookRoom}
-                        </Button>
-                      </BookingDialog>
-                    </CardFooter>
-                  </Card>
+                      <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {language === "th" ? room.description_th : room.description_en}
+                        </p>
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Wifi size={16} />
+                            <span>{language === 'th' ? 'WiFi ฟรี' : language === 'zh' ? '免费WiFi' : 'Free WiFi'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+
+                      <CardFooter className="p-4 sm:p-6 pt-0">
+                        <div className="w-full text-center text-primary font-semibold">
+                          {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </button>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -136,6 +153,13 @@ const RoomsSection = () => {
           </Carousel>
         </div>
       </div>
+
+      {/* Room Detail Modal */}
+      <RoomDetailModal
+        room={selectedRoom}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </section>
   );
 };

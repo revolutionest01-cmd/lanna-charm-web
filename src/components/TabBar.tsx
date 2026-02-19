@@ -44,42 +44,17 @@ const TabBar = () => {
   ];
 
   const getThemeStyles = (theme: SectionTheme) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          bg: 'bg-stone-900/95',
-          border: 'border-stone-700/20',
-          text: 'text-stone-500',
-          activeText: 'text-stone-100',
-          activeBg: 'bg-stone-700/50',
-          activeRing: 'ring-1 ring-stone-500/20',
-          hoverBg: 'hover:bg-stone-800/60',
-          hoverText: 'hover:text-stone-300',
-        };
-      case 'warm':
-        return {
-          bg: 'bg-amber-50/95',
-          border: 'border-amber-200/30',
-          text: 'text-stone-400',
-          activeText: 'text-stone-800',
-          activeBg: 'bg-amber-100/70',
-          activeRing: 'ring-1 ring-amber-300/30',
-          hoverBg: 'hover:bg-amber-100/50',
-          hoverText: 'hover:text-stone-600',
-        };
-      case 'light':
-      default:
-        return {
-          bg: 'bg-stone-50/95',
-          border: 'border-stone-200/30',
-          text: 'text-stone-400',
-          activeText: 'text-stone-800',
-          activeBg: 'bg-stone-200/50',
-          activeRing: 'ring-1 ring-stone-300/30',
-          hoverBg: 'hover:bg-stone-100/60',
-          hoverText: 'hover:text-stone-600',
-        };
-    }
+    // All themes now use consistent darkbrown + light text
+    return {
+      bg: 'bg-foreground/95',
+      border: 'border-primary/20',
+      text: 'text-background/60',
+      activeText: 'text-background',
+      activeBg: 'bg-primary/20',
+      activeRing: 'ring-1 ring-primary/20',
+      hoverBg: 'hover:bg-primary/10',
+      hoverText: 'hover:text-background/80',
+    };
   };
 
   const themeStyles = getThemeStyles(activeTheme);
@@ -121,18 +96,18 @@ const TabBar = () => {
     >
       <div
         className={cn(
-          "absolute inset-0 transition-colors duration-500",
+          "absolute inset-0 transition-colors duration-500 backdrop-blur-sm",
           themeStyles.bg,
         )}
       />
-      {/* Subtle bottom line */}
+      {/* Subtle bottom gradient border */}
       <div className={cn(
-        "absolute bottom-0 left-0 right-0 h-px border-b",
+        "absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent",
         themeStyles.border
       )} />
 
       <ScrollArea className="relative z-10 h-10 sm:h-11 w-full">
-        <div className="flex items-center h-full px-2 sm:px-3 gap-0.5 sm:gap-1">
+        <div className="flex items-center h-full px-2 sm:px-3 gap-1 sm:gap-1.5">
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
             const active = isActive(tab.href);
@@ -142,13 +117,23 @@ const TabBar = () => {
                 key={tab.href}
                 onClick={() => handleTabClick(tab.href)}
                 className={cn(
-                  "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full shrink-0",
+                  "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg shrink-0",
                   "text-[10px] sm:text-xs font-medium tracking-wide",
                   "transition-all duration-200 whitespace-nowrap",
                   "active:scale-95 touch-manipulation",
+                  "border shadow-sm hover:shadow-md",
                   active
-                    ? cn(themeStyles.activeBg, themeStyles.activeText, themeStyles.activeRing)
-                    : cn(themeStyles.text, themeStyles.hoverBg, themeStyles.hoverText)
+                    ? cn(
+                        themeStyles.activeBg,
+                        themeStyles.activeText,
+                        "border-primary/40 shadow-md bg-primary/15"
+                      )
+                    : cn(
+                        themeStyles.text,
+                        themeStyles.hoverBg,
+                        themeStyles.hoverText,
+                        "border-primary/20 bg-background/10 hover:bg-primary/15 hover:border-primary/40"
+                      )
                 )}
               >
                 <IconComponent className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
@@ -157,7 +142,7 @@ const TabBar = () => {
             );
           })}
         </div>
-        <ScrollBar orientation="horizontal" className="h-0" />
+        <ScrollBar orientation="horizontal" className="h-1" />
       </ScrollArea>
     </div>
   );

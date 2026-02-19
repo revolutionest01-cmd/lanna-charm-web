@@ -81,6 +81,21 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
 // Initialize auth state
 const initializeAuth = async () => {
   try {
+    // Set a timeout to ensure auth initializes within 5 seconds max
+    let authCompleted = false;
+    const authTimeoutId = setTimeout(() => {
+      if (!authCompleted && authState.isLoading) {
+        console.warn('Auth initialization timeout - forcing completion');
+        setAuthState({
+          user: null,
+          session: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+        authCompleted = true;
+      }
+    }, 5000);
+
     // Set up auth state listener FIRST
     supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
@@ -93,6 +108,8 @@ const initializeAuth = async () => {
             isAuthenticated: true,
             isLoading: false,
           });
+          authCompleted = true;
+          clearTimeout(authTimeoutId);
 
           // Enrich with profile data in background
           const enrichedUser = await fetchAndEnrichUser(session);
@@ -104,6 +121,8 @@ const initializeAuth = async () => {
             isAuthenticated: false,
             isLoading: false,
           });
+          authCompleted = true;
+          clearTimeout(authTimeoutId);
         }
       } catch (error) {
         console.error('Auth state change error:', error);
@@ -113,13 +132,15 @@ const initializeAuth = async () => {
           isAuthenticated: !!session,
           isLoading: false,
         });
+        authCompleted = true;
+        clearTimeout(authTimeoutId);
       }
     });
 
     // THEN check for existing session
     const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error) {
+    if (error && error.message !== 'JSON.parse: unexpected character') {
       console.error('Error getting session:', error);
     }
 
@@ -131,10 +152,14 @@ const initializeAuth = async () => {
         isAuthenticated: true,
         isLoading: false,
       });
+      authCompleted = true;
+      clearTimeout(authTimeoutId);
 
       // Enrich in background
       fetchAndEnrichUser(session).then(enrichedUser => {
         setAuthState({ user: enrichedUser });
+      }).catch(err => {
+        console.error('Error enriching user:', err);
       });
     } else {
       setAuthState({
@@ -143,6 +168,8 @@ const initializeAuth = async () => {
         isAuthenticated: false,
         isLoading: false,
       });
+      authCompleted = true;
+      clearTimeout(authTimeoutId);
     }
   } catch (error) {
     console.error('Auth initialization error:', error);

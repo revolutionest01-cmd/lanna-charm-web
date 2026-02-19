@@ -65,7 +65,7 @@ export const translations = {
     cateringServiceDesc: "อาหารและเครื่องดื่มคุณภาพ ปรับเมนูตามความต้องการ",
     privateEvents: "ห้องการไอทีและส่วนตัว",
     privateEventsDesc: "เหมาะสำหรับงานเป็นใช้ งานเชื่อมต่อส่วนตัวหรือ และงานส่วนตัว",
-    inquirePrice: "สอบถามราคาเลี้ยง",
+    inquirePrice: "สอบถามราคาเพื่อจัดเลี้ยง",
     presentationRoomShort: "ห้องนำเสนอ",
     presentationRoomShortDesc: "ห้องบรรยายพร้อมอุปกรณ์ทันสมัยนี้",
     cateringServiceShort: "รับจัดเลี้ยง",

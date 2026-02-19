@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, Volume2, VolumeX, X, ChevronDown } from "lucide-react";
+import { Menu, Volume2, VolumeX, X, ChevronDown, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import natureSound from "@/assets/nature-ambient.m4a";
-import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
+import { type SectionTheme } from "@/hooks/useActiveSection";
 import { useLanguage, Language } from "@/hooks/useLanguage";
 import {
   DropdownMenu,
@@ -27,7 +27,6 @@ const Secondbar = () => {
   const { language, setLanguage } = useLanguage();
   const currentLang = languages.find(l => l.code === language) || languages[0];
   const isOpen = state === "expanded";
-  const { activeTheme } = useActiveSection();
   
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -35,44 +34,26 @@ const Secondbar = () => {
   const [volume, setVolume] = useState(0.3);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme-mode');
+    if (saved) return saved === 'dark';
+    return document.documentElement.classList.contains('dark');
+  });
 
   const getThemeStyles = (theme: SectionTheme) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          bg: 'bg-[hsl(25,15%,12%)]/[0.97]',
-          bottomLine: 'bg-amber-700/20',
-          text: 'text-amber-50',
-          subText: 'text-amber-200/60',
-          buttonBg: 'hover:bg-amber-900/40',
-          buttonText: 'text-amber-100/80',
-          divider: 'bg-amber-600/20',
-        };
-      case 'warm':
-        return {
-          bg: 'bg-amber-50/[0.97]',
-          bottomLine: 'bg-amber-300/30',
-          text: 'text-stone-800',
-          subText: 'text-stone-500',
-          buttonBg: 'hover:bg-amber-100/70',
-          buttonText: 'text-stone-600',
-          divider: 'bg-amber-300/30',
-        };
-      case 'light':
-      default:
-        return {
-          bg: 'bg-[hsl(30,18%,95%)]/[0.97]',
-          bottomLine: 'bg-stone-300/30',
-          text: 'text-stone-800',
-          subText: 'text-stone-500',
-          buttonBg: 'hover:bg-stone-200/50',
-          buttonText: 'text-stone-600',
-          divider: 'bg-stone-300/30',
-        };
-    }
+    // Use consistent dark foreground color like Help button
+    return {
+      bg: 'bg-foreground',
+      bottomLine: 'bg-primary/20',
+      text: 'text-background',
+      subText: 'text-background/70',
+      buttonBg: 'hover:bg-background/20',
+      buttonText: 'text-background',
+      divider: 'bg-primary/30',
+    };
   };
 
-  const themeStyles = getThemeStyles(activeTheme);
+  const themeStyles = getThemeStyles('warm');
 
   useEffect(() => {
     const audio = new Audio(natureSound);
@@ -110,19 +91,36 @@ const Secondbar = () => {
     }
   };
 
+  const toggleTheme = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-12 sm:h-14 md:h-14 safe-area-top">
       <div 
         className={cn(
           "absolute inset-0 transition-colors duration-500",
-          themeStyles.bg,
+          "bg-gradient-to-r from-foreground via-foreground to-primary/80 shadow-lg shadow-black/20",
         )} 
       />
+
+      {/* Top gradient accent */}
+      <div className={cn(
+        "absolute top-0 left-0 right-0 h-0.5",
+        "bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+      )} />
 
       {/* Subtle warm bottom accent line */}
       <div className={cn(
         "absolute bottom-0 left-0 right-0 h-px",
-        themeStyles.bottomLine
+        "bg-gradient-to-r from-transparent via-primary/40 to-transparent"
       )} />
       
       <div className="relative z-10 h-full flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
@@ -193,13 +191,12 @@ const Secondbar = () => {
 
           {/* Label text */}
           <span className={cn(
-            "hidden md:flex flex-col text-[10px] font-semibold leading-tight text-right transition-colors duration-300 max-w-[100px]",
-            isPlaying ? "text-primary" : themeStyles.text
+            "hidden md:flex flex-col text-[10px] font-semibold leading-tight text-right transition-colors duration-300 max-w-[100px] text-background/90"
           )}>
             {isPlaying ? (
-              <><span>กำลังเล่น</span><span className={cn("text-[9px] font-normal mt-0.5", themeStyles.subText)}>เสียงธรรมชาติ</span></>
+              <><span>กำลังเล่น</span><span className={cn("text-[9px] font-normal mt-0.5", "text-background/70")}>เสียงธรรมชาติ</span></>
             ) : (
-              <><span>กดเปิด / ปิด</span><span className={cn("text-[9px] font-normal mt-0.5", themeStyles.text, "opacity-70")}>เพื่อฟังเสียงธรรมชาติ</span></>
+              <><span>กดเปิด / ปิด</span><span className={cn("text-[9px] font-normal mt-0.5", "text-background/70")}>เพื่อฟังเสียงธรรมชาติ</span></>
             )}
           </span>
 
@@ -213,8 +210,8 @@ const Secondbar = () => {
             className={cn(
               "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0",
               isPlaying
-                ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                : cn(themeStyles.buttonBg, themeStyles.buttonText, "border border-current/20")
+                ? "bg-background/30 text-background shadow-md hover:bg-background/40"
+                : "bg-background/20 text-background hover:bg-background/30"
             )}
             aria-label={isPlaying ? "ปิดเสียง" : "เปิดเสียงธรรมชาติ"}
           >
@@ -222,6 +219,25 @@ const Secondbar = () => {
               <Volume2 className="h-3.5 w-3.5" />
             ) : (
               <VolumeX className="h-3.5 w-3.5" />
+            )}
+          </Button>
+
+          {/* Theme Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className={cn(
+              "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0",
+              "bg-background/20 text-background hover:bg-background/30"
+            )}
+            aria-label={isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"}
+            title={isDarkMode ? "Light mode" : "Dark mode"}
+          >
+            {isDarkMode ? (
+              <Sun className="h-3.5 w-3.5" />
+            ) : (
+              <Moon className="h-3.5 w-3.5" />
             )}
           </Button>
 
@@ -236,20 +252,18 @@ const Secondbar = () => {
                   "inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg",
                   "border transition-all duration-200 active:scale-95",
                   "focus:outline-none focus:ring-2 focus:ring-primary/30",
-                  activeTheme === 'dark'
-                    ? "bg-amber-900/30 border-amber-700/30 hover:bg-amber-900/50"
-                    : "bg-white/40 border-stone-300/50 hover:bg-white/70",
-                  themeStyles.text
+                  "bg-background/20 border-background/40 hover:bg-background/30",
+                  "text-background"
                 )}
               >
                 <span className="text-base leading-none">{currentLang.flag}</span>
                 <span className={cn(
                   "text-[10px] sm:text-xs font-semibold tracking-wide hidden sm:inline",
-                  themeStyles.text
+                  "text-background"
                 )}>
                   {currentLang.nativeName}
                 </span>
-                <ChevronDown className={cn("h-3 w-3 opacity-60", themeStyles.text)} />
+                <ChevronDown className={cn("h-3 w-3 opacity-70", "text-background")} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent

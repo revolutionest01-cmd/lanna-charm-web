@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
   MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu
@@ -26,56 +26,37 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
+import { useActiveSection, type SectionTheme } from "@/hooks/useActiveSection";
 import logo from "@/assets/logo.png";
 
 const AppSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<string>('hero');
   const { language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
-  const { activeTheme } = useActiveSection();
+  const { activeSection } = useActiveSection();
   const t = translations[language];
 
   const getThemeStyles = (theme: SectionTheme) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          bg: 'bg-stone-900',
-          border: 'border-stone-700/40',
-          text: 'text-stone-100',
-          muted: 'text-stone-400',
-          hover: 'hover:bg-stone-800',
-          active: 'bg-stone-800',
-          separator: 'bg-stone-700/40',
-        };
-      case 'warm':
-        return {
-          bg: 'bg-amber-50',
-          border: 'border-amber-200/50',
-          text: 'text-stone-800',
-          muted: 'text-stone-500',
-          hover: 'hover:bg-amber-100',
-          active: 'bg-amber-100',
-          separator: 'bg-amber-200/50',
-        };
-      case 'light':
-      default:
-        return {
-          bg: 'bg-stone-50',
-          border: 'border-stone-200/50',
-          text: 'text-stone-800',
-          muted: 'text-stone-500',
-          hover: 'hover:bg-stone-100',
-          active: 'bg-stone-100',
-          separator: 'bg-stone-200/50',
-        };
-    }
+    // Use consistent dark foreground color like Help button
+    return {
+      bg: 'bg-foreground',
+      border: 'border-primary/30',
+      text: 'text-background',
+      muted: 'text-background/60',
+      hover: 'hover:bg-primary/20',
+      active: 'bg-primary/20',
+      separator: 'bg-primary/20',
+    };
   };
 
-  const themeStyles = getThemeStyles(activeTheme);
+  // Use fixed dark theme for sidebar - consistent with Help button
+  const themeStyles = getThemeStyles('dark');
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -94,7 +75,15 @@ const AppSidebar = () => {
     checkAdminStatus();
   }, [user]);
 
-  const navItems = [
+  // Sync selectedMenuItem with scroll position
+  useEffect(() => {
+    if (location.pathname === '/') {
+      setSelectedMenuItem(activeSection || 'hero');
+    }
+  }, [activeSection, location.pathname]);
+
+
+  const navItems = useMemo(() => ([
     { label: t.home, href: "/", icon: Home },
     { label: t.about, href: "/#features", icon: Info },
     { label: t.eventsTitle, href: "/#events", icon: Calendar },
@@ -103,13 +92,14 @@ const AppSidebar = () => {
     { label: t.gallery, href: "/gallery", icon: Image },
     { label: t.reviews, href: "/reviews", icon: Star },
     { label: t.contact, href: "/#contact", icon: Mail },
-  ];
+  ]), [language]);
 
   const handleNavClick = (href: string) => {
     if (isMobile) setOpenMobile(false);
     
     if (href.startsWith('/#')) {
       const sectionId = href.substring(2);
+      setSelectedMenuItem(sectionId);
       if (location.pathname === '/') {
         const element = document.getElementById(sectionId);
         if (element) element.scrollIntoView({ behavior: 'smooth' });
@@ -121,48 +111,67 @@ const AppSidebar = () => {
         }, 100);
       }
     } else {
+      setSelectedMenuItem(href === '/' ? 'hero' : '');
       navigate(href);
+      if (href === '/') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
   const isActive = (href: string) => {
-    if (href === '/') return location.pathname === '/';
-    if (href.startsWith('/#')) return false;
+    if (href === '/') return selectedMenuItem === 'hero' && location.pathname === '/';
+    if (href.startsWith('/#')) {
+      const sectionId = href.substring(2);
+      return selectedMenuItem === sectionId;
+    }
     return location.pathname === href;
   };
 
   return (
-    <Sidebar 
-      variant="sidebar" 
+    <Sidebar
+      role="navigation"
+      aria-label="Main navigation"
+      variant="sidebar"
       collapsible="offcanvas"
       className="border-none top-0 h-screen z-50"
     >
-      {/* Solid background */}
+      {/* Gradient background with depth */}
       <div className={cn(
-        "absolute inset-0 border-r transition-colors duration-500 shadow-xl",
-        themeStyles.bg,
+        "absolute inset-0 border-r transition-colors duration-500",
+        "bg-gradient-to-b from-foreground via-foreground to-primary/70 shadow-2xl shadow-black/30",
         themeStyles.border
       )} />
+
+      {/* Top gradient accent */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
       
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
         <div className={cn("flex items-center justify-between p-4 border-b", themeStyles.border)}>
-          <div className="flex items-center gap-3">
+          {/* Logo Card */}
+          <div className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg",
+            "border shadow-sm transition-all duration-200",
+            "bg-amber-50 hover:shadow-md hover:bg-amber-100",
+            "border-amber-200 hover:border-amber-300"
+          )}>
             <img src={logo} alt="Plern Ping" className="h-9 w-auto" />
             <div>
-              <h2 className={cn("text-lg font-bold tracking-wide", themeStyles.text)}>
+              <h2 className="text-lg font-bold tracking-wide text-amber-950">
                 Plern Ping
               </h2>
-              <p className={cn("text-[10px]", themeStyles.muted)}>
+              <p className="text-[10px] text-amber-900">
                 {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
               </p>
             </div>
           </div>
           <Button
+            aria-label={isMobile ? 'Close mobile menu' : 'Toggle sidebar'}
             variant="ghost"
             size="icon"
             onClick={() => isMobile ? setOpenMobile(false) : toggleSidebar()}
-            className={cn("h-8 w-8 rounded-lg", themeStyles.hover, themeStyles.text)}
+            className={cn("h-8 w-8 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40", themeStyles.hover, themeStyles.text)}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -176,39 +185,75 @@ const AppSidebar = () => {
                 {language === 'th' ? 'นำทาง' : language === 'zh' ? '导航' : 'Navigation'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-0.5">
-                  {navItems.map((item) => {
+                <SidebarMenu className="space-y-1 relative">
+                  {navItems.map((item, index) => {
                     const IconComponent = item.icon;
                     const active = isActive(item.href);
+                    const isHovered = hoveredIndex === index;
+                    const isFocused = focusedIndex === index;
                     return (
                       <SidebarMenuItem key={item.label}>
                         <SidebarMenuButton
                           onClick={() => handleNavClick(item.href)}
                           isActive={active}
+                          aria-current={active ? 'page' : undefined}
+                          title={item.label}
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNavClick(item.href); } }}
+                          onFocus={() => setFocusedIndex(index)}
+                          onBlur={() => setFocusedIndex(null)}
+                          onMouseEnter={() => setHoveredIndex(index)}
+                          onMouseLeave={() => setHoveredIndex(null)}
                           className={cn(
-                            "group w-full px-3 py-2.5 rounded-lg transition-all duration-200",
+                            "group relative w-full pl-2 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
                             active 
-                              ? cn(themeStyles.active, "shadow-sm")
-                              : themeStyles.hover,
+                              ? "bg-primary/35 shadow-lg" 
+                              : isHovered || isFocused
+                                ? "bg-primary/15 shadow-sm"
+                                : "hover:bg-primary/10",
                           )}
                         >
-                          <div className={cn(
-                            "flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200",
-                            active ? "bg-highlight/20" : "bg-transparent group-hover:bg-highlight/10"
-                          )}>
-                            <IconComponent className={cn(
-                              "h-4 w-4 transition-colors duration-200",
-                              active ? "text-highlight" : cn(themeStyles.muted, "group-hover:text-highlight")
+                          {/* Highlight bar - ONLY shows when ACTIVE, not on hover/focus */}
+                          {active && (
+                            <div className={cn(
+                              "absolute left-0 top-0 bottom-0 w-1.5 rounded-r-xl transition-all duration-300 ease-out",
+                              "bg-gradient-to-b from-primary via-primary to-primary/50 shadow-lg shadow-primary/60"
                             )} />
-                          </div>
-                          <span className={cn(
-                            "text-sm font-medium transition-colors duration-200",
-                            active ? "text-highlight" : cn(themeStyles.text, "group-hover:text-highlight")
+                          )}
+                          
+                          {/* Icon */}
+                          <div className={cn(
+                            "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0",
+                            active 
+                              ? "bg-background/20 shadow-md" 
+                              : isHovered || isFocused
+                                ? "bg-primary/30 shadow-sm" 
+                                : "bg-background/10 group-hover:bg-primary/20"
                           )}>
+                            <IconComponent
+                              className="h-4 w-4 transition-all duration-300 drop-shadow-sm"
+                              style={{ color: (active || isHovered || isFocused) ? 'hsl(var(--primary))' : 'hsl(var(--background))' }}
+                              aria-hidden
+                            />
+                          </div>
+                          
+                          {/* Label - always visible, truncate for long text */}
+                          <span
+                            className={cn(
+                              "text-sm transition-all duration-300 font-medium flex-1 truncate",
+                              active 
+                                ? "font-bold drop-shadow-sm text-primary" 
+                                : isHovered || isFocused
+                                  ? "drop-shadow-sm text-primary" 
+                                  : "text-background"
+                            )}
+                          >
                             {item.label}
                           </span>
+                          
+                          {/* Active indicator dot - only shows when active */}
                           {active && (
-                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-highlight" />
+                            <div className="w-2 h-2 rounded-full bg-background animate-pulse shadow-lg shadow-background/50 flex-shrink-0" />
                           )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -231,26 +276,63 @@ const AppSidebar = () => {
                     <SidebarMenuButton
                       onClick={() => handleNavClick('/forum')}
                       isActive={location.pathname === '/forum'}
+                      aria-current={location.pathname === '/forum' ? 'page' : undefined}
+                      title={t.forum}
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNavClick('/forum'); } }}
+                      onFocus={() => setFocusedIndex(8)}
+                      onBlur={() => setFocusedIndex(null)}
+                      onMouseEnter={() => setHoveredIndex(8)}
+                      onMouseLeave={() => setHoveredIndex(null)}
                       className={cn(
-                        "group w-full px-3 py-2.5 rounded-lg transition-all duration-200",
-                        location.pathname === '/forum' ? cn(themeStyles.active, "shadow-sm") : themeStyles.hover
+                        "group relative w-full pl-2 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
+                        location.pathname === '/forum' 
+                          ? "bg-primary/35 shadow-lg" 
+                          : hoveredIndex === 8
+                            ? "bg-primary/15 shadow-sm"
+                            : "hover:bg-primary/10",
                       )}
                     >
-                      <div className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200",
-                        location.pathname === '/forum' ? "bg-highlight/20" : "bg-transparent group-hover:bg-highlight/10"
-                      )}>
-                        <MessageCircle className={cn(
-                          "h-4 w-4 transition-colors duration-200",
-                          location.pathname === '/forum' ? "text-highlight" : themeStyles.muted
+                      {/* Highlight bar - ONLY shows when ACTIVE, not on hover */}
+                      {location.pathname === '/forum' && (
+                        <div className={cn(
+                          "absolute left-0 top-0 bottom-0 w-1.5 rounded-r-xl transition-all duration-300 ease-out",
+                          "bg-gradient-to-b from-primary via-primary to-primary/50 shadow-lg shadow-primary/60"
                         )} />
+                      )}
+                      
+                      {/* Icon */}
+                      <div className={cn(
+                        "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0",
+                        location.pathname === '/forum' 
+                          ? "bg-background/20 shadow-md" 
+                          : hoveredIndex === 8 || focusedIndex === 8
+                            ? "bg-primary/30 shadow-sm"
+                            : "bg-background/10 group-hover:bg-primary/20"
+                      )}>
+                        <MessageCircle
+                          className="h-4 w-4 transition-all duration-300 drop-shadow-sm"
+                          style={{ color: (location.pathname === '/forum' || hoveredIndex === 8 || focusedIndex === 8) ? 'hsl(var(--primary))' : 'hsl(var(--background))' }}
+                          aria-hidden
+                        />
                       </div>
+                      
+                      {/* Label - always visible and readable */}
                       <span className={cn(
-                        "text-sm font-medium transition-colors duration-200",
-                        location.pathname === '/forum' ? "text-highlight" : themeStyles.text
+                        "text-sm transition-all duration-300 font-medium flex-1 truncate",
+                        location.pathname === '/forum' 
+                          ? "text-primary font-bold drop-shadow-sm" 
+                          : hoveredIndex === 8 || focusedIndex === 8
+                            ? "text-primary drop-shadow-sm"
+                            : "text-background"
                       )}>
                         {t.forum}
                       </span>
+                      
+                      {/* Active indicator dot - only shows when active */}
+                      {location.pathname === '/forum' && (
+                        <div className="w-2 h-2 rounded-full bg-background animate-pulse shadow-lg shadow-background/50 flex-shrink-0" />
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

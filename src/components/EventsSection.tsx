@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Presentation, Utensils, Wifi } from "lucide-react";
+import { Presentation, Utensils, Wifi, CheckCircle2 } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useEventSpaces } from "@/hooks/useContentData";
 import { EventSkeleton } from "@/components/SkeletonCard";
@@ -22,6 +22,14 @@ const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: eventSpace, isLoading: loading } = useEventSpaces();
+
+  const handleInquireClick = () => {
+    // Scroll to contact section
+    const contactElement = document.getElementById('contact');
+    if (contactElement) {
+      contactElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   if (loading) {
     return (
@@ -79,100 +87,51 @@ const EventsSection = () => {
             </p>
 
             <div className="space-y-3 sm:space-y-4">
-              <h4 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4">
-                {t.ourServices}
-              </h4>
-
-              <div className="flex gap-3 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Presentation className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
-                </div>
-                <div className="min-w-0">
-                  <h5 className="font-semibold text-foreground mb-1 text-sm sm:text-base">
-                    {t.presentationRoom}
-                  </h5>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {t.presentationRoomDesc}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <CheckCircle2 size={24} className="text-primary flex-shrink-0" />
+                <h4 className="text-lg sm:text-xl font-semibold text-foreground">
+                  {t.ourServices}
+                </h4>
               </div>
 
-              <div className="flex gap-3 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
-                </div>
-                <div className="min-w-0">
-                  <h5 className="font-semibold text-foreground mb-1 text-sm sm:text-base">
-                    {t.cateringService}
-                  </h5>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {t.cateringServiceDesc}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <Presentation size={24} className="text-primary flex-shrink-0" />
+                <h5 className="font-semibold text-foreground text-sm sm:text-base">
+                  {t.presentationRoom}
+                </h5>
               </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 pl-8 sm:pl-9">
+                {t.presentationRoomDesc}
+              </p>
 
-              <div className="flex gap-3 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
-                </div>
-                <div className="min-w-0">
-                  <h5 className="font-semibold text-foreground mb-1 text-sm sm:text-base">
-                    {t.privateEvents}
-                  </h5>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {t.privateEventsDesc}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <Utensils size={24} className="text-primary flex-shrink-0" />
+                <h5 className="font-semibold text-foreground text-sm sm:text-base">
+                  {t.cateringService}
+                </h5>
               </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 pl-8 sm:pl-9">
+                {t.cateringServiceDesc}
+              </p>
+
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <Wifi size={24} className="text-primary flex-shrink-0" />
+                <h5 className="font-semibold text-foreground text-sm sm:text-base">
+                  {t.privateEvents}
+                </h5>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 pl-8 sm:pl-9">
+                {t.privateEventsDesc}
+              </p>
             </div>
 
-            <Button variant="highlight" size="lg" className="mt-4 sm:mt-6 w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg">
+            <Button variant="highlight" size="lg" className="mt-4 sm:mt-6 w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg" onClick={handleInquireClick}>
               {t.inquirePrice}
             </Button>
           </div>
         </div>
 
-        <StaggerReveal 
-          animation="zoom-in" 
-          staggerDelay={150} 
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
-        >
-          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow bg-card">
-            <div className="bg-muted w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <Presentation className="w-7 h-7 sm:w-8 sm:h-8 text-highlight" />
-            </div>
-            <h4 className="text-lg sm:text-xl font-semibold mb-2 text-foreground">
-              {t.presentationRoomShort}
-            </h4>
-            <p className="text-muted-foreground text-sm">
-              {t.presentationRoomShortDesc}
-            </p>
-          </Card>
 
-          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow bg-card">
-            <div className="bg-muted w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <Utensils className="w-7 h-7 sm:w-8 sm:h-8 text-highlight" />
-            </div>
-            <h4 className="text-lg sm:text-xl font-semibold mb-2 text-foreground">
-              {t.cateringServiceShort}
-            </h4>
-            <p className="text-muted-foreground text-sm">
-              {t.cateringServiceShortDesc}
-            </p>
-          </Card>
-
-          <Card className="p-5 sm:p-6 text-center hover:shadow-lg transition-shadow bg-card">
-            <div className="bg-muted w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <Wifi className="w-7 h-7 sm:w-8 sm:h-8 text-highlight" />
-            </div>
-            <h4 className="text-lg sm:text-xl font-semibold mb-2 text-foreground">
-              {t.privateEvents}
-            </h4>
-            <p className="text-muted-foreground text-sm">
-              {t.privateEventsDesc}
-            </p>
-          </Card>
-        </StaggerReveal>
       </div>
     </section>
   );

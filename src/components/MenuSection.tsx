@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { useMenus } from "@/hooks/useContentData";
 import { MenuSkeleton } from "@/components/SkeletonCard";
+import MenuDetailModal from "@/components/MenuDetailModal";
 
 interface Menu {
   id: string;
@@ -40,6 +42,8 @@ const MenuSection = () => {
   const t = translations[language];
   const navigate = useNavigate();
   const { data: menuData, isLoading: loading } = useMenus();
+  const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const menus = menuData?.menus || [];
   const categories = menuData?.categories || [];
@@ -49,6 +53,16 @@ const MenuSection = () => {
   const getMenusByCategory = (categoryId: string, limit?: number) => {
     const filtered = menus.filter((m) => m.category_id === categoryId);
     return limit ? filtered.slice(0, limit) : filtered;
+  };
+
+  const handleMenuClick = (menu: Menu) => {
+    setSelectedMenu(menu);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMenu(null);
   };
 
   if (loading) {
@@ -108,31 +122,39 @@ const MenuSection = () => {
                 <CarouselContent className="-ml-3 sm:-ml-4">
                   {recommendedMenus.map((item) => (
                     <CarouselItem key={item.id} className="pl-3 sm:pl-4 basis-[85%] sm:basis-1/2">
-                      <Card className="border-border hover:border-primary transition-all duration-500 overflow-hidden group h-full">
-                        <div className="relative h-48 sm:h-64 overflow-hidden">
-                          <img
-                            src={item.image_url || "/placeholder.svg"}
-                            alt={language === "th" ? item.name_th : item.name_en}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-primary text-primary-foreground px-3 sm:px-4 py-1.5 sm:py-2 rounded-full flex items-center gap-1 animate-pulse">
-                            <Star size={14} fill="currentColor" />
-                            <span className="font-semibold text-xs sm:text-sm">{t.recommended}</span>
+                      <button
+                        onClick={() => handleMenuClick(item)}
+                        className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all"
+                      >
+                        <Card className="border-border hover:border-primary transition-all duration-500 overflow-hidden group h-full cursor-pointer transform hover:scale-105">
+                          <div className="relative h-48 sm:h-64 overflow-hidden">
+                            <img
+                              src={item.image_url || "/placeholder.svg"}
+                              alt={language === "th" ? item.name_th : item.name_en}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-primary text-primary-foreground px-3 sm:px-4 py-1.5 sm:py-2 rounded-full flex items-center gap-1 animate-pulse">
+                              <Star size={14} fill="currentColor" />
+                              <span className="font-semibold text-xs sm:text-sm">{t.recommended}</span>
+                            </div>
                           </div>
-                        </div>
-                        <CardContent className="p-4 sm:p-6">
-                          <div className="flex justify-between items-start mb-2 gap-2">
-                            <h3 className="text-xl sm:text-2xl font-semibold text-foreground">
-                              {language === "th" ? item.name_th : item.name_en}
-                            </h3>
-                            <div className="text-xl sm:text-2xl font-bold text-primary flex-shrink-0">฿{item.price}</div>
-                          </div>
-                          <p className="text-muted-foreground text-sm line-clamp-2">
-                            {language === "th" ? item.description_th : item.description_en}
-                          </p>
-                        </CardContent>
-                      </Card>
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex justify-between items-start mb-2 gap-2">
+                              <h3 className="text-xl sm:text-2xl font-semibold text-foreground">
+                                {language === "th" ? item.name_th : item.name_en}
+                              </h3>
+                              <div className="text-xl sm:text-2xl font-bold text-primary flex-shrink-0">฿{item.price}</div>
+                            </div>
+                            <p className="text-muted-foreground text-sm line-clamp-2">
+                              {language === "th" ? item.description_th : item.description_en}
+                            </p>
+                            <p className="text-primary font-semibold text-sm mt-2">
+                              {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </button>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
@@ -178,38 +200,46 @@ const MenuSection = () => {
                   <TabsContent key={cat.id} value={cat.id} className="space-y-3 sm:space-y-4">
                     {categoryMenus.length > 0 ? (
                       categoryMenus.map((item, index) => (
-                        <Card
+                        <button
                           key={item.id}
-                          className="border-border hover:border-primary transition-colors animate-fade-in"
+                          onClick={() => handleMenuClick(item)}
+                          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all animate-fade-in"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <CardContent className="p-4 sm:p-6">
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
-                              <div className="flex-1 flex items-start gap-3 min-w-0">
-                                {item.icon_url && (
-                                  <img
-                                    src={item.icon_url}
-                                    alt="icon"
-                                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0 mt-0.5"
-                                  />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground mb-0.5 sm:mb-1 break-words">
-                                    {language === "th" ? item.name_th : item.name_en}
-                                  </h3>
-                                  {(item.description_th || item.description_en) && (
-                                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground break-words line-clamp-2">
-                                      {language === "th" ? item.description_th : item.description_en}
-                                    </p>
+                          <Card
+                            className="border-border hover:border-primary hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105"
+                          >
+                            <CardContent className="p-4 sm:p-6">
+                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
+                                <div className="flex-1 flex items-start gap-3 min-w-0">
+                                  {item.icon_url && (
+                                    <img
+                                      src={item.icon_url}
+                                      alt="icon"
+                                      className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0 mt-0.5"
+                                    />
                                   )}
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground mb-0.5 sm:mb-1 break-words">
+                                      {language === "th" ? item.name_th : item.name_en}
+                                    </h3>
+                                    {(item.description_th || item.description_en) && (
+                                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground break-words line-clamp-2">
+                                        {language === "th" ? item.description_th : item.description_en}
+                                      </p>
+                                    )}
+                                    <p className="text-primary text-xs font-semibold mt-1">
+                                      {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary flex-shrink-0">
+                                  ฿{item.price}
                                 </div>
                               </div>
-                              <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary flex-shrink-0">
-                                ฿{item.price}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
+                        </button>
                       ))
                     ) : (
                       <p className="text-center text-muted-foreground py-8">
@@ -237,6 +267,13 @@ const MenuSection = () => {
             </Button>
           </div>
         </div>
+
+        {/* Menu Detail Modal */}
+        <MenuDetailModal
+          menu={selectedMenu}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
       </div>
     </section>
   );
