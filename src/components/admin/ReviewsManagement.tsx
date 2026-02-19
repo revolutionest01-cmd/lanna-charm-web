@@ -360,7 +360,7 @@ export const ReviewsManagement = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>{language === "th" ? "ชื่อลูกค้า" : "Customer Name"}</Label>
+                <Label className="text-primary">{language === "th" ? "ชื่อลูกค้า" : "Customer Name"}</Label>
                 <Input
                   value={formData.customer_name}
                   onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
@@ -368,7 +368,7 @@ export const ReviewsManagement = () => {
                 />
               </div>
               <div>
-                <Label>{language === "th" ? "คะแนน" : "Rating"}</Label>
+                <Label className="text-primary">{language === "th" ? "คะแนน" : "Rating"}</Label>
                 <Select
                   value={formData.rating.toString()}
                   onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
@@ -386,7 +386,7 @@ export const ReviewsManagement = () => {
                 </Select>
               </div>
               <div>
-                <Label>{language === "th" ? "รีวิวภาษาอังกฤษ" : "English Review"}</Label>
+                <Label className="text-primary">{language === "th" ? "รีวิวภาษาอังกฤษ" : "English Review"}</Label>
                 <Textarea
                   value={formData.review_text_en}
                   onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
@@ -395,7 +395,7 @@ export const ReviewsManagement = () => {
                 />
               </div>
               <div>
-                <Label>{language === "th" ? "รีวิวภาษาไทย" : "Thai Review"}</Label>
+                <Label className="text-primary">{language === "th" ? "รีวิวภาษาไทย" : "Thai Review"}</Label>
                 <Textarea
                   value={formData.review_text_th}
                   onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
@@ -404,7 +404,7 @@ export const ReviewsManagement = () => {
                 />
               </div>
               <div>
-                <Label>{language === "th" ? "รูปภาพ (ถ้ามี)" : "Image (Optional)"}</Label>
+                <Label className="text-primary">{language === "th" ? "รูปภาพ (ถ้ามี)" : "Image (Optional)"}</Label>
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
