@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Language = 'th' | 'en' | 'zh';
+export type Language = 'th' | 'en' | 'zh' | 'ja';
 
 interface LanguageStore {
   language: Language;
@@ -429,7 +429,144 @@ export const translations = {
     footerDescription: "在自然花园环境中体验正宗泰国美食与精品咖啡的完美融合",
     contactUs: "联系我们",
     quickLinks: "快速链接",
-    followUs: "关注我们",
-    allRightsReserved: "版权所有",
+    followUs: "関注我们",
+    allRightsReserved: "版権所有",
+  },
+  ja: {
+    // Header
+    home: "ホーム",
+    about: "について",
+    rooms: "客室",
+    menu: "メニュー",
+    gallery: "ギャラリー",
+    reviews: "レビュー",
+    contact: "お問い合わせ",
+    forum: "フォーラム",
+    bookNow: "今すぐ予約",
+
+    // Hero
+    location: "タイ・バンコク ドンムアン",
+    heroTitle: "Plern Ping Cafe",
+    heroSubtitle: "伝統的なランナーの魅力と現代の快適さの完璧な融合を体験してください",
+    heroDescription: "自然の中に佇む静寂な庭園で、絶品料理とアルチザンコーヒーが出会う場所",
+    exploreMenu: "メニューを見る",
+    viewRooms: "客室を見る",
+
+    // Features
+    featuresTitle: "なぜ Plern Ping を選ぶのか",
+    featuresSubtitle: "唯一無二の体験があなたを待っています",
+    traditionalArchitecture: "伝統的な建築",
+    traditionalArchitectureDesc: "自然の中に佇む美しいランナー様式の木造建築",
+    artisanCoffee: "アルチザンコーヒー",
+    artisanCoffeeDesc: "スペシャルティロースト珈琲とタイ風ドリンク",
+    authenticCuisine: "本格料理",
+    authenticCuisineDesc: "地元シェフによる本格的なランナー・タイ料理",
+    gardenSetting: "ガーデン設定",
+    gardenSettingDesc: "緑豊かな庭園の中の室内・屋外席",
+
+    // Events
+    eventsTitle: "会議室・イベント",
+    eventsSubtitle: "会議・プレゼン・集まりに対応した特別スペース",
+    eventsMainTitle: "ランナーカフェと多目的ホール",
+    eventsMainDesc: "会議からプレゼン、社交イベントまで対応する設備完備の特別室。ケータリングサービス付き",
+    ourServices: "サービス内容",
+    presentationRoom: "プレゼン/セミナー室",
+    presentationRoomDesc: "プロジェクター・音響システム・接続コントロール完備",
+    cateringService: "ケータリングサービス",
+    cateringServiceDesc: "カスタマイズ可能な高品質な食事と飲み物",
+    privateEvents: "ITおよびプライベートイベント",
+    privateEventsDesc: "ビジネス利用、プライベート接続、個人イベントに最適",
+    inquirePrice: "イベント料金を問い合わせる",
+    presentationRoomShort: "プレゼン室",
+    presentationRoomShortDesc: "最新設備のセミナールーム",
+    cateringServiceShort: "ケータリング",
+    cateringServiceShortDesc: "フルサービスのイベントケータリング",
+
+    // Rooms
+    roomsTitle: "客室のご案内",
+    roomsSubtitle: "快適さとランナースタイルでおくつろぎください",
+    perNight: "/ 泊",
+    deluxeRoom: "デラックスルーム",
+    deluxeRoomDesc: "モダンランナースタイルのインテリアが施された広々とした客室",
+    familySuite: "ファミリースイート",
+    familySuiteDesc: "2ベッドルームを備えたファミリー向けの広々とした客室",
+    gardenView: "ガーデンビュールーム",
+    gardenViewDesc: "緑豊かな庭園を望む落ち着いた客室",
+    bookRoom: "客室を予約する",
+
+    // Menu
+    menuTitle: "メニューのご案内",
+    menuSubtitle: "情熱を込めて作られた本格タイ料理と厳選コーヒー",
+    coffeeAndDrinks: "コーヒー・ドリンク",
+    food: "フード",
+    espresso: "エスプレッソ",
+    espressoDesc: "濃厚でコクのあるシングルショット",
+    cappuccino: "カプチーノ",
+    cappuccinoDesc: "エスプレッソとスチームミルクフォーム",
+    latte: "ラテ",
+    latteDesc: "まろやかなエスプレッソとクリーミーなミルク",
+    thaiIcedCoffee: "タイアイスコーヒー",
+    thaiIcedCoffeeDesc: "コンデンスミルク入りの伝統的なタイスタイル",
+    padThai: "パッタイ",
+    padThaiDesc: "クラシックなタイ風炒め麺",
+    greenCurry: "グリーンカレー",
+    greenCurryDesc: "香り豊かなタイ風グリーンカレーとチキン",
+    somTam: "ソムタム",
+    somTamDesc: "ランナースタイルのスパイシーパパイヤサラダ",
+    khaoSoi: "カオソイ",
+    khaoSoiDesc: "北タイ風カレーヌードルスープ",
+    viewFullMenu: "フルメニューを見る",
+    recommended: "おすすめメニュー",
+    recommendedSubtitle: "ぜひ味わっていただきたい特別な一品",
+
+    // Gallery
+    galleryTitle: "ギャラリー",
+    gallerySubtitle: "静寂な空間の一端をご覧ください",
+
+    // Reviews
+    reviewsTitle: "お客様のレビュー",
+    reviewsSubtitle: "ご来店いただいたお客様の体験談",
+
+    // Contact
+    contactTitle: "お問い合わせ",
+    contactSubtitle: "ご質問やご予約のお手伝いをいたします",
+    phone: "電話",
+    email: "メール",
+    socialMedia: "ソーシャルメディア",
+    address: "住所",
+    openingHours: "営業時間",
+    lineId: "Line ID",
+    sendMessageForm: "メッセージを送る",
+    nameLabel: "お名前",
+    emailLabel: "メールアドレス",
+    phoneLabel: "電話番号",
+    topicLabel: "件名",
+    messageLabel: "メッセージ",
+    sendMessage: "送信する",
+    namePlaceholder: "お名前を入力してください",
+    emailPlaceholder: "メールアドレスを入力してください",
+    phonePlaceholder: "電話番号を入力してください",
+    topicPlaceholder: "件名を入力してください",
+    messagePlaceholder: "メッセージを入力してください",
+    messageSent: "メッセージを送信しました",
+    messageSuccess: "お問い合わせありがとうございます。できるだけ早くご連絡いたします",
+    dailyOpen: "毎日 08:00 - 21:00（現地時間）",
+
+    // Forum
+    forumTitle: "フォーラム",
+    forumSubtitle: "体験を共有しましょう",
+    latestTopics: "最新のトピック",
+    popularTopics: "人気のトピック",
+    replies: "返信",
+    views: "閲覧",
+    lastPost: "最終投稿",
+    startedBy: "投稿者",
+
+    // Footer
+    footerDescription: "自然の庭園環境で本格タイ料理とアルチザンコーヒーの完璧な融合を体験してください",
+    contactUs: "お問い合わせ",
+    quickLinks: "クイックリンク",
+    followUs: "フォローする",
+    allRightsReserved: "全著作権所有",
   },
 };

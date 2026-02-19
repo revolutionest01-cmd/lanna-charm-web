@@ -61,11 +61,11 @@ const Forum = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const categories = [
-    { value: "all", label: language === 'th' ? 'ทั้งหมด' : language === 'zh' ? '全部' : 'All' },
-    { value: "general", label: language === 'th' ? 'ทั่วไป' : language === 'zh' ? '一般' : 'General' },
-    { value: "question", label: language === 'th' ? 'คำถาม' : language === 'zh' ? '问题' : 'Question' },
-    { value: "review", label: language === 'th' ? 'รีวิว' : language === 'zh' ? '评论' : 'Review' },
-    { value: "shopping", label: language === 'th' ? 'ช้อปเอนเบิ้ล' : language === 'zh' ? '购物' : 'Shopping' },
+    { value: "all", label: language === 'th' ? 'ทั้งหมด' : language === 'zh' ? '全部' : language === 'ja' ? 'すべて' : 'All' },
+    { value: "general", label: language === 'th' ? 'ทั่วไป' : language === 'zh' ? '一般' : language === 'ja' ? '一般' : 'General' },
+    { value: "question", label: language === 'th' ? 'คำถาม' : language === 'zh' ? '问题' : language === 'ja' ? '質問' : 'Question' },
+    { value: "review", label: language === 'th' ? 'รีวิว' : language === 'zh' ? '评论' : language === 'ja' ? 'レビュー' : 'Review' },
+    { value: "shopping", label: language === 'th' ? 'ช้อปเอนเบิ้ล' : language === 'zh' ? '购物' : language === 'ja' ? 'ショッピング' : 'Shopping' },
   ];
 
   const [topics, setTopics] = useState<Topic[]>([
@@ -167,10 +167,10 @@ const Forum = () => {
 
   const getCategoryLabel = (category: Topic['category']) => {
     const labels = {
-      general: language === 'th' ? 'ทั่วไป' : language === 'zh' ? '一般' : 'General',
-      question: language === 'th' ? 'คำถาม' : language === 'zh' ? '问题' : 'Question',
-      review: language === 'th' ? 'รีวิว' : language === 'zh' ? '评论' : 'Review',
-      shopping: language === 'th' ? 'ช้อปเอนเบิ้ล' : language === 'zh' ? '购物' : 'Shopping',
+      general: language === 'th' ? 'ทั่วไป' : language === 'zh' ? '一般' : language === 'ja' ? '一般' : 'General',
+      question: language === 'th' ? 'คำถาม' : language === 'zh' ? '问题' : language === 'ja' ? '質問' : 'Question',
+      review: language === 'th' ? 'รีวิว' : language === 'zh' ? '评论' : language === 'ja' ? 'レビュー' : 'Review',
+      shopping: language === 'th' ? 'ช้อปเอนเบิ้ล' : language === 'zh' ? '购物' : language === 'ja' ? 'ショッピング' : 'Shopping',
     };
     return labels[category];
   };
@@ -189,7 +189,7 @@ const Forum = () => {
     e.preventDefault();
     
     if (!isAuthenticated || !user) {
-      sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : language === 'zh' ? '请先登录' : 'Please login first');
+      sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : language === 'zh' ? '请先登录' : language === 'ja' ? '先にログインしてください' : 'Please login first');
       return;
     }
 
@@ -219,20 +219,20 @@ const Forum = () => {
       setNewTopicContent("");
       setNewTopicCategory("general");
       setIsDialogOpen(false);
-      sweetAlert.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : language === 'zh' ? '主题创建成功' : 'Topic created successfully');
+      sweetAlert.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : language === 'zh' ? '主题创建成功' : language === 'ja' ? 'トピックを作成しました' : 'Topic created successfully');
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         sweetAlert.error(firstError.message);
       } else {
-        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
+        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : language === 'ja' ? 'エラーが発生しました。もう一度お試しください' : 'An error occurred. Please try again.');
       }
     }
   };
 
   const handleLogout = () => {
     logout();
-    sweetAlert.success(language === 'th' ? 'ออกจากระบบสำเร็จ' : language === 'zh' ? '成功登出' : 'Logged out successfully');
+    sweetAlert.success(language === 'th' ? 'ออกจากระบบสำเร็จ' : language === 'zh' ? '成功登出' : language === 'ja' ? 'ログアウトしました' : 'Logged out successfully');
     navigate("/");
   };
 
@@ -249,12 +249,12 @@ const Forum = () => {
                 onClick={() => navigate("/")}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                {language === 'th' ? 'หน้าแรก' : language === 'zh' ? '首页' : 'Home'}
+                {language === 'th' ? 'หน้าแรก' : language === 'zh' ? '首页' : language === 'ja' ? 'ホーム' : 'Home'}
               </Button>
               <Link to="/" className="flex items-center gap-2">
                 <img src={logo} alt="Plern Ping Cafe" className="h-8" />
                 <h1 className="font-serif font-bold text-lg text-foreground hidden sm:block">
-                  {language === 'th' ? 'ชุมชนคนเพลินพิง' : language === 'zh' ? 'Plern Ping 社区' : 'Plern Ping Community'}
+                  {language === 'th' ? 'ชุมชนคนเพลินพิง' : language === 'zh' ? 'Plern Ping 社区' : language === 'ja' ? 'Plern Ping コミュニティ' : 'Plern Ping Community'}
                 </h1>
               </Link>
             </div>
@@ -268,12 +268,12 @@ const Forum = () => {
                   </div>
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">{language === 'th' ? 'ออกจากระบบ' : language === 'zh' ? '退出登录' : 'Logout'}</span>
+                    <span className="hidden sm:inline">{language === 'th' ? 'ออกจากระบบ' : language === 'zh' ? '退出登录' : language === 'ja' ? 'ログアウト' : 'Logout'}</span>
                   </Button>
                 </>
               ) : (
                 <Button size="sm" onClick={() => navigate("/auth")}>
-                  {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
+                  {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : language === 'ja' ? 'ログイン' : 'Login'}
                 </Button>
               )}
             </div>
@@ -286,13 +286,15 @@ const Forum = () => {
         {/* Title & Description */}
         <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">
-            {language === 'th' ? 'ชุมชนคนเพลินพิง' : language === 'zh' ? 'Plern Ping 社区' : 'Plern Ping Community'}
+            {language === 'th' ? 'ชุมชนคนเพลินพิง' : language === 'zh' ? 'Plern Ping 社区' : language === 'ja' ? 'Plern Ping コミュニティ' : 'Plern Ping Community'}
           </h2>
           <p className="text-muted-foreground">
             {language === 'th' 
               ? 'แลกเปลี่ยนประสบการณ์และความรู้เกี่ยวกับคาเฟ่และรีสอร์ท' 
               : language === 'zh'
               ? '分享有关咖啡馆和度假村的经验和知识'
+              : language === 'ja'
+              ? 'カフェとリゾートに関する体験と知識を共有しましょう'
               : 'Share experiences and knowledge about cafe and resort'}
           </p>
         </div>
@@ -302,7 +304,7 @@ const Forum = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder={language === 'th' ? 'ค้นหากระทู้...' : language === 'zh' ? '搜索主题...' : 'Search topics...'}
+              placeholder={language === 'th' ? 'ค้นหากระทู้...' : language === 'zh' ? '搜索主题...' : language === 'ja' ? 'トピックを検索...' : 'Search topics...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -314,19 +316,19 @@ const Forum = () => {
               <DialogTrigger asChild>
                 <Button className="whitespace-nowrap">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  {language === 'th' ? 'ตั้งกระทู้ใหม่' : language === 'zh' ? '创建主题' : 'Create Topic'}
+                  {language === 'th' ? 'ตั้งกระทู้ใหม่' : language === 'zh' ? '创建主题' : language === 'ja' ? 'トピックを作成' : 'Create Topic'}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
-                    {language === 'th' ? 'ตั้งกระทู้ใหม่' : language === 'zh' ? '创建新主题' : 'Create New Topic'}
+                    {language === 'th' ? 'ตั้งกระทู้ใหม่' : language === 'zh' ? '创建新主题' : language === 'ja' ? '新しいトピックを作成' : 'Create New Topic'}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateTopic} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="topic-category">
-                      {language === 'th' ? 'หมวดหมู่' : language === 'zh' ? '类别' : 'Category'}
+                      {language === 'th' ? 'หมวดหมู่' : language === 'zh' ? '类别' : language === 'ja' ? 'カテゴリ' : 'Category'}
                     </Label>
                     <Select value={newTopicCategory} onValueChange={(value: any) => setNewTopicCategory(value)}>
                       <SelectTrigger>
@@ -342,31 +344,31 @@ const Forum = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="topic-title">
-                      {language === 'th' ? 'หัวข้อ' : language === 'zh' ? '标题' : 'Title'}
+                      {language === 'th' ? 'หัวข้อ' : language === 'zh' ? '标题' : language === 'ja' ? 'タイトル' : 'Title'}
                     </Label>
                     <Input
                       id="topic-title"
                       value={newTopicTitle}
                       onChange={(e) => setNewTopicTitle(e.target.value)}
-                      placeholder={language === 'th' ? 'ระบุหัวข้อกระทู้' : language === 'zh' ? '输入主题标题' : 'Enter topic title'}
+                      placeholder={language === 'th' ? 'ระบุหัวข้อกระทู้' : language === 'zh' ? '输入主题标题' : language === 'ja' ? 'トピックのタイトルを入力' : 'Enter topic title'}
                       required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="topic-content">
-                      {language === 'th' ? 'เนื้อหา' : language === 'zh' ? '内容' : 'Content'}
+                      {language === 'th' ? 'เนื้อหา' : language === 'zh' ? '内容' : language === 'ja' ? '内容' : 'Content'}
                     </Label>
                     <Textarea
                       id="topic-content"
                       value={newTopicContent}
                       onChange={(e) => setNewTopicContent(e.target.value)}
-                      placeholder={language === 'th' ? 'เขียนเนื้อหากระทู้...' : language === 'zh' ? '撰写您的主题内容...' : 'Write your topic content...'}
+                      placeholder={language === 'th' ? 'เขียนเนื้อหากระทู้...' : language === 'zh' ? '撰写您的主题内容...' : language === 'ja' ? 'トピックの内容を書いてください...' : 'Write your topic content...'}
                       rows={6}
                       required
                     />
                   </div>
                   <Button type="submit" className="w-full">
-                    {language === 'th' ? 'โพสต์' : language === 'zh' ? '发布' : 'Post'}
+                    {language === 'th' ? 'โพสต์' : language === 'zh' ? '发布' : language === 'ja' ? '投稿する' : 'Post'}
                   </Button>
                 </form>
               </DialogContent>
@@ -374,7 +376,7 @@ const Forum = () => {
           ) : (
             <Button onClick={() => navigate("/auth")} className="whitespace-nowrap">
               <PlusCircle className="mr-2 h-4 w-4" />
-              {language === 'th' ? 'เข้าสู่ระบบเพื่อโพสต์' : language === 'zh' ? '登录以发布' : 'Login to Post'}
+              {language === 'th' ? 'เข้าสู่ระบบเพื่อโพสต์' : language === 'zh' ? '登录以发布' : language === 'ja' ? 'ログインして投稿する' : 'Login to Post'}
             </Button>
           )}
         </div>
@@ -396,14 +398,14 @@ const Forum = () => {
           <div className="lg:col-span-2 space-y-3">
             <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
               <MessageCircle className="w-5 h-5 text-primary" />
-              {language === 'th' ? 'กระทู้ล่าสุด' : language === 'zh' ? '最新主题' : 'Latest Topics'}
+              {language === 'th' ? 'กระทู้ล่าสุด' : language === 'zh' ? '最新主题' : language === 'ja' ? '最新のトピック' : 'Latest Topics'}
             </h3>
             
             {filteredTopics().length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
                   <p className="text-muted-foreground">
-                    {language === 'th' ? 'ไม่พบกระทู้' : 'No topics found'}
+                    {language === 'th' ? 'ไม่พบกระทู้' : language === 'zh' ? '未找到主题' : language === 'ja' ? 'トピックが見つかりません' : 'No topics found'}
                   </p>
                 </CardContent>
               </Card>

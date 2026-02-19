@@ -50,20 +50,20 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
-        sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : 'Login successful');
+        sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : language === 'ja' ? 'ログイン成功' : 'Login successful');
         // Delay to show success message before redirect
         setTimeout(() => {
           navigate("/");
         }, 1500);
       } else {
-        sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : 'Invalid email or password. Please check and try again.'));
+        sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : language === 'ja' ? 'メールアドレスまたはパスワードが無効です' : 'Invalid email or password. Please check and try again.'));
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         sweetAlert.error(firstError.message);
       } else {
-        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
+        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : language === 'ja' ? 'エラーが発生しました。もう一度お試しください' : 'An error occurred. Please try again.');
       }
     } finally {
       // Always reset loading state
@@ -89,20 +89,20 @@ const Auth = () => {
       const result = await register(registerForm.name, registerForm.email, registerForm.password);
 
       if (result.success) {
-        sweetAlert.success(language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : 'Welcome');
+        sweetAlert.success(language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : language === 'ja' ? 'ようこそ' : 'Welcome');
         // Delay to show success message before redirect
         setTimeout(() => {
           navigate("/");
         }, 1500);
       } else {
-        sweetAlert.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : language === 'zh' ? '注册失败' : 'Registration failed'));
+        sweetAlert.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : language === 'zh' ? '注册失败' : language === 'ja' ? '登録に失敗しました' : 'Registration failed'));
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         sweetAlert.error(firstError.message);
       } else {
-        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
+        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : language === 'ja' ? 'エラーが発生しました。もう一度お試しください' : 'An error occurred. Please try again.');
       }
     } finally {
       // Always reset loading state
@@ -133,7 +133,7 @@ const Auth = () => {
         sweetAlert.error(error.message);
       }
     } catch (error) {
-      sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google' : language === 'zh' ? '使用Google登录时出错' : 'Error signing in with Google');
+      sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google' : language === 'zh' ? '使用Google登录时出错' : language === 'ja' ? 'Googleでのログイン中にエラーが発生しました' : 'Error signing in with Google');
     }
   };
 
@@ -146,29 +146,31 @@ const Auth = () => {
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : 'Back to Home'}
+          {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
         </Button>
 
         <div className="text-center mb-8 animate-fade-in">
           <img src={logo} alt="Plern Ping Cafe" className="h-20 mx-auto mb-4" />
           <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-            {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : 'Welcome'}
+            {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : language === 'ja' ? 'ようこそ' : 'Welcome'}
           </h1>
           <p className="text-muted-foreground">
-            {language === 'th' ? 'เข้าสู่ระบบเพื่อใช้งานเว็บบอร์ด' : language === 'zh' ? '登录以访问论坛' : 'Login to access the forum'}
+            {language === 'th' ? 'เข้าสู่ระบบเพื่อใช้งานเว็บบอร์ด' : language === 'zh' ? '登录以访问论坛' : language === 'ja' ? 'フォーラムにアクセスするにはログインしてください' : 'Login to access the forum'}
           </p>
         </div>
 
         <Card className="animate-fade-in border-border/50 shadow-xl">
           <CardHeader>
             <CardTitle className="text-center">
-              {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : 'Login / Register'}
+              {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register'}
             </CardTitle>
             <CardDescription className="text-center">
               {language === 'th' 
                 ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ' 
                 : language === 'zh'
                 ? '加入我们的社区，分享您的体验'
+                : language === 'ja'
+                ? 'コミュニティに参加して体験を共有してください'
                 : 'Join our community and share your experiences'}
             </CardDescription>
           </CardHeader>

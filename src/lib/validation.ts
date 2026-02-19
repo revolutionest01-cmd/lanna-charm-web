@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-export const createAuthValidation = (language: 'th' | 'en' | 'zh') => {
+export const createAuthValidation = (language: 'th' | 'en' | 'zh' | 'ja') => {
   return {
     email: z
       .string()
       .trim()
       .email({
-        message: language === 'th' ? 'รูปแบบอีเมลไม่ถูกต้อง' : language === 'zh' ? '电子邮件格式无效' : 'Invalid email address',
+        message: language === 'th' ? 'รูปแบบอีเมลไม่ถูกต้อง' : language === 'zh' ? '电子邮件格式无效' : language === 'ja' ? 'メールアドレスの形式が正しくありません' : 'Invalid email address',
       })
       .max(255, {
         message:
@@ -14,6 +14,8 @@ export const createAuthValidation = (language: 'th' | 'en' | 'zh') => {
             ? 'อีเมลต้องไม่เกิน 255 ตัวอักษร'
             : language === 'zh'
             ? '电子邮件不得超过255个字符'
+            : language === 'ja'
+            ? 'メールアドレスは255文字以内にしてください'
             : 'Email must be less than 255 characters',
       }),
     password: z
@@ -24,6 +26,8 @@ export const createAuthValidation = (language: 'th' | 'en' | 'zh') => {
             ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
             : language === 'zh'
             ? '密码至少需要6个字符'
+            : language === 'ja'
+            ? 'パスワードは6文字以上にしてください'
             : 'Password must be at least 6 characters',
       })
       .max(100, {
@@ -32,13 +36,15 @@ export const createAuthValidation = (language: 'th' | 'en' | 'zh') => {
             ? 'รหัสผ่านต้องไม่เกิน 100 ตัวอักษร'
             : language === 'zh'
             ? '密码不得超过100个字符'
+            : language === 'ja'
+            ? 'パスワードは100文字以内にしてください'
             : 'Password must be less than 100 characters',
       }),
     name: z
       .string()
       .trim()
       .min(1, {
-        message: language === 'th' ? 'กรุณากรอกชื่อ' : language === 'zh' ? '请输入您的姓名' : 'Please enter your name',
+        message: language === 'th' ? 'กรุณากรอกชื่อ' : language === 'zh' ? '请输入您的姓名' : language === 'ja' ? 'お名前を入力してください' : 'Please enter your name',
       })
       .max(100, {
         message:
@@ -46,18 +52,20 @@ export const createAuthValidation = (language: 'th' | 'en' | 'zh') => {
             ? 'ชื่อต้องไม่เกิน 100 ตัวอักษร'
             : language === 'zh'
             ? '姓名不得超过100个字符'
+            : language === 'ja'
+            ? 'お名前は100文字以内にしてください'
             : 'Name must be less than 100 characters',
       }),
   };
 };
 
-export const createTopicValidation = (language: 'th' | 'en' | 'zh') => {
+export const createTopicValidation = (language: 'th' | 'en' | 'zh' | 'ja') => {
   return z.object({
     title: z
       .string()
       .trim()
       .min(1, {
-        message: language === 'th' ? 'กรุณากรอกหัวข้อ' : language === 'zh' ? '请输入标题' : 'Please enter a title',
+        message: language === 'th' ? 'กรุณากรอกหัวข้อ' : language === 'zh' ? '请输入标题' : language === 'ja' ? 'タイトルを入力してください' : 'Please enter a title',
       })
       .max(200, {
         message:
@@ -65,13 +73,15 @@ export const createTopicValidation = (language: 'th' | 'en' | 'zh') => {
             ? 'หัวข้อต้องไม่เกิน 200 ตัวอักษร'
             : language === 'zh'
             ? '标题不得超过200个字符'
+            : language === 'ja'
+            ? 'タイトルは200文字以内にしてください'
             : 'Title must be less than 200 characters',
       }),
     content: z
       .string()
       .trim()
       .min(1, {
-        message: language === 'th' ? 'กรุณากรอกเนื้อหา' : language === 'zh' ? '请输入内容' : 'Please enter content',
+        message: language === 'th' ? 'กรุณากรอกเนื้อหา' : language === 'zh' ? '请输入内容' : language === 'ja' ? '内容を入力してください' : 'Please enter content',
       })
       .max(2000, {
         message:
@@ -79,6 +89,8 @@ export const createTopicValidation = (language: 'th' | 'en' | 'zh') => {
             ? 'เนื้อหาต้องไม่เกิน 2000 ตัวอักษร'
             : language === 'zh'
             ? '内容不得超过2000个字符'
+            : language === 'ja'
+            ? '内容は2000文字以内にしてください'
             : 'Content must be less than 2000 characters',
       }),
   });
