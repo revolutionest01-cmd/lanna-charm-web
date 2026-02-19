@@ -414,7 +414,7 @@ export const RoomsManagement = () => {
           <h3 className="text-lg font-semibold">
             {language === "th" ? "จัดการห้องพัก" : "Manage Rooms"}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground/70">
             {language === "th"
               ? "เพิ่ม แก้ไข หรือลบห้องพัก"
               : "Add, edit, or delete rooms"}
@@ -574,7 +574,7 @@ export const RoomsManagement = () => {
                           placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน" 
                         />
                       </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-foreground/70 mt-1">
                         {language === "th" ? "แยกด้วยจุลภาค" : "Separate with commas"}
                       </p>
                       <FormMessage />
@@ -600,7 +600,7 @@ export const RoomsManagement = () => {
                           placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs" 
                         />
                       </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-foreground/70 mt-1">
                         {language === "th" ? "แยกด้วยจุลภาค" : "Separate with commas"}
                       </p>
                       <FormMessage />
@@ -611,9 +611,9 @@ export const RoomsManagement = () => {
                 {/* Existing Images */}
                 {selectedRoom && selectedRoom.images && selectedRoom.images.length > 0 && (
                   <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border">
-                    <FormLabel className="text-base">
+                    <FormLabel className="text-base font-semibold">
                       {language === "th" ? "รูปภาพปัจจุบัน" : "Current Images"}
-                      <span className="text-xs font-normal text-muted-foreground ml-2">
+                      <span className="text-xs font-normal text-foreground/70 ml-2">
                         ({selectedRoom.images.length})
                       </span>
                     </FormLabel>
@@ -700,8 +700,8 @@ export const RoomsManagement = () => {
       {rooms.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <ImageIcon className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
+            <ImageIcon className="w-16 h-16 text-foreground/30 mb-4" />
+            <p className="text-foreground/70">
               {language === "th"
                 ? "ยังไม่มีห้องพัก กดปุ่มเพิ่มห้องพักเพื่อเริ่มต้น"
                 : "No rooms yet. Click Add Room to get started"}
@@ -729,7 +729,7 @@ export const RoomsManagement = () => {
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                    <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
+                    <ImageIcon className="w-12 h-12 text-foreground/20" />
                   </div>
                 )}
               </div>
@@ -767,7 +767,7 @@ export const RoomsManagement = () => {
 
               {(room.description_th || room.description_en) && (
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-foreground/70 line-clamp-2">
                     {language === "th"
                       ? room.description_th
                       : room.description_en}

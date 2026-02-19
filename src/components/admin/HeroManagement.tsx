@@ -249,7 +249,7 @@ export const HeroManagement = () => {
         <h3 className="text-lg font-semibold mb-2">
           {language === "th" ? "จัดการ Hero Section" : "Manage Hero Section"}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground/70">
           {language === "th"
             ? "อัพโหลดรูปภาพ (แนะนำ 16:9) และแก้ไขข้อความ"
             : "Upload image (recommended 16:9) and edit text"}

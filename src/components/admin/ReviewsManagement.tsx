@@ -430,12 +430,12 @@ export const ReviewsManagement = () => {
                     <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-2">
                       📷
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-foreground/70">
                       {language === "th"
                         ? "คลิกหรือลากไฟล์มาวาง"
                         : "Click or drag file here"}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-foreground/70 mt-1">
                       {language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "Max 5MB"}
                     </p>
                   </label>
@@ -515,7 +515,7 @@ export const ReviewsManagement = () => {
                   </Button>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-3">
+              <p className="text-sm text-foreground/70 line-clamp-3">
                 {language === "th" ? review.review_text_th : review.review_text_en}
               </p>
             </CardContent>
@@ -524,7 +524,7 @@ export const ReviewsManagement = () => {
       </div>
 
       {reviews.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-foreground/70">
           <p>{language === "th" ? "ยังไม่มีรีวิว" : "No reviews yet"}</p>
         </div>
       )}

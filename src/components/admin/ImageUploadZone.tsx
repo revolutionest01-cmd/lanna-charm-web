@@ -125,7 +125,7 @@ export const ImageUploadZone = ({
                 "w-8 h-8 transition-colors",
                 isDragActive && !disabled
                   ? "text-primary"
-                  : "text-muted-foreground"
+                  : "text-foreground/60"
               )}
             />
           </div>
@@ -136,7 +136,7 @@ export const ImageUploadZone = ({
                 ? "ลากรูปภาพมาวางที่นี่"
                 : "Drag images here"}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-foreground/70 mt-1">
               {language === "th"
                 ? "หรือคลิกเพื่อเลือกไฟล์"
                 : "or click to select files"}
@@ -144,13 +144,13 @@ export const ImageUploadZone = ({
           </div>
 
           {/* Info */}
-          <div className="flex flex-col gap-1 text-xs text-muted-foreground mt-2">
+          <div className="flex flex-col gap-1 text-xs text-foreground/70 mt-2">
             <p>
               {language === "th"
                 ? `สนับสนุน: JPG, PNG, GIF (ไม่เกิน 5MB ต่อไฟล์)`
                 : `Supported: JPG, PNG, GIF (Max 5MB per file)`}
             </p>
-            <p className="font-medium">
+            <p className="font-medium text-foreground/80">
               {language === "th"
                 ? `ที่เหลือ: ${remainingSlots} จาก ${maxImages} ภาพ`
                 : `Available: ${remainingSlots} of ${maxImages} images`}
@@ -179,7 +179,7 @@ export const ImageUploadZone = ({
                 : `Preview (${previews.length}/${maxImages})`}
             </h4>
             {previews.length > 1 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-foreground/70">
                 {language === "th"
                   ? "ลากเพื่อจัดเรียง"
                   : "Drag to reorder"}
@@ -189,8 +189,8 @@ export const ImageUploadZone = ({
 
           {remainingSlots === 0 && (
             <div className="flex gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-yellow-700">
+              <AlertCircle className="w-4 h-4 text-yellow-700 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-yellow-800 font-medium">
                 {language === "th"
                   ? "ถึงจำนวนรูปภาพสูงสุด"
                   : "Maximum images reached"}

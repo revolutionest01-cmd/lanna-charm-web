@@ -251,13 +251,13 @@ export const GalleryManagement = () => {
               }`}
               onClick={() => document.getElementById('gallery-upload')?.click()}
             >
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-2">
+              <Upload className="w-12 h-12 mx-auto mb-4 text-foreground/50" />
+              <p className="text-sm text-foreground/70 mb-2">
                 {language === "th" 
                   ? "ลากหลายไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก" 
                   : "Drag multiple files here or click to select"}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-foreground/70">
                 {language === "th" 
                   ? `รองรับไฟล์ภาพ (สูงสุด 5MB ต่อไฟล์) • ${formData.files.length} ไฟล์ที่เลือก` 
                   : `Supports image files (max 5MB per file) • ${formData.files.length} files selected`}
@@ -290,7 +290,7 @@ export const GalleryManagement = () => {
                     >
                       <X className="w-3 h-3" />
                     </Button>
-                    <p className="text-xs text-center mt-1 text-muted-foreground truncate">
+                    <p className="text-xs text-center mt-1 text-foreground/70 truncate">
                       {formData.files[index]?.name}
                     </p>
                   </div>
@@ -344,7 +344,7 @@ export const GalleryManagement = () => {
       </div>
 
       {images.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-foreground/70">
           <p>{language === "th" ? "ยังไม่มีรูปภาพในแกลเลอรี่" : "No images in gallery yet"}</p>
         </div>
       )}

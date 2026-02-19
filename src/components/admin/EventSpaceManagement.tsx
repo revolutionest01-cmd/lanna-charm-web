@@ -253,7 +253,7 @@ export const EventSpaceManagement = () => {
             ? "จัดการห้องประชุม & งานเลี้ยง"
             : "Manage Meeting & Event Space"}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground/70">
           {language === "th"
             ? "อัพโหลดรูปภาพและแก้ไขข้อมูล"
             : "Upload images and edit information"}

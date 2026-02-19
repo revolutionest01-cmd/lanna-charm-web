@@ -23,7 +23,7 @@ interface UserRole {
 const roleConfig = {
   admin: { icon: Crown, color: "text-red-500", badge: "destructive" as const },
   staff: { icon: Shield, color: "text-blue-500", badge: "default" as const },
-  user: { icon: User, color: "text-muted-foreground", badge: "secondary" as const },
+  user: { icon: User, color: "text-foreground/70", badge: "secondary" as const },
 };
 
 export const UserRolesManagement = () => {
@@ -165,7 +165,7 @@ export const UserRolesManagement = () => {
                           <p className="font-medium text-sm">
                             {u.display_name}
                             {isSelf && (
-                              <span className="text-xs text-muted-foreground ml-1.5">
+                              <span className="text-xs text-foreground/70 ml-1.5">
                                 ({language === "th" ? "คุณ" : "You"})
                               </span>
                             )}
@@ -179,12 +179,12 @@ export const UserRolesManagement = () => {
                         {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-foreground/70">
                       {new Date(u.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                     </TableCell>
                     <TableCell className="text-right">
                       {isSelf ? (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-foreground/70">—</span>
                       ) : (
                         <Select
                           value={u.role}

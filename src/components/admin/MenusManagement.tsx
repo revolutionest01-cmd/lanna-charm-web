@@ -609,7 +609,7 @@ export const MenusManagement = () => {
               <h3 className="text-lg font-semibold">
                 {language === "th" ? "จัดการเมนู" : "Manage Menus"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-foreground/70">
                 {language === "th"
                   ? "เพิ่ม แก้ไข หรือลบเมนู"
                   : "Add, edit, or delete menus"}
@@ -794,8 +794,8 @@ export const MenusManagement = () => {
                           htmlFor="menu-image-upload"
                           className="cursor-pointer flex flex-col items-center"
                         >
-                          <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">
+                          <ImageIcon className="w-8 h-8 text-foreground/50 mb-2" />
+                          <p className="text-sm text-foreground/70">
                             {language === "th"
                               ? "คลิกหรือลากไฟล์มาวาง (อัพโหลดได้หลายรูป)"
                               : "Click or drag files here (Multiple uploads)"}
@@ -854,8 +854,8 @@ export const MenusManagement = () => {
                           htmlFor="menu-icon-upload"
                           className="cursor-pointer flex flex-col items-center"
                         >
-                          <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">
+                          <ImageIcon className="w-8 h-8 text-foreground/50 mb-2" />
+                          <p className="text-sm text-foreground/70">
                             {language === "th"
                               ? "คลิกหรือลากไฟล์มาวาง"
                               : "Click or drag file here"}
@@ -918,8 +918,8 @@ export const MenusManagement = () => {
           {menus.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Coffee className="w-16 h-16 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
+                <Coffee className="w-16 h-16 text-foreground/30 mb-4" />
+                <p className="text-foreground/70">
                   {language === "th"
                     ? "ยังไม่มีเมนู กดปุ่มเพิ่มเมนูเพื่อเริ่มต้น"
                     : "No menus yet. Click Add Menu to get started"}
@@ -958,7 +958,7 @@ export const MenusManagement = () => {
                         <div className="text-sm font-normal text-primary mt-1">
                           ฿{menu.price.toLocaleString()}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-foreground/70 mt-1">
                           {getCategoryName(menu.category_id)}
                         </div>
                       </div>
@@ -982,7 +982,7 @@ export const MenusManagement = () => {
                   </CardHeader>
                   {(menu.description_th || menu.description_en) && (
                     <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-foreground/70 line-clamp-2">
                         {language === "th" ? menu.description_th : menu.description_en}
                       </p>
                     </CardContent>
@@ -1091,8 +1091,8 @@ export const MenusManagement = () => {
           {categories.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Coffee className="w-16 h-16 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
+                <Coffee className="w-16 h-16 text-foreground/30 mb-4" />
+                <p className="text-foreground/70">
                   {language === "th"
                     ? "ยังไม่มีหมวดหมู่ กดปุ่มเพิ่มหมวดหมู่เพื่อเริ่มต้น"
                     : "No categories yet. Click Add Category to get started"}
