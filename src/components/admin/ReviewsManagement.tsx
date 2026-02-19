@@ -15,11 +15,19 @@ import sweetAlert from "@/lib/sweetAlert";
 import { Loader2, Plus, Trash2, Edit, Star } from "lucide-react";
 import { z } from "zod";
 
+const AVATAR_OPTIONS = [
+  "😊", "😄", "😎", "🤩", "😍", 
+  "🥳", "😇", "🤓", "😌", "😊",
+  "👨", "👩", "👴", "👵", "👦",
+  "👧", "🧔", "👱", "🤵", "💼"
+];
+
 const reviewSchema = z.object({
   customer_name: z.string().min(1, "Customer name is required").max(100),
   rating: z.number().min(1).max(5),
   review_text_en: z.string().min(1, "English review is required").max(500),
   review_text_th: z.string().min(1, "Thai review is required").max(500),
+  avatar: z.string().default("😊"),
 });
 
 type Review = {
@@ -29,6 +37,7 @@ type Review = {
   review_text_en: string;
   review_text_th: string;
   image_url: string | null;
+  avatar: string;
   is_active: boolean;
   created_at: string;
 };
@@ -50,6 +59,7 @@ export const ReviewsManagement = () => {
     rating: 5,
     review_text_en: "",
     review_text_th: "",
+    avatar: "😊",
   });
 
   useEffect(() => {
@@ -78,6 +88,7 @@ export const ReviewsManagement = () => {
       customer_name: "",
       rating: 5,
       review_text_en: "",
+      avatar: "😊",
       review_text_th: "",
     });
     setEditingReview(null);
@@ -195,6 +206,7 @@ export const ReviewsManagement = () => {
           .update({
             customer_name: formData.customer_name,
             rating: formData.rating,
+            avatar: formData.avatar,
             review_text_en: formData.review_text_en,
             review_text_th: formData.review_text_th,
             image_url: imageUrl,
@@ -207,6 +219,7 @@ export const ReviewsManagement = () => {
         const { error } = await supabase.from("reviews").insert({
           customer_name: formData.customer_name,
           rating: formData.rating,
+          avatar: formData.avatar,
           review_text_en: formData.review_text_en,
           review_text_th: formData.review_text_th,
           image_url: imageUrl,
@@ -240,6 +253,7 @@ export const ReviewsManagement = () => {
     setEditingReview(review);
     setFormData({
       customer_name: review.customer_name,
+      avatar: review.avatar || "😊",
       rating: review.rating,
       review_text_en: review.review_text_en,
       review_text_th: review.review_text_th,
@@ -358,51 +372,99 @@ export const ReviewsManagement = () => {
                   : "Add New Review"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-primary">{language === "th" ? "ชื่อลูกค้า" : "Customer Name"}</Label>
-                <Input
-                  value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                  placeholder={language === "th" ? "คุณสมชาย" : "John Doe"}
-                />
+            <div className="space-y-6">
+              {/* Customer Name & Avatar */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-primary">{language === "th" ? "ชื่อลูกค้า" : "Customer Name"}</Label>
+                  <Input
+                    value={formData.customer_name}
+                    onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                    placeholder={language === "th" ? "คุณสมชาย" : "John Doe"}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label className="text-primary">{language === "th" ? "เลือก Avatar" : "Select Avatar"}</Label>
+                  <div className="grid grid-cols-5 gap-2 mt-2">
+                    {AVATAR_OPTIONS.map((avatar) => (
+                      <button
+                        key={avatar}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, avatar })}
+                        className={`text-3xl p-2 rounded-lg transition-all border-2 ${
+                          formData.avatar === avatar
+                            ? "border-primary bg-primary/10 scale-110"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {avatar}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* Rating with Stars Preview */}
               <div>
                 <Label className="text-primary">{language === "th" ? "คะแนน" : "Rating"}</Label>
-                <Select
-                  value={formData.rating.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[5, 4, 3, 2, 1].map((num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} {language === "th" ? "ดาว" : "Stars"}
-                      </SelectItem>
+                <div className="mt-2 flex items-center gap-4">
+                  <Select
+                    value={formData.rating.toString()}
+                    onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5, 4, 3, 2, 1].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} {language === "th" ? "ดาว" : "Stars"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {/* Star Preview */}
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-6 h-6 transition-all ${
+                          i < formData.rating
+                            ? "fill-amber-400 text-amber-400 scale-110"
+                            : "fill-muted text-muted/50"
+                        }`}
+                      />
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label className="text-primary">{language === "th" ? "รีวิวภาษาอังกฤษ" : "English Review"}</Label>
-                <Textarea
-                  value={formData.review_text_en}
-                  onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
-                  placeholder="Great service and delicious food!"
-                  rows={3}
-                />
+
+              {/* Reviews */}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-primary">{language === "th" ? "รีวิวภาษาอังกฤษ" : "English Review"}</Label>
+                  <Textarea
+                    value={formData.review_text_en}
+                    onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
+                    placeholder="Great service and delicious food!"
+                    rows={3}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label className="text-primary">{language === "th" ? "รีวิวภาษาไทย" : "Thai Review"}</Label>
+                  <Textarea
+                    value={formData.review_text_th}
+                    onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
+                    placeholder="บริการดีมาก อาหารอร่อย!"
+                    rows={3}
+                    className="mt-2"
+                  />
+                </div>
               </div>
-              <div>
-                <Label className="text-primary">{language === "th" ? "รีวิวภาษาไทย" : "Thai Review"}</Label>
-                <Textarea
-                  value={formData.review_text_th}
-                  onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
-                  placeholder="บริการดีมาก อาหารอร่อย!"
-                  rows={3}
-                />
-              </div>
+
+              {/* Image Upload */}
               <div>
                 <Label className="text-primary">{language === "th" ? "รูปภาพ (ถ้ามี)" : "Image (Optional)"}</Label>
                 <div
@@ -479,44 +541,81 @@ export const ReviewsManagement = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {reviews.map((review) => (
-          <Card key={review.id} className={review.is_active ? "" : "opacity-50"}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-semibold">{review.customer_name}</h4>
-                  <div className="flex gap-1 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < review.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "fill-muted text-muted"
-                        }`}
-                      />
-                    ))}
+          <Card key={review.id} className={`overflow-hidden transition-all hover:shadow-lg ${review.is_active ? "" : "opacity-50"}`}>
+            <CardContent className="p-6">
+              {/* Header with Avatar & Name */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-4xl p-2 bg-primary/10 rounded-lg">
+                    {review.avatar || "😊"}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg text-foreground">{review.customer_name}</h4>
+                    {/* Star Rating Display */}
+                    <div className="flex gap-1 mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? "fill-amber-400 text-amber-400"
+                              : "fill-muted text-muted"
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(review)}>
-                    <Edit className="w-4 h-4" />
+                {/* Actions */}
+                <div className="flex gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => handleEdit(review)}
+                    className="hover:bg-primary/10"
+                  >
+                    <Edit className="w-4 h-4 text-primary" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => toggleActive(review)}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => toggleActive(review)}
+                    title={review.is_active ? "Hide" : "Show"}
+                  >
                     {review.is_active ? "👁️" : "👁️‍🗨️"}
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(review.id)}
+                    className="hover:bg-destructive/10"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
               </div>
-              <p className="text-sm text-foreground/70 line-clamp-3">
+
+              {/* Review Image if exists */}
+              {review.image_url && (
+                <div className="mb-4 rounded-lg overflow-hidden">
+                  <img 
+                    src={review.image_url} 
+                    alt="Review" 
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Review Text */}
+              <p className="text-sm text-foreground/80 line-clamp-4 mb-2">
                 {language === "th" ? review.review_text_th : review.review_text_en}
+              </p>
+
+              {/* Date */}
+              <p className="text-xs text-foreground/50">
+                {new Date(review.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
               </p>
             </CardContent>
           </Card>
