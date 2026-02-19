@@ -96,8 +96,7 @@ const TabBar = () => {
     >
       <div
         className={cn(
-          "absolute inset-0 transition-colors duration-500 backdrop-blur-sm",
-          themeStyles.bg,
+          "absolute inset-0 transition-colors duration-500 backdrop-blur-sm bg-foreground"
         )}
       />
       {/* Subtle bottom gradient border */}
@@ -106,8 +105,8 @@ const TabBar = () => {
         themeStyles.border
       )} />
 
-      <ScrollArea className="relative z-10 h-10 sm:h-11 w-full">
-        <div className="flex items-center h-full px-2 sm:px-3 gap-1 sm:gap-1.5">
+      <ScrollArea className="relative z-10 h-10 sm:h-12 w-full">
+        <div className="flex items-center h-full px-2 sm:px-3 gap-1.5 sm:gap-2">
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
             const active = isActive(tab.href);
@@ -117,27 +116,18 @@ const TabBar = () => {
                 key={tab.href}
                 onClick={() => handleTabClick(tab.href)}
                 className={cn(
-                  "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg shrink-0",
-                  "text-[10px] sm:text-xs font-medium tracking-wide",
+                  "flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2.5 rounded-lg shrink-0",
+                  "text-[11px] sm:text-sm font-semibold tracking-wide",
                   "transition-all duration-200 whitespace-nowrap",
-                  "active:scale-95 touch-manipulation",
-                  "border shadow-sm hover:shadow-md",
-                  active
-                    ? cn(
-                        themeStyles.activeBg,
-                        themeStyles.activeText,
-                        "border-primary/40 shadow-md bg-primary/15"
-                      )
-                    : cn(
-                        themeStyles.text,
-                        themeStyles.hoverBg,
-                        themeStyles.hoverText,
-                        "border-primary/20 bg-background/10 hover:bg-primary/15 hover:border-primary/40"
-                      )
+                  "active:scale-90 touch-manipulation",
+                  "border shadow-md",
+                  themeStyles.text,
+                  "border-primary/30 bg-background/15",
+                  "hover:bg-primary/20 hover:border-primary/50 hover:text-background/90 hover:shadow-lg"
                 )}
               >
-                <IconComponent className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                <span className="truncate">{tab.label}</span>
+                <IconComponent className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0 transition-transform hover:scale-110" />
+                <span className="truncate font-semibold">{tab.label}</span>
               </button>
             );
           })}

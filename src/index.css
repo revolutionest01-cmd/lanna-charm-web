@@ -107,6 +107,12 @@ All colors MUST be HSL.
     --gradient-mid: 28 20% 88%;
     --gradient-end: 25 18% 85%;
     --gradient-accent: 20 30% 80%;
+    
+    /* Navigation Bar Darkbrown-to-Grey Gradient */
+    --nav-gradient-start: 20 40% 25%;
+    --nav-gradient-mid: 18 25% 30%;
+    --nav-gradient-end: 0 0% 42%;
+    --nav-gradient: linear-gradient(135deg, hsl(var(--nav-gradient-start)) 0%, hsl(var(--nav-gradient-mid)) 50%, hsl(var(--nav-gradient-end)) 100%);
   }
 
   .dark {
@@ -165,6 +171,12 @@ All colors MUST be HSL.
     --gradient-mid: 22 15% 14%;
     --gradient-end: 25 12% 10%;
     --gradient-accent: 18 20% 22%;
+    
+    /* Navigation Bar Darkbrown-to-Grey Gradient (Dark Mode) */
+    --nav-gradient-start: 20 50% 30%;
+    --nav-gradient-mid: 18 35% 35%;
+    --nav-gradient-end: 0 0% 50%;
+    --nav-gradient: linear-gradient(135deg, hsl(var(--nav-gradient-start)) 0%, hsl(var(--nav-gradient-mid)) 50%, hsl(var(--nav-gradient-end)) 100%);
   }
 }
 

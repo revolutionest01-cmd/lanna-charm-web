@@ -136,15 +136,15 @@ const AppSidebar = () => {
       collapsible="offcanvas"
       className="border-none top-0 h-screen z-50"
     >
-      {/* Gradient background with depth */}
+      {/* Deep dark brown background (matching Help button) */}
       <div className={cn(
         "absolute inset-0 border-r transition-colors duration-500",
-        "bg-gradient-to-b from-foreground via-foreground to-primary/70 shadow-2xl shadow-black/30",
+        "bg-foreground shadow-2xl shadow-black/40",
         themeStyles.border
       )} />
 
       {/* Top gradient accent */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40" />
       
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}

@@ -7,6 +7,9 @@ import { BrowserRouter } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AnimatedRoutes from "./components/AnimatedRoutes";
 import LoadingScreen from "./components/LoadingScreen";
+import AppUpdateNotifier from "./components/AppUpdateNotifier";
+import DataLoadError from "./components/DataLoadError";
+import { useGAPageTracking } from "./lib/googleAnalytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +21,20 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Component to track page views
+const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; onLoadingComplete: () => void }) => {
+  useGAPageTracking();
+
+  return (
+    <>
+      {showLoading && <LoadingScreen onLoadingComplete={onLoadingComplete} />}
+      <AnimatedRoutes />
+      <AppUpdateNotifier />
+      <DataLoadError />
+    </>
+  );
+};
 
 const App = () => {
   const [showLoading, setShowLoading] = useState(true);
@@ -32,9 +49,8 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          {showLoading && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
           <BrowserRouter>
-            <AnimatedRoutes />
+            <AppRoutes showLoading={showLoading} onLoadingComplete={handleLoadingComplete} />
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

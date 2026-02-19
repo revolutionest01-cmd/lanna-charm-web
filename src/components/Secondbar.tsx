@@ -106,18 +106,17 @@ const Secondbar = () => {
     <div className="fixed top-0 left-0 right-0 z-50 h-12 sm:h-14 md:h-14 safe-area-top">
       <div 
         className={cn(
-          "absolute inset-0 transition-colors duration-500",
-          "bg-gradient-to-r from-foreground via-foreground to-primary/80 shadow-lg shadow-black/20",
-        )} 
+          "absolute inset-0 transition-colors duration-500 shadow-lg shadow-black/40 bg-foreground"
+        )}
       />
 
       {/* Top gradient accent */}
       <div className={cn(
-        "absolute top-0 left-0 right-0 h-0.5",
-        "bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+        "absolute top-0 left-0 right-0 h-1",
+        "bg-gradient-to-r from-transparent via-primary/50 to-transparent"
       )} />
 
-      {/* Subtle warm bottom accent line */}
+      {/* Subtle bottom accent line */}
       <div className={cn(
         "absolute bottom-0 left-0 right-0 h-px",
         "bg-gradient-to-r from-transparent via-primary/40 to-transparent"

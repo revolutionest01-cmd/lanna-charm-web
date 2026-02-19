@@ -5,27 +5,33 @@ import { supabase } from "@/integrations/supabase/client";
 import plernpingLogo from "@/assets/plernping-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef } from "react";
-import { useCountUp } from "@/hooks/useCountUp";
 import { useBusinessInfo } from "@/hooks/useContentData";
 
-// Animated Visitor Counter Component
+// Beautiful Visitor Counter Component
 const VisitorCounterAnimated = ({ totalVisits, language }: { totalVisits: number; language: string }) => {
-  const { count } = useCountUp({
-    end: totalVisits,
-    duration: 2000,
-    delay: 300
-  });
-
   return (
-    <div className="flex justify-center mb-6">
-      <div className="flex items-center gap-2 bg-primary/5 rounded-full px-4 py-2">
-        <Users size={18} className="text-primary" />
-        <span className="text-muted-foreground text-sm">
-          {language === 'th' ? 'ผู้เยี่ยมชม' : language === 'zh' ? '访客' : 'Visitors'}: {' '}
-          <span className="font-semibold text-foreground tabular-nums">
-            {count.toLocaleString()}
-          </span>
-        </span>
+    <div className="flex justify-center mb-8">
+      <div className="relative">
+        {/* Gradient background glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40 rounded-full blur-2xl opacity-60 -z-10 scale-110" />
+        
+        {/* Main counter card with glassmorphism */}
+        <div className="flex items-center gap-3 bg-gradient-to-r from-primary/15 to-primary/10 backdrop-blur-md border border-primary/30 rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          {/* Icon with glow */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/40 rounded-full blur-md" />
+            <Users size={24} className="text-primary relative z-10" />
+          </div>
+          
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">
+              {language === 'th' ? 'ผู้เยี่ยมชม' : language === 'zh' ? '访客' : 'Visitors'}
+            </span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent tabular-nums">
+              {totalVisits.toLocaleString()}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

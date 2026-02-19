@@ -50,6 +50,58 @@
     <!-- Brand Identity -->
     <meta name="theme-color" content="#8B6F47" />
     <meta name="application-name" content="Plern Ping Cafe" />
+    
+    <!-- App Version for Cache Busting -->
+    <meta name="app-version" content="1.0.0" />
+        <!-- Aggressive cache clearing script - runs before app loads -->
+    <script>
+      // IMPORTANT: Run FIRST before anything else loads
+      (function() {
+        console.log('🧹 [PRELOAD] Starting aggressive cache cleanup...');
+        
+        // 1. Clear all service worker caches immediately
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => {
+              console.log('🗑️  Deleting cache: ' + name);
+              caches.delete(name);
+            });
+          }).catch(e => console.warn('Cache clear error:', e));
+        }
+        
+        // 2. Unregister service workers before app loads
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((reg) => {
+              console.log('🛑 Unregistering SW: ' + reg.scope);
+              reg.unregister();
+            });
+          }).catch(e => console.warn('SW unregister error:', e));
+        }
+        
+        // 3. Prevent stale manifest cache
+        const link = document.querySelector('link[rel="manifest"]');
+        if (link) {
+          link.href = link.href + '?v=' + Date.now();
+        }
+        
+        console.log('✅ Preload cleanup completed');
+      })();
+    </script>
+        <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('✅ Service Worker registered:', registration);
+            })
+            .catch((error) => {
+              console.warn('⚠️ Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </head>
 
   <body>

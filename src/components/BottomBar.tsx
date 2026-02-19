@@ -1,50 +1,53 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Bed, Coffee, MessageCircle, Menu } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useActiveSection, SectionTheme } from "@/hooks/useActiveSection";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import BookingDialog from "./BookingDialog";
+import { useState, useEffect } from "react";
 
 const BottomBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
-  const { activeTheme } = useActiveSection();
   const { toggleSidebar } = useSidebar();
   const t = translations[language];
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  const getThemeStyles = (theme: SectionTheme) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          bg: 'bg-stone-900/95',
-          border: 'border-stone-700/50',
-          text: 'text-stone-300',
-          activeText: 'text-stone-100',
-          activeBg: 'bg-stone-800/80',
-        };
-      case 'warm':
-        return {
-          bg: 'bg-amber-50/95',
-          border: 'border-amber-200/60',
-          text: 'text-stone-600',
-          activeText: 'text-highlight',
-          activeBg: 'bg-amber-100/80',
-        };
-      case 'light':
-      default:
-        return {
-          bg: 'bg-stone-50/95',
-          border: 'border-stone-200/60',
-          text: 'text-stone-500',
-          activeText: 'text-stone-800',
-          activeBg: 'bg-stone-100/80',
-        };
-    }
+  // Detect scroll direction - hide on scroll down, show on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show if scroll up or at top
+      if (currentScrollY < lastScrollY || currentScrollY < 100) {
+        setIsVisible(true);
+      } 
+      // Hide if scroll down past threshold
+      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  // Use consistent theme with Navbar/Sidebar - dark foreground
+  const getThemeStyles = () => {
+    return {
+      bg: 'bg-foreground',
+      border: 'border-primary/20',
+      text: 'text-background/70',
+      activeText: 'text-background',
+      activeBg: 'bg-primary/20',
+    };
   };
 
-  const themeStyles = getThemeStyles(activeTheme);
+  const themeStyles = getThemeStyles();
 
   const handleNavClick = (href: string) => {
     if (href.startsWith('/#')) {
@@ -82,18 +85,20 @@ const BottomBar = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      {/* Solid background with top shadow */}
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 md:hidden transition-all duration-500 ease-out",
+      isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+    )}>
+      {/* Darkbrown to grey glassmorphism background */}
       <div 
         className={cn(
-          "absolute inset-0 border-t transition-colors duration-300",
-          "shadow-[0_-4px_20px_rgba(0,0,0,0.1)]",
-          themeStyles.bg,
-          themeStyles.border
-        )} 
+          "absolute inset-0 border-t transition-all duration-300",
+          "bg-foreground shadow-[0_-12px_40px_rgba(0,0,0,0.4)]",
+          "backdrop-blur-xl"
+        )}
       />
       
-      <div className="relative z-10 flex items-center justify-around h-14 sm:h-16 px-1 sm:px-2 pb-safe">
+      <div className="relative z-10 flex items-center justify-around h-14 sm:h-16 px-1 sm:px-2 pb-safe gap-0">
         {quickLinks.map((item) => {
           const IconComponent = item.icon;
           const active = isActive(item.href);
@@ -103,41 +108,47 @@ const BottomBar = () => {
               key={item.href}
               onClick={() => handleNavClick(item.href)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg",
-                "min-w-[48px] sm:min-w-[56px]",
-                "transition-colors duration-200 active:scale-95 touch-manipulation",
+                "flex flex-col items-center justify-center gap-0.5 py-2.5 px-2.5 transition-all duration-300",
+                "min-w-[56px] sm:min-w-[64px] active:scale-85 touch-manipulation relative",
+                "hover:text-background hover:bg-primary/25 rounded-lg",
+                "hover:shadow-[0_4px_16px_rgba(var(--primary),0.3)]",
                 active 
-                  ? cn(themeStyles.activeBg, themeStyles.activeText)
+                  ? "text-background bg-primary/30 shadow-[0_4px_16px_rgba(var(--primary),0.35)]"
                   : themeStyles.text
               )}
             >
-              <div className={cn(
-                "flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg transition-colors duration-200",
-                active && "bg-highlight/20"
-              )}>
-                <IconComponent className={cn(
-                  "h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200",
-                  active && "text-highlight"
-                )} />
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-medium leading-tight truncate max-w-[48px]">{item.label}</span>
+              {active && (
+                <div className="absolute inset-0 rounded-lg bg-primary/30 -z-10" />
+              )}
+              <IconComponent className={cn(
+                "h-6 w-6 sm:h-7 sm:w-7 transition-all duration-300",
+                "hover:scale-125 active:scale-95",
+                active ? "text-background font-bold scale-110" : ""
+              )} />
+              <span className={cn(
+                "text-[8px] sm:text-[9px] leading-tight transition-all duration-300 font-semibold mt-1",
+                active ? "text-background" : ""
+              )}>{item.label}</span>
             </button>
           );
         })}
         
-        {/* Book Now Button - Center - Elevated design */}
+        {/* Book Now Button - Center - Inverted prominent design with glow */}
         <BookingDialog>
-          <button className="flex flex-col items-center justify-center gap-0.5 p-1 min-w-[48px] sm:min-w-[56px] touch-manipulation">
+          <button className="flex flex-col items-center justify-center py-2.5 px-2 touch-manipulation transition-all duration-300 active:scale-85 hover:scale-115 relative group">
+            {/* Animated glow background */}
+            <div className="absolute inset-0 bottom-0 w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-gradient-to-r from-accent via-highlight to-accent opacity-0 group-hover:opacity-70 transition-opacity duration-300 blur-md animate-pulse" />
+            
+            {/* Main button */}
             <div className={cn(
-              "flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full",
-              "bg-gradient-to-br from-primary to-primary/80",
-              "shadow-lg shadow-primary/40 -mt-4 sm:-mt-5",
-              "border-3 sm:border-4 border-background",
-              "transition-transform duration-200 active:scale-95"
+              "flex items-center justify-center w-12 h-12 sm:w-13 sm:h-13 rounded-lg relative z-10",
+              "bg-gradient-to-br from-background to-background/95 hover:from-background hover:to-background/90 active:from-background active:to-background/85",
+              "border-2 border-primary/40 hover:border-primary/60 active:border-primary/40",
+              "shadow-[0_8px_24px_rgba(30,18,91,0.35)] hover:shadow-[0_12px_36px_rgba(30,18,91,0.5)] -my-0.5",
+              "transition-all duration-300 active:shadow-[0_2px_8px_rgba(30,18,91,0.2)]"
             )}>
-              <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+              <Bed className="h-6 w-6 sm:h-7 sm:w-7 text-foreground transition-all duration-300 hover:scale-125 font-bold" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold text-primary leading-tight">{t.bookNow}</span>
           </button>
         </BookingDialog>
         
@@ -145,16 +156,15 @@ const BottomBar = () => {
         <button
           onClick={toggleSidebar}
           className={cn(
-            "flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2 rounded-lg",
-            "min-w-[48px] sm:min-w-[56px]",
-            "transition-colors duration-200 active:scale-95 touch-manipulation",
+            "flex flex-col items-center justify-center gap-0.5 py-2.5 px-2.5 transition-all duration-300 rounded-lg",
+            "min-w-[56px] sm:min-w-[64px] active:scale-85 touch-manipulation relative",
+            "hover:text-background hover:bg-primary/25",
+            "hover:shadow-[0_4px_16px_rgba(var(--primary),0.3)]",
             themeStyles.text
           )}
         >
-          <div className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg">
-            <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
-          </div>
-          <span className="text-[9px] sm:text-[10px] font-medium leading-tight">
+          <Menu className="h-6 w-6 sm:h-7 sm:w-7 transition-all duration-300 hover:scale-125 active:scale-95" />
+          <span className="text-[8px] sm:text-[9px] leading-tight transition-all duration-300 font-semibold mt-1">
             {language === 'th' ? 'เมนู' : language === 'zh' ? '菜单' : 'Menu'}
           </span>
         </button>
