@@ -451,7 +451,7 @@ export const RoomsManagement = () => {
                     name="name_th"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
+                        <FormLabel className="text-primary">
                           {language === "th" ? "ชื่อห้อง (ไทย)" : "Room Name (Thai)"}
                         </FormLabel>
                         <FormControl>
@@ -467,7 +467,7 @@ export const RoomsManagement = () => {
                     name="name_en"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
+                        <FormLabel className="text-primary">
                           {language === "th" ? "ชื่อห้อง (อังกฤษ)" : "Room Name (English)"}
                         </FormLabel>
                         <FormControl>
@@ -485,7 +485,7 @@ export const RoomsManagement = () => {
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
+                        <FormLabel className="text-primary">
                           {language === "th" ? "ราคา (บาท)" : "Price (THB)"}
                         </FormLabel>
                         <FormControl>
@@ -507,7 +507,7 @@ export const RoomsManagement = () => {
                     name="capacity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
+                        <FormLabel className="text-primary">
                           {language === "th" ? "จำนวนคน" : "Capacity"}
                         </FormLabel>
                         <FormControl>
@@ -529,7 +529,7 @@ export const RoomsManagement = () => {
                   name="description_th"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className="text-primary">
                         {language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}
                       </FormLabel>
                       <FormControl>
@@ -545,7 +545,7 @@ export const RoomsManagement = () => {
                   name="description_en"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className="text-primary">
                         {language === "th"
                           ? "รายละเอียด (อังกฤษ)"
                           : "Description (English)"}
@@ -563,7 +563,7 @@ export const RoomsManagement = () => {
                   name="amenities_th"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className="text-primary">
                         {language === "th" ? "สิ่งอำนวยความสะดวก (ไทย)" : "Amenities (Thai)"}
                       </FormLabel>
                       <FormControl>
@@ -587,7 +587,7 @@ export const RoomsManagement = () => {
                   name="amenities_en"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className="text-primary">
                         {language === "th"
                           ? "สิ่งอำนวยความสะดวก (อังกฤษ)"
                           : "Amenities (English)"}
@@ -611,7 +611,7 @@ export const RoomsManagement = () => {
                 {/* Existing Images */}
                 {selectedRoom && selectedRoom.images && selectedRoom.images.length > 0 && (
                   <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border">
-                    <FormLabel className="text-base font-semibold">
+                    <FormLabel className="text-base font-semibold text-primary">
                       {language === "th" ? "รูปภาพปัจจุบัน" : "Current Images"}
                       <span className="text-xs font-normal text-foreground/70 ml-2">
                         ({selectedRoom.images.length})
@@ -646,7 +646,7 @@ export const RoomsManagement = () => {
 
                 {/* New Images Upload Zone */}
                 <div className="space-y-2">
-                  <FormLabel className="text-base">
+                  <FormLabel className="text-base text-primary">
                     {language === "th" ? "อัพโหลดรูปภาพ" : "Upload Images"}
                   </FormLabel>
                   <ImageUploadZone

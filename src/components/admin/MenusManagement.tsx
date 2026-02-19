@@ -645,7 +645,7 @@ export const MenusManagement = () => {
                         name="name_th"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{language === "th" ? "ชื่อเมนู (ไทย)" : "Menu Name (Thai)"}</FormLabel>
+                            <FormLabel className="text-primary">{language === "th" ? "ชื่อเมนู (ไทย)" : "Menu Name (Thai)"}</FormLabel>
                             <FormControl>
                               <Input {...field} disabled={submitting} />
                             </FormControl>
@@ -659,7 +659,7 @@ export const MenusManagement = () => {
                         name="name_en"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{language === "th" ? "ชื่อเมนู (อังกฤษ)" : "Menu Name (English)"}</FormLabel>
+                            <FormLabel className="text-primary">{language === "th" ? "ชื่อเมนู (อังกฤษ)" : "Menu Name (English)"}</FormLabel>
                             <FormControl>
                               <Input {...field} disabled={submitting} />
                             </FormControl>
@@ -719,7 +719,7 @@ export const MenusManagement = () => {
                       name="description_th"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
+                          <FormLabel className="text-primary">{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
                           <FormControl>
                             <Textarea {...field} disabled={submitting} rows={3} />
                           </FormControl>
@@ -733,7 +733,7 @@ export const MenusManagement = () => {
                       name="description_en"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
+                          <FormLabel className="text-primary">{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
                           <FormControl>
                             <Textarea {...field} disabled={submitting} rows={3} />
                           </FormControl>
@@ -748,7 +748,7 @@ export const MenusManagement = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">
+                            <FormLabel className="text-base text-primary">
                               {language === "th" ? "เมนูแนะนำ" : "Recommended Menu"}
                             </FormLabel>
                             <FormDescription>
@@ -770,7 +770,7 @@ export const MenusManagement = () => {
 
                     {/* Image Upload */}
                     <div className="space-y-2">
-                      <Label>{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
+                      <Label className="text-primary">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
                       <div
                         onDragOver={handleImageDragOver}
                         onDragLeave={handleImageDragLeave}
@@ -831,7 +831,7 @@ export const MenusManagement = () => {
 
                     {/* Icon Upload */}
                     <div className="space-y-2">
-                      <Label>{language === "th" ? "ไอคอนเมนู" : "Menu Icon"}</Label>
+                      <Label className="text-primary">{language === "th" ? "ไอคอนเมนู" : "Menu Icon"}</Label>
                       <div
                         onDragOver={handleIconDragOver}
                         onDragLeave={handleIconDragLeave}
@@ -1035,7 +1035,7 @@ export const MenusManagement = () => {
                       name="name_th"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{language === "th" ? "ชื่อหมวดหมู่ (ไทย)" : "Category Name (Thai)"}</FormLabel>
+                          <FormLabel className="text-primary">{language === "th" ? "ชื่อหมวดหมู่ (ไทย)" : "Category Name (Thai)"}</FormLabel>
                           <FormControl>
                             <Input {...field} disabled={loading} />
                           </FormControl>
@@ -1049,7 +1049,7 @@ export const MenusManagement = () => {
                       name="name_en"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{language === "th" ? "ชื่อหมวดหมู่ (อังกฤษ)" : "Category Name (English)"}</FormLabel>
+                          <FormLabel className="text-primary">{language === "th" ? "ชื่อหมวดหมู่ (อังกฤษ)" : "Category Name (English)"}</FormLabel>
                           <FormControl>
                             <Input {...field} disabled={loading} />
                           </FormControl>
