@@ -454,11 +454,11 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           {children}
         </DrawerTrigger>
         <DrawerContent className="max-h-[92dvh]">
-          <DrawerHeader className="text-left pb-2">
+          <DrawerHeader className="text-center pb-4 px-3">
             <div className="text-xl sm:text-2xl font-bold font-serif tracking-tight text-foreground mb-2">
               {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
             </div>
-            <DrawerTitle className="text-lg font-bold font-serif tracking-tight text-foreground/80">
+            <DrawerTitle className="text-sm sm:text-base font-semibold font-serif tracking-tight text-foreground/70 leading-relaxed">
               {language === 'th' ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping' : language === 'zh' ? '填写详细信息以预订房间' : 'Fill in the details to book your room'}
             </DrawerTitle>
           </DrawerHeader>
@@ -476,12 +476,12 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px] rounded-2xl p-6">
-        <DialogHeader>
-          <div className="text-2xl sm:text-3xl font-bold font-serif tracking-tight text-foreground mb-2">
+      <DialogContent className="sm:max-w-[500px] rounded-2xl p-6 md:p-8">
+        <DialogHeader className="text-center mb-1">
+          <div className="text-2xl md:text-3xl font-bold font-serif tracking-tight text-foreground mb-3 leading-tight">
             {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
           </div>
-          <DialogTitle className="text-lg font-bold font-serif tracking-tight text-foreground/80">
+          <DialogTitle className="text-sm md:text-base font-semibold font-serif tracking-tight text-foreground/70 leading-relaxed px-2">
             {language === 'th'
               ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
               : language === 'zh'
