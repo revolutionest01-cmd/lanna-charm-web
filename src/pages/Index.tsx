@@ -2,6 +2,7 @@ import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import EventsSection from "@/components/EventsSection";
 import RoomsSection from "@/components/RoomsSection";
+import PromotionSection from "@/components/PromotionSection";
 import MenuSection from "@/components/MenuSection";
 import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -38,6 +39,10 @@ const Index = () => {
           <div className="section-glow">
             <RoomsSection />
           </div>
+        </ScrollReveal>
+        
+        <ScrollReveal animation="fade-up" delay={100}>
+          <PromotionSection />
         </ScrollReveal>
         
         <ScrollReveal animation="fade-up" delay={100}>

@@ -23,6 +23,7 @@ import {
   TrendingUp,
   BarChart3,
   Activity,
+  Zap,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -30,6 +31,7 @@ import { HeroManagement } from "@/components/admin/HeroManagement";
 import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
 import { RoomsManagement } from "@/components/admin/RoomsManagement";
 import { MenusManagement } from "@/components/admin/MenusManagement";
+import { PromotionManagement } from "@/components/admin/PromotionManagement";
 import { GalleryManagement } from "@/components/admin/GalleryManagement";
 import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
 import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
@@ -48,6 +50,7 @@ const TABS = [
   { id: "events", icon: Calendar, labelTh: "อีเว้นท์", labelEn: "Events" },
   { id: "rooms", icon: Home, labelTh: "ห้องพัก", labelEn: "Rooms" },
   { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus" },
+  { id: "promotions", icon: Zap, labelTh: "โปรโมชั่น", labelEn: "Promotions" },
   { id: "gallery", icon: ImageIcon, labelTh: "แกลเลอรี่", labelEn: "Gallery" },
   { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews" },
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
@@ -186,6 +189,7 @@ const Admin = () => {
       case "events": return <EventSpaceManagement />;
       case "rooms": return <RoomsManagement />;
       case "menus": return <MenusManagement />;
+      case "promotions": return <PromotionManagement />;
       case "gallery": return <GalleryManagement />;
       case "reviews": return <ReviewsManagement />;
       case "business": return <BusinessInfoManagement />;
@@ -221,9 +225,9 @@ const Admin = () => {
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
-        <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0">
-          <ScrollArea className="lg:h-[calc(100vh-60px)]">
-            <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible">
+        <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 overflow-hidden">
+          <ScrollArea className="w-full lg:h-[calc(100vh-60px)] lg:[&>[style]]:h-auto">
+            <div className="flex lg:flex-col p-2 gap-1 lg:w-auto w-max">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -231,7 +235,7 @@ const Admin = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap lg:whitespace-normal shrink-0 lg:shrink
                       ${isActive
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -242,6 +246,12 @@ const Admin = () => {
                   </button>
                 );
               })}
+            </div>
+            {/* Visual indicator for scrollable content on mobile */}
+            <div className="lg:hidden flex justify-center pt-1">
+              <div className="text-xs text-muted-foreground px-2">
+                ← {language === "th" ? "เลื่อนเพื่อดูแท็บอื่น" : "Scroll for more tabs"} →
+              </div>
             </div>
           </ScrollArea>
         </nav>

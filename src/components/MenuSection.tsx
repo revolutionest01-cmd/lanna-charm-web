@@ -45,8 +45,80 @@ const MenuSection = () => {
   const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const menus = menuData?.menus || [];
-  const categories = menuData?.categories || [];
+  // Mock data for development - shows when no data from DB
+  const MOCK_MENUS: Menu[] = [
+    {
+      id: '1',
+      name_th: 'แลด',
+      name_en: 'Iced Coffee',
+      description_th: 'กาแฟเย็นหมักเข้มข้น',
+      description_en: 'Strong iced coffee blend',
+      price: 65,
+      category_id: '1',
+      image_url: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=500&h=400&fit=crop',
+      icon_url: null,
+      is_recommended: true,
+      is_active: true,
+    },
+    {
+      id: '2',
+      name_th: 'คำฎีไหม',
+      name_en: 'Iced Tea',
+      description_th: 'ชาเยือกเย็นสดชื่น',
+      description_en: 'Refreshing iced tea',
+      price: 70,
+      category_id: '1',
+      image_url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=400&fit=crop',
+      icon_url: null,
+      is_recommended: false,
+      is_active: true,
+    },
+    {
+      id: '3',
+      name_th: 'อเมริกโน่',
+      name_en: 'Americano',
+      description_th: 'กาแฟอเมริกันแท้',
+      description_en: 'Classic americano',
+      price: 55,
+      category_id: '1',
+      image_url: 'https://images.unsplash.com/photo-1559056199-641a0ac8b3f7?w=500&h=400&fit=crop',
+      icon_url: null,
+      is_recommended: false,
+      is_active: true,
+    },
+    {
+      id: '4',
+      name_th: 'เอสเพรสโซ่',
+      name_en: 'Espresso',
+      description_th: 'เอสเพรสโซ่เข้มข้น',
+      description_en: 'Strong espresso shot',
+      price: 50,
+      category_id: '1',
+      image_url: 'https://images.unsplash.com/photo-1442521962633-e50a8dd4fc59?w=500&h=400&fit=crop',
+      icon_url: null,
+      is_recommended: false,
+      is_active: true,
+    },
+    {
+      id: '5',
+      name_th: 'บูชกะไก่',
+      name_en: 'Chicken Soup',
+      description_th: 'ซุปไก่หมักเข้มข้น',
+      description_en: 'Flavorful chicken broth',
+      price: 75,
+      category_id: '2',
+      image_url: 'https://images.unsplash.com/photo-1547069900-7138c3d4c6d1?w=500&h=400&fit=crop',
+      icon_url: null,
+      is_recommended: false,
+      is_active: true,
+    },
+  ];
+
+  const menus = (menuData?.menus && menuData.menus.length > 0) ? menuData.menus : MOCK_MENUS;
+  const categories = (menuData?.categories && menuData.categories.length > 0) ? menuData.categories : [
+    { id: '1', name_th: 'เครื่องดื่ม', name_en: 'Beverages' },
+    { id: '2', name_th: 'อาหาร', name_en: 'Food' },
+  ];
 
   const recommendedMenus = menus.filter((m) => m.is_recommended);
   
@@ -210,7 +282,8 @@ const MenuSection = () => {
                             className="border-border hover:border-primary hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105"
                           >
                             <CardContent className="p-4 sm:p-6">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
+                              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                                {/* Left Content */}
                                 <div className="flex-1 flex items-start gap-3 min-w-0">
                                   {item.icon_url && (
                                     <img
@@ -231,11 +304,27 @@ const MenuSection = () => {
                                     <p className="text-primary text-xs font-semibold mt-1">
                                       {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
                                     </p>
+                                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary mt-3 sm:mt-4">
+                                      ฿{item.price}
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary flex-shrink-0">
-                                  ฿{item.price}
-                                </div>
+
+                                {/* Right Image */}
+                                {item.image_url && (
+                                  <div className="w-full sm:w-40 md:w-48 flex-shrink-0">
+                                    <div className="rounded-2xl border-4 border-red-500 p-1 overflow-hidden bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 h-32 sm:h-40 md:h-44">
+                                      <img
+                                        src={item.image_url}
+                                        alt={language === "th" ? item.name_th : item.name_en}
+                                        className="w-full h-full object-cover rounded-xl hover:scale-110 transition-transform duration-300"
+                                        onError={(e) => {
+                                          e.currentTarget.src = '/placeholder.svg';
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
