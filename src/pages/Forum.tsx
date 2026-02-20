@@ -58,14 +58,16 @@ const Forum = () => {
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [newTopicContent, setNewTopicContent] = useState("");
   const [newTopicCategory, setNewTopicCategory] = useState<Topic['category']>("general");
+  const [newTopicImage, setNewTopicImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [likedTopicIds, setLikedTopicIds] = useState<Set<number>>(new Set());
 
   const categories = [
     { value: "all", label: language === 'th' ? 'ทั้งหมด' : language === 'zh' ? '全部' : language === 'ja' ? 'すべて' : 'All' },
     { value: "general", label: language === 'th' ? 'ทั่วไป' : language === 'zh' ? '一般' : language === 'ja' ? '一般' : 'General' },
     { value: "question", label: language === 'th' ? 'คำถาม' : language === 'zh' ? '问题' : language === 'ja' ? '質問' : 'Question' },
     { value: "review", label: language === 'th' ? 'รีวิว' : language === 'zh' ? '评论' : language === 'ja' ? 'レビュー' : 'Review' },
-    { value: "shopping", label: language === 'th' ? 'ช้อปเอนเบิ้ล' : language === 'zh' ? '购物' : language === 'ja' ? 'ショッピング' : 'Shopping' },
+    { value: "shopping", label: "Shoppable" },
   ];
 
   const [topics, setTopics] = useState<Topic[]>([
@@ -170,7 +172,7 @@ const Forum = () => {
       general: language === 'th' ? 'ทั่วไป' : language === 'zh' ? '一般' : language === 'ja' ? '一般' : 'General',
       question: language === 'th' ? 'คำถาม' : language === 'zh' ? '问题' : language === 'ja' ? '質問' : 'Question',
       review: language === 'th' ? 'รีวิว' : language === 'zh' ? '评论' : language === 'ja' ? 'レビュー' : 'Review',
-      shopping: language === 'th' ? 'ช้อปเอนเบิ้ล' : language === 'zh' ? '购物' : language === 'ja' ? 'ショッピング' : 'Shopping',
+      shopping: 'Shoppable',
     };
     return labels[category];
   };
@@ -211,13 +213,15 @@ const Forum = () => {
         likes: 0,
         category: newTopicCategory,
         content: newTopicContent.trim(),
-        createdAt: new Date().toISOString().split('T')[0]
+        createdAt: new Date().toISOString().split('T')[0],
+        image: newTopicImage || undefined
       };
 
       setTopics([newTopic, ...topics]);
       setNewTopicTitle("");
       setNewTopicContent("");
       setNewTopicCategory("general");
+      setNewTopicImage(null);
       setIsDialogOpen(false);
       sweetAlert.success(language === 'th' ? 'สร้างกระทู้สำเร็จ' : language === 'zh' ? '主题创建成功' : language === 'ja' ? 'トピックを作成しました' : 'Topic created successfully');
     } catch (error) {
@@ -236,6 +240,38 @@ const Forum = () => {
     navigate("/");
   };
 
+  const handleLikeTopic = (e: React.MouseEvent, topicId: number) => {
+    e.stopPropagation();
+    
+    if (!isAuthenticated || !user) {
+      sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : language === 'zh' ? '请先登录' : language === 'ja' ? '先にログインしてください' : 'Please login first');
+      return;
+    }
+
+    setLikedTopicIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(topicId)) {
+        newSet.delete(topicId);
+      } else {
+        newSet.add(topicId);
+      }
+      return newSet;
+    });
+
+    setTopics(prev => 
+      prev.map(topic => {
+        if (topic.id === topicId) {
+          const isNowLiked = !likedTopicIds.has(topicId);
+          return {
+            ...topic,
+            likes: isNowLiked ? topic.likes + 1 : Math.max(0, topic.likes - 1)
+          };
+        }
+        return topic;
+      })
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -247,6 +283,7 @@ const Forum = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/")}
+                className="text-foreground"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {language === 'th' ? 'หน้าแรก' : language === 'zh' ? '首页' : language === 'ja' ? 'ホーム' : 'Home'}
@@ -321,17 +358,17 @@ const Forum = () => {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-foreground">
                     {language === 'th' ? 'ตั้งกระทู้ใหม่' : language === 'zh' ? '创建新主题' : language === 'ja' ? '新しいトピックを作成' : 'Create New Topic'}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateTopic} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="topic-category">
+                    <Label htmlFor="topic-category" className="text-foreground">
                       {language === 'th' ? 'หมวดหมู่' : language === 'zh' ? '类别' : language === 'ja' ? 'カテゴリ' : 'Category'}
                     </Label>
                     <Select value={newTopicCategory} onValueChange={(value: any) => setNewTopicCategory(value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white text-foreground">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -343,7 +380,7 @@ const Forum = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="topic-title">
+                    <Label htmlFor="topic-title" className="text-foreground">
                       {language === 'th' ? 'หัวข้อ' : language === 'zh' ? '标题' : language === 'ja' ? 'タイトル' : 'Title'}
                     </Label>
                     <Input
@@ -351,11 +388,12 @@ const Forum = () => {
                       value={newTopicTitle}
                       onChange={(e) => setNewTopicTitle(e.target.value)}
                       placeholder={language === 'th' ? 'ระบุหัวข้อกระทู้' : language === 'zh' ? '输入主题标题' : language === 'ja' ? 'トピックのタイトルを入力' : 'Enter topic title'}
+                      className="bg-white text-foreground"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="topic-content">
+                    <Label htmlFor="topic-content" className="text-foreground">
                       {language === 'th' ? 'เนื้อหา' : language === 'zh' ? '内容' : language === 'ja' ? '内容' : 'Content'}
                     </Label>
                     <Textarea
@@ -363,9 +401,43 @@ const Forum = () => {
                       value={newTopicContent}
                       onChange={(e) => setNewTopicContent(e.target.value)}
                       placeholder={language === 'th' ? 'เขียนเนื้อหากระทู้...' : language === 'zh' ? '撰写您的主题内容...' : language === 'ja' ? 'トピックの内容を書いてください...' : 'Write your topic content...'}
+                      className="bg-white text-foreground"
                       rows={6}
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="topic-image" className="text-foreground">
+                      {language === 'th' ? 'อัพโหลดรูปภาพ (ไม่จำเป็น)' : language === 'zh' ? '上传图片（可选）' : language === 'ja' ? '画像をアップロード（オプション）' : 'Upload Image (Optional)'}
+                    </Label>
+                    <Input
+                      id="topic-image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setNewTopicImage(event.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="bg-white text-foreground cursor-pointer"
+                    />
+                    {newTopicImage && (
+                      <div className="relative w-32 h-32 mt-3 rounded-lg overflow-hidden border border-gray-300">
+                        <img src={newTopicImage} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setNewTopicImage(null)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <Button type="submit" className="w-full">
                     {language === 'th' ? 'โพสต์' : language === 'zh' ? '发布' : language === 'ja' ? '投稿する' : 'Post'}
@@ -381,11 +453,15 @@ const Forum = () => {
           )}
         </div>
 
-        {/* Category Tabs */}
+        {/* Category Tabs - Premium Styling */}
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="w-full justify-start bg-gradient-to-r from-background via-muted to-background p-1 rounded-xl border border-border/30 gap-1 flex-wrap h-auto">
             {categories.map((cat) => (
-              <TabsTrigger key={cat.value} value={cat.value} className="whitespace-nowrap">
+              <TabsTrigger 
+                key={cat.value} 
+                value={cat.value} 
+                className="whitespace-nowrap font-medium transition-all duration-200 text-foreground bg-background/50 data-[state=active]:shadow-lg data-[state=active]:bg-foreground data-[state=active]:text-background hover:bg-foreground/10 px-4 py-2 rounded-lg"
+              >
                 {cat.label}
               </TabsTrigger>
             ))}
@@ -450,10 +526,17 @@ const Forum = () => {
                             <Eye className="w-3.5 h-3.5" />
                             <span>{topic.views}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-3.5 h-3.5" />
+                          <button
+                            onClick={(e) => handleLikeTopic(e, topic.id)}
+                            className="flex items-center gap-1 transition-colors hover:text-red-500 cursor-pointer"
+                          >
+                            <Heart 
+                              className="w-3.5 h-3.5" 
+                              fill={likedTopicIds.has(topic.id) ? "currentColor" : "none"}
+                              color={likedTopicIds.has(topic.id) ? "#ef4444" : "currentColor"}
+                            />
                             <span>{topic.likes}</span>
-                          </div>
+                          </button>
                           <div className="flex items-center gap-1">
                             <MessageCircle className="w-3.5 h-3.5" />
                             <span>{topic.replies}</span>
@@ -496,10 +579,21 @@ const Forum = () => {
                             <Eye className="w-3 h-3" />
                             {topic.views}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Heart className="w-3 h-3" />
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleLikeTopic(e, topic.id);
+                            }}
+                            className="flex items-center gap-1 transition-colors hover:text-red-500 cursor-pointer"
+                          >
+                            <Heart 
+                              className="w-3 h-3" 
+                              fill={likedTopicIds.has(topic.id) ? "currentColor" : "none"}
+                              color={likedTopicIds.has(topic.id) ? "#ef4444" : "currentColor"}
+                            />
                             {topic.likes}
-                          </span>
+                          </button>
                         </div>
                       </div>
                     </div>

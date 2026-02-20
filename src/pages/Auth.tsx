@@ -25,6 +25,8 @@ const Auth = () => {
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -109,6 +111,61 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Validate email
+      const validation = createAuthValidation(language);
+      const emailSchema = z.object({
+        email: validation.email,
+      });
+      
+      emailSchema.parse({ email: forgotPasswordEmail });
+
+      // Send password reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) {
+        sweetAlert.error(
+          language === 'th' 
+            ? 'ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่' 
+            : language === 'zh'
+            ? '无法发送密码重置电子邮件，请重试'
+            : 'Unable to send password reset email. Please try again.'
+        );
+      } else {
+        sweetAlert.success(
+          language === 'th' 
+            ? 'ลิงก์รีเซ็ตรหัสผ่านส่งไปแล้ว กรุณาตรวจสอบอีเมล' 
+            : language === 'zh'
+            ? '密码重置链接已发送。请检查您的电子邮件'
+            : 'Password reset link sent! Please check your email.'
+        );
+        setForgotPasswordEmail("");
+        setIsForgotPasswordMode(false);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        sweetAlert.error(firstError.message);
+      } else {
+        sweetAlert.error(
+          language === 'th' 
+            ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' 
+            : language === 'zh'
+            ? '发生错误，请重试'
+            : 'An error occurred. Please try again.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       // Use production domain for redirect
@@ -160,20 +217,65 @@ const Auth = () => {
 
         <Card className="animate-fade-in border-border/50 shadow-xl">
           <CardHeader>
-            <CardTitle className="text-center">
-              {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register'}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {language === 'th' 
-                ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ' 
-                : language === 'zh'
-                ? '加入我们的社区，分享您的体验'
-                : language === 'ja'
-                ? 'コミュニティに参加して体験を共有してください'
-                : 'Join our community and share your experiences'}
-            </CardDescription>
+            {isForgotPasswordMode ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2 p-2"
+                    onClick={() => setIsForgotPasswordMode(false)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <CardTitle>
+                    {language === 'th' ? 'รีเซ็ตหัสผ่าน' : language === 'zh' ? '重置密码' : 'Reset Password'}
+                  </CardTitle>
+                </div>
+                <CardDescription>
+                  {language === 'th' ? 'กรอกอีเมลของคุณเพื่อรับลิงก์รีเซ็ต' : language === 'zh' ? '输入您的电子邮件以接收重置链接' : 'Enter your email to receive reset link'}
+                </CardDescription>
+              </>
+            ) : (
+              <>
+                <CardTitle className="text-center">
+                  {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register'}
+                </CardTitle>
+                <CardDescription className="text-center">
+                  {language === 'th' 
+                    ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ' 
+                    : language === 'zh'
+                    ? '加入我们的社区，分享您的体验'
+                    : language === 'ja'
+                    ? 'コミュニティに参加して体験を共有してください'
+                    : 'Join our community and share your experiences'}
+                </CardDescription>
+              </>
+            )}
           </CardHeader>
           <CardContent>
+            {isForgotPasswordMode ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">
+                    {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
+                  </Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder={language === 'th' ? 'กรอกอีเมล' : language === 'zh' ? '请输入电子邮件' : 'Enter your email'}
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {language === 'th' ? 'ส่งลิงก์รีเซ็ต' : language === 'zh' ? '发送重置链接' : 'Send Reset Link'}
+                </Button>
+              </form>
+            ) : (
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">
@@ -228,10 +330,24 @@ const Auth = () => {
                       </Button>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
-                  </Button>
+                  <div className="flex justify-between items-center">
+                    <Button type="submit" className="flex-1" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
+                    </Button>
+                  </div>
+
+                  <div className="text-right">
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="p-0 h-auto"
+                      onClick={() => setIsForgotPasswordMode(true)}
+                    >
+                      {language === 'th' ? 'ลืมรหัสผ่าน?' : language === 'zh' ? '忘记密码?' : 'Forgot password?'}
+                    </Button>
+                  </div>
 
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
@@ -375,6 +491,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </CardContent>
         </Card>
 

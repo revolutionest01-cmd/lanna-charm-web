@@ -47,7 +47,7 @@ export const translations = {
     traditionalArchitecture: "สถาปัตยกรรมล้านนาแท้",
     traditionalArchitectureDesc: "บ้านไม้สไตล์ล้านนาที่สวยงามในบรรยากาศธรรมชาติ",
     artisanCoffee: "กาแฟชั้นเยี่ยม",
-    artisanCoffeeDesc: "เมือกาแฟคั่วพิเศษและเครื่องดื่มสไตล์ไทย",
+    artisanCoffeeDesc: "กาแฟคั่วพิเศษและเครื่องดื่มสไตล์ไทย",
     authenticCuisine: "อาหารไทยแท้",
     authenticCuisineDesc: "อาหารล้านนาและไทยต้นตำรับจากเชฟท้องถิ่น",
     gardenSetting: "ในสวนธรรมชาติ",
@@ -55,12 +55,12 @@ export const translations = {
     
     // Events
     eventsTitle: "ห้องประชุม & งานเลี้ยง",
-    eventsSubtitle: "พื้นที่จองแบบพิเศษสำหรับการจัดงาน การนำเสนอ และงานสังสรรค์ รองรับได้ทุกรูปแบบ",
+    eventsSubtitle: "พื้นที่จองแบบพิเศษสำหรับการจัดงาน",
     eventsMainTitle: "คาแฟล้านนาและห้องอเนกประสงค์",
     eventsMainDesc: "พื้นที่ห้องแบบพิเศษพร้อมอุปกรณ์ทุกสิ่งอย่าง ตั้งแต่การประชุม การนำเสนอ ไปจนถึงงานสังสรรค์ พร้อมบริการจัดเลี้ยงและอุปกรณ์ครบครัน",
     ourServices: "บริการของเรา",
     presentationRoom: "ห้องบรรยาย/นำเสนอ",
-    presentationRoomDesc: "พร้อมโปรเจคเตอร์ ระบบเสียง และระบบควบคุมความเข้าใจ",
+    presentationRoomDesc: "ห้องบรรยายพร้อมอุปกรณ์ทันสมัย",
     cateringService: "บริการจัดเลี้ยง",
     cateringServiceDesc: "อาหารและเครื่องดื่มคุณภาพ ปรับเมนูตามความต้องการ",
     privateEvents: "ห้องการไอทีและส่วนตัว",

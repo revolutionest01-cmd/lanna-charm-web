@@ -81,97 +81,18 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
 // Initialize auth state
 const initializeAuth = async () => {
   try {
-    // Set a timeout to ensure auth initializes within 3 seconds max
-    let authCompleted = false;
-    const authTimeoutId = setTimeout(() => {
-      if (!authCompleted && authState.isLoading) {
-        console.warn('[Auth] Initialization timeout - forcing completion');
-        setAuthState({
-          user: null,
-          session: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-        authCompleted = true;
-      }
-    }, 3000);
-
-    // Set up auth state listener FIRST
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      try {
-        if (session?.user) {
-          // Set basic user immediately so isLoading clears
-          const basicUser = buildUserFromSession(session);
-          setAuthState({
-            user: basicUser,
-            session,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          authCompleted = true;
-          clearTimeout(authTimeoutId);
-          console.log('[Auth] Session restored from listener:', basicUser.email);
-
-          // Enrich with profile data in background
-          const enrichedUser = await fetchAndEnrichUser(session);
-          setAuthState({ user: enrichedUser });
-        } else {
-          setAuthState({
-            user: null,
-            session: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-          authCompleted = true;
-          clearTimeout(authTimeoutId);
-          console.log('[Auth] No session from listener');
-        }
-      } catch (error) {
-        console.error('[Auth] State change error:', error);
-        setAuthState({
-          user: null,
-          session,
-          isAuthenticated: !!session,
-          isLoading: false,
-        });
-        authCompleted = true;
-        clearTimeout(authTimeoutId);
-      }
-    });
-
-    // THEN check for existing session with retry logic
-    let sessionCheckAttempts = 0;
-    const maxAttempts = 3;
-    let session = null;
+    console.log('[Auth] Starting initialization...');
     
-    while (sessionCheckAttempts < maxAttempts && !session && !authCompleted) {
-      try {
-        const { data: { session: foundSession }, error } = await supabase.auth.getSession();
-        
-        if (error && error.message !== 'JSON.parse: unexpected character') {
-          console.error('[Auth] Error getting session:', error);
-        }
-        
-        if (foundSession?.user) {
-          session = foundSession;
-          break;
-        }
-        
-        sessionCheckAttempts++;
-        if (sessionCheckAttempts < maxAttempts && !session) {
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      } catch (error) {
-        console.error('[Auth] Session check error:', error);
-        sessionCheckAttempts++;
-        if (sessionCheckAttempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
+    // First, get the session from localStorage/Supabase
+    console.log('[Auth] Getting initial session...');
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('[Auth] Error getting session:', error.message);
     }
-
+    
     if (session?.user) {
+      console.log('[Auth] Found existing session:', session.user.email);
       const basicUser = buildUserFromSession(session);
       setAuthState({
         user: basicUser,
@@ -179,27 +100,63 @@ const initializeAuth = async () => {
         isAuthenticated: true,
         isLoading: false,
       });
-      authCompleted = true;
-      clearTimeout(authTimeoutId);
-      console.log('[Auth] Session found after', sessionCheckAttempts + 1, 'attempt(s):', basicUser.email);
-
-      // Enrich in background
+      
+      // Enrich with profile data in background
       fetchAndEnrichUser(session).then(enrichedUser => {
         setAuthState({ user: enrichedUser });
       }).catch(err => {
         console.error('[Auth] Error enriching user:', err);
       });
-    } else if (!authCompleted) {
+    } else {
+      console.log('[Auth] No existing session found');
       setAuthState({
         user: null,
         session: null,
         isAuthenticated: false,
         isLoading: false,
       });
-      authCompleted = true;
-      clearTimeout(authTimeoutId);
-      console.log('[Auth] No session found');
     }
+    
+    // Set up auth state listener for future changes (login/logout/refresh)
+    const unsubscribe = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      try {
+        console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
+        
+        if (newSession?.user) {
+          const basicUser = buildUserFromSession(newSession);
+          console.log('[Auth] Session updated in listener:', basicUser.email);
+          setAuthState({
+            user: basicUser,
+            session: newSession,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          
+          // Enrich with profile data in background
+          const enrichedUser = await fetchAndEnrichUser(newSession);
+          setAuthState({ user: enrichedUser });
+        } else {
+          console.log('[Auth] Session cleared in listener');
+          setAuthState({
+            user: null,
+            session: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } catch (error) {
+        console.error('[Auth] Error in state change handler:', error);
+        setAuthState({
+          user: null,
+          session: newSession || null,
+          isAuthenticated: !!newSession,
+          isLoading: false,
+        });
+      }
+    });
+    
+    // Keep the unsubscribe for potential cleanup
+    return () => unsubscribe?.();
   } catch (error) {
     console.error('[Auth] Initialization error:', error);
     setAuthState({
@@ -274,6 +231,13 @@ export const useAuth = () => {
     // Preserve language preference
     const language = localStorage.getItem('language-storage');
     
+    // Sign out from Supabase FIRST (this will clear auth tokens)
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('[Auth] Error during signOut:', error);
+    }
+    
     // Clear non-auth localStorage items only
     const keysToPreserve = ['language-storage'];
     const keysToDelete: string[] = [];
@@ -295,9 +259,6 @@ export const useAuth = () => {
     
     // Clear sessionStorage (it's not persisted anyway)
     sessionStorage.clear();
-    
-    // Sign out from Supabase (this will handle clearing auth tokens from localStorage)
-    await supabase.auth.signOut();
     
     console.log('[Auth] Logout complete');
   };

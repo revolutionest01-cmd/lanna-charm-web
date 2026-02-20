@@ -1,0 +1,12 @@
+{
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "devCommand": "bun run dev",
+  "installCommand": "bun install",
+  "routes": [
+    {
+      "src": "^/(?!assets|robots\\.txt|sitemap\\.xml|sw\\.js|\\.well-known).*",
+      "dest": "/index.html"
+    }
+  ]
+}

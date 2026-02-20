@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useModalState } from "@/contexts/ModalContext";
+import { Portal } from "@/components/ui/portal";
 
 interface RoomImage {
   id: string;
@@ -35,6 +37,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const { user } = useAuth();
+  const { setIsModalOpen } = useModalState();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -42,6 +45,11 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
+
+  // Update Modal state when isOpen changes
+  useEffect(() => {
+    setIsModalOpen(isOpen);
+  }, [isOpen, setIsModalOpen]);
 
   // Check admin status
   useEffect(() => {
@@ -157,24 +165,25 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
   const totalImages = allImages.length;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
-        onClick={onClose}
-      />
-
-      {/* Modal Container - Better for mobile */}
-      <div 
-        className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-4"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
+    <Portal>
+      <>
+        {/* Backdrop */}
         <div
-          className="relative bg-background rounded-t-3xl lg:rounded-3xl shadow-2xl w-full lg:w-full lg:max-w-5xl max-h-[95vh] lg:max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-bottom-5 lg:motion-safe:slide-in-from-center"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={onClose}
+        />
+
+        {/* Modal Container - Centered on viewport */}
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+        >
+          <div
+            className="relative bg-background rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button - Fixed at top */}
@@ -705,8 +714,9 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
             </div>
           </div>
         </div>
-      </div>
-    </>
+        </div>
+      </>
+    </Portal>
   );
 };
 

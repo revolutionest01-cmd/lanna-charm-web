@@ -4,6 +4,8 @@
  */
 
 export const initializeCacheCleanup = () => {
+  console.log('[Cache Cleanup] Initializing...');
+  
   // Clear all old caches on app load
   if ('caches' in window) {
     caches.keys().then((cacheNames) => {
@@ -38,24 +40,34 @@ export const initializeCacheCleanup = () => {
 
   // Check for Supabase auth keys and preserve them
   const preservedAuthKeys: string[] = [];
+  const allKeys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && (key.includes('sb-') || key.includes('auth') || key.includes('supabase'))) {
-      preservedAuthKeys.push(key);
+    if (key) {
+      allKeys.push(key);
+      if (key.includes('sb-') || key.includes('auth') || key.includes('supabase')) {
+        preservedAuthKeys.push(key);
+      }
     }
   }
   
+  console.log('[Cache Cleanup] Total localStorage keys:', allKeys.length);
   if (preservedAuthKeys.length > 0) {
-    console.log('[Cache Cleanup] Preserving', preservedAuthKeys.length, 'Supabase auth keys');
+    console.log('[Cache Cleanup] Preserving', preservedAuthKeys.length, 'Supabase auth keys:', preservedAuthKeys);
   }
 
-  // Unregister all service workers to force fresh load
+  // Unregister all service workers to force fresh load (but don't wait for it)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => {
-        console.log('[Cache Cleanup] Unregistering SW:', registration.scope);
-        registration.unregister();
-      });
+      if (registrations.length > 0) {
+        console.log('[Cache Cleanup] Found', registrations.length, 'service worker(s)');
+        registrations.forEach((registration) => {
+          console.log('[Cache Cleanup] Unregistering SW:', registration.scope);
+          registration.unregister();
+        });
+      }
+    }).catch(err => {
+      console.log('[Cache Cleanup] Error getting SW registrations:', err);
     });
   }
 

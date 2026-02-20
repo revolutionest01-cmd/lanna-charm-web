@@ -174,7 +174,6 @@ const TopicDetail = () => {
       general: language === 'th' ? 'ทั่วไป' : 'General',
       question: language === 'th' ? 'คำถาม' : 'Question',
       review: language === 'th' ? 'รีวิว' : 'Review',
-      shopping: language === 'th' ? 'ช้อปเอนเบิ้ล' : 'Shopping',
     };
     return labels[category];
   };
@@ -184,7 +183,6 @@ const TopicDetail = () => {
       general: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200',
       question: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200',
       review: 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-200',
-      shopping: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-200',
     };
     return colors[category];
   };

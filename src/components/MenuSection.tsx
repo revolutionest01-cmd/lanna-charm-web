@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
@@ -182,20 +183,46 @@ const MenuSection = () => {
         <div className="max-w-4xl mx-auto">
           {categories.length > 0 ? (
             <Tabs defaultValue={categories[0]?.id} className="w-full">
-              <div className="overflow-x-auto mb-6 sm:mb-8 -mx-2 px-2 pb-2">
-                <TabsList 
-                  className="inline-flex w-auto min-w-full justify-start md:grid md:w-full md:grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 bg-muted/50 p-1 rounded-xl"
-                >
-                  {categories.map((cat) => (
-                    <TabsTrigger 
-                      key={cat.id} 
-                      value={cat.id} 
-                      className="text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap flex-shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg"
+              <div className="mb-6 sm:mb-8 w-full">
+                {/* Mobile & Tablet: Scrollable */}
+                <div className="lg:hidden">
+                  <ScrollArea className="w-full">
+                    <TabsList 
+                      className="inline-flex gap-2 bg-transparent p-0 h-auto"
                     >
-                      {language === "th" ? cat.name_th : cat.name_en}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+                      {categories.map((cat) => (
+                        <TabsTrigger 
+                          key={cat.id} 
+                          value={cat.id} 
+                          className="text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg font-semibold whitespace-nowrap flex-shrink-0 min-h-[42px] flex items-center justify-center transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-muted/80 border border-transparent data-[state=active]:border-primary/30"
+                        >
+                          {language === "th" ? cat.name_th : cat.name_en}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    <ScrollBar orientation="horizontal" className="h-1.5" />
+                  </ScrollArea>
+                </div>
+
+                {/* Desktop: Grid Layout */}
+                <div className="hidden lg:block">
+                  <TabsList 
+                    className="w-full grid grid-cols-auto-fit gap-3 bg-transparent p-0 h-auto"
+                    style={{
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))'
+                    }}
+                  >
+                    {categories.map((cat) => (
+                      <TabsTrigger 
+                        key={cat.id} 
+                        value={cat.id} 
+                        className="text-sm md:text-base px-4 sm:px-5 py-3 sm:py-3.5 rounded-lg font-semibold whitespace-nowrap text-center min-h-[44px] flex items-center justify-center transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-muted/80 border border-transparent data-[state=active]:border-primary/30"
+                      >
+                        {language === "th" ? cat.name_th : cat.name_en}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
               </div>
 
               {categories.map((cat) => {

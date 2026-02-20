@@ -88,18 +88,51 @@ export const sweetAlert = {
       });
     },
 
-    confirm: async (title: string, text?: string, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก') => {
+    confirm: async (title: string, text?: string, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก', useHtml = false) => {
       const result = await Swal.fire({
         icon: 'question',
         title,
-        text,
+        [useHtml ? 'html' : 'text']: text,
         showCancelButton: true,
         confirmButtonColor: '#8B6F47',
         cancelButtonColor: '#6b7280',
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: (dialog) => {
+          // Ensure buttons are clickable
+          const confirmBtn = dialog.querySelector('.swal2-confirm') as HTMLElement;
+          const cancelBtn = dialog.querySelector('.swal2-cancel') as HTMLElement;
+          const backdrop = dialog.parentElement?.querySelector('.swal2-backdrop') as HTMLElement;
+          
+          if (confirmBtn) {
+            confirmBtn.style.pointerEvents = 'auto';
+            confirmBtn.style.cursor = 'pointer';
+          }
+          if (cancelBtn) {
+            cancelBtn.style.pointerEvents = 'auto';
+            cancelBtn.style.cursor = 'pointer';
+          }
+          if (backdrop) {
+            backdrop.style.pointerEvents = 'none';
+          }
+        },
         customClass: {
-          container: '!z-[9999]',
+          container: '!z-[99999]',
+          popup: '!z-[99999]',
+          backdrop: '!z-[99998]',
+          title: '!text-[hsl(12,55%,50%)]',
+          htmlContainer: '!text-[hsl(12,55%,50%)]',
+          confirmButton: '!pointer-events-auto',
+          cancelButton: '!pointer-events-auto',
+        },
+        titleColor: 'hsl(12, 55%, 50%)',
+        didRender: (dialog) => {
+          const content = dialog.querySelector('.swal2-html-container');
+          if (content) {
+            content.style.color = 'hsl(12, 55%, 50%)';
+          }
         },
       });
       return result.isConfirmed;

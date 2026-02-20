@@ -63,11 +63,23 @@ const ContactSection = () => {
       .string()
       .trim()
       .min(1, { message: language === "th" ? "กรุณากรอกชื่อ" : "Please enter your name" })
+      .min(2, {
+        message:
+          language === "th"
+            ? "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"
+            : "Name must be at least 2 characters",
+      })
       .max(100, {
         message:
           language === "th"
             ? "ชื่อต้องไม่เกิน 100 ตัวอักษร"
             : "Name must be less than 100 characters",
+      })
+      .regex(/^[\u0E00-\u0E7Fa-zA-Z\s]+$/, {
+        message:
+          language === "th"
+            ? "ชื่อควรประกอบด้วยตัวอักษร (ไทย/อังกฤษ) และเว้นวรรคเท่านั้น"
+            : "Name must contain only letters (Thai/English) and spaces",
       }),
     email: z
       .string()
@@ -85,17 +97,11 @@ const ContactSection = () => {
     phone: z
       .string()
       .trim()
-      .min(1, {
+      .regex(/^\d{10}$/, {
         message:
           language === "th"
-            ? "กรุณากรอกเบอร์โทร"
-            : "Please enter your phone number",
-      })
-      .max(20, {
-        message:
-          language === "th"
-            ? "เบอร์โทรต้องไม่เกิน 20 ตัวอักษร"
-            : "Phone must be less than 20 characters",
+            ? "เบอร์โทรต้องมี 10 หลักและประกอบด้วยตัวเลขเท่านั้น"
+            : "Phone number must be exactly 10 digits",
       }),
     topic: z
       .string()
@@ -113,11 +119,11 @@ const ContactSection = () => {
     message: z
       .string()
       .trim()
-      .min(1, {
+      .min(10, {
         message:
           language === "th"
-            ? "กรุณากรอกข้อความ"
-            : "Please enter your message",
+            ? "ข้อความต้องมีอย่างน้อย 10 ตัวอักษร"
+            : "Message must be at least 10 characters",
       })
       .max(1000, {
         message:
@@ -196,9 +202,20 @@ const ContactSection = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    let processedValue = value;
+
+    // Validate and process input based on field type
+    if (name === "name") {
+      // Allow only Thai and English letters and spaces
+      processedValue = value.replace(/[^ก-๙a-zA-Z\s]/g, "");
+    } else if (name === "phone") {
+      // Allow only digits and limit to 10
+      processedValue = value.replace(/[^\d]/g, "").slice(0, 10);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
     // Clear error when user starts typing
     if (errors[name]) {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,7 @@ const reviewSchema = z.object({
 });
 
 const Reviews = () => {
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const t = translations[language];
   const { user, isAuthenticated } = useAuth();
@@ -54,7 +56,7 @@ const Reviews = () => {
     review_text_th: "",
   });
 
-  const { data: reviews = [], isLoading } = useQuery({
+  const { data: reviews = [], isLoading, error: reviewsError } = useQuery({
     queryKey: ["reviews-all"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -63,28 +65,49 @@ const Reviews = () => {
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       
-      if (error) throw error;
-      return data as Review[];
+      if (error) {
+        console.error("Error fetching reviews:", error);
+        throw error;
+      }
+      
+      // Ensure helpful_count is included (default to 0 if missing)
+      return (data || []).map(review => ({
+        ...review,
+        helpful_count: review.helpful_count || 0
+      })) as Review[];
     },
     staleTime: 5 * 60 * 1000,
+    retry: 1,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Fetch user's likes
-  const { data: userLikes = [] } = useQuery({
+  const { data: userLikes = [], isLoading: userLikesLoading } = useQuery({
     queryKey: ["user-review-likes", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const { data, error } = await supabase
-        .from("review_likes")
-        .select("review_id")
-        .eq("user_id", user.id);
-      
-      if (error) throw error;
-      return data.map(like => like.review_id);
+      try {
+        const { data, error } = await supabase
+          .from("review_likes")
+          .select("review_id")
+          .eq("user_id", user.id);
+        
+        if (error) {
+          console.error("Error fetching user likes:", error);
+          throw error;
+        }
+        
+        return data?.map(like => like.review_id) || [];
+      } catch (err) {
+        console.error("Error in userLikes query:", err);
+        return [];
+      }
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const toggleLikeMutation = useMutation({
@@ -93,30 +116,37 @@ const Reviews = () => {
         throw new Error("Must be logged in");
       }
 
-      if (isLiked) {
-        // Unlike
-        const { error } = await supabase
-          .from("review_likes")
-          .delete()
-          .eq("review_id", reviewId)
-          .eq("user_id", user.id);
-        
-        if (error) throw error;
-      } else {
-        // Like
-        const { error } = await supabase
-          .from("review_likes")
-          .insert({
-            review_id: reviewId,
-            user_id: user.id,
-          });
-        
-        if (error) throw error;
+      try {
+        if (isLiked) {
+          // Unlike
+          const { error } = await supabase
+            .from("review_likes")
+            .delete()
+            .eq("review_id", reviewId)
+            .eq("user_id", user.id);
+          
+          if (error) throw error;
+        } else {
+          // Like
+          const { error } = await supabase
+            .from("review_likes")
+            .insert({
+              review_id: reviewId,
+              user_id: user.id,
+            });
+          
+          if (error) throw error;
+        }
+      } catch (err) {
+        console.error("Error in toggleLikeMutation:", err);
+        throw err;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reviews-all"] });
-      queryClient.invalidateQueries({ queryKey: ["user-review-likes"] });
+      // Invalidate both the reviews list and user's likes cache
+      // Use exact: false for user-review-likes to match any with that prefix (includes user.id)
+      queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["user-review-likes"], exact: false });
     },
     onError: (error: any) => {
       console.error("Error toggling like:", error);
@@ -131,10 +161,10 @@ const Reviews = () => {
       } else {
         sweetAlert.error(
           language === "th" 
-            ? "เกิดข้อผิดพลาด" 
+            ? "เกิดข้อผิดพลาด: " + (error.message || "ไม่ทราบข้อผิดพลาด") 
             : language === "zh"
-            ? "发生错误"
-            : "An error occurred"
+            ? "发生错误: " + (error.message || "未知错误")
+            : "An error occurred: " + (error.message || "Unknown error")
         );
       }
     },
@@ -346,7 +376,7 @@ const Reviews = () => {
                     ? "请登录后撰写评价"
                     : "Please login to write a review"}
                 </p>
-                <Button onClick={() => window.location.href = "/auth"}>
+                <Button onClick={() => navigate("/auth")}>
                   {language === "th" ? "เข้าสู่ระบบ" : language === "zh" ? "登录" : "Login"}
                 </Button>
               </CardContent>

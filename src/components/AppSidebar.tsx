@@ -438,14 +438,14 @@ const AppSidebar = () => {
           <SidebarSeparator className={cn("my-2", themeStyles.separator)} />
 
           {/* Language & Booking */}
-          <div className="flex gap-2">
-            <LanguageDropdown variant="dark" />
+          <div className="space-y-2">
+            <LanguageDropdown variant="dark" className="w-full" />
             <BookingDialog>
               <Button 
-                className="flex-1 gap-2 h-10 text-sm font-semibold rounded-lg bg-gradient-to-r from-highlight to-primary hover:opacity-90 shadow-md text-white"
+                className="w-full gap-2 h-10 text-sm font-semibold rounded-lg bg-gradient-to-r from-highlight to-primary hover:opacity-90 shadow-md text-white truncate"
               >
-                <Bed className="h-4 w-4" />
-                {t.bookNow}
+                <Bed className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{t.bookNow}</span>
               </Button>
             </BookingDialog>
           </div>

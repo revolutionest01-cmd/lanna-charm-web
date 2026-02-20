@@ -5,6 +5,8 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useModalState } from "@/contexts/ModalContext";
+import { Portal } from "@/components/ui/portal";
 
 interface Menu {
   id: string;
@@ -30,12 +32,18 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const { user } = useAuth();
+  const { setIsModalOpen } = useModalState();
   const [isLiked, setIsLiked] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
+
+  // Update Modal state when isOpen changes
+  useEffect(() => {
+    setIsModalOpen(isOpen);
+  }, [isOpen, setIsModalOpen]);
 
   // Check admin status
   useEffect(() => {
@@ -135,16 +143,17 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
   ];
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
-        onClick={onClose}
-      />
+    <Portal>
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={onClose}
+        />
 
-      {/* Modal Container - Centered on viewport */}
-      <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4"
+        {/* Modal Container - Centered on viewport */}
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4\"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             onClose();
@@ -152,7 +161,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
         }}
       >
         <div
-          className="relative bg-background rounded-xl sm:rounded-xl md:rounded-2xl shadow-2xl w-full max-w-4xl md:max-w-5xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto"
+          className="relative bg-background rounded-2xl shadow-2xl w-full max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Action Buttons */}
@@ -189,12 +198,12 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
           </div>
 
           {/* Content Container */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
             {/* Image Section */}
             <div className="flex flex-col gap-3 sm:gap-4">
               {/* Main Image */}
               {allImages.length > 0 || menu.icon_url ? (
-                <div className="relative bg-foreground/5 rounded-lg sm:rounded-xl overflow-hidden aspect-square lg:h-80">
+                <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72">
                   <img
                     src={allImages.length > 0 ? allImages[0].url : menu.icon_url || "/placeholder.svg"}
                     alt={menuName}
@@ -202,8 +211,8 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
                   />
                 </div>
               ) : (
-                <div className="relative bg-foreground/5 rounded-lg sm:rounded-xl overflow-hidden aspect-square lg:h-80 flex items-center justify-center">
-                  <p className="text-muted-foreground">
+                <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72 flex items-center justify-center">
+                  <p className="text-muted-foreground text-sm">
                     {language === 'th' ? 'ไม่มีรูปภาพ' : language === 'zh' ? '无图片' : 'No image'}
                   </p>
                 </div>
@@ -212,10 +221,10 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
               {/* Uploaded Images - Admin Only */}
               {isAdmin && uploadedImages.length > 0 && (
                 <div>
-                  <h4 className="text-xs sm:text-sm font-semibold text-foreground mb-2">
+                  <h4 className="text-xs font-semibold text-foreground mb-2">
                     {language === 'th' ? 'ภาพที่อัพโหลด' : language === 'zh' ? '上传的图片' : 'Uploaded Images'}
                   </h4>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {uploadedImages.map((imgUrl, index) => (
                       <button
                         key={imgUrl}
@@ -235,7 +244,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
               {/* Image Upload Section - Admin Only */}
               {isAdmin && uploadedImages.length < maxImages && (
                 <div 
-                  className="border-2 border-dashed border-primary/40 rounded-lg p-3 sm:p-4 text-center hover:border-primary/60 transition-colors cursor-pointer"
+                  className="border-2 border-dashed border-primary/40 rounded-lg p-3 text-center hover:border-primary/60 transition-colors cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
@@ -247,24 +256,24 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
                     className="hidden"
                     disabled={isUploading}
                   />
-                  <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+                  <div className="flex flex-col items-center gap-1">
                     {isUploading ? (
                       <>
-                        <Loader2 size={20} className="text-primary animate-spin" />
-                        <p className="text-xs sm:text-sm text-muted-foreground">
+                        <Loader2 size={18} className="text-primary animate-spin" />
+                        <p className="text-xs text-muted-foreground">
                           {language === 'th' ? 'กำลังอัพโหลด...' : language === 'zh' ? '上传中...' : 'Uploading...'}
                         </p>
                       </>
                     ) : (
                       <>
-                        <Upload size={20} className="text-primary" />
-                        <p className="text-xs sm:text-sm font-medium text-foreground">
-                          {language === 'th' ? `อัพโหลดภาพ (${maxImages - uploadedImages.length} ภาพเหลือ)` :
-                           language === 'zh' ? `上传图片 (还可上传 ${maxImages - uploadedImages.length} 张)` :
-                           `Upload images (${maxImages - uploadedImages.length} remaining)`}
+                        <Upload size={18} className="text-primary" />
+                        <p className="text-xs font-medium text-foreground">
+                          {language === 'th' ? `อัพโหลดภาพ (${maxImages - uploadedImages.length} เหลือ)` :
+                           language === 'zh' ? `上传图片 (还可 ${maxImages - uploadedImages.length} 张)` :
+                           `Upload (${maxImages - uploadedImages.length} left)`}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          {language === 'th' ? 'คลิกหรือลากไฟล์มาวาง' : language === 'zh' ? '点击或拖拽文件' : 'Click or drag files'}
+                        <p className="text-[10px] text-muted-foreground">
+                          {language === 'th' ? 'คลิกหรือลากไฟล์' : language === 'zh' ? '点击或拖拽' : 'Click or drag'}
                         </p>
                       </>
                     )}
@@ -274,14 +283,14 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             </div>
 
             {/* Details Section */}
-            <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Menu Name & Price */}
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground mb-2 sm:mb-3">
+                <h1 className="text-xl sm:text-2xl font-bold font-serif text-foreground mb-1.5">
                   {menuName}
                 </h1>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
+                  <span className="text-xl sm:text-2xl font-bold text-primary">
                     ฿{menu.price}
                   </span>
                 </div>
@@ -290,10 +299,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
               {/* Description */}
               {menuDescription && (
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                    {language === 'th' ? 'รายละเอียด' : language === 'zh' ? '描述' : 'Description'}
-                  </h3>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {menuDescription}
                   </p>
                 </div>
@@ -301,25 +307,19 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
 
               {/* Recommended Badge */}
               {menu.is_recommended && (
-                <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 sm:p-4 text-center">
-                  <p className="font-semibold text-primary text-sm sm:text-base">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg p-2.5 sm:p-3 text-center">
+                  <p className="font-semibold text-primary text-xs sm:text-sm">
                     ⭐ {language === 'th' ? 'เมนูแนะนำของเรา' : language === 'zh' ? '我们推荐' : 'Our Recommendation'}
                   </p>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-primary/20">
-                <Button
-                  variant="highlight"
-                  className="w-full font-bold h-11 sm:h-12 text-sm sm:text-base rounded-xl"
-                >
-                  {language === 'th' ? 'เพิ่มไปยังตะกร้า' : language === 'zh' ? '加入购物车' : 'Add to Cart'}
-                </Button>
+              <div className="flex flex-col gap-2 pt-2 border-t border-primary/20">
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="w-full font-semibold h-10 sm:h-11 rounded-xl text-sm sm:text-base"
+                  className="w-full font-semibold h-10 rounded-lg text-sm"
                 >
                   {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                 </Button>
@@ -327,8 +327,9 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             </div>
           </div>
         </div>
-      </div>
-    </>
+        </div>
+      </>
+    </Portal>
   );
 };
 

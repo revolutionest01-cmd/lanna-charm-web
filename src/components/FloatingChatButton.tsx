@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, DollarSign, MessageSquare, X, HelpCircle, ChevronLeft } from "lucide-react";
+import { Phone, HelpCircle, MessageCircle, X, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
@@ -35,22 +35,22 @@ const FloatingChatButton = () => {
     {
       icon: Phone,
       label: language === 'th' ? 'โทรเลย' : language === 'zh' ? '立即致电' : 'Call Now',
-      color: 'text-primary',
-      bg: 'bg-primary/10',
+      color: 'text-blue-600',
+      bg: 'bg-blue-100 dark:bg-blue-950',
       onClick: () => window.open('tel:+66818469098'),
     },
     {
-      icon: DollarSign,
+      icon: HelpCircle,
       label: language === 'th' ? 'สอบถามข้อมูล' : language === 'zh' ? '查询信息' : 'Quick Info',
-      color: 'text-highlight',
-      bg: 'bg-highlight/10',
+      color: 'text-amber-600',
+      bg: 'bg-amber-100 dark:bg-amber-950',
       onClick: () => { setIsQuickInfoOpen(true); setIsOpen(false); },
     },
     {
-      icon: MessageSquare,
+      icon: MessageCircle,
       label: 'Plernping AI',
-      color: 'text-accent-foreground',
-      bg: 'bg-accent',
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-100 dark:bg-emerald-950',
       onClick: () => { setIsChatOpen(true); setIsOpen(false); },
     },
   ];

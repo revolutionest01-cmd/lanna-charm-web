@@ -20,13 +20,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Users, User, Mail, Phone, Sparkles } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CalendarIcon, Users, User, Mail, Phone, Sparkles, AlertCircle, Bed } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useRooms } from "@/hooks/useContentData";
 import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
+import { useModalState } from "@/contexts/ModalContext";
+import {
+  sanitizeGuests,
+  sanitizeName,
+  sanitizePhone,
+  validateBookingForm,
+  getErrorMessage,
+} from "@/lib/bookingValidation";
 
 interface BookingDialogProps {
   children: React.ReactNode;
@@ -36,31 +52,124 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const isMobile = useIsMobile();
+  const { setIsModalOpen } = useModalState();
+  const { data: roomData } = useRooms();
+  const rooms = roomData?.rooms || [];
+  
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [guests, setGuests] = useState("2");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    setIsModalOpen(newOpen);
+    if (!newOpen) {
+      // Reset form when closing
+      setCheckIn(undefined);
+      setCheckOut(undefined);
+      setSelectedRoom("");
+      setGuests("2");
+      setName("");
+      setEmail("");
+      setPhone("");
+      setErrors({});
+    }
+  };
+
+  // Input handlers with sanitization
+  const handleGuestsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeGuests(e.target.value);
+    setGuests(sanitized);
+    if (errors.guests) {
+      const newErrors = { ...errors };
+      delete newErrors.guests;
+      setErrors(newErrors);
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeName(e.target.value);
+    setName(sanitized);
+    if (errors.name) {
+      const newErrors = { ...errors };
+      delete newErrors.name;
+      setErrors(newErrors);
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (errors.email) {
+      const newErrors = { ...errors };
+      delete newErrors.email;
+      setErrors(newErrors);
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizePhone(e.target.value);
+    setPhone(sanitized);
+    if (errors.phone) {
+      const newErrors = { ...errors };
+      delete newErrors.phone;
+      setErrors(newErrors);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!checkIn || !checkOut || !name || !email || !phone) {
-      sweetAlert.error(language === 'th' ? 'กรุณากรอกข้อมูลให้ครบถ้วน' : language === 'zh' ? '请填写所有字段' : 'Please fill in all fields');
+
+    // Validate form
+    const validation = validateBookingForm(
+      checkIn,
+      checkOut,
+      guests,
+      name,
+      email,
+      phone
+    );
+
+    if (!validation.valid && validation.error) {
+      const errorMessage = getErrorMessage(validation.error, language as 'th' | 'en' | 'zh');
+      sweetAlert.error(errorMessage);
       return;
     }
 
     const confirmed = await sweetAlert.modal.confirm(
       language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking',
       language === 'th' 
-        ? `คุณต้องการยืนยันการจองห้องพักใช่หรือไม่?\n\nวันเช็คอิน: ${format(checkIn, "PPP")}\nวันเช็คเอาท์: ${format(checkOut, "PPP")}\nจำนวนผู้เข้าพัก: ${guests} คน`
+        ? `<div style="text-align: left; line-height: 1.8;">
+            <div style="margin-bottom: 8px;"><strong>วันเช็คอิน:</strong> ${format(checkIn, "PPPP")}</div>
+            <div style="margin-bottom: 8px;"><strong>วันเช็คเอาท์:</strong> ${format(checkOut, "PPPP")}</div>
+            <div style="margin-bottom: 8px;"><strong>จำนวนผู้เข้าพัก:</strong> ${guests} คน</div>
+            <hr style="margin: 12px 0; border: none; border-top: 1px solid #ccc;">
+            <div style="font-size: 0.9em; color: #666;">คุณต้องการยืนยันการจองห้องพักใช่หรือไม่?</div>
+          </div>`
         : language === 'zh'
-        ? `您确定要预订吗？\n\n入住: ${format(checkIn, "PPP")}\n退房: ${format(checkOut, "PPP")}\n人数: ${guests}`
-        : `Do you want to confirm your booking?\n\nCheck-in: ${format(checkIn, "PPP")}\nCheck-out: ${format(checkOut, "PPP")}\nGuests: ${guests}`,
+        ? `<div style="text-align: left; line-height: 1.8;">
+            <div style="margin-bottom: 8px;"><strong>入住:</strong> ${format(checkIn, "PPPP")}</div>
+            <div style="margin-bottom: 8px;"><strong>退房:</strong> ${format(checkOut, "PPPP")}</div>
+            <div style="margin-bottom: 8px;"><strong>人数:</strong> ${guests}</div>
+            <hr style="margin: 12px 0; border: none; border-top: 1px solid #ccc;">
+            <div style="font-size: 0.9em; color: #666;">您确定要预订吗？</div>
+          </div>`
+        : `<div style="text-align: left; line-height: 1.8;">
+            <div style="margin-bottom: 8px;"><strong>Check-in:</strong> ${format(checkIn, "PPPP")}</div>
+            <div style="margin-bottom: 8px;"><strong>Check-out:</strong> ${format(checkOut, "PPPP")}</div>
+            <div style="margin-bottom: 8px;"><strong>Guests:</strong> ${guests}</div>
+            <hr style="margin: 12px 0; border: none; border-top: 1px solid #ccc;">
+            <div style="font-size: 0.9em; color: #666;">Do you want to confirm your booking?</div>
+          </div>`,
       language === 'th' ? 'ยืนยัน' : language === 'zh' ? '确认' : 'Confirm',
-      language === 'th' ? 'ยกเลิก' : language === 'zh' ? '取消' : 'Cancel'
+      language === 'th' ? 'ยกเลิก' : language === 'zh' ? '取消' : 'Cancel',
+      true // useHtml = true
     );
 
     if (!confirmed) return;
@@ -71,6 +180,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           name,
           email,
           phone,
+          roomId: selectedRoom || null,
           checkIn: format(checkIn, "yyyy-MM-dd"),
           checkOut: format(checkOut, "yyyy-MM-dd"),
           guests: parseInt(guests),
@@ -87,18 +197,44 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           : `Thank you ${name}! We've received your booking.`
       );
       
-      setOpen(false);
       setCheckIn(undefined);
       setCheckOut(undefined);
+      setSelectedRoom("");
       setGuests("2");
       setName("");
       setEmail("");
       setPhone("");
+      setErrors({});
     } catch (error) {
       console.error('Booking submission error:', error);
       sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : 'An error occurred. Please try again.');
     }
   };
+
+  // Static room types for booking
+  const roomTypes = language === 'th' 
+    ? [
+        { id: 'deluxe', name: 'ห้องดีลักซ์' },
+        { id: 'family', name: 'ห้องแฟมิลี่' },
+        { id: 'standard', name: 'ห้องมาตรฐาน' },
+        { id: 'standard-queen', name: 'ห้องแสตนดาร์ดเตียงใหญ่' },
+        { id: 'standard-twin', name: 'ห้องแสตนดาร์ดเตียงคู่' },
+      ]
+    : language === 'zh'
+    ? [
+        { id: 'deluxe', name: '豪华房' },
+        { id: 'family', name: '家庭房' },
+        { id: 'standard', name: '标准房' },
+        { id: 'standard-queen', name: '标准双人房' },
+        { id: 'standard-twin', name: '标准孪生房' },
+      ]
+    : [
+        { id: 'deluxe', name: 'Deluxe Room' },
+        { id: 'family', name: 'Family Room' },
+        { id: 'standard', name: 'Standard Room' },
+        { id: 'standard-queen', name: 'Standard Queen Room' },
+        { id: 'standard-twin', name: 'Standard Twin Room' },
+      ];
 
   const bookingForm = (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,7 +249,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border",
+                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border text-foreground font-semibold bg-white border-2",
                   !checkIn && "text-muted-foreground"
                 )}
               >
@@ -121,8 +257,15 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
                 {checkIn ? format(checkIn, "dd MMM") : <span className="text-xs">{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick date'}</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-[60]" align="start">
-              <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus />
+            <PopoverContent className="w-auto p-0 z-[60] bg-foreground text-background" align="start">
+              <Calendar 
+                mode="single" 
+                selected={checkIn} 
+                onSelect={setCheckIn} 
+                initialFocus
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                className="[&_.rdp-head_cell]:text-background [&_.rdp-cell]:text-background [&_.rdp-button]:text-background hover:[&_.rdp-button]:text-background [&_.rdp-button_selected]:bg-background [&_.rdp-button_selected]:text-foreground [&_.rdp-button_today]:text-background"
+              />
             </PopoverContent>
           </Popover>
         </div>
@@ -136,7 +279,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border",
+                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border text-foreground font-semibold bg-white border-2",
                   !checkOut && "text-muted-foreground"
                 )}
               >
@@ -144,11 +287,42 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
                 {checkOut ? format(checkOut, "dd MMM") : <span className="text-xs">{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick date'}</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-[60]" align="start">
-              <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus />
+            <PopoverContent className="w-auto p-0 z-[60] bg-foreground text-background" align="start">
+              <Calendar 
+                mode="single" 
+                selected={checkOut} 
+                onSelect={setCheckOut} 
+                initialFocus
+                disabled={(date) => !checkIn || date <= checkIn}
+                className="[&_.rdp-head_cell]:text-background [&_.rdp-cell]:text-background [&_.rdp-button]:text-background hover:[&_.rdp-button]:text-background [&_.rdp-button_selected]:bg-background [&_.rdp-button_selected]:text-foreground [&_.rdp-button_today]:text-background"
+              />
             </PopoverContent>
           </Popover>
         </div>
+      </div>
+
+      {/* Room Type Selection */}
+      <div className="space-y-1.5">
+        <Label htmlFor="room" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {language === 'th' ? 'ประเภทห้องพัก' : language === 'zh' ? '房间类型' : 'Room Type'}
+        </Label>
+        <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+          <SelectTrigger className="h-11 rounded-xl border-2 bg-white text-foreground font-semibold">
+            <div className="flex items-center gap-2">
+              <Bed className="h-4 w-4 text-muted-foreground" />
+              <SelectValue 
+                placeholder={language === 'th' ? 'เลือกประเภทห้องพัก' : language === 'zh' ? '选择房间类型' : 'Select room type'} 
+              />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            {roomTypes.map((room) => (
+              <SelectItem key={room.id} value={room.id}>
+                {room.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Guests */}
@@ -160,14 +334,20 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="guests"
-            type="number"
-            min="1"
-            max="10"
+            type="text"
+            placeholder="2"
             value={guests}
-            onChange={(e) => setGuests(e.target.value)}
-            className="pl-10 h-11 rounded-xl"
+            onChange={handleGuestsChange}
+            maxLength={2}
+            className={cn("pl-10 h-11 rounded-xl", errors.guests && "border-destructive focus-visible:ring-destructive")}
           />
         </div>
+        {errors.guests && (
+          <div className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span>{errors.guests}</span>
+          </div>
+        )}
       </div>
 
       {/* Name */}
@@ -179,13 +359,19 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="name"
+            type="text"
             placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : language === 'zh' ? '请输入您的姓名' : 'Enter your name'}
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="pl-10 h-11 rounded-xl"
+            onChange={handleNameChange}
+            className={cn("pl-10 h-11 rounded-xl", errors.name && "border-destructive focus-visible:ring-destructive")}
           />
         </div>
+        {errors.name && (
+          <div className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span>{errors.name}</span>
+          </div>
+        )}
       </div>
 
       {/* Email */}
@@ -197,14 +383,19 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="email"
-            type="email"
+            type="text"
             placeholder="example@email.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="pl-10 h-11 rounded-xl"
+            onChange={handleEmailChange}
+            className={cn("pl-10 h-11 rounded-xl", errors.email && "border-destructive focus-visible:ring-destructive")}
           />
         </div>
+        {errors.email && (
+          <div className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span>{errors.email}</span>
+          </div>
+        )}
       </div>
 
       {/* Phone */}
@@ -216,14 +407,20 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="phone"
-            type="tel"
-            placeholder="081-234-5678"
+            type="text"
+            placeholder="0812345678"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            className="pl-10 h-11 rounded-xl"
+            onChange={handlePhoneChange}
+            maxLength={10}
+            className={cn("pl-10 h-11 rounded-xl", errors.phone && "border-destructive focus-visible:ring-destructive")}
           />
         </div>
+        {errors.phone && (
+          <div className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span>{errors.phone}</span>
+          </div>
+        )}
       </div>
 
       {/* Submit */}
@@ -252,22 +449,18 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   // Mobile: use Drawer (bottom sheet)
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>
           {children}
         </DrawerTrigger>
         <DrawerContent className="max-h-[92dvh]">
           <DrawerHeader className="text-left pb-2">
-            <DrawerTitle className="text-xl font-bold font-serif">
-              {language === 'th' ? 'จองที่พักของคุณ' : language === 'zh' ? '预订您的住宿' : 'Book Your Stay'}
+            <div className="text-xl sm:text-2xl font-bold font-serif tracking-tight text-foreground mb-2">
+              {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
+            </div>
+            <DrawerTitle className="text-lg font-bold font-serif tracking-tight text-foreground/80">
+              {language === 'th' ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping' : language === 'zh' ? '填写详细信息以预订房间' : 'Fill in the details to book your room'}
             </DrawerTitle>
-            <DrawerDescription className="text-sm text-muted-foreground">
-              {language === 'th'
-                ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
-                : language === 'zh'
-                ? '填写详细信息以预订房间'
-                : 'Fill in the details to reserve your room'}
-            </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-6 overflow-y-auto">
             {bookingForm}
@@ -279,22 +472,22 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
 
   // Desktop: use Dialog
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px] rounded-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-serif">
-            {language === 'th' ? 'จองที่พักของคุณ' : language === 'zh' ? '预订您的住宿' : 'Book Your Stay'}
-          </DialogTitle>
-          <DialogDescription>
+          <div className="text-2xl sm:text-3xl font-bold font-serif tracking-tight text-foreground mb-2">
+            {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
+          </div>
+          <DialogTitle className="text-lg font-bold font-serif tracking-tight text-foreground/80">
             {language === 'th'
               ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
               : language === 'zh'
               ? '填写详细信息以预订房间'
-              : 'Fill in the details to reserve your room'}
-          </DialogDescription>
+              : 'Fill in the details to book your room'}
+          </DialogTitle>
         </DialogHeader>
         <div className="mt-2">
           {bookingForm}
