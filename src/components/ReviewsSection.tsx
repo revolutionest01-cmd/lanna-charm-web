@@ -71,11 +71,11 @@ const ReviewsSection = () => {
                 delay: 4000,
               }),
             ]}
-            className="w-full max-w-7xl mx-auto"
+            className="w-full"
           >
-            <CarouselContent className="-ml-3 sm:-ml-4">
+            <CarouselContent className="-ml-2 sm:-ml-4">
               {reviews.map((review, index) => (
-                <CarouselItem key={review.id} className="pl-3 sm:pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={review.id} className="pl-2 sm:pl-4 basis-[calc(100%-0.5rem)] sm:basis-1/2 lg:basis-1/3">
                   <Card
                     className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in border-border/50 h-full"
                     style={{ animationDelay: `${index * 0.1}s` }}

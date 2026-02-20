@@ -86,7 +86,7 @@ const RoomsSection = () => {
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto px-2 sm:px-12">
+        <div className="w-full px-2 sm:px-4">
           <Carousel
             opts={{
               align: "start",
@@ -99,9 +99,9 @@ const RoomsSection = () => {
             ]}
             className="w-full"
           >
-            <CarouselContent className="-ml-3 sm:-ml-4">
+            <CarouselContent className="-ml-2 sm:-ml-4">
               {rooms.map((room) => (
-                <CarouselItem key={room.id} className="pl-3 sm:pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={room.id} className="pl-2 sm:pl-4 basis-[calc(100%-0.5rem)] sm:basis-1/2 lg:basis-1/3">
                   <button
                     onClick={() => handleRoomClick(room)}
                     className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all"
