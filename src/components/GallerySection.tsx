@@ -67,9 +67,9 @@ const GallerySection = () => {
             ]}
             className="w-full"
           >
-            <CarouselContent className="-ml-3 sm:-ml-4">
+            <CarouselContent className="-ml-2 sm:-ml-4">
               {images.map((image, index) => (
-                <CarouselItem key={image.id} className="pl-3 sm:pl-4 basis-[75%] sm:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={image.id} className="pl-2 sm:pl-4 basis-[calc(100%-0.5rem)] sm:basis-1/2 lg:basis-1/3">
                   <div
                     className="relative overflow-hidden rounded-xl sm:rounded-lg aspect-square group cursor-pointer animate-scale-in"
                     style={{ animationDelay: `${index * 80}ms` }}

@@ -106,7 +106,7 @@ const MenuSection = () => {
               </p>
             </div>
 
-            <div className="max-w-5xl mx-auto px-2 sm:px-12">
+            <div className="w-full px-2 sm:px-4">
               <Carousel
                 opts={{
                   align: "start",
@@ -119,37 +119,41 @@ const MenuSection = () => {
                 ]}
                 className="w-full"
               >
-                <CarouselContent className="-ml-3 sm:-ml-4">
+                <CarouselContent className="-ml-2 sm:-ml-4">
                   {recommendedMenus.map((item) => (
-                    <CarouselItem key={item.id} className="pl-3 sm:pl-4 basis-[85%] sm:basis-1/2">
+                    <CarouselItem key={item.id} className="pl-2 sm:pl-4 basis-[calc(100%-0.5rem)] sm:basis-1/2 lg:basis-1/2">
                       <button
                         onClick={() => handleMenuClick(item)}
                         className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all"
                       >
-                        <Card className="border-border hover:border-primary transition-all duration-500 overflow-hidden group h-full cursor-pointer transform hover:scale-105">
-                          <div className="relative h-48 sm:h-64 overflow-hidden">
-                            <img
-                              src={item.image_url || "/placeholder.svg"}
-                              alt={language === "th" ? item.name_th : item.name_en}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-primary text-primary-foreground px-3 sm:px-4 py-1.5 sm:py-2 rounded-full flex items-center gap-1 animate-pulse">
-                              <Star size={14} fill="currentColor" />
-                              <span className="font-semibold text-xs sm:text-sm">{t.recommended}</span>
+                        <Card className="border-border hover:border-primary transition-all duration-500 overflow-hidden group h-full cursor-pointer transform hover:scale-105 shadow-sm hover:shadow-md">
+                          {/* Image Section */}
+                          {item.image_url && (
+                            <div className="relative h-40 sm:h-48 overflow-hidden bg-muted">
+                              <img
+                                src={item.image_url}
+                                alt={language === "th" ? item.name_th : item.name_en}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                              {/* Recommended Badge */}
+                              <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-primary/90 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1">
+                                <Star size={14} fill="currentColor" className="text-white" />
+                                <span className="font-semibold text-xs sm:text-sm text-white">{t.recommended}</span>
+                              </div>
+                              {/* Price Badge */}
+                              <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-black/60 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
+                                <span className="font-bold text-sm sm:text-base text-white">฿{item.price}</span>
+                              </div>
                             </div>
-                          </div>
-                          <CardContent className="p-4 sm:p-6">
-                            <div className="flex justify-between items-start mb-2 gap-2">
-                              <h3 className="text-xl sm:text-2xl font-semibold text-foreground">
-                                {language === "th" ? item.name_th : item.name_en}
-                              </h3>
-                              <div className="text-xl sm:text-2xl font-bold text-primary flex-shrink-0">฿{item.price}</div>
-                            </div>
-                            <p className="text-muted-foreground text-sm line-clamp-2">
+                          )}
+                          <CardContent className="p-3 sm:p-4 md:p-5">
+                            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
+                              {language === "th" ? item.name_th : item.name_en}
+                            </h3>
+                            <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
                               {language === "th" ? item.description_th : item.description_en}
                             </p>
-                            <p className="text-primary font-semibold text-sm mt-2">
+                            <p className="text-primary font-semibold text-xs sm:text-sm">
                               {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
                             </p>
                           </CardContent>

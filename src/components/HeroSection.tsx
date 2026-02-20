@@ -89,11 +89,11 @@ const HeroSection = () => {
           {t.heroDescription}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 sm:px-0">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center px-3 sm:px-0 w-full sm:w-auto">
           <Button 
             variant="highlight" 
             size="lg" 
-            className="w-full sm:w-auto h-11 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.exploreMenu}
@@ -102,7 +102,7 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="w-full sm:w-auto h-11 sm:h-12 text-sm sm:text-base font-semibold bg-white/10 hover:bg-white/20 text-white border-white/30 hover:text-white rounded-xl"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold bg-white/10 hover:bg-white/20 text-white border-white/30 hover:text-white rounded-xl transition-all duration-300 hover:scale-105"
             onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.viewRooms}

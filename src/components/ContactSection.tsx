@@ -221,9 +221,9 @@ const ContactSection = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto">
+        <div className="grid gap-6 sm:gap-8 max-w-7xl mx-auto lg:grid-cols-3">
           {/* Left side - Contact Information */}
-          <div className="space-y-5 sm:space-y-8 animate-fade-in lg:col-span-1 order-2 lg:order-1">
+          <div className="space-y-5 sm:space-y-8 animate-fade-in lg:col-span-1">
             {/* Address */}
             {businessInfo && (businessInfo.address_th || businessInfo.address_en) && (
               <div className="flex gap-3 sm:gap-4 items-start">
@@ -382,7 +382,7 @@ const ContactSection = () => {
           </div>
 
           {/* Center - Contact Form */}
-          <Card className="p-5 sm:p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1 order-1 lg:order-2">
+          <Card className="p-4 sm:p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1">
             <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-foreground">
               {t.sendMessageForm}
             </h3>
