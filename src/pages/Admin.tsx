@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -6,20 +6,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ArrowLeft, 
-  Image, 
-  Calendar, 
-  Home, 
-  Coffee, 
-  ImageIcon, 
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ArrowLeft,
+  Image,
+  Calendar,
+  Home,
+  Coffee,
+  ImageIcon,
   MessageSquare,
   Loader2,
   Shield,
   Phone,
   UserCog,
-  LogOut
+  TrendingUp,
+  BarChart3,
+  Activity,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -31,6 +34,32 @@ import { GalleryManagement } from "@/components/admin/GalleryManagement";
 import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
 import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
 import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+
+const TABS = [
+  { id: "dashboard", icon: BarChart3, labelTh: "แดชบอร์ด", labelEn: "Dashboard" },
+  { id: "hero", icon: Image, labelTh: "Hero", labelEn: "Hero" },
+  { id: "events", icon: Calendar, labelTh: "อีเว้นท์", labelEn: "Events" },
+  { id: "rooms", icon: Home, labelTh: "ห้องพัก", labelEn: "Rooms" },
+  { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus" },
+  { id: "gallery", icon: ImageIcon, labelTh: "แกลเลอรี่", labelEn: "Gallery" },
+  { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews" },
+  { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
+  { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles" },
+];
+
+const PIE_COLORS = [
+  "hsl(217, 91%, 60%)",  // blue
+  "hsl(38, 92%, 50%)",   // amber
+  "hsl(271, 91%, 65%)",  // purple
+  "hsl(346, 77%, 60%)",  // rose
+];
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -38,6 +67,7 @@ const Admin = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({
     rooms: 0,
     menus: 0,
@@ -45,7 +75,6 @@ const Admin = () => {
     reviews: 0,
   });
 
-  // Check if user is admin
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!isAuthenticated || !user) {
@@ -53,263 +82,302 @@ const Admin = () => {
         setCheckingAdmin(false);
         return;
       }
-
       try {
         const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
           .maybeSingle();
-
-        if (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data);
-        }
-      } catch (error) {
-        console.error('Error:', error);
+        setIsAdmin(!!data && !error);
+      } catch {
         setIsAdmin(false);
       } finally {
         setCheckingAdmin(false);
       }
     };
-
-    if (!isLoading) {
-      checkAdminStatus();
-    }
+    if (!isLoading) checkAdminStatus();
   }, [isAuthenticated, user, isLoading]);
 
-  // Fetch stats (run after page is visible to reduce initial load)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const fetchStats = async () => {
-        if (!isAdmin) return;
-
-        try {
-          const [roomsRes, menusRes, galleryRes, reviewsRes] = await Promise.all([
-            supabase.from('rooms').select('id', { count: 'exact', head: true }),
-            supabase.from('menus').select('id', { count: 'exact', head: true }),
-            supabase.from('gallery_images').select('id', { count: 'exact', head: true }),
-            supabase.from('reviews').select('id', { count: 'exact', head: true }),
-          ]);
-
-          setStats({
-            rooms: roomsRes.count || 0,
-            menus: menusRes.count || 0,
-            gallery: galleryRes.count || 0,
-            reviews: reviewsRes.count || 0,
-          });
-        } catch (error) {
-          console.error('Error fetching stats:', error);
-        }
-      };
-
-      fetchStats();
+    const timer = setTimeout(async () => {
+      if (!isAdmin) return;
+      try {
+        const [roomsRes, menusRes, galleryRes, reviewsRes] = await Promise.all([
+          supabase.from("rooms").select("id", { count: "exact", head: true }),
+          supabase.from("menus").select("id", { count: "exact", head: true }),
+          supabase.from("gallery_images").select("id", { count: "exact", head: true }),
+          supabase.from("reviews").select("id", { count: "exact", head: true }),
+        ]);
+        setStats({
+          rooms: roomsRes.count || 0,
+          menus: menusRes.count || 0,
+          gallery: galleryRes.count || 0,
+          reviews: reviewsRes.count || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
     }, 100);
-
     return () => clearTimeout(timer);
   }, [isAdmin]);
 
-  // Redirect if not admin
   useEffect(() => {
     if (!checkingAdmin && !isLoading) {
       if (!isAuthenticated) {
-        sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
-        navigate('/auth');
+        sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
+        navigate("/auth");
       } else if (!isAdmin) {
-        sweetAlert.error(language === 'th' ? 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้' : 'You do not have permission to access this page');
-        navigate('/');
+        sweetAlert.error(language === "th" ? "คุณไม่มีสิทธิ์เข้าถึงหน้านี้" : "You do not have permission");
+        navigate("/");
       }
     }
   }, [isAuthenticated, isAdmin, checkingAdmin, isLoading, navigate, language]);
 
-  // Cleanup and invalidate cache when leaving Admin page
   useEffect(() => {
     return () => {
-      // When unmounting Admin component, refresh content cache for home page
       invalidateContentCache();
-      console.log('[Admin] Cleaning up - invalidated content cache');
     };
   }, []);
 
+  const barChartData = useMemo(() => [
+    { name: language === "th" ? "ห้องพัก" : "Rooms", value: stats.rooms, fill: PIE_COLORS[0] },
+    { name: language === "th" ? "เมนู" : "Menus", value: stats.menus, fill: PIE_COLORS[1] },
+    { name: language === "th" ? "แกลเลอรี่" : "Gallery", value: stats.gallery, fill: PIE_COLORS[2] },
+    { name: language === "th" ? "รีวิว" : "Reviews", value: stats.reviews, fill: PIE_COLORS[3] },
+  ], [stats, language]);
+
+  const totalItems = stats.rooms + stats.menus + stats.gallery + stats.reviews;
+
+  const chartConfig: ChartConfig = {
+    value: { label: language === "th" ? "จำนวน" : "Count" },
+  };
+
   if (isLoading || checkingAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="relative w-16 h-16 mx-auto">
-            <Loader2 className="w-16 h-16 animate-spin text-amber-500" />
-            <Shield className="absolute inset-0 m-auto w-8 h-8 text-amber-600 opacity-50" />
+            <Loader2 className="w-16 h-16 animate-spin text-primary" />
+            <Shield className="absolute inset-0 m-auto w-8 h-8 text-primary/50" />
           </div>
-          <p className="text-slate-300 font-medium">
-            {language === 'th' ? 'กำลังตรวจสอบสิทธิ์...' : 'Verifying access...'}
+          <p className="text-muted-foreground font-medium">
+            {language === "th" ? "กำลังตรวจสอบสิทธิ์..." : "Verifying access..."}
           </p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
-    return null;
-  }
+  if (!isAuthenticated || !isAdmin) return null;
 
   const statsDisplay = [
-    { label: language === 'th' ? 'ห้องพัก' : 'Rooms', value: stats.rooms, icon: Home, color: 'text-blue-500', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20' },
-    { label: language === 'th' ? 'เมนู' : 'Menus', value: stats.menus, icon: Coffee, color: 'text-amber-500', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
-    { label: language === 'th' ? 'แกลเลอรี่' : 'Gallery', value: stats.gallery, icon: ImageIcon, color: 'text-purple-500', bgColor: 'bg-purple-500/10', borderColor: 'border-purple-500/20' },
-    { label: language === 'th' ? 'รีวิว' : 'Reviews', value: stats.reviews, icon: MessageSquare, color: 'text-rose-500', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/20' },
+    { label: language === "th" ? "ห้องพัก" : "Rooms", value: stats.rooms, icon: Home, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: language === "th" ? "เมนู" : "Menus", value: stats.menus, icon: Coffee, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: language === "th" ? "แกลเลอรี่" : "Gallery", value: stats.gallery, icon: ImageIcon, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: language === "th" ? "รีวิว" : "Reviews", value: stats.reviews, icon: MessageSquare, color: "text-rose-500", bg: "bg-rose-500/10" },
   ];
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <DashboardContent stats={statsDisplay} barChartData={barChartData} totalItems={totalItems} chartConfig={chartConfig} language={language} />;
+      case "hero": return <HeroManagement />;
+      case "events": return <EventSpaceManagement />;
+      case "rooms": return <RoomsManagement />;
+      case "menus": return <MenusManagement />;
+      case "gallery": return <GalleryManagement />;
+      case "reviews": return <ReviewsManagement />;
+      case "business": return <BusinessInfoManagement />;
+      case "roles": return <UserRolesManagement />;
+      default: return null;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-md">
-        <div className="container mx-auto px-4 py-4">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+        <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {language === 'th' ? 'กลับหน้าแรก' : 'Back to Home'}
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0">
+                <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div className="flex items-center gap-3">
-                <img src={logo} alt="Plern Ping Cafe" className="h-10" />
-                <div>
-                  <h1 className="font-serif font-bold text-xl text-foreground flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-primary" />
-                    {language === 'th' ? 'แผงควบคุมผู้ดูแล' : 'Admin Panel'}
-                  </h1>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'th' ? 'ยินดีต้อนรับ' : 'Welcome'}, {user?.name}
-                  </p>
-                </div>
+              <img src={logo} alt="Logo" className="h-8 hidden sm:block" />
+              <div className="min-w-0">
+                <h1 className="font-bold text-base sm:text-lg text-foreground flex items-center gap-2 truncate">
+                  <Shield className="w-4 h-4 text-primary shrink-0" />
+                  {language === "th" ? "แผงควบคุม" : "Admin Panel"}
+                </h1>
+                <p className="text-xs text-muted-foreground truncate">
+                  {language === "th" ? "สวัสดี" : "Hi"}, {user?.name}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
-            {language === 'th' ? 'ภาพรวมระบบ' : 'System Overview'}
-          </h2>
-          <p className="text-muted-foreground">
-            {language === 'th' 
-              ? 'จัดการเนื้อหาและข้อมูลของเว็บไซต์' 
-              : 'Manage website content and data'}
-          </p>
-        </div>
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
+        <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0">
+          <ScrollArea className="lg:h-[calc(100vh-60px)]">
+            <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0
+                      ${isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span>{language === "th" ? tab.labelTh : tab.labelEn}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </nav>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {statsDisplay.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.label}
-                </CardTitle>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Management Sections */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              {language === 'th' ? 'จัดการเนื้อหา' : 'Content Management'}
-            </CardTitle>
-            <CardDescription>
-              {language === 'th' 
-                ? 'เลือกส่วนที่ต้องการจัดการ' 
-                : 'Select a section to manage'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="hero" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-6">
-                <TabsTrigger value="hero" className="gap-2">
-                  <Image className="w-4 h-4" />
-                  {language === 'th' ? 'Hero' : 'Hero'}
-                </TabsTrigger>
-                <TabsTrigger value="events" className="gap-2">
-                  <Calendar className="w-4 h-4" />
-                  {language === 'th' ? 'งานอีเว้นท์' : 'Events'}
-                </TabsTrigger>
-                <TabsTrigger value="rooms" className="gap-2">
-                  <Home className="w-4 h-4" />
-                  {language === 'th' ? 'ห้องพัก' : 'Rooms'}
-                </TabsTrigger>
-                <TabsTrigger value="menus" className="gap-2">
-                  <Coffee className="w-4 h-4" />
-                  {language === 'th' ? 'เมนู' : 'Menus'}
-                </TabsTrigger>
-                <TabsTrigger value="gallery" className="gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  {language === 'th' ? 'แกลเลอรี่' : 'Gallery'}
-                </TabsTrigger>
-                <TabsTrigger value="reviews" className="gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  {language === 'th' ? 'รีวิว' : 'Reviews'}
-                </TabsTrigger>
-                <TabsTrigger value="business" className="gap-2">
-                  <Phone className="w-4 h-4" />
-                  {language === 'th' ? 'ข้อมูลธุรกิจ' : 'Business Info'}
-                </TabsTrigger>
-                <TabsTrigger value="roles" className="gap-2">
-                  <UserCog className="w-4 h-4" />
-                  {language === 'th' ? 'บทบาท' : 'Roles'}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="hero" className="space-y-4">
-                <HeroManagement />
-              </TabsContent>
-
-              <TabsContent value="events" className="space-y-4">
-                <EventSpaceManagement />
-              </TabsContent>
-
-              <TabsContent value="rooms" className="space-y-4">
-                <RoomsManagement />
-              </TabsContent>
-
-              <TabsContent value="menus" className="space-y-4">
-                <MenusManagement />
-              </TabsContent>
-
-              <TabsContent value="gallery" className="space-y-4">
-                <GalleryManagement />
-              </TabsContent>
-
-              <TabsContent value="reviews" className="space-y-4">
-                <ReviewsManagement />
-              </TabsContent>
-
-              <TabsContent value="business" className="space-y-4">
-                <BusinessInfoManagement />
-              </TabsContent>
-
-              <TabsContent value="roles" className="space-y-4">
-                <UserRolesManagement />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+            {renderContent()}
+          </div>
+        </main>
       </div>
     </div>
   );
 };
+
+/* ─── Dashboard Section ─── */
+interface DashboardContentProps {
+  stats: Array<{ label: string; value: number; icon: any; color: string; bg: string }>;
+  barChartData: Array<{ name: string; value: number; fill: string }>;
+  totalItems: number;
+  chartConfig: ChartConfig;
+  language: string;
+}
+
+const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, language }: DashboardContentProps) => (
+  <div className="space-y-6">
+    {/* Page Title */}
+    <div>
+      <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+        <Activity className="w-6 h-6 text-primary" />
+        {language === "th" ? "ภาพรวมระบบ" : "System Overview"}
+      </h2>
+      <p className="text-muted-foreground text-sm mt-1">
+        {language === "th" ? "สรุปข้อมูลเนื้อหาทั้งหมดของเว็บไซต์" : "Summary of all website content"}
+      </p>
+    </div>
+
+    {/* Stat Cards */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {stats.map((stat, i) => {
+        const Icon = stat.icon;
+        return (
+          <Card key={i} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg ${stat.bg}`}>
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
+                </div>
+                <TrendingUp className="w-3.5 h-3.5 text-muted-foreground/50" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{stat.label}</p>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+
+    {/* Charts Row */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      {/* Bar Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            {language === "th" ? "จำนวนเนื้อหาตามหมวดหมู่" : "Content by Category"}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {language === "th" ? `ทั้งหมด ${totalItems} รายการ` : `${totalItems} total items`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[220px] sm:h-[260px] w-full">
+            <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
+                {barChartData.map((entry, index) => (
+                  <Cell key={index} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Pie Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" />
+            {language === "th" ? "สัดส่วนเนื้อหา" : "Content Distribution"}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {language === "th" ? "แสดงสัดส่วนเนื้อหาแต่ละประเภท" : "Proportion of each content type"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[220px] sm:h-[260px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={barChartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={4}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
+                >
+                  {barChartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Legend */}
+          <div className="flex flex-wrap justify-center gap-3 mt-3">
+            {barChartData.map((item, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                <span>{item.name}</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{item.value}</Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);
 
 export default Admin;
