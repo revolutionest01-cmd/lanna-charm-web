@@ -37,7 +37,7 @@ type Review = {
   review_text_en: string;
   review_text_th: string;
   image_url: string | null;
-  avatar: string;
+  avatar?: string;
   is_active: boolean;
   created_at: string;
 };

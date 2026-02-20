@@ -240,12 +240,6 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    // Clear React Query cache before signing out
-    if (globalQueryClient) {
-      globalQueryClient.clear();
-      console.log('[Auth] Cleared React Query cache on logout');
-    }
-    
     // Clear all localStorage except language
     const language = localStorage.getItem('language-storage');
     localStorage.clear();
