@@ -927,70 +927,68 @@ export const MenusManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="max-h-[800px] overflow-y-auto pr-4 -mr-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {menus.map((menu) => (
-                  <Card key={menu.id} className="overflow-hidden">
-                    {menu.image_url && (
-                      <img
-                        src={menu.image_url}
-                        alt={menu.name_en}
-                        className="w-full h-48 object-cover"
-                      />
-                    )}
-                    <CardHeader>
-                      <CardTitle className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            {menu.icon_url && (
-                              <img
-                                src={menu.icon_url}
-                                alt="icon"
-                                className="w-6 h-6 object-contain"
-                              />
-                            )}
-                            <span className="text-lg">
-                              {language === "th" ? menu.name_th : menu.name_en}
-                            </span>
-                            {menu.is_recommended && (
-                              <Star className="w-4 h-4 fill-primary text-primary" />
-                            )}
-                          </div>
-                          <div className="text-sm font-normal text-primary mt-1">
-                            ฿{menu.price.toLocaleString()}
-                          </div>
-                          <div className="text-xs text-foreground/70 mt-1">
-                            {getCategoryName(menu.category_id)}
-                          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {menus.map((menu) => (
+                <Card key={menu.id} className="overflow-hidden">
+                  {menu.image_url && (
+                    <img
+                      src={menu.image_url}
+                      alt={menu.name_en}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
+                  <CardHeader>
+                    <CardTitle className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          {menu.icon_url && (
+                            <img
+                              src={menu.icon_url}
+                              alt="icon"
+                              className="w-6 h-6 object-contain"
+                            />
+                          )}
+                          <span className="text-lg">
+                            {language === "th" ? menu.name_th : menu.name_en}
+                          </span>
+                          {menu.is_recommended && (
+                            <Star className="w-4 h-4 fill-primary text-primary" />
+                          )}
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditMenu(menu)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => setMenuToDelete(menu)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div className="text-sm font-normal text-primary mt-1">
+                          ฿{menu.price.toLocaleString()}
                         </div>
-                      </CardTitle>
-                    </CardHeader>
-                    {(menu.description_th || menu.description_en) && (
-                      <CardContent>
-                        <p className="text-sm text-foreground/70 line-clamp-2">
-                          {language === "th" ? menu.description_th : menu.description_en}
-                        </p>
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
+                        <div className="text-xs text-foreground/70 mt-1">
+                          {getCategoryName(menu.category_id)}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleEditMenu(menu)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => setMenuToDelete(menu)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  {(menu.description_th || menu.description_en) && (
+                    <CardContent>
+                      <p className="text-sm text-foreground/70 line-clamp-2">
+                        {language === "th" ? menu.description_th : menu.description_en}
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
@@ -1102,43 +1100,41 @@ export const MenusManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="max-h-[600px] overflow-y-auto pr-4 -mr-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((category) => (
-                  <Card key={category.id}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>
-                          {language === "th" ? category.name_th : category.name_en}
-                        </span>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              categoryForm.reset({
-                                name_th: category.name_th,
-                                name_en: category.name_en,
-                              });
-                              setIsCategoryDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => setCategoryToDelete(category)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((category) => (
+                <Card key={category.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>
+                        {language === "th" ? category.name_th : category.name_en}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedCategory(category);
+                            categoryForm.reset({
+                              name_th: category.name_th,
+                              name_en: category.name_en,
+                            });
+                            setIsCategoryDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => setCategoryToDelete(category)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
