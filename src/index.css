@@ -187,6 +187,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-foreground text-background;
+    font-family: var(--font-sans);
+  }
+
+  html {
+    font-family: var(--font-sans);
   }
 }
 

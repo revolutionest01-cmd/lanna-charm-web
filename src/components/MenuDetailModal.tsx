@@ -18,6 +18,17 @@ interface Menu {
   icon_url: string | null;
   is_recommended: boolean;
   is_active: boolean;
+  ingredients_th?: string | null;
+  ingredients_en?: string | null;
+  temperature_options?: string | null;
+  size_options?: string | null;
+  allergens_th?: string | null;
+  allergens_en?: string | null;
+  calories?: number | null;
+  preparation_method_th?: string | null;
+  preparation_method_en?: string | null;
+  customization_options_th?: string | null;
+  customization_options_en?: string | null;
 }
 
 interface MenuDetailModalProps {
@@ -280,24 +291,123 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground mb-2 sm:mb-3">
                   {menuName}
                 </h1>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2 sm:gap-3">
                   <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
                     ฿{menu.price}
                   </span>
+                  {menu.calories && (
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      {menu.calories} {language === 'th' ? 'แคลลอรี่' : language === 'zh' ? '卡路里' : 'cal'}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Main Description */}
               {menuDescription && (
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                    {language === 'th' ? 'รายละเอียด' : language === 'zh' ? '描述' : 'Description'}
-                  </h3>
+                <div className="pb-3 sm:pb-4 border-b border-border/50">
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {menuDescription}
                   </p>
                 </div>
               )}
+
+              {/* Ingredients */}
+              {menu.ingredients_th || menu.ingredients_en ? (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <span className="text-lg">🥘</span>
+                    {language === 'th' ? 'วัตถุดิบ' : language === 'zh' ? '成分' : 'Ingredients'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {language === 'th' && menu.ingredients_th ? menu.ingredients_th : 
+                     language === 'en' && menu.ingredients_en ? menu.ingredients_en : 
+                     menu.ingredients_th || menu.ingredients_en}
+                  </p>
+                </div>
+              ) : null}
+
+              {/* Temperature & Size Options */}
+              {menu.temperature_options || menu.size_options ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {menu.temperature_options && (
+                    <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
+                      <h4 className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-1.5">
+                        <span className="text-base">🌡️</span>
+                        {language === 'th' ? 'อุณหภูมิ' : language === 'zh' ? '温度' : 'Temperature'}
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {menu.temperature_options.split(',').map((option, idx) => (
+                          <span key={idx} className="text-xs sm:text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 px-2.5 sm:px-3 py-1 rounded-full">
+                            {option.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {menu.size_options && (
+                    <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
+                      <h4 className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-1.5">
+                        <span className="text-base">📏</span>
+                        {language === 'th' ? 'ขนาด' : language === 'zh' ? '大小' : 'Size'}
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {menu.size_options.split(',').map((option, idx) => (
+                          <span key={idx} className="text-xs sm:text-sm bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 px-2.5 sm:px-3 py-1 rounded-full">
+                            {option.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {/* Customization Options */}
+              {menu.customization_options_th || menu.customization_options_en ? (
+                <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-base font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
+                    <span className="text-lg">✨</span>
+                    {language === 'th' ? 'ปรับแต่งได้' : language === 'zh' ? '自定义' : 'Customization'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-purple-900/70 dark:text-purple-100/70 whitespace-pre-wrap leading-relaxed">
+                    {language === 'th' && menu.customization_options_th ? menu.customization_options_th : 
+                     language === 'en' && menu.customization_options_en ? menu.customization_options_en : 
+                     menu.customization_options_th || menu.customization_options_en}
+                  </p>
+                </div>
+              ) : null}
+
+              {/* Preparation Method */}
+              {menu.preparation_method_th || menu.preparation_method_en ? (
+                <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-base font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
+                    <span className="text-lg">⏱️</span>
+                    {language === 'th' ? 'วิธีเตรียม' : language === 'zh' ? '制作方法' : 'Preparation'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-green-900/70 dark:text-green-100/70 whitespace-pre-wrap leading-relaxed">
+                    {language === 'th' && menu.preparation_method_th ? menu.preparation_method_th : 
+                     language === 'en' && menu.preparation_method_en ? menu.preparation_method_en : 
+                     menu.preparation_method_th || menu.preparation_method_en}
+                  </p>
+                </div>
+              ) : null}
+
+              {/* Allergens Warning */}
+              {menu.allergens_th || menu.allergens_en ? (
+                <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-base font-semibold text-red-900 dark:text-red-100 mb-2 flex items-center gap-2">
+                    <span className="text-lg">⚠️</span>
+                    {language === 'th' ? 'สารก่อแพ้' : language === 'zh' ? '过敏原' : 'Allergens'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-red-900/70 dark:text-red-100/70">
+                    {language === 'th' && menu.allergens_th ? menu.allergens_th : 
+                     language === 'en' && menu.allergens_en ? menu.allergens_en : 
+                     menu.allergens_th || menu.allergens_en}
+                  </p>
+                </div>
+              ) : null}
 
               {/* Recommended Badge */}
               {menu.is_recommended && (
