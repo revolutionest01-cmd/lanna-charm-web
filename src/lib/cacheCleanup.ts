@@ -18,6 +18,7 @@ export const initializeCacheCleanup = () => {
   }
 
   // Clear old localStorage keys that might cause issues
+  // BUT preserve Supabase auth-related keys
   const keysToCheck = [
     'language-storage',
     'app-cache-metadata',
@@ -35,6 +36,19 @@ export const initializeCacheCleanup = () => {
     }
   });
 
+  // Check for Supabase auth keys and preserve them
+  const preservedAuthKeys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.includes('sb-') || key.includes('auth') || key.includes('supabase'))) {
+      preservedAuthKeys.push(key);
+    }
+  }
+  
+  if (preservedAuthKeys.length > 0) {
+    console.log('[Cache Cleanup] Preserving', preservedAuthKeys.length, 'Supabase auth keys');
+  }
+
   // Unregister all service workers to force fresh load
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
@@ -47,7 +61,7 @@ export const initializeCacheCleanup = () => {
 
   // Set a flag to indicate fresh load
   sessionStorage.setItem('app-fresh-load', 'true');
-  console.log('[Cache Cleanup] App started with fresh cache');
+  console.log('[Cache Cleanup] App started with fresh cache (auth keys preserved)');
 };
 
 /**

@@ -78,25 +78,34 @@ const Admin = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!isAuthenticated || !user) {
+        console.log('[Admin] Not authenticated or no user');
         setIsAdmin(false);
         setCheckingAdmin(false);
         return;
       }
       try {
+        console.log('[Admin] Checking admin status for user:', user.id);
         const { data, error } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id)
           .eq("role", "admin")
           .maybeSingle();
-        setIsAdmin(!!data && !error);
-      } catch {
+        
+        const isAdminUser = !!data && !error;
+        console.log('[Admin] Admin check result:', isAdminUser);
+        setIsAdmin(isAdminUser);
+      } catch (error) {
+        console.error('[Admin] Error checking admin status:', error);
         setIsAdmin(false);
       } finally {
         setCheckingAdmin(false);
       }
     };
-    if (!isLoading) checkAdminStatus();
+    
+    if (!isLoading) {
+      checkAdminStatus();
+    }
   }, [isAuthenticated, user, isLoading]);
 
   useEffect(() => {
