@@ -5,6 +5,7 @@ import { initializeGA } from "./lib/googleAnalytics";
 import { debugUtils } from "./lib/debugUtils";
 import { hardReset } from "./lib/hardReset";
 import { initializeCacheCleanup } from "./lib/cacheCleanup";
+import { cacheClearManager } from "./lib/cacheClearManager";
 
 // 1. FIRST: Clean up old caches and service workers (prevents stale data issues)
 initializeCacheCleanup();
@@ -15,10 +16,12 @@ initializeGA();
 // 3. Make utilities available in console
 console.log("🚀 App starting...");
 console.log("💡 Debug utilities available:");
+console.log("   - cacheClearManager.hardClear() - Quick cache clear + reload");
+console.log("   - cacheClearManager.nuclearReset() - Complete reset");
+console.log("   - cacheClearManager.status() - See all options");
 console.log("   - debugUtils.suggest() - Auto diagnostic");
-console.log("   - debugUtils.runFullDiagnostic() - Full check");
-console.log("   - hardReset.RESET_ALL() - Nuclear reset");
-console.log("   - hardReset.HELP() - See options");
+console.log("   - hardReset.RESET_ALL() - Hard reset (legacy)");
+console.log("   - hardReset.HELP() - See reset options");
 
 // Auto-run diagnostic in development
 if (process.env.NODE_ENV === 'development') {

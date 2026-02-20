@@ -6,33 +6,25 @@ import { useLanguage } from '@/hooks/useLanguage';
 /**
  * Error Recovery Component
  * Shows when data fails to load and provides recovery options
+ * 
+ * DISABLED: This component was causing false positives by checking /index.html
+ * instead of actual data loading status. Re-enable only with proper error detection.
  */
 export const DataLoadError = () => {
   const { language } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
 
-  useEffect(() => {
-    // Check if Supabase queries are failing
-    const checkInterval = setInterval(async () => {
-      try {
-        // Simple test query
-        const response = await fetch('/index.html', { 
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        
-        if (!response.ok) {
-          setError('Failed to load app');
-        }
-      } catch (e) {
-        setError('Connection error');
-      }
-    }, 5000);
+  // DISABLED: Don't check /index.html periodically - it causes false positives
+  // useEffect(() => {
+  //   const checkInterval = setInterval(async () => { ... }, 5000);
+  //   return () => clearInterval(checkInterval);
+  // }, []);
 
-    return () => clearInterval(checkInterval);
-  }, []);
+  // Always return null - component disabled due to false positives
+  return null;
 
+  // Original error UI disabled:
   if (!error) {
     return null;
   }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import plernpingLogo from "@/assets/plernping-logo.png";
 
-const MIN_DURATION = 1000; // 1 second minimum to show branding
-const MAX_DURATION = 5000; // 5 seconds maximum to prevent infinite loading
+const MIN_DURATION = 1500; // 1.5 seconds minimum to show branding
+const MAX_DURATION = 8000; // 8 seconds maximum to allow data fetching
 const FADE_DURATION = 300;
 
 const LoadingScreen = ({ onLoadingComplete }: { onLoadingComplete: () => void }) => {

@@ -53,54 +53,76 @@
     
     <!-- App Version for Cache Busting -->
     <meta name="app-version" content="1.0.0" />
-        <!-- Aggressive cache clearing script - runs before app loads -->
+        <!-- Aggressive cache clearing script - runs SYNCHRONOUSLY before app loads -->
     <script>
-      // IMPORTANT: Run FIRST before anything else loads
+      // CRITICAL: Run FIRST and SYNCHRONOUSLY before anything else loads
       (function() {
-        console.log('🧹 [PRELOAD] Starting aggressive cache cleanup...');
+        console.log('🧹 [PRELOAD] ⚠️  AGGRESSIVE cache cleanup starting...');
         
-        // 1. Clear all service worker caches immediately
+        // 1. SYNCHRONOUS clearance for localStorage/sessionStorage
+        try {
+          // Clear app-specific storage (preserve language)
+          const language = localStorage.getItem('language-storage');
+          localStorage.clear();
+          sessionStorage.clear();
+          if (language) {
+            localStorage.setItem('language-storage', language);
+            console.log('✓ Storage cleared (language preserved)');
+          }
+        } catch (e) {
+          console.warn('Storage clear error:', e);
+        }
+        
+        // 2. Clear all service worker caches (async but start immediately)
         if ('caches' in window) {
           caches.keys().then((names) => {
-            names.forEach((name) => {
-              console.log('🗑️  Deleting cache: ' + name);
-              caches.delete(name);
+            console.log(`🗑️  Found ${names.length} caches`);
+            Promise.all(names.map(name => {
+              console.log('  → Deleting: ' + name);
+              return caches.delete(name);
+            })).then(() => {
+              console.log('✓ All caches deleted');
             });
-          }).catch(e => console.warn('Cache clear error:', e));
+          }).catch(e => console.warn('Cache API error:', e));
         }
         
-        // 2. Unregister service workers before app loads
+        // 3. Unregister service workers ASAP
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then((regs) => {
+            console.log(`🛑 Found ${regs.length} service workers`);
             regs.forEach((reg) => {
-              console.log('🛑 Unregistering SW: ' + reg.scope);
-              reg.unregister();
+              console.log('  → Unregistering: ' + reg.scope);
+              reg.unregister().catch(e => console.warn('SW unregister error:', e));
             });
-          }).catch(e => console.warn('SW unregister error:', e));
+          });
         }
         
-        // 3. Prevent stale manifest cache
-        const link = document.querySelector('link[rel="manifest"]');
-        if (link) {
-          link.href = link.href + '?v=' + Date.now();
+        // 4. Cache-bust manifest and resources
+        const manifest = document.querySelector('link[rel="manifest"]');
+        if (manifest) {
+          manifest.href = manifest.href.split('?')[0] + '?v=' + Date.now();
         }
         
-        console.log('✅ Preload cleanup completed');
+        // 5. Add cache-busting to main script
+        const script = document.querySelector('script[src*="/src/main"]');
+        if (script && script.src) {
+          const url = new URL(script.src, location.href);
+          url.searchParams.set('v', Date.now().toString());
+          script.src = url.href;
+        }
+        
+        console.log('✅ Preload cleanup initiated - page will load with no cache');
       })();
     </script>
-        <!-- Service Worker Registration -->
+
+    <!-- Service Worker Registration - DISABLED due to aggressive cache issues -->
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('✅ Service Worker registered:', registration);
-            })
-            .catch((error) => {
-              console.warn('⚠️ Service Worker registration failed:', error);
-            });
-        });
-      }
+      // DEPRECATED: SW registration disabled to avoid cache priming issues
+      // if ('serviceWorker' in navigator) {
+      //   window.addEventListener('load', () => {
+      //     navigator.serviceWorker.register('/sw.js')...
+      // }
+      console.log('ℹ️  Service Workers disabled - using client-side caching only');
     </script>
   </head>
 

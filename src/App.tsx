@@ -15,9 +15,9 @@ import { setGlobalQueryClient } from "./hooks/useContentData";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,
+      retry: 2,
+      refetchOnWindowFocus: true,
+      staleTime: 2 * 60 * 1000, // Further reduced to 2 min for faster updates after admin changes
       gcTime: 10 * 60 * 1000,
     },
   },
@@ -55,6 +55,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <AppRoutes showLoading={showLoading} onLoadingComplete={handleLoadingComplete} />
+            {/* DataLoadError disabled - was causing false positives on refresh */}
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

@@ -81,7 +81,7 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
 // Initialize auth state
 const initializeAuth = async () => {
   try {
-    // Set a timeout to ensure auth initializes within 5 seconds max
+    // Set a timeout to ensure auth initializes within 2 seconds max
     let authCompleted = false;
     const authTimeoutId = setTimeout(() => {
       if (!authCompleted && authState.isLoading) {
@@ -94,7 +94,7 @@ const initializeAuth = async () => {
         });
         authCompleted = true;
       }
-    }, 5000);
+    }, 2000);
 
     // Set up auth state listener FIRST
     supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -240,6 +240,23 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
+    // Clear React Query cache before signing out
+    if (globalQueryClient) {
+      globalQueryClient.clear();
+      console.log('[Auth] Cleared React Query cache on logout');
+    }
+    
+    // Clear all localStorage except language
+    const language = localStorage.getItem('language-storage');
+    localStorage.clear();
+    if (language) {
+      localStorage.setItem('language-storage', language);
+    }
+    
+    // Clear sessionStorage
+    sessionStorage.clear();
+    
+    // Sign out from Supabase
     await supabase.auth.signOut();
   };
 

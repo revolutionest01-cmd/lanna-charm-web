@@ -157,10 +157,18 @@ export const UserRolesManagement = () => {
                   <TableRow key={u.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={u.avatar_url || undefined} />
-                          <AvatarFallback>{u.display_name.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
+                        {u.avatar_url && /^[\p{Emoji}]$/u.test(u.avatar_url) ? (
+                          // Emoji Avatar
+                          <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center text-sm font-semibold">
+                            {u.avatar_url}
+                          </div>
+                        ) : (
+                          // Image or Fallback Avatar
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={u.avatar_url || undefined} />
+                            <AvatarFallback>{u.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        )}
                         <div>
                           <p className="font-medium text-sm">
                             {u.display_name}

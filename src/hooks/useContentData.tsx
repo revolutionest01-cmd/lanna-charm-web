@@ -25,9 +25,9 @@ export const useHeroContent = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -45,7 +45,7 @@ export const useEventSpaces = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -63,9 +63,9 @@ export const useRooms = () => {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -84,9 +84,9 @@ export const useMenus = () => {
         menus: menusRes.data || [],
       };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -102,9 +102,9 @@ export const useGalleryImages = (limit: number = 9) => {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -121,9 +121,9 @@ export const useReviews = (limit: number = 9) => {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -139,9 +139,9 @@ export const useBusinessInfo = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -155,6 +155,7 @@ export const invalidateContentCache = (): void => {
   console.log('[Cache] Invalidating all content caches...');
   
   try {
+    // Invalidate all queries to force fresh fetch
     globalQueryClient.invalidateQueries({ queryKey: ["hero-content"] });
     globalQueryClient.invalidateQueries({ queryKey: ["event-spaces"] });
     globalQueryClient.invalidateQueries({ queryKey: ["rooms"] });
@@ -164,7 +165,14 @@ export const invalidateContentCache = (): void => {
     globalQueryClient.invalidateQueries({ queryKey: ["menu_categories"] });
     globalQueryClient.invalidateQueries({ queryKey: ["business_info"] });
     
-    console.log('[Cache] ✓ All content caches invalidated successfully');
+    // Also refetch to ensure fresh data immediately
+    globalQueryClient.refetchQueries({ queryKey: ["hero-content"] });
+    globalQueryClient.refetchQueries({ queryKey: ["rooms"] });
+    globalQueryClient.refetchQueries({ queryKey: ["menus"] });
+    globalQueryClient.refetchQueries({ queryKey: ["gallery"] });
+    globalQueryClient.refetchQueries({ queryKey: ["reviews"] });
+    
+    console.log('[Cache] ✓ All content caches invalidated and refetching...');
   } catch (error) {
     console.error('[Cache] Error invalidating caches:', error);
   }

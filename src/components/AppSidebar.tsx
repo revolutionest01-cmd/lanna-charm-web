@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
-  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu
+  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
 import LanguageDropdown from "./LanguageDropdown";
+import UtilityTools from "./UtilityTools";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -153,15 +154,15 @@ const AppSidebar = () => {
           <div className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg",
             "border shadow-sm transition-all duration-200",
-            "bg-amber-50 hover:shadow-md hover:bg-amber-100",
-            "border-amber-200 hover:border-amber-300"
+            "bg-primary/40 hover:shadow-md hover:bg-primary/50",
+            "border-primary/50 hover:border-primary/60"
           )}>
             <img src={logo} alt="Plern Ping" className="h-9 w-auto" />
             <div>
-              <h2 className="text-lg font-bold tracking-wide text-amber-950">
+              <h2 className={cn("text-lg font-bold tracking-wide", themeStyles.text)}>
                 Plern Ping
               </h2>
-              <p className="text-[10px] text-amber-900">
+              <p className={cn("text-[10px]", themeStyles.muted)}>
                 {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
               </p>
             </div>
@@ -338,6 +339,16 @@ const AppSidebar = () => {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {/* Utility Tools - Bottom of Sidebar (Admin Only) */}
+            {isAdmin && (
+              <div className="mt-6 pt-4 border-t border-primary/20">
+                <p className={cn("text-[10px] font-semibold uppercase tracking-wider mb-3", themeStyles.muted)}>
+                  {language === 'th' ? 'เครื่องมือ' : language === 'zh' ? '工具' : 'Tools'}
+                </p>
+                <UtilityTools />
+              </div>
+            )}
           </ScrollArea>
         </SidebarContent>
 
@@ -350,12 +361,21 @@ const AppSidebar = () => {
                 "flex items-center gap-3 p-3 rounded-xl border",
                 themeStyles.border, themeStyles.active
               )}>
-                <Avatar className="h-10 w-10 ring-2 ring-highlight/30">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-highlight/15 text-highlight font-semibold">
-                    {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
-                  </AvatarFallback>
-                </Avatar>
+                {/* Avatar - Handle both emoji and URL avatars */}
+                {user.avatar && /^[\p{Emoji}]$/u.test(user.avatar) ? (
+                  // Emoji Avatar
+                  <div className="h-10 w-10 rounded-lg bg-highlight/15 flex items-center justify-center text-lg font-semibold ring-2 ring-highlight/30">
+                    {user.avatar}
+                  </div>
+                ) : (
+                  // Image or Fallback Avatar
+                  <Avatar className="h-10 w-10 ring-2 ring-highlight/30">
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarFallback className="bg-highlight/15 text-highlight font-semibold">
+                      {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className={cn("text-sm font-semibold truncate", themeStyles.text)}>{user.name}</p>
                   <p className={cn("text-[10px]", themeStyles.muted)}>

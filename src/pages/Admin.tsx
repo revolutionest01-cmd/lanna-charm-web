@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,7 +18,8 @@ import {
   Loader2,
   Shield,
   Phone,
-  UserCog
+  UserCog,
+  LogOut
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -79,31 +81,35 @@ const Admin = () => {
     }
   }, [isAuthenticated, user, isLoading]);
 
-  // Fetch stats
+  // Fetch stats (run after page is visible to reduce initial load)
   useEffect(() => {
-    const fetchStats = async () => {
-      if (!isAdmin) return;
+    const timer = setTimeout(() => {
+      const fetchStats = async () => {
+        if (!isAdmin) return;
 
-      try {
-        const [roomsRes, menusRes, galleryRes, reviewsRes] = await Promise.all([
-          supabase.from('rooms').select('id', { count: 'exact', head: true }),
-          supabase.from('menus').select('id', { count: 'exact', head: true }),
-          supabase.from('gallery_images').select('id', { count: 'exact', head: true }),
-          supabase.from('reviews').select('id', { count: 'exact', head: true }),
-        ]);
+        try {
+          const [roomsRes, menusRes, galleryRes, reviewsRes] = await Promise.all([
+            supabase.from('rooms').select('id', { count: 'exact', head: true }),
+            supabase.from('menus').select('id', { count: 'exact', head: true }),
+            supabase.from('gallery_images').select('id', { count: 'exact', head: true }),
+            supabase.from('reviews').select('id', { count: 'exact', head: true }),
+          ]);
 
-        setStats({
-          rooms: roomsRes.count || 0,
-          menus: menusRes.count || 0,
-          gallery: galleryRes.count || 0,
-          reviews: reviewsRes.count || 0,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
+          setStats({
+            rooms: roomsRes.count || 0,
+            menus: menusRes.count || 0,
+            gallery: galleryRes.count || 0,
+            reviews: reviewsRes.count || 0,
+          });
+        } catch (error) {
+          console.error('Error fetching stats:', error);
+        }
+      };
 
-    fetchStats();
+      fetchStats();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [isAdmin]);
 
   // Redirect if not admin
@@ -119,13 +125,25 @@ const Admin = () => {
     }
   }, [isAuthenticated, isAdmin, checkingAdmin, isLoading, navigate, language]);
 
+  // Cleanup and invalidate cache when leaving Admin page
+  useEffect(() => {
+    return () => {
+      // When unmounting Admin component, refresh content cache for home page
+      invalidateContentCache();
+      console.log('[Admin] Cleaning up - invalidated content cache');
+    };
+  }, []);
+
   if (isLoading || checkingAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">
-            {language === 'th' ? 'กำลังโหลด...' : 'Loading...'}
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <Loader2 className="w-16 h-16 animate-spin text-amber-500" />
+            <Shield className="absolute inset-0 m-auto w-8 h-8 text-amber-600 opacity-50" />
+          </div>
+          <p className="text-slate-300 font-medium">
+            {language === 'th' ? 'กำลังตรวจสอบสิทธิ์...' : 'Verifying access...'}
           </p>
         </div>
       </div>
@@ -137,10 +155,10 @@ const Admin = () => {
   }
 
   const statsDisplay = [
-    { label: language === 'th' ? 'ห้องพัก' : 'Rooms', value: stats.rooms, icon: Home, color: 'text-blue-600' },
-    { label: language === 'th' ? 'เมนู' : 'Menus', value: stats.menus, icon: Coffee, color: 'text-green-600' },
-    { label: language === 'th' ? 'แกลเลอรี่' : 'Gallery', value: stats.gallery, icon: ImageIcon, color: 'text-purple-600' },
-    { label: language === 'th' ? 'รีวิว' : 'Reviews', value: stats.reviews, icon: MessageSquare, color: 'text-orange-600' },
+    { label: language === 'th' ? 'ห้องพัก' : 'Rooms', value: stats.rooms, icon: Home, color: 'text-blue-500', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20' },
+    { label: language === 'th' ? 'เมนู' : 'Menus', value: stats.menus, icon: Coffee, color: 'text-amber-500', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+    { label: language === 'th' ? 'แกลเลอรี่' : 'Gallery', value: stats.gallery, icon: ImageIcon, color: 'text-purple-500', bgColor: 'bg-purple-500/10', borderColor: 'border-purple-500/20' },
+    { label: language === 'th' ? 'รีวิว' : 'Reviews', value: stats.reviews, icon: MessageSquare, color: 'text-rose-500', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-500/20' },
   ];
 
   return (
