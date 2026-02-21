@@ -89,10 +89,9 @@ export const sweetAlert = {
     },
 
     confirm: async (title: string, text?: string, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก', useHtml = false) => {
-      const result = await Swal.fire({
+      const options: Record<string, any> = {
         icon: 'question',
         title,
-        [useHtml ? 'html' : 'text']: text,
         showCancelButton: true,
         confirmButtonColor: '#8B6F47',
         cancelButtonColor: '#6b7280',
@@ -100,12 +99,10 @@ export const sweetAlert = {
         cancelButtonText: cancelText,
         allowOutsideClick: false,
         allowEscapeKey: false,
-        didOpen: (dialog) => {
-          // Ensure buttons are clickable
+        didOpen: (dialog: HTMLElement) => {
           const confirmBtn = dialog.querySelector('.swal2-confirm') as HTMLElement;
           const cancelBtn = dialog.querySelector('.swal2-cancel') as HTMLElement;
           const backdrop = dialog.parentElement?.querySelector('.swal2-backdrop') as HTMLElement;
-          
           if (confirmBtn) {
             confirmBtn.style.pointerEvents = 'auto';
             confirmBtn.style.cursor = 'pointer';
@@ -128,13 +125,19 @@ export const sweetAlert = {
           cancelButton: '!pointer-events-auto',
         },
         titleColor: 'hsl(12, 55%, 50%)',
-        didRender: (dialog) => {
-          const content = dialog.querySelector('.swal2-html-container');
+        didRender: (dialog: HTMLElement) => {
+          const content = dialog.querySelector('.swal2-html-container') as HTMLElement;
           if (content) {
             content.style.color = 'hsl(12, 55%, 50%)';
           }
         },
-      });
+      };
+      if (useHtml) {
+        options.html = text;
+      } else {
+        options.text = text;
+      }
+      const result = await Swal.fire(options);
       return result.isConfirmed;
     },
 
