@@ -55,6 +55,9 @@ interface Room {
   description_th?: string;
   description_en?: string;
   price: number;
+  capacity?: string;
+  amenities_th?: string;
+  amenities_en?: string;
   is_active: boolean;
   sort_order: number;
   images?: RoomImage[];
@@ -222,10 +225,15 @@ export const RoomsManagement = () => {
     try {
       setLoading(true);
 
-      // Delete from storage
-      const fileName = image.image_url.split("/").pop();
-      if (fileName) {
-        await supabase.storage.from("rooms").remove([fileName]);
+      // Extract correct storage path from public URL
+      // URL format: https://xxx.supabase.co/storage/v1/object/public/rooms/filename.jpg
+      const urlParts = image.image_url.split('/storage/v1/object/public/rooms/');
+      const storagePath = urlParts.length > 1 ? urlParts[1] : image.image_url.split("/").pop();
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage.from("rooms").remove([storagePath]);
+        if (storageError) {
+          console.warn("Storage delete warning:", storageError);
+        }
       }
 
       // Delete from database
@@ -262,6 +270,9 @@ export const RoomsManagement = () => {
         description_th: values.description_th || null,
         description_en: values.description_en || null,
         price: parseFloat(values.price),
+        capacity: values.capacity || null,
+        amenities_th: values.amenities_th || null,
+        amenities_en: values.amenities_en || null,
         is_active: true,
       };
 
@@ -329,9 +340,9 @@ export const RoomsManagement = () => {
       description_th: room.description_th || "",
       description_en: room.description_en || "",
       price: room.price.toString(),
-      capacity: "",
-      amenities_th: "",
-      amenities_en: "",
+      capacity: (room as any).capacity || "",
+      amenities_th: (room as any).amenities_th || "",
+      amenities_en: (room as any).amenities_en || "",
     });
     setIsDialogOpen(true);
   };

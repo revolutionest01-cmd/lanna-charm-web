@@ -427,6 +427,9 @@ export type Database = {
       }
       rooms: {
         Row: {
+          amenities_en: string | null
+          amenities_th: string | null
+          capacity: string | null
           created_at: string
           description_en: string | null
           description_th: string | null
@@ -439,6 +442,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amenities_en?: string | null
+          amenities_th?: string | null
+          capacity?: string | null
           created_at?: string
           description_en?: string | null
           description_th?: string | null
@@ -451,6 +457,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amenities_en?: string | null
+          amenities_th?: string | null
+          capacity?: string | null
           created_at?: string
           description_en?: string | null
           description_th?: string | null
