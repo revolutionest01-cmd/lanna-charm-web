@@ -118,7 +118,7 @@ const initializeAuth = async () => {
     }
     
     // Set up auth state listener for future changes (login/logout/refresh)
-    const unsubscribe = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       try {
         console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
         
@@ -156,7 +156,7 @@ const initializeAuth = async () => {
     });
     
     // Keep the unsubscribe for potential cleanup
-    return () => unsubscribe?.();
+    return () => subscription?.unsubscribe();
   } catch (error) {
     console.error('[Auth] Initialization error:', error);
     setAuthState({

@@ -53,8 +53,7 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   const t = translations[language];
   const isMobile = useIsMobile();
   const { setIsModalOpen } = useModalState();
-  const { data: roomData } = useRooms();
-  const rooms = roomData?.rooms || [];
+  const { data: rooms = [] } = useRooms();
   
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
