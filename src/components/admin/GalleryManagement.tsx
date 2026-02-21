@@ -285,7 +285,7 @@ export const GalleryManagement = () => {
                     <Button
                       variant="destructive"
                       size="icon"
-                      className="absolute -top-2 -right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity z-20"
                       onClick={() => removeFile(index)}
                     >
                       <X className="w-3 h-3" />
@@ -318,12 +318,12 @@ export const GalleryManagement = () => {
       {/* Gallery Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {images.map((image) => (
-          <Card key={image.id} className="group relative overflow-hidden">
+          <Card key={image.id} className="group relative">
             <CardContent className="p-0">
               <img
                 src={image.image_url}
                 alt={language === "th" ? image.title_th || "" : image.title_en || ""}
-                className="w-full h-48 object-cover"
+                className="w-full h-48 object-cover rounded-t-lg"
               />
               <div className="p-3">
                 <p className="text-sm font-medium truncate">
@@ -333,7 +333,7 @@ export const GalleryManagement = () => {
               <Button
                 variant="destructive"
                 size="icon"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
                 onClick={() => handleDelete(image)}
               >
                 <Trash2 className="w-4 h-4" />

@@ -480,7 +480,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
 
                 {/* Action Buttons - Mobile stacked */}
                 <div className="flex flex-col gap-2 pt-2">
-                  <BookingDialog>
+                  <BookingDialog roomId={room.id}>
                     <Button
                       variant="highlight"
                       className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105"
@@ -685,7 +685,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
-                      <BookingDialog>
+                      <BookingDialog roomId={room.id}>
                         <Button
                           variant="highlight"
                           className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105"

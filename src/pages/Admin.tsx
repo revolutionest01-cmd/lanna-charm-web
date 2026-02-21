@@ -9,6 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   ArrowLeft,
   Image,
   Calendar,
@@ -32,6 +38,7 @@ import { RoomsManagement } from "@/components/admin/RoomsManagement";
 import { MenusManagement } from "@/components/admin/MenusManagement";
 import { GalleryManagement } from "@/components/admin/GalleryManagement";
 import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
+import { WebboardManagement } from "@/components/admin/WebboardManagement";
 import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
 import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 import {
@@ -50,6 +57,7 @@ const TABS = [
   { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus" },
   { id: "gallery", icon: ImageIcon, labelTh: "แกลเลอรี่", labelEn: "Gallery" },
   { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews" },
+  { id: "webboard", icon: MessageSquare, labelTh: "กระทู้", labelEn: "Webboard" },
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles" },
 ];
@@ -197,6 +205,7 @@ const Admin = () => {
       case "menus": return <MenusManagement />;
       case "gallery": return <GalleryManagement />;
       case "reviews": return <ReviewsManagement />;
+      case "webboard": return <WebboardManagement />;
       case "business": return <BusinessInfoManagement />;
       case "roles": return <UserRolesManagement />;
       default: return null;
@@ -232,26 +241,34 @@ const Admin = () => {
         {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
         <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0">
           <ScrollArea className="lg:h-[calc(100vh-60px)]">
-            <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible">
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0
-                      ${isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      }`}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span>{language === "th" ? tab.labelTh : tab.labelEn}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <TooltipProvider>
+              <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible md:overflow-x-visible smooth-scroll scroll-smooth">
+                {TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <Tooltip key={tab.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start md:px-3 md:py-2.5 px-2.5 py-2.5
+                            ${isActive
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span className="hidden md:inline">{language === "th" ? tab.labelTh : tab.labelEn}</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="md:hidden">
+                        {language === "th" ? tab.labelTh : tab.labelEn}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </ScrollArea>
         </nav>
 

@@ -27,30 +27,36 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const welcomeMessage = language === 'th'
-    ? "สวัสดีค่ะ 😊 สามารถพิมพ์ถามราคาห้องพัก ห้องประชุม หรือราคาอาหาร/เครื่องดื่มได้เลยนะคะ"
+    ? "สวัสดี! 😊 ฉันคือ Plernping AI ช่วยเหลือคุณ หรือคุณต้องการถามเกี่ยวกับห้องพัก ห้องประชุม เมนู หรือขึ้นอื่น?"
     : language === 'zh'
-    ? "您好 😊 您可以询问房价、会议室价格或餐饮菜单价格。"
-    : "Hello 😊 You can ask about room prices, meeting/event space prices, or food/beverage menu prices.";
+    ? "你好! 😊 我是Plernping AI，可以帮助你了解房间、会议室、菜单或其他服务。"
+    : "Hi! 😊 I'm Plernping AI. Ask me about rooms, meeting spaces, menu, or other services!";
 
   const quickQuestions = language === 'th'
     ? [
         "ห้องพักราคาเท่าไหร่?",
-        "ห้องประชุมมีแบบไหนบ้าง?",
-        "เมนูแนะนำมีอะไร?",
-        "เครื่องดื่มราคาเท่าไหร่?",
+        "มีห้องประชุมไหม?",
+        "เมนูอะไรแนะนำ?",
+        "ขนาดห้องเท่าไหร่?",
+        "จัดงานได้ไหม?",
+        "เครื่องดื่มมีอะไร?",
       ]
     : language === 'zh'
     ? [
-        "房价是多少？",
-        "有什么会议室？",
-        "推荐菜单有什么？",
-        "饮品价格多少？",
+        "房价多少？",
+        "有会议室吗？",
+        "推荐菜单？",
+        "房间大小？",
+        "可以举办活动吗？",
+        "有什么饮品？",
       ]
     : [
         "Room prices?",
-        "Meeting rooms available?",
-        "Recommended menu?",
-        "Drink prices?",
+        "Meeting rooms?",
+        "Menu recommendations?",
+        "Room size?",
+        "Can host events?",
+        "Beverages available?",
       ];
 
   useEffect(() => {
@@ -123,7 +129,8 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
 
   if (!isOpen) return null;
 
-  const showQuickQuestions = messages.length <= 1 && !isLoading;
+  // Show quick questions after assistant message or on first load
+  const showQuickQuestions = (messages.length <= 1 || (messages.length > 1 && messages[messages.length - 1]?.role === 'assistant')) && !isLoading;
 
   return (
     <div className="fixed bottom-20 right-2 left-2 md:inset-auto md:bottom-24 md:right-8 z-50 w-auto md:w-96 h-[70dvh] max-h-[500px] md:h-[500px] md:max-h-[600px] bg-background border border-border rounded-2xl md:rounded-lg shadow-2xl flex flex-col animate-fade-in">
@@ -181,16 +188,16 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
 
           {/* Quick Guide Questions */}
           {showQuickQuestions && (
-            <div className="pt-2">
-              <p className="text-xs text-muted-foreground mb-2 font-medium">
-                {language === 'th' ? '💡 คำถามแนะนำ:' : language === 'zh' ? '💡 推荐问题:' : '💡 Quick questions:'}
+            <div className="pt-2 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-2 font-semibold">
+                {language === 'th' ? '💡 คำถามอื่น:' : language === 'zh' ? '💡 你还可以问:' : '💡 Quick Questions:'}
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-2 gap-1.5">
                 {quickQuestions.map((q, i) => (
                   <button
                     key={i}
                     onClick={() => handleSend(q)}
-                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-colors text-foreground"
+                    className="text-xs px-2 py-1.5 rounded-lg border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-all text-foreground truncate"
                   >
                     {q}
                   </button>

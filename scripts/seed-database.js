@@ -203,6 +203,18 @@ async function seedDatabase() {
         is_recommended: true,
         is_active: true,
       },
+      {
+        name_th: "สปาเก็ตตี้คาโบนาร่า",
+        name_en: "Carbonara Pasta",
+        description_th: "สปาเก็ตตี้บีคอน ไข่ และชีส คลาสสิกอิตาลี",
+        description_en: "Classic Italian pasta with bacon, eggs, and cheese",
+        price: 100.0,
+        category_id: categoryMap["อาหาร"],
+        image_url:
+          "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&h=400&fit=crop",
+        is_recommended: true,
+        is_active: true,
+      },
     ];
 
     const menusResult = await supabase

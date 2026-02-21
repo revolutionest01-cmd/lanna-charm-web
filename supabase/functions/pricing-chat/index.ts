@@ -91,76 +91,227 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Detect intent from message
+    // **COMPREHENSIVE KEYWORD DETECTION SYSTEM**
+    // Track user keywords for learning and optimization
+    const userKeywords = {
+      // Rooms & Accommodation
+      rooms: ['ห้องพัก', 'ที่พัก', 'ห้องนอน', 'room', 'accommodation', 'พัก'),
+      pricing: ['ราคา', 'เท่าไหร่', 'ราคาเท่าไร', 'บาท', 'price', 'cost', 'ค่า'),
+      parking: ['จอดรถ', 'ที่จอดรถ', 'parking', 'park', 'ที่จอด'),
+      menu: ['เมนู', 'อาหาร', 'กิน', 'ของรับประทาน', 'menu', 'food', 'dish'),
+      coffee: ['กาแฟ', 'coffee', 'คอฟฟี่', 'ชา', 'เครื่องดื่ม', 'drink', 'beverage'),
+      recommended: ['แนะนำ', 'ยอดนิยม', 'ดี', 'ดีที่สุด', 'recommend', 'best', 'popular', 'suggest'),
+      event: ['ห้องประชุม', 'จัดงาน', 'งานแต่งงาน', 'event', 'meeting', 'conference', 'wedding', 'party'),
+    };
+
+    // Extract keywords from message
+    const detectedCategories: string[] = [];
+    let hasRoomKeyword = false, hasPricingKeyword = false, hasParkingKeyword = false;
+    let hasMenuKeyword = false, hasRecommendedKeyword = false;
+
+    Object.entries(userKeywords).forEach(([category, keywords]) => {
+      if (keywords.some(kw => messageLower.includes(kw))) {
+        detectedCategories.push(category);
+        if (category === 'rooms') hasRoomKeyword = true;
+        if (category === 'pricing') hasPricingKeyword = true;
+        if (category === 'parking') hasParkingKeyword = true;
+        if (category === 'menu' || category === 'coffee') hasMenuKeyword = true;
+        if (category === 'recommended') hasRecommendedKeyword = true;
+      }
+    });
+
+    // Log detected keywords for AI learning/analytics
+    if (detectedCategories.length > 0) {
+      console.log('Detected categories:', detectedCategories.join(', '));
+    }
+
+    // Always fetch ALL relevant data
     const messageLower = message.toLowerCase();
-    let context = '';
+    let contexts: string[] = [];
     let intent = 'general';
 
-    // Check for room-related queries
-    if (messageLower.includes('ห้องพัก') || messageLower.includes('room') || 
-        messageLower.includes('ที่พัก') || messageLower.includes('accommodation')) {
-      intent = 'room';
-      const { data: rooms } = await supabase
-        .from('rooms')
-        .select('name_th, name_en, description_th, description_en, price')
-        .eq('is_active', true)
-        .order('sort_order');
+    // Always fetch all relevant data to provide comprehensive answers
+    let allContext = '';
+
+    // Fetch rooms data
+    const { data: rooms } = await supabase
+      .from('rooms')
+      .select('name_th, name_en, description_th, description_en, price, capacity, amenities_th, amenities_en')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    // Fetch event spaces data
+    const { data: events } = await supabase
+      .from('event_spaces')
+      .select('title_th, title_en, description_th, description_en, image_url')
+      .eq('is_active', true);
+
+    // **ALWAYS Fetch menus data** - critical for menu name matching
+    const { data: menus } = await supabase
+      .from('menus')
+      .select(`
+        name_th,
+        name_en,
+        description_th,
+        description_en,
+        price,
+        is_recommended,
+        menu_categories(name_th, name_en)
+      `)
+      .eq('is_active', true)
+      .order('sort_order');
+
+    // Fetch reviews for recommendations
+    const { data: reviews } = await supabase
+      .from('reviews')
+      .select('rating, customer_name, review_text_th, review_text_en')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    // **Helper function for fuzzy matching menu names**
+    const findMatchingMenus = (query: string): typeof menus => {
+      if (!menus) return [];
+      const queryLower = query.toLowerCase();
       
-      if (rooms && rooms.length > 0) {
-        context = `ข้อมูลห้องพัก:\n${rooms.map(r => 
-          `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน\n  ${sanitizedLanguage === 'th' ? r.description_th : r.description_en}`
-        ).join('\n')}`;
-      }
-    }
-    // Check for event space queries
-    else if (messageLower.includes('ห้องประชุม') || messageLower.includes('meeting') || 
-             messageLower.includes('งานเลี้ยง') || messageLower.includes('event') ||
-             messageLower.includes('conference')) {
-      intent = 'event';
-      const { data: events } = await supabase
-        .from('event_spaces')
-        .select('title_th, title_en, description_th, description_en')
-        .eq('is_active', true);
-      
-      if (events && events.length > 0) {
-        context = `ข้อมูลห้องประชุม & งานเลี้ยง:\n${events.map(e => 
-          `- ${sanitizedLanguage === 'th' ? e.title_th : e.title_en}\n  ${sanitizedLanguage === 'th' ? e.description_th : e.description_en}`
-        ).join('\n')}`;
-      }
-    }
-    // Check for menu queries
-    else if (messageLower.includes('อาหาร') || messageLower.includes('food') || 
-             messageLower.includes('เครื่องดื่ม') || messageLower.includes('drink') ||
-             messageLower.includes('เมนู') || messageLower.includes('menu') ||
-             messageLower.includes('กาแฟ') || messageLower.includes('coffee')) {
+      return menus.filter(m => {
+        const nameTh = m.name_th.toLowerCase();
+        const nameEn = m.name_en.toLowerCase();
+        
+        // Direct substring match
+        if (nameTh.includes(queryLower) || nameEn.includes(queryLower)) return true;
+        
+        // Reverse: check if query contains menu name
+        if (queryLower.includes(nameTh.substring(0, 4)) || 
+            queryLower.includes(nameEn.substring(0, 4).toLowerCase())) return true;
+        
+        // Check individual words
+        const queryWords = queryLower.split(' ');
+        const menuWords = [...nameTh.split(' '), ...nameEn.toLowerCase().split(' ')];
+        return queryWords.some(word => menuWords.some(mw => mw.includes(word) || word.length > 2));
+      });
+    };
+
+    // Build context based on detected categories and intent
+    if (menuMatches.length > 0) {
+      // Found matching menu items - show them prominently
       intent = 'menu';
-      const { data: menus } = await supabase
-        .from('menus')
-        .select(`
-          name_th,
-          name_en,
-          description_th,
-          description_en,
-          price,
-          menu_categories(name_th, name_en)
-        `)
-        .eq('is_active', true)
-        .order('sort_order');
+      contexts.push(`🍽️ เมนูที่ตรงกับคำถาม:\n${menuMatches.map(m => {
+        let menuInfo = `- ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท${m.is_recommended ? ' ⭐' : ''}`;
+        if (m.description_th || m.description_en) {
+          menuInfo += `\n  📝 ${sanitizedLanguage === 'th' ? m.description_th : m.description_en}`;
+        }
+        return menuInfo;
+      }).join('\n')}`);
+    } else if (hasRoomKeyword || (detectedCategories.includes('pricing') && messageLower.includes('ห้อง'))) {
+      // Room-related queries
+      intent = 'room';
+      if (rooms && rooms.length > 0) {
+        const roomInfo = rooms.map(r => {
+          let info = `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน`;
+          if (r.description_th || r.description_en) {
+            info += `\n  📍 ${sanitizedLanguage === 'th' ? r.description_th : r.description_en}`;
+          }
+          if (r.capacity) {
+            info += `\n  👥 ความจุ: ${r.capacity}`;
+          }
+          // Include amenities if parking question
+          if (hasParkingKeyword && r.amenities_th) {
+            const amenities = sanitizedLanguage === 'th' ? r.amenities_th : r.amenities_en;
+            if (amenities?.toLowerCase().includes('จอด') || amenities?.toLowerCase().includes('park')) {
+              info += `\n  🚗 ${amenities}`;
+            }
+          }
+          return info;
+        }).join('\n');
+        contexts.push(`ข้อมูลห้องพัก:\n${roomInfo}`);
+      }
       
+      // Add parking info if asked
+      if (hasParkingKeyword && rooms && rooms.length > 0) {
+        const parkingAmenities = rooms
+          .filter(r => r.amenities_th?.toLowerCase().includes('จอด') || r.amenities_en?.toLowerCase().includes('park'))
+          .map(r => `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${sanitizedLanguage === 'th' ? r.amenities_th : r.amenities_en}`)
+          .join('\n');
+        if (parkingAmenities) {
+          contexts.push(`🚗 ที่จอดรถ:\n${parkingAmenities}`);
+        }
+      }
+    } else if (messageLower.includes('ห้องประชุม') || messageLower.includes('meeting') || 
+        messageLower.includes('งานเลี้ยง') || messageLower.includes('event') ||
+        messageLower.includes('conference') || messageLower.includes('wedding')) {
+      intent = 'event';
+      if (events && events.length > 0) {
+        contexts.push(`ข้อมูลห้องประชุม & งานเลี้ยง:\n${events.map(e => 
+          `- ${sanitizedLanguage === 'th' ? e.title_th : e.title_en}\n  ${sanitizedLanguage === 'th' ? e.description_th : e.description_en}`
+        ).join('\n')}`);
+      }
+    } else if (hasMenuKeyword) {
+      // Menu-related queries (including coffee)
+      intent = 'menu';
       if (menus && menus.length > 0) {
-        context = `ข้อมูลเมนูอาหารและเครื่องดื่ม:\n${menus.map(m => {
-          const category = Array.isArray(m.menu_categories) ? m.menu_categories[0] : m.menu_categories;
-          const categoryName = category ? (sanitizedLanguage === 'th' ? category.name_th : category.name_en) : 'ทั่วไป';
-          return `- ${sanitizedLanguage === 'th' ? m.name_th : m.name_en} (${categoryName}): ${m.price} บาท${m.description_th || m.description_en ? '\n  ' + (sanitizedLanguage === 'th' ? m.description_th : m.description_en) : ''}`;
-        }).join('\n')}`;
+        const menusByCategory: { [key: string]: typeof menus } = {};
+        menus.forEach(m => {
+          const category = Array.isArray(m.menu_categories) ? m.menu_categories[0]?.name_th : (m.menu_categories as any)?.name_th;
+          const categoryName = category || 'ทั่วไป';
+          if (!menusByCategory[categoryName]) {
+            menusByCategory[categoryName] = [];
+          }
+          menusByCategory[categoryName].push(m);
+        });
+
+        contexts.push(`ข้อมูลเมนูอาหารและเครื่องดื่ม:\n${Object.entries(menusByCategory).map(([category, items]) => {
+          return `${category}:\n${items.map(m => 
+            `  - ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท${m.is_recommended ? ' ⭐' : ''}`
+          ).join('\n')}`;
+        }).join('\n')}`);
+
+        // Add recommended items section if asked
+        if (hasRecommendedKeyword) {
+          const recommendedMenus = menus.filter(m => m.is_recommended);
+          if (recommendedMenus.length > 0) {
+            contexts.push(`⭐ เมนูแนะนำ:\n${recommendedMenus.map(m => 
+              `- ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท (${Array.isArray(m.menu_categories) ? m.menu_categories[0]?.name_th : (m.menu_categories as any)?.name_th})`
+            ).join('\n')}`);
+          }
+        }
       }
     }
 
-    // If no specific intent detected, provide general info
-    if (!context) {
-      context = 'ไม่พบข้อมูลที่เกี่ยวข้องกับคำถาม กรุณาระบุว่าต้องการถามเกี่ยวกับ ห้องพัก, ห้องประชุม/งานเลี้ยง หรือ อาหาร/เครื่องดื่ม';
-      intent = 'unsupported';
+    // **ALWAYS Include Summary of Services** in any context if no specific match
+    if (contexts.length === 0) {
+      // Comprehensive fallback - include everything
+      if (menus && menus.length > 0) {
+        const recommendedMenus = menus.filter(m => m.is_recommended);
+        if (recommendedMenus.length > 0) {
+          contexts.push(`⭐ เมนูแนะนำ:\n${recommendedMenus.map(m => 
+            `  - ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท`
+          ).join('\n')}`);
+        }
+        
+        const allMenusStr = menus.map(m => `${sanitizedLanguage === 'th' ? m.name_th : m.name_en} (${m.price})`).join(', ');
+        contexts.push(`📋 เมนูทั้งหมด: ${allMenusStr.substring(0, 200)}${allMenusStr.length > 200 ? '...' : ''}`);
+      }
+      if (rooms && rooms.length > 0) {
+        contexts.push(`🛏️ ห้องพัก: ${rooms.map(r => `${sanitizedLanguage === 'th' ? r.name_th : r.name_en} (${r.price} บาท/คืน)`).join(', ')}`);
+        
+        // Include parking info in fallback
+        const parkingRooms = rooms.filter(r => r.amenities_th?.toLowerCase().includes('จอด') || r.amenities_en?.toLowerCase().includes('park'));
+        if (parkingRooms.length > 0) {
+          contexts.push(`🚗 ที่จอด: มีให้ใช้อย่างปลอดภัย`);
+        }
+      }
+      if (events && events.length > 0) {
+        contexts.push(`🎪 บริการจัดงาน: ${events.map(e => sanitizedLanguage === 'th' ? e.title_th : e.title_en).join(', ')}`);
+      }
+      intent = 'general';
     }
+
+    if (reviews && reviews.length > 0) {
+      contexts.push(`ความพึงพอใจจากลูกค้า: ⭐ ${(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}/5`);
+    }
+
+    const context = contexts.join('\n\n');
 
     console.log('Intent detected:', intent);
 
@@ -171,26 +322,54 @@ serve(async (req) => {
     }
 
     const systemPrompt = sanitizedLanguage === 'th' 
-      ? `คุณเป็นผู้ช่วยตอบคำถามเกี่ยวกับราคาห้องพัก ห้องประชุม/งานเลี้ยง และเมนูอาหาร/เครื่องดื่มของ Plern Ping Cafe & Resort
+      ? `คุณเป็น Plernping AI - ผู้ช่วยตอบคำถามของ Plern Ping Cafe & Resort
 
-กฎการตอบ:
-1. ตอบเป็นภาษาไทยที่สุภาพและเป็นมิตร
-2. ใช้ข้อมูลจาก context ที่ให้ไปเท่านั้น ห้ามสร้างข้อมูลเอง
-3. ถ้าไม่มีข้อมูล หรือคำถามไม่เกี่ยวกับราคา ให้แนะนำให้ติดต่อเจ้าหน้าที่โดยกดปุ่ม "ติดต่อเรา"
-4. แสดงราคาชัดเจน พร้อมหน่วยเงิน (บาท)
-5. ตอบสั้น กระชับ เข้าใจง่าย
+🎯 หน้าที่หลัก:
+1. ตอบคำถาม เกี่ยวกับ ห้องพัก ราคา ที่จอดรถ เมนูอาหาร กาแฟ และ บริการจัดงาน
+2. แนะนำเมนูแนะนำ (⭐) และอาการยอดนิยม
+3. ตัดสินใจอย่างฉลาด จากข้อมูล DATABASE ที่ให้มา
 
-${context}`
-      : `You are a helpful assistant for Plern Ping Cafe & Resort, answering questions about room prices, meeting/event space prices, and food/beverage menu prices.
+📋 กฎการตอบ:
+✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร
+✓ **ตอบสั้นกระชับ** (2-3 บรรทัด ไม่เกิน 100 คำ)
+✓ ใช้ข้อมูลจาก context เท่านั้น ห้ามสร้างข้อมูลเอง
+✓ ถ้าชื่อเมนู/ห้อง -> ระบุ ราคา + คำบรรยาย + (⭐ ถ้าแนะนำ)
+✓ ถ้าถาม ที่จอดรถ -> บอกว่ามี/مี่ และรายละเอียด
+✓ ถ้าไม่มีข้อมูล -> บอกให้ติดต่อเจ้าหน้าที่
+✓ ให้ตัวเลือก/สาขาอื่น ถ้ามีหลายอย่าง
 
-Rules:
-1. Answer in English politely and friendly
-2. Use only the information from the provided context, do not make up information
-3. If no data available or question is not about pricing, suggest contacting staff via "Contact Us" button
-4. Show prices clearly with currency (Baht)
-5. Keep answers short, clear, and easy to understand
+🌟 ลำดับความสำคัญ:
+1. เมนูแนะนำ (⭐)
+2. ข้อมูลที่ตรงกับคำถาม
+3. ข้อเสริมเพิ่มเติม (ถ้าเกี่ยวข้อง)
 
-${context}`;
+\`\`\`
+${context}
+\`\`\``
+      : `You are Plernping AI - your mission is to help with Plern Ping Cafe & Resort inquiries
+
+🎯 Your Role:
+1. Answer about rooms, prices, parking, menus, coffee, and event services
+2. Recommend special items (⭐) and popular options
+3. Use DATABASE information smartly
+
+📋 Rules:
+✓ Answer in English, polite and friendly
+✓ **Keep it SHORT** (2-3 lines, max 100 words)
+✓ Use ONLY provided information - no making up data
+✓ For menus/rooms: Show name + price + description + (⭐ if recommended)
+✓ For parking: Mention availability and details
+✓ If no info: Suggest contacting staff
+✓ Offer alternatives when available
+
+🌟 Priority:
+1. Recommended items (⭐)
+2. Direct answers to the question
+3. Related additional info (if relevant)
+
+\`\`\`
+${context}
+\`\`\``;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

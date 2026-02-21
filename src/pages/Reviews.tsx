@@ -390,7 +390,7 @@ const Reviews = () => {
               onValueChange={(value) => setFilterRating(value === "all" ? null : parseInt(value))}
               className="w-full max-w-2xl"
             >
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full md:grid-cols-6 grid-cols-1 md:w-auto overflow-x-auto inline-flex md:inline-grid">
                 <TabsTrigger value="all">
                   {language === "th" ? "ทั้งหมด" : language === "zh" ? "全部" : "All"}
                 </TabsTrigger>

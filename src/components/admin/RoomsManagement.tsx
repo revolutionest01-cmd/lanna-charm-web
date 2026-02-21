@@ -443,7 +443,7 @@ export const RoomsManagement = () => {
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className={selectedRoom ? "text-amber-900" : ""}>
                 {selectedRoom
                   ? language === "th"
                     ? "แก้ไขห้องพัก"
@@ -466,7 +466,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (ไทย)" : "Room Name (Thai)"}
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="เช่น ห้องประชุมเล็ก" {...field} disabled={submitting} />
+                          <Input placeholder="เช่น ห้องประชุมเล็ก" className="bg-white text-foreground" {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -482,7 +482,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (อังกฤษ)" : "Room Name (English)"}
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Small Conference Room" {...field} disabled={submitting} />
+                          <Input placeholder="e.g. Small Conference Room" className="bg-white text-foreground" {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -505,6 +505,7 @@ export const RoomsManagement = () => {
                             type="number"
                             step="100"
                             placeholder="2000"
+                            className="bg-white text-foreground"
                             disabled={submitting}
                           />
                         </FormControl>
@@ -526,6 +527,7 @@ export const RoomsManagement = () => {
                             {...field}
                             type="number"
                             placeholder="10-15"
+                            className="bg-white text-foreground"
                             disabled={submitting}
                           />
                         </FormControl>
@@ -544,7 +546,7 @@ export const RoomsManagement = () => {
                         {language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={submitting} rows={3} placeholder="เช่น ห้องประชุมสำหรับ 10-15 คน พร้อมเอก สารและห้องค้นหา..." />
+                        <Textarea {...field} disabled={submitting} rows={3} placeholder="เช่น ห้องประชุมสำหรับ 10-15 คน พร้อมเอก สารและห้องค้นหา..." className="bg-white text-foreground" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -562,7 +564,7 @@ export const RoomsManagement = () => {
                           : "Description (English)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={submitting} rows={3} placeholder="e.g. Conference room for 10-15 people with projector..." />
+                        <Textarea {...field} disabled={submitting} rows={3} placeholder="e.g. Conference room for 10-15 people with projector..." className="bg-white text-foreground" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -582,7 +584,8 @@ export const RoomsManagement = () => {
                           {...field} 
                           disabled={submitting} 
                           rows={2} 
-                          placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน" 
+                          placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน"
+                          className="bg-white text-foreground" 
                         />
                       </FormControl>
                       <p className="text-xs text-foreground/70 mt-1">
@@ -608,7 +611,8 @@ export const RoomsManagement = () => {
                           {...field} 
                           disabled={submitting} 
                           rows={2} 
-                          placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs" 
+                          placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs"
+                          className="bg-white text-foreground" 
                         />
                       </FormControl>
                       <p className="text-xs text-foreground/70 mt-1">
@@ -630,20 +634,20 @@ export const RoomsManagement = () => {
                     </FormLabel>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {selectedRoom.images.map((image, idx) => (
-                        <div key={image.id} className="group relative aspect-square rounded-lg overflow-hidden bg-background border border-border">
+                        <div key={image.id} className="group relative aspect-square rounded-lg bg-background border border-border">
                           <img
                             src={image.image_url}
                             alt="Room"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover rounded-lg"
                           />
-                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center text-xs font-bold">
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center text-xs font-bold z-10">
                             {idx + 1}
                           </div>
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity z-20"
                             onClick={() => setImageToDelete(image)}
                           >
                             <Trash2 className="h-3 w-3" />

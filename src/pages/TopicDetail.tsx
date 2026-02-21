@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useLanguage, translations } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,283 +13,379 @@ import {
   Heart,
   ArrowLeft,
   Send,
-  Clock
+  Clock,
+  User,
+  Loader2,
+  Share2,
+  AlertCircle,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
+import { supabase } from "@/integrations/supabase/client";
+import { getCategoryLabel, getCategoryColor } from "@/lib/forumConfig";
+import { ForumTopic } from "@/hooks/useWebboard";
 
-interface Reply {
-  id: number;
-  author: string;
-  authorId: string;
+interface ForumReply {
+  id: string;
+  topic_id: string;
+  author_id: string;
+  author_name: string;
   content: string;
-  createdAt: string;
+  created_at: string;
   likes: number;
+  is_liked?: boolean;
 }
-
-interface Topic {
-  id: number;
-  title: string;
-  author: string;
-  authorId: string;
-  replies: number;
-  views: number;
-  likes: number;
-  category: 'general' | 'question' | 'review' | 'shopping';
-  content: string;
-  createdAt: string;
-  image?: string;
-}
-
-// Import images
-import foodImage from "@/assets/forum-food-1.jpg";
-import staffImage from "@/assets/forum-staff-1.jpg";
-import cakeImage from "@/assets/forum-cake-1.jpg";
-import parkingImage from "@/assets/forum-parking-1.jpg";
-import wifiImage from "@/assets/forum-wifi-1.jpg";
 
 const TopicDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { language } = useLanguage();
-  const t = translations[language];
+  const { language } = useLanguage() as { language: "th" | "en" | "zh" | "ja" };
+  const displayLanguage: "th" | "en" = language === "th" ? "th" : "en";
   const { user, isAuthenticated } = useAuth();
 
+  // State
+  const [topic, setTopic] = useState<ForumTopic | null>(null);
+  const [replies, setReplies] = useState<ForumReply[]>([]);
+  const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
+  const [isTopicLiked, setIsTopicLiked] = useState(false);
 
-  // Mock topics data (same as Forum page)
-  const topics: Topic[] = [
-    {
-      id: 1,
-      title: language === 'th' ? 'แนะนำเมนูอร่อยที่ Plern Ping 🍜' : 'Recommended delicious menu at Plern Ping 🍜',
-      author: language === 'th' ? 'คุณสมชาย' : 'Somchai',
-      authorId: 'user1',
-      replies: 5,
-      views: 234,
-      likes: 15,
-      category: 'review',
-      content: language === 'th' 
-        ? 'ขอบคุณมุมกาแฟแจ่งสบาย ๆ อาหารรสชาติดี เมนูแนะนำให้ไปได้เลย อร่อยมากครับ หอมทั้งกลิ่นกาแฟและกลิ่นอาหาร ข้าวซอยรสชาติเข้มข้น เส้นกรอบอร่อย น้ำแกงหอมเครื่องเทศ แนะนำเลยครับ'
-        : 'Thank you for the cool coffee corner. The food tastes good. Recommended menu to go. The Khao Soi is rich in flavor, crispy noodles, fragrant curry.',
-      createdAt: '2025-01-20',
-      image: foodImage
-    },
-    {
-      id: 2,
-      title: language === 'th' ? 'พนักงานบริการดีมาก ยิ้มแย้มเสมอ 😊' : 'Great service staff, always smiling 😊',
-      author: language === 'th' ? 'คุณนิดา' : 'Nida',
-      authorId: 'user2',
-      replies: 3,
-      views: 123,
-      likes: 8,
-      category: 'review',
-      content: language === 'th'
-        ? 'ประทับใจพนักงานทุกคน ยินดีเป็นกันเอง พูดจาสุภาพ เป็นมิตรกับลูกค้าและเราได้รับการดูแลเป็นอย่างดี ทำให้รู้สึกอบอุ่นและเป็นกันเอง พนักงานแนะนำเมนูดีมาก รู้จักรสชาติของลูกค้า'
-        : 'Impressed with all the staff. Friendly, polite, and we receive excellent service. The staff are great at recommending menus and understanding customer tastes.',
-      createdAt: '2025-01-19',
-      image: staffImage
-    },
-    {
-      id: 3,
-      title: language === 'th' ? 'เค้กโรมนอร่อยมาก ต้องลอง! 🍰' : 'Delicious cake, must try! 🍰',
-      author: language === 'th' ? 'คุณปิยะ' : 'Piya',
-      authorId: 'user3',
-      replies: 2,
-      views: 156,
-      likes: 12,
-      category: 'review',
-      content: language === 'th'
-        ? 'ลองมาเค้กโรมนอร่อยงามมาก วัตถุดิบดี ๆ ครอซซองเหมือนไป ความอร่อยเดินบทาให้งงงง รสชาติดีจริงๆ แนะนำเลยค่ะ ราคาไม่แพง คุ้มค่ามากๆ ครอสซองต์หอมมาก เนยแท้'
-        : 'Try the delicious croissant. Good ingredients. Really good taste. Reasonable price, very worth it. The croissant is very fragrant with real butter.',
-      createdAt: '2025-01-18',
-      image: cakeImage
-    },
-    {
-      id: 4,
-      title: language === 'th' ? 'ที่จอดรถว่างวาง จอดสะดวก 🚗' : 'Spacious parking, easy to park 🚗',
-      author: language === 'th' ? 'คุณวันเพ็ญ' : 'Wanpen',
-      authorId: 'user4',
-      replies: 1,
-      views: 89,
-      likes: 5,
-      category: 'general',
-      content: language === 'th'
-        ? 'ที่จอดรถว่างมาก จอดสะดวก นี่เป็นข้อดีที่สุด ปลอดภัย มีรักษาความปลอดภัย จอดง่ายมาก มีเจ้าหน้าที่ดูแล พื้นที่กว้าง จอดได้หลายคัน'
-        : 'Lots of parking space, easy to park. Very safe. There are security guards. Wide area, can park many cars.',
-      createdAt: '2025-01-17',
-      image: parkingImage
-    },
-    {
-      id: 5,
-      title: language === 'th' ? 'WiFi เร็วมาก ทำงานได้เลย 📶' : 'Fast WiFi, can work 📶',
-      author: language === 'th' ? 'คุณธนากร' : 'Thanakorn',
-      authorId: 'user5',
-      replies: 4,
-      views: 67,
-      likes: 3,
-      category: 'general',
-      content: language === 'th'
-        ? 'WiFi เร็วมาก เหมาะมาทำงาน สะดวก มีปลั๊กไฟให้ทุกที่ บรรยากาศดีเงียบสงบ เหมาะสำหรับนั่งทำงาน มีโต๊ะเยอะ นั่งสบาย'
-        : 'Very fast WiFi, suitable for working. Convenient. Quiet atmosphere, suitable for sitting and working. Many tables, comfortable seating.',
-      createdAt: '2025-01-16',
-      image: wifiImage
-    },
-  ];
-
-  const [replies, setReplies] = useState<Reply[]>([
-    {
-      id: 1,
-      author: language === 'th' ? 'คุณมานี' : 'Manee',
-      authorId: 'user6',
-      content: language === 'th' ? 'เห็นด้วยค่ะ อาหารอร่อยจริงๆ' : 'I agree, the food is really delicious',
-      createdAt: language === 'th' ? '1 ชั่วโมงที่แล้ว' : '1 hour ago',
-      likes: 3
-    },
-    {
-      id: 2,
-      author: language === 'th' ? 'คุณสมหมาย' : 'Sommai',
-      authorId: 'user7',
-      content: language === 'th' ? 'ขอบคุณสำหรับรีวิวครับ จะไปลองดูแน่นอน' : 'Thank you for the review. Will definitely try it',
-      createdAt: language === 'th' ? '30 นาทีที่แล้ว' : '30 minutes ago',
-      likes: 1
+  // Load topic and replies
+  useEffect(() => {
+    if (id) {
+      loadTopicAndReplies();
     }
-  ]);
+  }, [id]);
 
-  const topic = topics.find(t => t.id === Number(id));
+  // Check if user has liked the topic
+  useEffect(() => {
+    if (user && topic) {
+      checkIfTopicLiked();
+    }
+  }, [user, topic?.id]);
 
-  if (!topic) {
+  const loadTopicAndReplies = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch topic
+      const { data: topicData, error: topicError } = await supabase
+        .from("forum_topics")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (topicError) throw topicError;
+
+      if (topicData) {
+        setTopic(topicData as ForumTopic);
+
+        // Increment views
+        await supabase
+          .from("forum_topics")
+          .update({ views: (topicData.views || 0) + 1 })
+          .eq("id", id);
+      }
+
+      // Fetch replies
+      const { data: repliesData, error: repliesError } = await supabase
+        .from("forum_replies")
+        .select("*")
+        .eq("topic_id", id)
+        .order("created_at", { ascending: true });
+
+      if (repliesError) throw repliesError;
+
+      if (repliesData) {
+        setReplies(repliesData as ForumReply[]);
+      }
+    } catch (error) {
+      console.error("Error loading topic:", error);
+      sweetAlert.error(language === "th" ? "ไม่สามารถโหลดกระทู้ได้" : "Failed to load topic");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkIfTopicLiked = async () => {
+    if (!user || !topic) return;
+
+    const { data } = await supabase
+      .from("forum_likes")
+      .select("*")
+      .eq("topic_id", topic.id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (data) {
+      setIsTopicLiked(true);
+    }
+  };
+
+  const handleToggleLike = async () => {
+    if (!isAuthenticated || !user || !topic) {
+      sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      if (isTopicLiked) {
+        // Remove like
+        await supabase
+          .from("forum_likes")
+          .delete()
+          .eq("topic_id", topic.id)
+          .eq("user_id", user.id);
+
+        setTopic({ ...topic, likes: (topic.likes || 0) - 1 });
+        setIsTopicLiked(false);
+      } else {
+        // Add like
+        await supabase.from("forum_likes").insert({
+          topic_id: topic.id,
+          user_id: user.id,
+        });
+
+        setTopic({ ...topic, likes: (topic.likes || 0) + 1 });
+        setIsTopicLiked(true);
+      }
+    } catch (error) {
+      sweetAlert.error(language === "th" ? "ไม่สามารถไลค์ได้" : "Failed to like");
+    }
+  };
+
+  const handleSubmitReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isAuthenticated || !user) {
+      sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
+      navigate("/auth");
+      return;
+    }
+
+    if (!replyContent.trim()) {
+      sweetAlert.error(language === "th" ? "กรุณาใส่ข้อความ" : "Please enter a message");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const { data, error } = await supabase
+        .from("forum_replies")
+        .insert({
+          topic_id: id,
+          author_id: user.id,
+          author_name: user.name,
+          content: replyContent,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setReplies([...replies, data as ForumReply]);
+        setReplyContent("");
+        
+        // Update topic reply count
+        if (topic) {
+          setTopic({ ...topic, replies: (topic.replies || 0) + 1 });
+        }
+
+        sweetAlert.success(language === "th" ? "ส่งความคิดเห็นสำเร็จ" : "Reply submitted successfully");
+      }
+    } catch (error) {
+      console.error("Error submitting reply:", error);
+      sweetAlert.error(language === "th" ? "เกิดข้อผิดพลาด" : "Failed to submit reply");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleShareTopic = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: topic?.title,
+          text: topic?.content,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log("Share cancelled");
+      }
+    } else {
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(window.location.href);
+      sweetAlert.success(language === "th" ? "คัดลอกลิงก์สำเร็จ" : "Link copied to clipboard");
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">{language === 'th' ? 'ไม่พบกระทู้' : 'Topic not found'}</h2>
-          <Button onClick={() => navigate('/forum')}>
-            {language === 'th' ? 'กลับไปหน้าเว็บบอร์ด' : 'Back to Forum'}
-          </Button>
+          <div className="w-16 h-16 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">{language === "th" ? "กำลังโหลด..." : "Loading..."}</p>
         </div>
       </div>
     );
   }
 
-  const getCategoryLabel = (category: Topic['category']) => {
-    const labels = {
-      general: language === 'th' ? 'ทั่วไป' : 'General',
-      question: language === 'th' ? 'คำถาม' : 'Question',
-      review: language === 'th' ? 'รีวิว' : 'Review',
-    };
-    return labels[category];
-  };
+  if (!topic) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:to-slate-900">
+        <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-blue-100/20 dark:border-blue-900/20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/forum")}
+              className="hover:bg-blue-100 dark:hover:bg-blue-900/20"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {language === "th" ? "กลับไปเว็บบอร์ด" : "Back to Forum"}
+            </Button>
+          </div>
+        </header>
 
-  const getCategoryColor = (category: Topic['category']) => {
-    const colors = {
-      general: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200',
-      question: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200',
-      review: 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-200',
-    };
-    return colors[category];
-  };
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-2xl shadow-sm bg-gradient-to-br from-red-50/50 to-orange-50/50 dark:from-red-900/20 dark:to-orange-900/20">
+            <CardContent className="p-8 text-center">
+              <AlertCircle className="h-16 w-16 text-red-500 dark:text-red-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {language === "th" ? "ไม่พบกระทู้" : "Topic not found"}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                {language === "th"
+                  ? "กระทู้ที่คุณค้นหาไม่มีอยู่ หรืออาจถูกลบไปแล้ว"
+                  : "The topic you are looking for does not exist or has been deleted"}
+              </p>
+              <Button
+                onClick={() => navigate("/forum")}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                {language === "th" ? "กลับไปหน้าเว็บบอร์ด" : "Back to Forum"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
-  const handleSubmitReply = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isAuthenticated || !user) {
-      sweetAlert.error(language === 'th' ? 'กรุณาเข้าสู่ระบบก่อน' : 'Please login first');
-      navigate('/auth');
-      return;
-    }
+  const categoryColor = getCategoryColor(topic.category);
+  const categoryLabel = getCategoryLabel(topic.category, displayLanguage);
 
-    if (!replyContent.trim()) {
-      sweetAlert.error(language === 'th' ? 'กรุณาใส่ข้อความ' : 'Please enter a message');
-      return;
-    }
-
-    const newReply: Reply = {
-      id: Date.now(),
-      author: user.name,
-      authorId: user.id,
-      content: replyContent,
-      createdAt: language === 'th' ? 'เมื่อสักครู่' : 'Just now',
-      likes: 0
-    };
-
-    setReplies([...replies, newReply]);
-    setReplyContent("");
-    sweetAlert.success(language === 'th' ? 'ตอบกลับสำเร็จ' : 'Reply submitted successfully');
-  };
+  const formattedDate = new Date(topic.created_at).toLocaleDateString(
+    displayLanguage === "th" ? "th-TH" : "en-US",
+    { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }
+  );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-3">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-blue-100/20 dark:border-blue-900/20 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => navigate('/forum')}
+            onClick={() => navigate("/forum")}
+            className="hover:bg-blue-100 dark:hover:bg-blue-900/20"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {language === 'th' ? 'กลับไปเว็บบอร์ด' : 'Back to Forum'}
+            {language === "th" ? "กลับไปเว็บบอร์ด" : "Back to Forum"}
           </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Topic Card */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
+        <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-2xl shadow-sm overflow-hidden mb-8">
+          <CardContent className="p-6 sm:p-8">
             {/* Category Badge */}
-            <Badge variant="outline" className={`${getCategoryColor(topic.category)} text-xs border mb-4`}>
-              {getCategoryLabel(topic.category)}
-            </Badge>
+            <div className="mb-4">
+              <Badge
+                variant="outline"
+                className={`${categoryColor.bg} ${categoryColor.text} border ${categoryColor.border} text-sm px-3 py-1.5`}
+              >
+                {categoryLabel}
+              </Badge>
+            </div>
 
             {/* Title */}
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-gray-900 dark:text-white mb-6 leading-tight">
               {topic.title}
             </h1>
 
-            {/* Author & Stats */}
-            <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-primary text-sm">
-                    {topic.author.charAt(0).toUpperCase()}
+            {/* Author & Meta Info */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 border-b border-blue-100/50 dark:border-blue-800/50">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10 border-2 border-blue-200 dark:border-blue-800">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
+                    {topic.author_name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium">{topic.author}</span>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    {topic.author_name || "Anonymous"}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {formattedDate}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{topic.createdAt}</span>
-              </div>
+
               <div className="flex items-center gap-4 ml-auto">
-                <div className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  <span>{topic.views}</span>
+                {/* Views */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100/50 dark:border-blue-800/50">
+                  <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {topic.views || 0}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  <span>{topic.likes}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{replies.length}</span>
-                </div>
+
+                {/* Likes */}
+                <button
+                  onClick={handleToggleLike}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50/50 dark:bg-red-900/20 border border-red-100/50 dark:border-red-800/50 hover:bg-red-100/50 dark:hover:bg-red-900/40 transition-colors"
+                >
+                  <Heart
+                    className="w-4 h-4"
+                    fill={isTopicLiked ? "currentColor" : "none"}
+                    color={isTopicLiked ? "#ef4444" : "currentColor"}
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {topic.likes || 0}
+                  </span>
+                </button>
+
+                {/* Share */}
+                <button
+                  onClick={handleShareTopic}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50/50 dark:bg-green-900/20 border border-green-100/50 dark:border-green-800/50 hover:bg-green-100/50 dark:hover:bg-green-900/40 transition-colors"
+                >
+                  <Share2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                </button>
               </div>
             </div>
 
             {/* Image */}
             {topic.image && (
-              <div className="mb-6 rounded-lg overflow-hidden">
-                <img 
-                  src={topic.image} 
+              <div className="my-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 shadow-sm">
+                <img
+                  src={topic.image}
                   alt={topic.title}
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover max-h-96"
                 />
               </div>
             )}
 
             {/* Content */}
-            <div className="prose max-w-none">
-              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+            <div className="prose dark:prose-invert prose-sm sm:prose-base max-w-none">
+              <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
                 {topic.content}
               </p>
             </div>
@@ -297,67 +393,129 @@ const TopicDetail = () => {
         </Card>
 
         {/* Replies Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <MessageCircle className="w-5 h-5" />
-            {language === 'th' ? 'ความคิดเห็น' : 'Replies'} ({replies.length})
-          </h2>
-
-          <div className="space-y-4">
-            {replies.map((reply) => (
-              <Card key={reply.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="bg-gradient-to-br from-secondary/20 to-primary/20">
-                        {reply.author.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-semibold">{reply.author}</span>
-                        <span className="text-xs text-muted-foreground">{reply.createdAt}</span>
-                      </div>
-                      <p className="text-foreground mb-2">{reply.content}</p>
-                      <Button variant="ghost" size="sm" className="h-auto p-1 text-muted-foreground hover:text-primary">
-                        <Heart className="w-4 h-4 mr-1" />
-                        {reply.likes}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <MessageCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {language === "th" ? "ความคิดเห็น" : "Replies"}
+            </h2>
+            <span className="ml-auto text-sm font-medium text-gray-500 dark:text-gray-400">
+              {replies.length} {language === "th" ? "รายการ" : "comments"}
+            </span>
           </div>
+
+          {replies.length === 0 ? (
+            <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-xl shadow-sm">
+              <CardContent className="p-8 text-center">
+                <MessageCircle className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">
+                  {language === "th" ? "ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็นได้" : "No comments yet. Be the first!"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {replies.map((reply) => (
+                <Card
+                  key={reply.id}
+                  className="border-blue-100/50 dark:border-blue-800/50 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-5 sm:p-6">
+                    <div className="flex gap-4">
+                      <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-blue-200 dark:border-blue-800">
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-blue-500 text-white text-sm font-semibold">
+                          {reply.author_name?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {reply.author_name}
+                          </p>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(reply.created_at).toLocaleDateString(
+                              language === "th" ? "th-TH" : "en-US",
+                              { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+                            )}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-wrap">
+                          {reply.content}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors">
+                            <Heart className="w-4 h-4" />
+                            {reply.likes || 0}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Reply Form */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              {language === 'th' ? 'แสดงความคิดเห็น' : 'Leave a Reply'}
+        <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-2xl shadow-sm overflow-hidden">
+          <CardContent className="p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+              {language === "th" ? "แสดงความคิดเห็น" : "Leave a Reply"}
             </h3>
             {isAuthenticated ? (
               <form onSubmit={handleSubmitReply} className="space-y-4">
-                <Textarea
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder={language === 'th' ? 'เขียนความคิดเห็น...' : 'Write your reply...'}
-                  rows={4}
-                  className="resize-none"
-                />
-                <Button type="submit" className="w-full sm:w-auto">
-                  <Send className="w-4 h-4 mr-2" />
-                  {language === 'th' ? 'ส่งความคิดเห็น' : 'Submit Reply'}
-                </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {user?.name}
+                  </label>
+                  <Textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder={language === "th" ? "เขียนความคิดเห็น..." : "Write your reply..."}
+                    rows={4}
+                    className="resize-none rounded-lg border-blue-200 dark:border-blue-800 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {language === "th"
+                      ? "ความคิดเห็นของคุณจะปรากฏทันทีหลังจากการตรวจสอบ"
+                      : "Your comment will appear after moderation"}
+                  </p>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !replyContent.trim()}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {language === "th" ? "กำลังส่ง..." : "Submitting..."}
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        {language === "th" ? "ส่งความคิดเห็น" : "Submit Reply"}
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  {language === 'th' ? 'กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น' : 'Please login to leave a reply'}
+              <div className="text-center py-12">
+                <User className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  {language === "th"
+                    ? "กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น"
+                    : "Please login to leave a reply"}
                 </p>
-                <Button onClick={() => navigate('/auth')}>
-                  {language === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                <Button
+                  onClick={() => navigate("/auth")}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg"
+                >
+                  {language === "th" ? "เข้าสู่ระบบ" : "Login"}
                 </Button>
               </div>
             )}

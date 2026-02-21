@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -46,9 +46,10 @@ import {
 
 interface BookingDialogProps {
   children: React.ReactNode;
+  roomId?: string;
 }
 
-const BookingDialog = ({ children }: BookingDialogProps) => {
+const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const isMobile = useIsMobile();
@@ -57,13 +58,21 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
   
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [selectedRoom, setSelectedRoom] = useState<string>(roomId || "");
   const [guests, setGuests] = useState("2");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update selectedRoom when roomId prop changes
+  useEffect(() => {
+    if (roomId) {
+      console.log('BookingDialog: roomId prop changed to:', roomId);
+      setSelectedRoom(roomId);
+    }
+  }, [roomId]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -174,6 +183,8 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     if (!confirmed) return;
 
     try {
+      console.log('Submitting booking with roomId:', selectedRoom);
+      
       const { data, error } = await supabase.functions.invoke('booking', {
         body: {
           name,
@@ -210,30 +221,14 @@ const BookingDialog = ({ children }: BookingDialogProps) => {
     }
   };
 
-  // Static room types for booking
-  const roomTypes = language === 'th' 
-    ? [
-        { id: 'deluxe', name: 'ห้องดีลักซ์' },
-        { id: 'family', name: 'ห้องแฟมิลี่' },
-        { id: 'standard', name: 'ห้องมาตรฐาน' },
-        { id: 'standard-queen', name: 'ห้องแสตนดาร์ดเตียงใหญ่' },
-        { id: 'standard-twin', name: 'ห้องแสตนดาร์ดเตียงคู่' },
-      ]
-    : language === 'zh'
-    ? [
-        { id: 'deluxe', name: '豪华房' },
-        { id: 'family', name: '家庭房' },
-        { id: 'standard', name: '标准房' },
-        { id: 'standard-queen', name: '标准双人房' },
-        { id: 'standard-twin', name: '标准孪生房' },
-      ]
-    : [
-        { id: 'deluxe', name: 'Deluxe Room' },
-        { id: 'family', name: 'Family Room' },
-        { id: 'standard', name: 'Standard Room' },
-        { id: 'standard-queen', name: 'Standard Queen Room' },
-        { id: 'standard-twin', name: 'Standard Twin Room' },
-      ];
+  // Dynamic room types from admin rooms management
+  // Display room names in English, with Thai names as fallback
+  const roomTypes = rooms.filter(room => room.is_active).map(room => ({
+    id: room.id,
+    name: language === 'th' ? room.name_th : room.name_en,
+    name_th: room.name_th,
+    name_en: room.name_en,
+  }));
 
   const bookingForm = (
     <form onSubmit={handleSubmit} className="space-y-4">

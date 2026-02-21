@@ -14,6 +14,7 @@ import AppSidebar from "@/components/AppSidebar";
 import TabBar from "@/components/TabBar";
 import Secondbar from "@/components/Secondbar";
 import BottomBar from "@/components/BottomBar";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import { cn } from "@/lib/utils";
 
 // Wrapper component to access sidebar state
@@ -130,6 +131,7 @@ const AnimatedRoutes = () => {
         
           {/* Bottom Bar for mobile */}
           <BottomBar />
+          <FloatingChatButton />
         </div>
       </div>
     </SidebarProvider>
