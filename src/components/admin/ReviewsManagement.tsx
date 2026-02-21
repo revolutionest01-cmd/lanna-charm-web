@@ -200,13 +200,19 @@ export const ReviewsManagement = () => {
 
       const imageUrl = await uploadImage();
 
+      // Get current user for user_id (required by RLS)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
+        return;
+      }
+
       if (editingReview) {
         const { error } = await supabase
           .from("reviews")
           .update({
             customer_name: formData.customer_name,
             rating: formData.rating,
-            avatar: formData.avatar,
             review_text_en: formData.review_text_en,
             review_text_th: formData.review_text_th,
             image_url: imageUrl,
@@ -219,10 +225,11 @@ export const ReviewsManagement = () => {
         const { error } = await supabase.from("reviews").insert({
           customer_name: formData.customer_name,
           rating: formData.rating,
-          avatar: formData.avatar,
           review_text_en: formData.review_text_en,
           review_text_th: formData.review_text_th,
           image_url: imageUrl,
+          user_id: user.id,
+          is_active: true,
         });
 
         if (error) throw error;
