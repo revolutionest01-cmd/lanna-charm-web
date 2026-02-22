@@ -213,13 +213,16 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
 
         {/* Modal Container - Centered on viewport */}
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4\"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
         <div
           className="relative bg-background rounded-2xl shadow-2xl w-full max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
@@ -260,12 +263,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
           {/* Content Container */}
           <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
             {/* Image Section */}
-            <div 
-              className="flex flex-col gap-3 sm:gap-4"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Main Image */}
               {allImages.length > 0 || menu.icon_url ? (
                 <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72">
