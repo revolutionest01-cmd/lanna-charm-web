@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
-  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2, Heart
+  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2, Heart, Map
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -326,6 +326,63 @@ const AppSidebar = () => {
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  
+                  {/* Store Map Button */}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                        navigate('/');
+                        setTimeout(() => {
+                          const element = document.getElementById('contact');
+                          if (element) {
+                            const rect = element.getBoundingClientRect();
+                            window.scrollTo({
+                              top: window.scrollY + rect.top - 100,
+                              behavior: 'smooth'
+                            });
+                          }
+                        }, 100);
+                      }}
+                      title={language === 'th' ? 'แผนที่ของร้าน' : language === 'zh' ? '店铺地图' : 'Store Map'}
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); } }}
+                      onFocus={() => setFocusedIndex(9)}
+                      onBlur={() => setFocusedIndex(null)}
+                      onMouseEnter={() => setHoveredIndex(9)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      className={cn(
+                        "group relative w-full pl-2 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
+                        hoveredIndex === 9 || focusedIndex === 9
+                          ? "bg-primary/15 shadow-sm"
+                          : "hover:bg-primary/10",
+                      )}
+                    >
+                      {/* Icon */}
+                      <div className={cn(
+                        "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0",
+                        hoveredIndex === 9 || focusedIndex === 9
+                          ? "bg-primary/30 shadow-sm"
+                          : "bg-background/10 group-hover:bg-primary/20"
+                      )}>
+                        <Map
+                          className="h-4 w-4 transition-all duration-300 drop-shadow-sm"
+                          style={{ color: (hoveredIndex === 9 || focusedIndex === 9) ? 'hsl(var(--primary))' : 'hsl(var(--background))' }}
+                          aria-hidden
+                        />
+                      </div>
+                      
+                      {/* Label - always visible and readable */}
+                      <span className={cn(
+                        "text-sm transition-all duration-300 font-medium flex-1 truncate",
+                        hoveredIndex === 9 || focusedIndex === 9
+                          ? "text-primary drop-shadow-sm"
+                          : "text-background"
+                      )}>
+                        {language === 'th' ? 'แผนที่ของร้าน' : language === 'zh' ? '店铺地图' : 'Store Map'}
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -473,11 +530,11 @@ const AppSidebar = () => {
                 {/* Main button */}
                 <div className={cn(
                   "w-full gap-2 h-11 text-sm font-bold rounded-lg transition-all duration-300 active:scale-95 relative z-10",
-                  "bg-primary/35 shadow-lg",
+                  "bg-primary/35 shadow-lg border-2 border-white/60",
                   isBookingHovered 
-                    ? "scale-105 bg-primary/45 shadow-[0_4px_16px_rgba(var(--primary),0.4)]" 
+                    ? "scale-105 bg-primary/45 shadow-[0_4px_16px_rgba(var(--primary),0.4)] border-white/80" 
                     : "hover:scale-105 hover:bg-primary/45 hover:shadow-[0_4px_16px_rgba(var(--primary),0.4)]",
-                  "text-background border-0 overflow-hidden flex items-center justify-center"
+                  "text-background overflow-hidden flex items-center justify-center"
                 )}>
                   <span className={cn(
                     "absolute inset-0 rounded-lg transition-colors duration-200",
@@ -491,6 +548,8 @@ const AppSidebar = () => {
                 </div>
               </button>
             </BookingDialog>
+
+
           </div>
         </SidebarFooter>
       </div>
