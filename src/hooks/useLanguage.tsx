@@ -109,7 +109,7 @@ export const translations = {
     
     // Gallery
     galleryTitle: "แกลเลอรี",
-    gallerySubtitle: "เหลือบมองสถานที่อันเงียบสงบของเรา",
+    gallerySubtitle: "มุมพิงเพลินๆที่เพลินพิง",
     
     // Reviews
     reviewsTitle: "รีวิวจากลูกค้า",
