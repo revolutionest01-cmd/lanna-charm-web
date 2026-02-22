@@ -53,6 +53,10 @@ const RoomsSection = () => {
     setSelectedRoom(null);
   };
 
+  const handleRoomChange = (room: Room) => {
+    setSelectedRoom(room);
+  };
+
   if (loading) {
     return (
       <section id="rooms" className="py-20 bg-background">
@@ -160,6 +164,8 @@ const RoomsSection = () => {
         room={selectedRoom}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        allRooms={rooms}
+        onRoomChange={handleRoomChange}
       />
     </section>
   );

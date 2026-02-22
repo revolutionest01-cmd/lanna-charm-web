@@ -32,9 +32,11 @@ interface RoomDetailModalProps {
   room: Room | null;
   isOpen: boolean;
   onClose: () => void;
+  allRooms?: Room[];
+  onRoomChange?: (room: Room) => void;
 }
 
-const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
+const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }: RoomDetailModalProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const { user } = useAuth();
@@ -46,13 +48,73 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [isTogglingAvailability, setIsTogglingAvailability] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
+  const minSwipeDistance = 50;
+
+  // Get current room index
+  const currentRoomIndex = room ? allRooms.findIndex(r => r.id === room.id) : -1;
+  const hasNextRoom = currentRoomIndex < allRooms.length - 1;
+  const hasPrevRoom = currentRoomIndex > 0;
+
+  const handlePrevRoom = () => {
+    if (hasPrevRoom && allRooms[currentRoomIndex - 1] && onRoomChange) {
+      onRoomChange(allRooms[currentRoomIndex - 1]);
+      setCurrentImageIndex(0);
+    }
+  };
+
+  const handleNextRoom = () => {
+    if (hasNextRoom && allRooms[currentRoomIndex + 1] && onRoomChange) {
+      onRoomChange(allRooms[currentRoomIndex + 1]);
+      setCurrentImageIndex(0);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNextRoom();
+    } else if (isRightSwipe) {
+      handlePrevRoom();
+    }
+  };
 
   // Update Modal state when isOpen changes
   useEffect(() => {
     setIsModalOpen(isOpen);
   }, [isOpen, setIsModalOpen]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevRoom();
+      } else if (e.key === 'ArrowRight') {
+        handleNextRoom();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, currentRoomIndex, allRooms, onRoomChange]);
 
   // Check admin status
   useEffect(() => {
@@ -276,6 +338,9 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
               onClose();
             }
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <div
             className="relative bg-background rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
@@ -600,6 +665,57 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                   </div>
                 </div>
 
+                {/* Room Navigation - Horizontal Layout */}
+                {allRooms.length > 1 && (
+                  <div className="flex items-center justify-between gap-3 px-2 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrevRoom();
+                      }}
+                      disabled={!hasPrevRoom}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                        hasPrevRoom
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Previous room"
+                    >
+                      <ChevronLeft size={18} />
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'ห้องก่อนหน้า' : 'Previous'}
+                      </span>
+                    </button>
+
+                    <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
+                      <span className="font-semibold text-sm text-foreground">
+                        {currentRoomIndex + 1} / {allRooms.length}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextRoom();
+                      }}
+                      disabled={!hasNextRoom}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                        hasNextRoom
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Next room"
+                    >
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'ห้องถัดไป' : 'Next'}
+                      </span>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+
                 {/* Action Buttons - Mobile stacked */}
                 <div className="flex flex-col gap-2 pt-2">
                   <BookingDialog roomId={room.id}>
@@ -610,9 +726,8 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                     </Button>
                   </BookingDialog>
                   <Button
-                    variant="outline"
                     onClick={onClose}
-                    className="w-full font-semibold h-11 rounded-lg transition-all"
+                    className="w-full font-semibold h-11 rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                   >
                     {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                   </Button>
@@ -853,6 +968,53 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                       </div>
                     </div>
 
+                    {/* Room Navigation - Horizontal Layout */}
+                    {allRooms.length > 1 && (
+                      <div className="flex items-center justify-between gap-3 px-3 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePrevRoom();
+                          }}
+                          disabled={!hasPrevRoom}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                            hasPrevRoom
+                              ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                              : "opacity-40 cursor-not-allowed text-muted-foreground"
+                          )}
+                          aria-label="Previous room"
+                        >
+                          <ChevronLeft size={18} />
+                          <span>{language === 'th' ? 'ก่อนหน้า' : 'Previous'}</span>
+                        </button>
+
+                        <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
+                          <span className="font-semibold text-sm text-foreground">
+                            {currentRoomIndex + 1} / {allRooms.length}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNextRoom();
+                          }}
+                          disabled={!hasNextRoom}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                            hasNextRoom
+                              ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                              : "opacity-40 cursor-not-allowed text-muted-foreground"
+                          )}
+                          aria-label="Next room"
+                        >
+                          <span>{language === 'th' ? 'ถัดไป' : 'Next'}</span>
+                          <ChevronRight size={18} />
+                        </button>
+                      </div>
+                    )}
+
                     {/* Action Buttons */}
                     <div className="space-y-3">
                       <BookingDialog roomId={room.id}>
@@ -863,9 +1025,8 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                         </Button>
                       </BookingDialog>
                       <Button
-                        variant="outline"
                         onClick={onClose}
-                        className="w-full font-semibold h-11 rounded-lg transition-all"
+                        className="w-full font-semibold h-11 rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                       >
                         {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                       </Button>
