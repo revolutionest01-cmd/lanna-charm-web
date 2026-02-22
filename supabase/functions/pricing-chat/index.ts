@@ -95,13 +95,13 @@ serve(async (req) => {
     // Track user keywords for learning and optimization
     const userKeywords = {
       // Rooms & Accommodation
-      rooms: ['ห้องพัก', 'ที่พัก', 'ห้องนอน', 'room', 'accommodation', 'พัก'),
-      pricing: ['ราคา', 'เท่าไหร่', 'ราคาเท่าไร', 'บาท', 'price', 'cost', 'ค่า'),
-      parking: ['จอดรถ', 'ที่จอดรถ', 'parking', 'park', 'ที่จอด'),
-      menu: ['เมนู', 'อาหาร', 'กิน', 'ของรับประทาน', 'menu', 'food', 'dish'),
-      coffee: ['กาแฟ', 'coffee', 'คอฟฟี่', 'ชา', 'เครื่องดื่ม', 'drink', 'beverage'),
-      recommended: ['แนะนำ', 'ยอดนิยม', 'ดี', 'ดีที่สุด', 'recommend', 'best', 'popular', 'suggest'),
-      event: ['ห้องประชุม', 'จัดงาน', 'งานแต่งงาน', 'event', 'meeting', 'conference', 'wedding', 'party'),
+      rooms: ['ห้องพัก', 'ที่พัก', 'ห้องนอน', 'room', 'accommodation', 'พัก'],
+      pricing: ['ราคา', 'เท่าไหร่', 'ราคาเท่าไร', 'บาท', 'price', 'cost', 'ค่า'],
+      parking: ['จอดรถ', 'ที่จอดรถ', 'parking', 'park', 'ที่จอด'],
+      menu: ['เมนู', 'อาหาร', 'กิน', 'ของรับประทาน', 'menu', 'food', 'dish'],
+      coffee: ['กาแฟ', 'coffee', 'คอฟฟี่', 'ชา', 'เครื่องดื่ม', 'drink', 'beverage'],
+      recommended: ['แนะนำ', 'ยอดนิยม', 'ดี', 'ดีที่สุด', 'recommend', 'best', 'popular', 'suggest'],
+      event: ['ห้องประชุม', 'จัดงาน', 'งานแต่งงาน', 'event', 'meeting', 'conference', 'wedding', 'party'],
     };
 
     // Extract keywords from message
