@@ -289,9 +289,8 @@ const MenuSection = () => {
 
           <div className="text-center mt-8 sm:mt-10">
             <Button 
-              variant="highlight" 
               size="lg" 
-              className="font-semibold w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg"
+              className="font-semibold w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl transition-all"
               onClick={() => navigate('/menu')}
             >
               {t.viewFullMenu}
