@@ -169,7 +169,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             {/* Like Button */}
             <button
               onClick={toggleLike}
-              className="p-1.5 sm:p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-all"
+              className="p-1.5 sm:p-2 rounded-full bg-white hover:bg-white/90 transition-all"
               aria-label="Toggle like"
             >
               <Heart
@@ -181,7 +181,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             {/* Share Button */}
             <button
               onClick={handleShare}
-              className="p-1.5 sm:p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full bg-white hover:bg-white/90 transition-colors"
               aria-label="Share menu"
             >
               <Share2 size={20} className="text-foreground" />
@@ -190,7 +190,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full bg-white hover:bg-white/90 transition-colors"
               aria-label="Close modal"
             >
               <X size={20} className="text-foreground" />
