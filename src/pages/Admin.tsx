@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateContentCache } from "@/hooks/useContentData";
@@ -73,8 +74,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const { isAdmin, isChecking } = useAdminStatus();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({
     rooms: 0,
@@ -82,39 +82,6 @@ const Admin = () => {
     gallery: 0,
     reviews: 0,
   });
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!isAuthenticated || !user) {
-        console.log('[Admin] Not authenticated or no user');
-        setIsAdmin(false);
-        setCheckingAdmin(false);
-        return;
-      }
-      try {
-        console.log('[Admin] Checking admin status for user:', user.id);
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        
-        const isAdminUser = !!data && !error;
-        console.log('[Admin] Admin check result:', isAdminUser);
-        setIsAdmin(isAdminUser);
-      } catch (error) {
-        console.error('[Admin] Error checking admin status:', error);
-        setIsAdmin(false);
-      } finally {
-        setCheckingAdmin(false);
-      }
-    };
-    
-    if (!isLoading) {
-      checkAdminStatus();
-    }
-  }, [isAuthenticated, user, isLoading]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -140,7 +107,7 @@ const Admin = () => {
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!checkingAdmin && !isLoading) {
+    if (!isChecking && !isLoading) {
       if (!isAuthenticated) {
         sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
         navigate("/auth");
@@ -149,7 +116,7 @@ const Admin = () => {
         navigate("/");
       }
     }
-  }, [isAuthenticated, isAdmin, checkingAdmin, isLoading, navigate, language]);
+}, [isAuthenticated, isAdmin, isChecking, isLoading, navigate, language]);
 
   useEffect(() => {
     return () => {
@@ -170,7 +137,7 @@ const Admin = () => {
     value: { label: language === "th" ? "จำนวน" : "Count" },
   };
 
-  if (isLoading || checkingAdmin) {
+  if (isLoading || isChecking) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">

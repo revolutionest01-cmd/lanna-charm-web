@@ -27,19 +27,16 @@ import { ForumTopic } from "@/hooks/useWebboard";
 interface ForumReply {
   id: string;
   topic_id: string;
-  author_id: string;
-  author_name: string;
+  user_id: string;
   content: string;
   created_at: string;
-  likes: number;
-  is_liked?: boolean;
+  author_name?: string;
 }
 
 const TopicDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { language } = useLanguage() as { language: "th" | "en" | "zh" | "ja" };
-  const displayLanguage: "th" | "en" = language === "th" ? "th" : "en";
+  const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
 
   // State
@@ -139,7 +136,7 @@ const TopicDetail = () => {
           .eq("topic_id", topic.id)
           .eq("user_id", user.id);
 
-        setTopic({ ...topic, likes: (topic.likes || 0) - 1 });
+        setTopic({ ...topic, likes_count: (topic.likes_count || 0) - 1 });
         setIsTopicLiked(false);
       } else {
         // Add like
@@ -148,7 +145,7 @@ const TopicDetail = () => {
           user_id: user.id,
         });
 
-        setTopic({ ...topic, likes: (topic.likes || 0) + 1 });
+        setTopic({ ...topic, likes_count: (topic.likes_count || 0) + 1 });
         setIsTopicLiked(true);
       }
     } catch (error) {
@@ -177,8 +174,7 @@ const TopicDetail = () => {
         .from("forum_replies")
         .insert({
           topic_id: id,
-          author_id: user.id,
-          author_name: user.name,
+          user_id: user.id,
           content: replyContent,
         })
         .select()
@@ -192,7 +188,7 @@ const TopicDetail = () => {
         
         // Update topic reply count
         if (topic) {
-          setTopic({ ...topic, replies: (topic.replies || 0) + 1 });
+          setTopic({ ...topic, replies_count: (topic.replies_count || 0) + 1 });
         }
 
         sweetAlert.success(language === "th" ? "ส่งความคิดเห็นสำเร็จ" : "Reply submitted successfully");
@@ -276,10 +272,10 @@ const TopicDetail = () => {
   }
 
   const categoryColor = getCategoryColor(topic.category);
-  const categoryLabel = getCategoryLabel(topic.category, displayLanguage);
+  const categoryLabel = getCategoryLabel(topic.category, language === 'th' ? 'th' : 'en');
 
   const formattedDate = new Date(topic.created_at).toLocaleDateString(
-    displayLanguage === "th" ? "th-TH" : "en-US",
+    language === "th" ? "th-TH" : "en-US",
     { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }
   );
 
@@ -358,7 +354,7 @@ const TopicDetail = () => {
                     color={isTopicLiked ? "#ef4444" : "currentColor"}
                   />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {topic.likes || 0}
+                    {topic.likes_count || 0}
                   </span>
                 </button>
 
@@ -373,10 +369,10 @@ const TopicDetail = () => {
             </div>
 
             {/* Image */}
-            {topic.image && (
+            {topic.image_url && (
               <div className="my-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 shadow-sm">
                 <img
-                  src={topic.image}
+                  src={topic.image_url}
                   alt={topic.title}
                   className="w-full h-auto object-cover max-h-96"
                 />
@@ -443,10 +439,9 @@ const TopicDetail = () => {
                           {reply.content}
                         </p>
                         <div className="flex items-center gap-2">
-                          <button className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors">
-                            <Heart className="w-4 h-4" />
-                            {reply.likes || 0}
-                          </button>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(reply.created_at).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                     </div>

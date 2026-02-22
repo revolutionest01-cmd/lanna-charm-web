@@ -52,10 +52,11 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
+        sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : language === 'ja' ? 'ログイン成功' : 'Login successful');
         // Show quick success feedback then navigate
         setTimeout(() => {
           navigate("/");
-        }, 300);
+        }, 500);
       } else {
         sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : language === 'ja' ? 'メールアドレスまたはパスワードが無効です' : 'Invalid email or password. Please check and try again.'));
       }

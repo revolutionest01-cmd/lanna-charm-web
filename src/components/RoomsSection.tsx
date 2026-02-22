@@ -25,6 +25,7 @@ interface Room {
   description_en: string | null;
   price: number;
   is_active: boolean | null;
+  is_available?: boolean; // Room availability status (for bookings)
   images: RoomImage[];
 }
 

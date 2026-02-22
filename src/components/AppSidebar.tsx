@@ -8,10 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
+import sweetAlert from "@/lib/sweetAlert";
 import BookingDialog from "./BookingDialog";
 import LanguageDropdown from "./LanguageDropdown";
 import UtilityTools from "./UtilityTools";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -33,12 +34,12 @@ import logo from "@/assets/logo.png";
 const AppSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isAdmin, setIsAdmin] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<string>('hero');
   const { language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
+  const { isAdmin } = useAdminStatus();
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const { activeSection } = useActiveSection();
   const t = translations[language];
@@ -58,23 +59,6 @@ const AppSidebar = () => {
 
   // Use fixed dark theme for sidebar - consistent with Help button
   const themeStyles = getThemeStyles('dark');
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-      setIsAdmin(!!data && !error);
-    };
-    checkAdminStatus();
-  }, [user]);
 
   // Sync selectedMenuItem with scroll position
   useEffect(() => {
@@ -409,6 +393,7 @@ const AppSidebar = () => {
                   onClick={() => {
                     if (isMobile) setOpenMobile(false);
                     logout();
+                    sweetAlert.success(language === 'th' ? 'ออกจากระบบสำเร็จ' : language === 'zh' ? '成功登出' : language === 'ja' ? 'ログアウトしました' : 'Logged out successfully');
                   }}
                   className={cn(
                     "gap-2 h-9 rounded-lg bg-destructive/10 border-destructive/20 hover:bg-destructive/20 text-destructive text-xs",
