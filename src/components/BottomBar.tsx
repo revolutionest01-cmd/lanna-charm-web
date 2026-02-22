@@ -86,7 +86,7 @@ const BottomBar = () => {
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ease-out h-20",
+      "fixed bottom-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ease-out h-auto",
       isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
     )}>
       {/* Darkbrown to grey glassmorphism background */}
@@ -142,18 +142,18 @@ const BottomBar = () => {
             </div>
             
             {/* Animated glow background with theme colors */}
-            <div className="absolute inset-0 -inset-1 w-14 h-14 sm:w-15 sm:h-15 rounded-lg bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 opacity-0 group-hover:opacity-70 transition-opacity duration-300 blur-lg animate-pulse -z-10" />
+            <div className="absolute inset-0 -inset-1 w-14 h-14 sm:w-15 sm:h-15 rounded-lg bg-gradient-to-r from-slate-100 via-white to-slate-100 opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-lg animate-pulse -z-10" />
             
             {/* Second layer glow */}
-            <div className="absolute inset-0 w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500 opacity-0 group-hover:opacity-60 transition-opacity duration-300 blur-md -z-5 animate-pulse" style={{ animationDelay: '0.2s' }} />
+            <div className="absolute inset-0 w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-gradient-to-r from-white via-slate-50 to-white opacity-0 group-hover:opacity-35 transition-opacity duration-300 blur-md -z-5 animate-pulse" style={{ animationDelay: '0.2s' }} />
             
             {/* Main button */}
             <div className={cn(
               "flex items-center justify-center w-12 h-12 sm:w-13 sm:h-13 rounded-lg relative z-10",
-              "bg-gradient-to-br from-orange-600 via-amber-500 to-orange-600 hover:from-orange-700 hover:via-amber-600 hover:to-orange-700 active:from-orange-800 active:via-amber-700 active:to-orange-800",
-              "border-2 border-background/90 hover:border-background",
-              "shadow-[0_8px_24px_rgba(180,83,9,0.5)] hover:shadow-[0_12px_36px_rgba(180,83,9,0.7)] -my-0.5",
-              "transition-all duration-300 active:shadow-[0_2px_8px_rgba(180,83,9,0.4)]"
+              "bg-primary/35 hover:bg-primary/45 active:bg-primary/55",
+              "border-2 border-background/70 hover:border-background/80",
+              "shadow-[0_4px_16px_rgba(var(--primary),0.3)] hover:shadow-[0_8px_24px_rgba(var(--primary),0.4)] -my-0.5",
+              "transition-all duration-300 active:shadow-[0_2px_8px_rgba(var(--primary),0.2)]"
             )}>
               <Heart className="h-6 w-6 sm:h-7 sm:w-7 text-background transition-all duration-300 hover:scale-130 font-bold fill-current animate-bounce" style={{ animationDelay: '0s' }} />
             </div>
