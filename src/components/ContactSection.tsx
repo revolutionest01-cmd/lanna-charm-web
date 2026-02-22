@@ -229,6 +229,22 @@ const ContactSection = () => {
   return (
     <section id="contact" className="py-16 sm:py-20 bg-background">
       <div className="container mx-auto px-5 sm:px-6">
+        {/* Google Maps */}
+        {businessInfo?.address_th && (
+          <div className="mb-10 sm:mb-16 animate-fade-in rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-primary/20">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1369.0154984267165!2d100.58045831684991!3d13.94904317189059!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e28325db535c0f%3A0x2dd936aab31792a2!2sPlern%20Ping%20Hotel%20%26%20Cafe!5e0!3m2!1sth!2sth!4v1771762338979!5m2!1sth!2sth" 
+              width="100%" 
+              height="450" 
+              style={{ border: 0 }}
+              allowFullScreen 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              className="w-full"
+            />
+          </div>
+        )}
+
         <div className="text-center mb-10 sm:mb-16 animate-fade-in">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-foreground">
             {t.contactTitle}
