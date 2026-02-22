@@ -49,7 +49,7 @@ export const translations = {
     artisanCoffeeDesc: "กาแฟคั่วพิเศษและเครื่องดื่มสไตล์ไทย",
     authenticCuisine: "อาหารไทยแท้",
     authenticCuisineDesc: "อาหารล้านนาและไทยต้นตำรับจากเชฟท้องถิ่น",
-    gardenSetting: "ในสวนธรรมชาติ",
+    gardenSetting: "ท่ามกลางธรรมชาติ",
     gardenSettingDesc: "ที่นั่งในร่มและกลางแจ้งท่ามกลางสวนเขียวขจี",
     
     // Events
