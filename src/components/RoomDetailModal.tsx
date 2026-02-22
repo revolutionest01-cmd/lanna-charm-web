@@ -108,7 +108,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
       
       const { data, error } = await supabase
         .from('rooms')
-        .update({ is_available: newAvailabilityStatus })
+        .update({ is_active: newAvailabilityStatus })
         .eq('id', room.id)
         .select();
       
