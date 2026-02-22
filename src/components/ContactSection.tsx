@@ -244,8 +244,8 @@ const ContactSection = () => {
             {/* Address */}
             {businessInfo && (businessInfo.address_th || businessInfo.address_en) && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -261,8 +261,8 @@ const ContactSection = () => {
             {/* Phone Numbers */}
             {businessInfo && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -289,8 +289,8 @@ const ContactSection = () => {
             {/* Email */}
             {businessInfo?.email && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -309,8 +309,8 @@ const ContactSection = () => {
             {/* LINE ID */}
             {businessInfo?.line_id && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -324,8 +324,8 @@ const ContactSection = () => {
             {/* Opening Hours */}
             {businessInfo && (businessInfo.opening_hours_th || businessInfo.opening_hours_en) && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
