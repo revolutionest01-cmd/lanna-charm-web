@@ -418,7 +418,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       </div>
 
       {/* Submit */}
-      <Button type="submit" variant="highlight" className="w-full h-12 rounded-xl text-base font-bold tracking-wide" size="lg">
+      <Button type="submit" className="w-full h-12 rounded-xl text-base font-bold tracking-wide bg-[#c65539] text-white hover:bg-[#c65539]/90 shadow-lg hover:shadow-xl transition-all" size="lg">
         <Sparkles className="h-4 w-4 mr-1" />
         {language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking'}
       </Button>

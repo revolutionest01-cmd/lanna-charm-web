@@ -57,7 +57,7 @@ export const sweetAlert = {
         icon: 'success',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -66,7 +66,7 @@ export const sweetAlert = {
         icon: 'error',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -75,7 +75,7 @@ export const sweetAlert = {
         icon: 'warning',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -84,7 +84,7 @@ export const sweetAlert = {
         icon: 'info',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -93,7 +93,7 @@ export const sweetAlert = {
         icon: 'question',
         title,
         showCancelButton: true,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
         cancelButtonColor: '#6b7280',
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,

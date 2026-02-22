@@ -424,7 +424,7 @@ const ContactSection = () => {
                 <label htmlFor="name" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.nameLabel}
                 </label>
-                <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder={t.namePlaceholder} className={`h-11 sm:h-10 ${errors.name ? "border-destructive" : ""}`} />
+                <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder={t.namePlaceholder} className={`h-11 sm:h-10 bg-white ${errors.name ? "border-destructive" : ""}`} />
                 {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
               </div>
 
@@ -432,7 +432,7 @@ const ContactSection = () => {
                 <label htmlFor="email" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.emailLabel}
                 </label>
-                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder={t.emailPlaceholder} className={`h-11 sm:h-10 ${errors.email ? "border-destructive" : ""}`} />
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder={t.emailPlaceholder} className={`h-11 sm:h-10 bg-white ${errors.email ? "border-destructive" : ""}`} />
                 {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
               </div>
 
@@ -440,7 +440,7 @@ const ContactSection = () => {
                 <label htmlFor="phone" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.phoneLabel}
                 </label>
-                <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder={t.phonePlaceholder} className={`h-11 sm:h-10 ${errors.phone ? "border-destructive" : ""}`} />
+                <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder={t.phonePlaceholder} className={`h-11 sm:h-10 bg-white ${errors.phone ? "border-destructive" : ""}`} />
                 {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
               </div>
 
@@ -448,7 +448,7 @@ const ContactSection = () => {
                 <label htmlFor="topic" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.topicLabel}
                 </label>
-                <Input id="topic" name="topic" type="text" value={formData.topic} onChange={handleChange} placeholder={t.topicPlaceholder} className={`h-11 sm:h-10 ${errors.topic ? "border-destructive" : ""}`} />
+                <Input id="topic" name="topic" type="text" value={formData.topic} onChange={handleChange} placeholder={t.topicPlaceholder} className={`h-11 sm:h-10 bg-white ${errors.topic ? "border-destructive" : ""}`} />
                 {errors.topic && <p className="text-sm text-destructive mt-1">{errors.topic}</p>}
               </div>
 
@@ -456,7 +456,7 @@ const ContactSection = () => {
                 <label htmlFor="message" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.messageLabel}
                 </label>
-                <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder={t.messagePlaceholder} rows={4} className={errors.message ? "border-destructive" : ""} />
+                <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder={t.messagePlaceholder} rows={4} className={`bg-white ${errors.message ? "border-destructive" : ""}`} />
                 {errors.message && <p className="text-sm text-destructive mt-1">{errors.message}</p>}
               </div>
 

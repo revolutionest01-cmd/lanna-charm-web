@@ -604,8 +604,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                 <div className="flex flex-col gap-2 pt-2">
                   <BookingDialog roomId={room.id}>
                     <Button
-                      variant="highlight"
-                      className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105"
+                      className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
                     >
                       {t.bookRoom}
                     </Button>
@@ -858,8 +857,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                     <div className="space-y-3">
                       <BookingDialog roomId={room.id}>
                         <Button
-                          variant="highlight"
-                          className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105"
+                          className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
                         >
                           {t.bookRoom}
                         </Button>
