@@ -37,7 +37,6 @@ export const translations = {
     location: "กรุงเทพ ดอนเมือง, ประเทศไทย",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "สัมผัสการผสมผสานที่ลงตัวระหว่างเสน่ห์ล้านนาแท้และความสะดวกสบายสมัยใหม่",
-    heroDescription: "ท่ามกลางธรรมชาติที่สงบ ที่ซึ่งอาหารรสเลิศผสานกับกาแฟชั้นเยี่ยมในสวนอันเงียบสงบ",
     exploreMenu: "สำรวจเมนู",
     viewRooms: "ดูห้องพัก",
     
@@ -174,7 +173,6 @@ export const translations = {
     location: "Bangkok Don Mueang, Thailand",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "Experience the perfect blend of traditional Lanna charm and modern comfort",
-    heroDescription: "Nestled in nature's embrace, where exceptional food meets artisan coffee in a tranquil garden setting",
     exploreMenu: "Explore Menu",
     viewRooms: "View Rooms",
     
@@ -311,7 +309,6 @@ export const translations = {
     location: "泰国曼谷廊曼",
     heroTitle: "Plern Ping 咖啡馆",
     heroSubtitle: "体验传统兰纳魅力与现代舒适的完美融合",
-    heroDescription: "坐落在大自然的怀抱中，在宁静的花园环境中，特色美食与精品咖啡相遇",
     exploreMenu: "探索菜单",
     viewRooms: "查看客房",
     
@@ -448,7 +445,6 @@ export const translations = {
     location: "タイ・バンコク ドンムアン",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "伝統的なランナーの魅力と現代の快適さの完璧な融合を体験してください",
-    heroDescription: "自然の中に佇む静寂な庭園で、絶品料理とアルチザンコーヒーが出会う場所",
     exploreMenu: "メニューを見る",
     viewRooms: "客室を見る",
 

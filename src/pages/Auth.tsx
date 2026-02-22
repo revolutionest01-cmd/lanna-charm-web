@@ -27,6 +27,43 @@ const Auth = () => {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(false);
+  const STORAGE_KEY = 'plernping_login_data';
+
+  // Load saved credentials from localStorage on component mount
+  useEffect(() => {
+    const loadSavedCredentials = () => {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        console.log('Checking localStorage:', STORAGE_KEY, savedData);
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          console.log('Loaded credentials:', parsed);
+          setLoginForm({ email: parsed.email || "", password: parsed.password || "" });
+          setRememberPassword(true);
+        }
+      } catch (error) {
+        console.error('Failed to load saved credentials:', error);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    };
+    loadSavedCredentials();
+  }, []);
+
+  // Save credentials whenever loginForm changes and rememberPassword is checked
+  useEffect(() => {
+    if (rememberPassword && loginForm.email && loginForm.password) {
+      try {
+        console.log('Saving credentials to localStorage');
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          email: loginForm.email,
+          password: loginForm.password,
+        }));
+      } catch (error) {
+        console.error('Failed to save credentials:', error);
+      }
+    }
+  }, [rememberPassword, loginForm.email, loginForm.password]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -52,6 +89,7 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
+        // Credentials will be automatically saved by the useEffect hook
         sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : language === 'ja' ? 'ログイン成功' : 'Login successful');
         // Show quick success feedback then navigate
         setTimeout(() => {
@@ -198,11 +236,10 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Button
-          variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-4"
+          className="mb-4 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" />
           {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
         </Button>
 
@@ -331,12 +368,32 @@ const Auth = () => {
                       </Button>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <Button type="submit" className="flex-1" disabled={isLoading}>
-                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
-                    </Button>
+
+                  <div className="flex items-center gap-2 py-2">
+                    <input
+                      type="checkbox"
+                      id="remember-password"
+                      checked={rememberPassword}
+                      onChange={(e) => {
+                        setRememberPassword(e.target.checked);
+                        if (!e.target.checked) {
+                          localStorage.removeItem(STORAGE_KEY);
+                        }
+                      }}
+                      className="w-4 h-4 cursor-pointer accent-primary"
+                    />
+                    <label htmlFor="remember-password" className="text-sm text-muted-foreground cursor-pointer select-none">
+                      {language === 'th' ? 'จดจำรหัสผ่าน' : language === 'zh' ? '记住密码' : 'Remember password'}
+                    </label>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {language === 'th' ? '(ไม่แนะนำบนคอมพิวเตอร์ของคนอื่น)' : language === 'zh' ? '(不建议在公用电脑上使用)' : '(not recommended on shared devices)'}
+                    </span>
                   </div>
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
+                  </Button>
 
                   <div className="text-right">
                     <Button
@@ -495,14 +552,6 @@ const Auth = () => {
             )}
           </CardContent>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          {language === 'th' 
-            ? '* นี่คือระบบ mockup สำหรับทดสอบการใช้งาน' 
-            : language === 'zh'
-            ? '* 这是一个用于测试的模拟系统'
-            : '* This is a mockup system for testing purposes'}
-        </p>
       </div>
     </div>
   );

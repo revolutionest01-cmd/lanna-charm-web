@@ -84,10 +84,6 @@ const HeroSection = () => {
         <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-4 sm:mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] px-2">
           {heroSubtitle}
         </p>
-        
-        <p className="text-sm sm:text-base md:text-lg text-white mb-8 sm:mb-10 max-w-xl mx-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] px-2">
-          {t.heroDescription}
-        </p>
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center px-3 sm:px-0 w-full sm:w-auto">
           <Button 

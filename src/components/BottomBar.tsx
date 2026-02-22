@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Bed, Coffee, MessageCircle, Menu } from "lucide-react";
+import { Home, Bed, Coffee, MessageCircle, Menu, Sparkles, Heart } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -135,19 +135,27 @@ const BottomBar = () => {
         
         {/* Book Now Button - Center - Inverted prominent design with glow */}
         <BookingDialog>
-          <button className="flex flex-col items-center justify-center py-2.5 px-2 touch-manipulation transition-all duration-300 active:scale-85 hover:scale-115 relative group">
-            {/* Animated glow background */}
-            <div className="absolute inset-0 bottom-0 w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-gradient-to-r from-accent via-highlight to-accent opacity-0 group-hover:opacity-70 transition-opacity duration-300 blur-md animate-pulse" />
+          <button className="flex flex-col items-center justify-center py-2.5 px-2 touch-manipulation transition-all duration-300 active:scale-85 hover:scale-125 relative group">
+            {/* Hover Badge */}
+            <div className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 rounded-full text-background font-bold text-sm sm:text-base whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg border-2 border-background/90 scale-0 group-hover:scale-100 transform group-hover:-translate-y-2 transition-all duration-300">
+              {language === 'th' ? '😍 กดเพื่อจองเลย!' : language === 'zh' ? '😍 点击立即预定!' : '😍 Book Now!'}
+            </div>
+            
+            {/* Animated glow background with theme colors */}
+            <div className="absolute inset-0 -inset-1 w-14 h-14 sm:w-15 sm:h-15 rounded-lg bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 opacity-0 group-hover:opacity-70 transition-opacity duration-300 blur-lg animate-pulse -z-10" />
+            
+            {/* Second layer glow */}
+            <div className="absolute inset-0 w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500 opacity-0 group-hover:opacity-60 transition-opacity duration-300 blur-md -z-5 animate-pulse" style={{ animationDelay: '0.2s' }} />
             
             {/* Main button */}
             <div className={cn(
               "flex items-center justify-center w-12 h-12 sm:w-13 sm:h-13 rounded-lg relative z-10",
-              "bg-gradient-to-br from-background to-background/95 hover:from-background hover:to-background/90 active:from-background active:to-background/85",
-              "border-2 border-primary/40 hover:border-primary/60 active:border-primary/40",
-              "shadow-[0_8px_24px_rgba(30,18,91,0.35)] hover:shadow-[0_12px_36px_rgba(30,18,91,0.5)] -my-0.5",
-              "transition-all duration-300 active:shadow-[0_2px_8px_rgba(30,18,91,0.2)]"
+              "bg-gradient-to-br from-orange-600 via-amber-500 to-orange-600 hover:from-orange-700 hover:via-amber-600 hover:to-orange-700 active:from-orange-800 active:via-amber-700 active:to-orange-800",
+              "border-2 border-background/90 hover:border-background",
+              "shadow-[0_8px_24px_rgba(180,83,9,0.5)] hover:shadow-[0_12px_36px_rgba(180,83,9,0.7)] -my-0.5",
+              "transition-all duration-300 active:shadow-[0_2px_8px_rgba(180,83,9,0.4)]"
             )}>
-              <Bed className="h-6 w-6 sm:h-7 sm:w-7 text-foreground transition-all duration-300 hover:scale-125 font-bold" />
+              <Heart className="h-6 w-6 sm:h-7 sm:w-7 text-background transition-all duration-300 hover:scale-130 font-bold fill-current animate-bounce" style={{ animationDelay: '0s' }} />
             </div>
           </button>
         </BookingDialog>

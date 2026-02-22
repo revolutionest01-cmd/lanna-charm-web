@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
-  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2
+  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2, Heart
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ const AppSidebar = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<string>('hero');
+  const [isBookingHovered, setIsBookingHovered] = useState(false);
   const { language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
   const { isAdmin } = useAdminStatus();
@@ -342,32 +343,34 @@ const AppSidebar = () => {
         </SidebarContent>
 
         {/* Footer */}
-        <SidebarFooter className={cn("p-4 mt-auto border-t", themeStyles.border)}>
+        <SidebarFooter className={cn("p-3 mt-auto border-t", themeStyles.border)}>
           {isAuthenticated && user ? (
-            <div className="space-y-3">
-              {/* User Profile */}
+            <div className="space-y-2.5">
+              {/* User Profile Card - Minimal & Elegant */}
               <div className={cn(
-                "flex items-center gap-3 p-3 rounded-xl border",
-                themeStyles.border, themeStyles.active
+                "flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200",
+                "bg-gradient-to-br from-highlight/8 to-highlight/5",
+                "border border-highlight/15 hover:border-highlight/25",
+                "hover:shadow-sm hover:from-highlight/12 hover:to-highlight/8"
               )}>
                 {/* Avatar - Handle both emoji and URL avatars */}
                 {user.avatar && /^[\p{Emoji}]$/u.test(user.avatar) ? (
                   // Emoji Avatar
-                  <div className="h-10 w-10 rounded-lg bg-highlight/15 flex items-center justify-center text-lg font-semibold ring-2 ring-highlight/30 text-white">
+                  <div className="h-10 w-10 rounded-[10px] bg-gradient-to-br from-primary/25 to-primary/15 flex items-center justify-center text-lg font-semibold ring-1.5 ring-primary/30 text-foreground flex-shrink-0">
                     {user.avatar}
                   </div>
                 ) : (
                   // Image or Fallback Avatar
-                  <Avatar className="h-10 w-10 ring-2 ring-highlight/30">
+                  <Avatar className="h-10 w-10 ring-1.5 ring-primary/30 flex-shrink-0">
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="bg-highlight/15 text-white font-semibold">
+                    <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/20 text-foreground font-semibold text-sm">
                       {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className={cn("text-sm font-semibold truncate", themeStyles.text)}>{user.name}</p>
-                  <p className={cn("text-[10px]", themeStyles.muted)}>
+                  <p className={cn("text-sm font-medium truncate", themeStyles.text)}>{user.name}</p>
+                  <p className={cn("text-[11px] tracking-wide", themeStyles.muted)}>
                     {isAdmin 
                       ? (language === 'th' ? 'ผู้ดูแลระบบ' : language === 'zh' ? '管理员' : 'Administrator')
                       : (language === 'th' ? 'สมาชิก' : language === 'zh' ? '会员' : 'Member')
@@ -376,17 +379,24 @@ const AppSidebar = () => {
                 </div>
               </div>
 
-              {/* Admin & Logout */}
-              <div className="flex gap-2">
+              {/* Admin & Logout - Refined & Minimal */}
+              <div className="flex gap-2 mt-2">
                 {isAdmin && (
                   <Button
-                    variant="default"
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       if (isMobile) setOpenMobile(false);
                       navigate('/admin');
                     }}
-                    className="flex-1 gap-2 h-9 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs shadow-md ring-1 ring-primary/30"
+                    className={cn(
+                      "flex-1 gap-2 h-9 rounded-lg font-medium text-xs transition-all duration-200",
+                      "bg-gradient-to-r from-[hsl(var(--highlight))]/20 to-[hsl(var(--highlight))]/10",
+                      "border border-[hsl(var(--highlight))]/40 hover:border-[hsl(var(--highlight))]/60",
+                      "text-[hsl(var(--highlight))]",
+                      "hover:bg-gradient-to-r hover:from-[hsl(var(--highlight))]/30 hover:to-[hsl(var(--highlight))]/20",
+                      "hover:shadow-md hover:shadow-[hsl(var(--highlight))]/15 active:scale-95"
+                    )}
                   >
                     <Shield className="h-3.5 w-3.5" />
                     Admin
@@ -401,8 +411,12 @@ const AppSidebar = () => {
                     sweetAlert.success(language === 'th' ? 'ออกจากระบบสำเร็จ' : language === 'zh' ? '成功登出' : language === 'ja' ? 'ログアウトしました' : 'Logged out successfully');
                   }}
                   className={cn(
-                    "gap-2 h-9 rounded-lg bg-destructive/10 border-destructive/20 hover:bg-destructive/20 text-destructive text-xs",
-                    isAdmin ? "" : "flex-1"
+                    "flex-1 gap-2 h-9 rounded-lg font-medium text-xs transition-all duration-200",
+                    "bg-gradient-to-r from-[hsl(var(--accent))]/25 to-[hsl(var(--secondary))]/20",
+                    "border border-[hsl(var(--accent))]/40 hover:border-[hsl(var(--accent))]/60",
+                    "text-foreground/75 hover:text-foreground",
+                    "hover:bg-gradient-to-r hover:from-[hsl(var(--accent))]/35 hover:to-[hsl(var(--secondary))]/30",
+                    "hover:shadow-md hover:shadow-foreground/10 active:scale-95"
                   )}
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -431,13 +445,51 @@ const AppSidebar = () => {
           <div className="space-y-2">
             <LanguageDropdown variant="dark" className="w-full" />
             <BookingDialog>
-              <Button 
-                className="w-full gap-2 h-11 text-sm font-bold rounded-lg bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 hover:from-orange-600 hover:via-red-600 hover:to-orange-700 hover:shadow-xl shadow-lg text-white truncate transition-all duration-200 active:scale-95 hover:scale-105 relative overflow-hidden group"
+              <button 
+                className="w-full relative"
+                onMouseEnter={() => setIsBookingHovered(true)}
+                onMouseLeave={() => setIsBookingHovered(false)}
               >
-                <span className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                <Bed className="h-4 w-4 flex-shrink-0 relative z-10" />
-                <span className="truncate relative z-10">{t.bookNow}</span>
-              </Button>
+                {/* Hover Badge - Only shows on button hover */}
+                <div className={cn(
+                  "absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 rounded-full text-background font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 pointer-events-none shadow-lg border border-background/80 z-50",
+                  isBookingHovered ? "opacity-100 animate-bounce-up scale-100" : "opacity-0 scale-0"
+                )}>
+                  {language === 'th' ? '😍 กดจองเลย!' : language === 'zh' ? '😍 点击预定!' : '😍 Book Now!'}
+                </div>
+                
+                {/* Glow background - outer */}
+                <div className={cn(
+                  "absolute inset-0 h-11 rounded-lg bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 transition-opacity duration-300 blur-md animate-pulse -z-10 -m-1",
+                  isBookingHovered ? "opacity-70" : "opacity-0"
+                )} />
+                
+                {/* Glow background - inner */}
+                <div className={cn(
+                  "absolute inset-0 h-11 rounded-lg bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500 transition-opacity duration-300 blur-sm -z-5 animate-pulse",
+                  isBookingHovered ? "opacity-50" : "opacity-0"
+                )} style={{ animationDelay: '0.2s' }} />
+                
+                {/* Main button */}
+                <div className={cn(
+                  "w-full gap-2 h-11 text-sm font-bold rounded-lg transition-all duration-300 active:scale-95 relative z-10",
+                  "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 shadow-lg",
+                  isBookingHovered 
+                    ? "scale-105 from-orange-700 via-amber-600 to-orange-700 shadow-[0_8px_20px_rgba(180,83,9,0.5)] shadow-xl" 
+                    : "hover:scale-105 hover:from-orange-700 hover:via-amber-600 hover:to-orange-700 hover:shadow-[0_8px_20px_rgba(180,83,9,0.5)] hover:shadow-xl",
+                  "text-background border-0 overflow-hidden flex items-center justify-center"
+                )}>
+                  <span className={cn(
+                    "absolute inset-0 rounded-lg transition-colors duration-200",
+                    isBookingHovered ? "bg-white/10" : "bg-black/0"
+                  )} />
+                  <Heart className={cn(
+                    "h-4 w-4 flex-shrink-0 relative z-10 fill-current text-background",
+                    isBookingHovered && "animate-pulse"
+                  )} style={{ animationDelay: '0s' }} />
+                  <span className="truncate relative z-10 ml-1">{t.bookNow}</span>
+                </div>
+              </button>
             </BookingDialog>
           </div>
         </SidebarFooter>
