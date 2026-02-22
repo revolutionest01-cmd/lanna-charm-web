@@ -155,34 +155,69 @@ const TopicDetail = () => {
 
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[TopicDetail] Submit reply clicked - isAuthenticated:', isAuthenticated, 'user:', user?.id, 'replyContent:', replyContent.trim());
 
     if (!isAuthenticated || !user) {
+      console.error('[TopicDetail] Not authenticated');
       sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
       navigate("/auth");
       return;
     }
 
     if (!replyContent.trim()) {
+      console.error('[TopicDetail] Empty reply content');
       sweetAlert.error(language === "th" ? "กรุณาใส่ข้อความ" : "Please enter a message");
+      return;
+    }
+
+    if (!id) {
+      console.error('[TopicDetail] Missing topic ID');
+      sweetAlert.error(language === "th" ? "ไม่พบ ID ของกระทู้" : "Topic ID not found");
       return;
     }
 
     try {
       setIsSubmitting(true);
+      console.log('[TopicDetail] Submitting reply...', { topic_id: id, user_id: user.id, content: replyContent });
 
+      // First check if user exists in profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        console.warn('[TopicDetail] Profile check error (may not exist yet):', profileError.message);
+      }
+
+      // Insert the reply
       const { data, error } = await (supabase as any)
         .from("forum_replies")
         .insert({
           topic_id: id,
           user_id: user.id,
-          content: replyContent,
+          content: replyContent.trim(),
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[TopicDetail] Insert error:', error.message, error.code, error.details);
+        
+        // Provide specific error messages
+        if (error.message?.includes('duplicate')) {
+          throw new Error(language === "th" ? "ความคิดเห็นนี้ซ้ำกับที่มีอยู่" : "This comment already exists");
+        } else if (error.message?.includes('foreign key')) {
+          throw new Error(language === "th" ? "กระทู้นี้ไม่มีอยู่แล้ว" : "Topic no longer exists");
+        } else if (error.message?.includes('RLS')) {
+          throw new Error(language === "th" ? "คุณไม่มีสิทธิ์แสดงความคิดเห็น" : "Permission denied");
+        }
+        throw error;
+      }
 
       if (data) {
+        console.log('[TopicDetail] Reply inserted successfully:', data);
         setReplies([...replies, data as ForumReply]);
         setReplyContent("");
         
@@ -194,8 +229,9 @@ const TopicDetail = () => {
         sweetAlert.success(language === "th" ? "ส่งความคิดเห็นสำเร็จ" : "Reply submitted successfully");
       }
     } catch (error) {
-      console.error("Error submitting reply:", error);
-      sweetAlert.error(language === "th" ? "เกิดข้อผิดพลาด" : "Failed to submit reply");
+      console.error("[TopicDetail] Error submitting reply:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit reply";
+      sweetAlert.error(language === "th" ? `เกิดข้อผิดพลาด: ${errorMessage}` : `Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -482,17 +518,21 @@ const TopicDetail = () => {
                   <Button
                     type="submit"
                     disabled={isSubmitting || !replyContent.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg"
+                    className={`px-6 py-2.5 rounded-lg font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+                      isSubmitting || !replyContent.trim()
+                        ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg active:scale-95 cursor-pointer shadow-md'
+                    }`}
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {language === "th" ? "กำลังส่ง..." : "Submitting..."}
+                        <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                        <span>{language === "th" ? "กำลังส่ง..." : "Submitting..."}</span>
                       </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
-                        {language === "th" ? "ส่งความคิดเห็น" : "Submit Reply"}
+                        <Send className="w-4 h-4 flex-shrink-0" />
+                        <span>{language === "th" ? "ส่งความคิดเห็น" : "Submit Reply"}</span>
                       </>
                     )}
                   </Button>

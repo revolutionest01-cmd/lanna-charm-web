@@ -135,12 +135,17 @@ const AppSidebar = () => {
         {/* Header */}
         <div className={cn("flex items-center justify-between p-4 border-b", themeStyles.border)}>
           {/* Logo Card */}
-          <div className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg",
-            "border shadow-sm transition-all duration-200",
-            "bg-primary/40 hover:shadow-md hover:bg-primary/50",
-            "border-primary/50 hover:border-primary/60"
-          )}>
+          <button
+            onClick={() => navigate("/")}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg",
+              "border shadow-sm transition-all duration-200",
+              "bg-primary/40 hover:shadow-md hover:bg-primary/50",
+              "border-primary/50 hover:border-primary/60",
+              "active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            )}
+            aria-label="Go to home"
+          >
             <img src={logo} alt="Plern Ping" className="h-9 w-auto" />
             <div>
               <h2 className={cn("text-lg font-bold tracking-wide", themeStyles.text)}>
@@ -150,7 +155,7 @@ const AppSidebar = () => {
                 {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
               </p>
             </div>
-          </div>
+          </button>
           <Button
             aria-label={isMobile ? 'Close mobile menu' : 'Toggle sidebar'}
             variant="ghost"
@@ -348,14 +353,14 @@ const AppSidebar = () => {
                 {/* Avatar - Handle both emoji and URL avatars */}
                 {user.avatar && /^[\p{Emoji}]$/u.test(user.avatar) ? (
                   // Emoji Avatar
-                  <div className="h-10 w-10 rounded-lg bg-highlight/15 flex items-center justify-center text-lg font-semibold ring-2 ring-highlight/30">
+                  <div className="h-10 w-10 rounded-lg bg-highlight/15 flex items-center justify-center text-lg font-semibold ring-2 ring-highlight/30 text-white">
                     {user.avatar}
                   </div>
                 ) : (
                   // Image or Fallback Avatar
                   <Avatar className="h-10 w-10 ring-2 ring-highlight/30">
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="bg-highlight/15 text-highlight font-semibold">
+                    <AvatarFallback className="bg-highlight/15 text-white font-semibold">
                       {user.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
@@ -427,10 +432,11 @@ const AppSidebar = () => {
             <LanguageDropdown variant="dark" className="w-full" />
             <BookingDialog>
               <Button 
-                className="w-full gap-2 h-10 text-sm font-semibold rounded-lg bg-gradient-to-r from-highlight to-primary hover:opacity-90 shadow-md text-white truncate"
+                className="w-full gap-2 h-11 text-sm font-bold rounded-lg bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 hover:from-orange-600 hover:via-red-600 hover:to-orange-700 hover:shadow-xl shadow-lg text-white truncate transition-all duration-200 active:scale-95 hover:scale-105 relative overflow-hidden group"
               >
-                <Bed className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{t.bookNow}</span>
+                <span className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                <Bed className="h-4 w-4 flex-shrink-0 relative z-10" />
+                <span className="truncate relative z-10">{t.bookNow}</span>
               </Button>
             </BookingDialog>
           </div>

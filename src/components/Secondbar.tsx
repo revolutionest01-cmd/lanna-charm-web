@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, Volume2, VolumeX, X, ChevronDown, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -23,6 +24,7 @@ const languages = [
 ];
 
 const Secondbar = () => {
+  const navigate = useNavigate();
   const { toggleSidebar, state } = useSidebar();
   const { language, setLanguage } = useLanguage();
   const currentLang = languages.find(l => l.code === language) || languages[0];
@@ -147,7 +149,11 @@ const Secondbar = () => {
           {/* Subtle vertical divider */}
           <div className={cn("w-px h-6 sm:h-7", themeStyles.divider)} />
 
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200 active:scale-95"
+            aria-label="Go to home"
+          >
             <img 
               src={logo} 
               alt="Plern Ping" 
@@ -167,7 +173,7 @@ const Secondbar = () => {
                 Cafe & Stay
               </span>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Right side - Language + Sound Controls */}

@@ -80,7 +80,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
     checkAdminStatus();
   }, [user]);
 
-  // Load room availability status
+  // Load room availability status from prop
   useEffect(() => {
     if (room) {
       // Default to true if is_available field doesn't exist (before migration)
@@ -88,9 +88,41 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
         ? room.is_available 
         : true;
       setIsAvailable(available);
-      console.log(`[RoomModal] Room ${room.id} availability loaded:`, available, 'is_available field exists:', 'is_available' in room);
+      console.log(`[RoomModal] Room ${room.id} availability loaded from prop:`, available, 'is_available field exists:', 'is_available' in room);
     }
   }, [room]);
+
+  // Fetch fresh availability status from database when modal opens
+  useEffect(() => {
+    if (isOpen && room) {
+      const fetchFreshAvailability = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('rooms')
+            .select('is_available')
+            .eq('id', room.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('[RoomModal] Error fetching fresh availability:', error);
+            return;
+          }
+
+          if (data) {
+            const available = data.is_available !== null && data.is_available !== undefined 
+              ? data.is_available 
+              : true;
+            setIsAvailable(available);
+            console.log(`[RoomModal] Fresh availability loaded from DB for room ${room.id}:`, available);
+          }
+        } catch (err) {
+          console.error('[RoomModal] Error fetching fresh availability:', err);
+        }
+      };
+
+      fetchFreshAvailability();
+    }
+  }, [isOpen, room?.id]);
 
   // Toggle room availability
   const handleToggleAvailability = async () => {
