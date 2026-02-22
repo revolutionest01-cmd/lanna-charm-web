@@ -133,18 +133,15 @@ const initializeAuth = async () => {
           const basicUser = buildUserFromSession(newSession);
           console.log('[Auth] Session updated in listener:', basicUser.email);
           
-          // For INITIAL_SESSION and TOKEN_REFRESHED, don't reset isLoading
-          // to avoid flickering on page refresh
-          const shouldSetLoading = _event === 'SIGNED_IN';
-          
+          // Keep loading state during enrichment
           setAuthState({
             user: basicUser,
             session: newSession,
             isAuthenticated: true,
-            isLoading: shouldSetLoading,
+            isLoading: true, // Keep loading during enrichment
           });
           
-          // Enrich with profile data in background
+          // Enrich with profile data and update when complete
           try {
             const enrichedUser = await fetchAndEnrichUser(newSession);
             setAuthState({ 
