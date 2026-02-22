@@ -460,7 +460,7 @@ const ContactSection = () => {
                 {errors.message && <p className="text-sm text-destructive mt-1">{errors.message}</p>}
               </div>
 
-              <Button type="submit" variant="highlight" size="lg" className="w-full h-12 sm:h-11 text-base rounded-xl sm:rounded-lg">
+              <Button type="submit" size="lg" className="w-full h-12 sm:h-11 text-base rounded-xl sm:rounded-lg bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl transition-all">
                 <Send className="mr-2 h-5 w-5" />
                 {t.sendMessage}
               </Button>

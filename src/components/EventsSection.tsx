@@ -166,9 +166,8 @@ const EventsSection = () => {
             {/* CTA Button */}
             <div className="pt-2 sm:pt-4">
               <Button 
-                variant="highlight" 
                 size="lg" 
-                className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-11 text-base rounded-xl sm:rounded-lg transition-all duration-300 hover:scale-105" 
+                className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-11 text-base rounded-xl sm:rounded-lg transition-all duration-300 hover:scale-105 bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl" 
                 onClick={handleInquireClick}
               >
                 {t.inquirePrice}
