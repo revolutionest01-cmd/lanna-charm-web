@@ -137,7 +137,7 @@ const BottomBar = () => {
         <BookingDialog>
           <button className="flex flex-col items-center justify-center py-2.5 px-2 touch-manipulation transition-all duration-300 active:scale-85 hover:scale-125 relative group">
             {/* Hover Badge */}
-            <div className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 rounded-full text-background font-bold text-sm sm:text-base whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg border-2 border-background/90 scale-0 group-hover:scale-100 transform group-hover:-translate-y-2 transition-all duration-300">
+            <div className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 bg-background/20 backdrop-blur-md rounded-full text-background font-bold text-sm sm:text-base whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg border-2 border-background/40 scale-0 group-hover:scale-100 transform group-hover:-translate-y-2 transition-all duration-300">
               {language === 'th' ? '😍 กดเพื่อจองเลย!' : language === 'zh' ? '😍 点击立即预定!' : '😍 Book Now!'}
             </div>
             

@@ -452,7 +452,7 @@ const AppSidebar = () => {
               >
                 {/* Hover Badge - Only shows on button hover */}
                 <div className={cn(
-                  "absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 rounded-full text-background font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 pointer-events-none shadow-lg border border-background/80 z-50",
+                  "absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-foreground rounded-full text-background/70 font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 pointer-events-none shadow-lg border border-primary/30 z-50",
                   isBookingHovered ? "opacity-100 animate-bounce-up scale-100" : "opacity-0 scale-0"
                 )}>
                   {language === 'th' ? '😍 กดจองเลย!' : language === 'zh' ? '😍 点击预定!' : '😍 Book Now!'}
@@ -460,23 +460,23 @@ const AppSidebar = () => {
                 
                 {/* Glow background - outer */}
                 <div className={cn(
-                  "absolute inset-0 h-11 rounded-lg bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 transition-opacity duration-300 blur-md animate-pulse -z-10 -m-1",
-                  isBookingHovered ? "opacity-70" : "opacity-0"
+                  "absolute inset-0 h-11 rounded-lg bg-gradient-to-r from-slate-100 via-white to-slate-100 transition-opacity duration-300 blur-lg animate-pulse -z-10 -m-1",
+                  isBookingHovered ? "opacity-40" : "opacity-0"
                 )} />
                 
                 {/* Glow background - inner */}
                 <div className={cn(
-                  "absolute inset-0 h-11 rounded-lg bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500 transition-opacity duration-300 blur-sm -z-5 animate-pulse",
-                  isBookingHovered ? "opacity-50" : "opacity-0"
+                  "absolute inset-0 h-11 rounded-lg bg-gradient-to-r from-white via-slate-50 to-white transition-opacity duration-300 blur-md -z-5 animate-pulse",
+                  isBookingHovered ? "opacity-35" : "opacity-0"
                 )} style={{ animationDelay: '0.2s' }} />
                 
                 {/* Main button */}
                 <div className={cn(
                   "w-full gap-2 h-11 text-sm font-bold rounded-lg transition-all duration-300 active:scale-95 relative z-10",
-                  "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 shadow-lg",
+                  "bg-primary/35 shadow-lg",
                   isBookingHovered 
-                    ? "scale-105 from-orange-700 via-amber-600 to-orange-700 shadow-[0_8px_20px_rgba(180,83,9,0.5)] shadow-xl" 
-                    : "hover:scale-105 hover:from-orange-700 hover:via-amber-600 hover:to-orange-700 hover:shadow-[0_8px_20px_rgba(180,83,9,0.5)] hover:shadow-xl",
+                    ? "scale-105 bg-primary/45 shadow-[0_4px_16px_rgba(var(--primary),0.4)]" 
+                    : "hover:scale-105 hover:bg-primary/45 hover:shadow-[0_4px_16px_rgba(var(--primary),0.4)]",
                   "text-background border-0 overflow-hidden flex items-center justify-center"
                 )}>
                   <span className={cn(
