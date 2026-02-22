@@ -108,7 +108,7 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
       
       const { data, error } = await supabase
         .from('rooms')
-        .update({ is_active: newAvailabilityStatus })
+        .update({ is_available: newAvailabilityStatus } as any)
         .eq('id', room.id)
         .select();
       
@@ -534,10 +534,37 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                     <span className="text-muted-foreground text-sm">
                       {language === 'th' ? 'สถานะ' : 'Status'}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-500/20 text-green-600 rounded-full text-xs font-semibold">
-                      <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                      {language === 'th' ? 'ว่าง' : 'Available'}
-                    </span>
+                    {isAdmin ? (
+                      <button
+                        onClick={() => handleToggleAvailability()}
+                        disabled={isTogglingAvailability}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300',
+                          isAvailable
+                            ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+                            : 'bg-red-500/20 text-red-600 hover:bg-red-500/30',
+                          'disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-95'
+                        )}
+                        title={language === 'th' ? 'กดเพื่อสลับสถานะ' : 'Click to toggle status'}
+                      >
+                        <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
+                        {isTogglingAvailability ? (
+                          <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : isAvailable ? (
+                          language === 'th' ? 'ว่าง' : 'Available'
+                        ) : (
+                          language === 'th' ? 'ไม่ว่าง' : 'Not Available'
+                        )}
+                      </button>
+                    ) : (
+                      <span className={cn(
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
+                        isAvailable ? 'bg-green-500/20 text-green-600' : 'bg-red-500/20 text-red-600'
+                      )}>
+                        <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
+                        {isAvailable ? (language === 'th' ? 'ว่าง' : 'Available') : (language === 'th' ? 'ไม่ว่าง' : 'Not Available')}
+                      </span>
+                    )}
                   </div>
                 </div>
 
