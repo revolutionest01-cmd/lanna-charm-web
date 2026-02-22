@@ -61,6 +61,10 @@ const MenuSection = () => {
     setIsModalOpen(true);
   };
 
+  const handleMenuChange = (menu: Menu) => {
+    setSelectedMenu(menu);
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedMenu(null);
@@ -303,6 +307,8 @@ const MenuSection = () => {
           menu={selectedMenu}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
+          allMenus={menus}
+          onMenuChange={handleMenuChange}
         />
       </div>
     </section>

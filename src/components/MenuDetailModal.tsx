@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Heart, Share2, Upload, Loader2 } from "lucide-react";
+import { X, Heart, Share2, Upload, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,9 +26,11 @@ interface MenuDetailModalProps {
   menu: Menu | null;
   isOpen: boolean;
   onClose: () => void;
+  allMenus?: Menu[];
+  onMenuChange?: (menu: Menu) => void;
 }
 
-const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
+const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }: MenuDetailModalProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const { user } = useAuth();
@@ -37,13 +39,71 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
+  const minSwipeDistance = 50;
+
+  // Get current menu index
+  const currentMenuIndex = menu ? allMenus.findIndex(m => m.id === menu.id) : -1;
+  const hasNextMenu = currentMenuIndex < allMenus.length - 1;
+  const hasPrevMenu = currentMenuIndex > 0;
+
+  const handlePrevMenu = () => {
+    if (hasPrevMenu && allMenus[currentMenuIndex - 1] && onMenuChange) {
+      onMenuChange(allMenus[currentMenuIndex - 1]);
+    }
+  };
+
+  const handleNextMenu = () => {
+    if (hasNextMenu && allMenus[currentMenuIndex + 1] && onMenuChange) {
+      onMenuChange(allMenus[currentMenuIndex + 1]);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNextMenu();
+    } else if (isRightSwipe) {
+      handlePrevMenu();
+    }
+  };
 
   // Update Modal state when isOpen changes
   useEffect(() => {
     setIsModalOpen(isOpen);
   }, [isOpen, setIsModalOpen]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevMenu();
+      } else if (e.key === 'ArrowRight') {
+        handleNextMenu();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, currentMenuIndex, allMenus, onMenuChange]);
 
   // Check admin status
   useEffect(() => {
@@ -200,7 +260,12 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
           {/* Content Container */}
           <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
             {/* Image Section */}
-            <div className="flex flex-col gap-3 sm:gap-4">
+            <div 
+              className="flex flex-col gap-3 sm:gap-4"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* Main Image */}
               {allImages.length > 0 || menu.icon_url ? (
                 <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72">
@@ -316,10 +381,60 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 pt-2 border-t border-primary/20">
+                {/* Menu Navigation - Horizontal Layout */}
+                {allMenus.length > 1 && (
+                  <div className="flex items-center justify-between gap-3 px-2 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrevMenu();
+                      }}
+                      disabled={!hasPrevMenu}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                        hasPrevMenu
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Previous menu"
+                    >
+                      <ChevronLeft size={18} />
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'เมนูก่อนหน้า' : 'Previous'}
+                      </span>
+                    </button>
+
+                    <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
+                      <span className="font-semibold text-sm text-foreground">
+                        {currentMenuIndex + 1} / {allMenus.length}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextMenu();
+                      }}
+                      disabled={!hasNextMenu}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                        hasNextMenu
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Next menu"
+                    >
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'เมนูถัดไป' : 'Next'}
+                      </span>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+
                 <Button
-                  variant="outline"
                   onClick={onClose}
-                  className="w-full font-semibold h-10 rounded-lg text-sm"
+                  className="w-full font-semibold h-10 rounded-lg text-sm bg-foreground text-background hover:bg-foreground/90"
                 >
                   {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                 </Button>
