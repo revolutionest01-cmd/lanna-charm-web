@@ -92,7 +92,7 @@ const BottomBar = () => {
       {/* Darkbrown to grey glassmorphism background */}
       <div 
         className={cn(
-          "absolute inset-0 border-t transition-all duration-300",
+          "absolute inset-0 transition-all duration-300",
           "bg-foreground shadow-[0_-12px_40px_rgba(0,0,0,0.4)]",
           "backdrop-blur-xl"
         )}
@@ -117,9 +117,6 @@ const BottomBar = () => {
                   : themeStyles.text
               )}
             >
-              {active && (
-                <div className="absolute inset-0 rounded-lg bg-primary/30 -z-10" />
-              )}
               <IconComponent className={cn(
                 "h-6 w-6 sm:h-7 sm:w-7 transition-all duration-300",
                 "hover:scale-125 active:scale-95",
@@ -135,27 +132,30 @@ const BottomBar = () => {
         
         {/* Book Now Button - Center - Inverted prominent design with glow */}
         <BookingDialog>
-          <button className="flex flex-col items-center justify-center py-2.5 px-2 touch-manipulation transition-all duration-300 active:scale-85 hover:scale-125 relative group">
+          <button className="flex flex-col items-center justify-center py-2.5 px-2 touch-manipulation transition-all duration-300 active:scale-85 hover:scale-125 relative group z-20">
             {/* Hover Badge */}
-            <div className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 bg-background/20 backdrop-blur-md rounded-full text-background font-bold text-sm sm:text-base whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg border-2 border-background/40 scale-0 group-hover:scale-100 transform group-hover:-translate-y-2 transition-all duration-300">
+            <div className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 bg-background/20 backdrop-blur-md rounded-full text-background font-bold text-sm sm:text-base whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg border-2 border-background/40 z-50 scale-0 group-hover:scale-100 transform group-hover:-translate-y-2 transition-all duration-300">
               {language === 'th' ? '😍 กดเพื่อจองเลย!' : language === 'zh' ? '😍 点击立即预定!' : '😍 Book Now!'}
             </div>
             
-            {/* Animated glow background with theme colors */}
-            <div className="absolute inset-0 -inset-1 w-14 h-14 sm:w-15 sm:h-15 rounded-lg bg-gradient-to-r from-slate-100 via-white to-slate-100 opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-lg animate-pulse -z-10" />
-            
-            {/* Second layer glow */}
-            <div className="absolute inset-0 w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-gradient-to-r from-white via-slate-50 to-white opacity-0 group-hover:opacity-35 transition-opacity duration-300 blur-md -z-5 animate-pulse" style={{ animationDelay: '0.2s' }} />
-            
-            {/* Main button */}
-            <div className={cn(
-              "flex items-center justify-center w-12 h-12 sm:w-13 sm:h-13 rounded-lg relative z-10",
-              "bg-primary/35 hover:bg-primary/45 active:bg-primary/55",
-              "border-2 border-background/70 hover:border-background/80",
-              "shadow-[0_4px_16px_rgba(var(--primary),0.3)] hover:shadow-[0_8px_24px_rgba(var(--primary),0.4)] -my-0.5",
-              "transition-all duration-300 active:shadow-[0_2px_8px_rgba(var(--primary),0.2)]"
-            )}>
-              <Heart className="h-6 w-6 sm:h-7 sm:w-7 text-background transition-all duration-300 hover:scale-130 font-bold fill-current animate-bounce" style={{ animationDelay: '0s' }} />
+            {/* Main button wrapper with contained glow */}
+            <div className="relative w-12 h-12 sm:w-13 sm:h-13">
+              {/* Animated glow background - contained */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-slate-100 via-white to-slate-100 opacity-0 group-hover:opacity-30 transition-opacity duration-300 blur-lg animate-pulse -z-10" />
+              
+              {/* Second layer glow - contained */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white via-slate-50 to-white opacity-0 group-hover:opacity-25 transition-opacity duration-300 blur-md -z-5 animate-pulse" style={{ animationDelay: '0.2s' }} />
+              
+              {/* Main button */}
+              <div className={cn(
+                "flex items-center justify-center w-full h-full rounded-lg relative z-10",
+                "bg-primary/35 hover:bg-primary/45 active:bg-primary/55",
+                "border-2 border-background/70 hover:border-background/80",
+                "shadow-[0_4px_16px_rgba(var(--primary),0.3)] hover:shadow-[0_8px_24px_rgba(var(--primary),0.4)]",
+                "transition-all duration-300 active:shadow-[0_2px_8px_rgba(var(--primary),0.2)]"
+              )}>
+                <Heart className="h-6 w-6 sm:h-7 sm:w-7 text-background transition-all duration-300 hover:scale-130 font-bold fill-current animate-bounce relative z-20" style={{ animationDelay: '0s' }} />
+              </div>
             </div>
           </button>
         </BookingDialog>
