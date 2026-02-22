@@ -67,7 +67,7 @@ const TopicDetail = () => {
       setLoading(true);
 
       // Fetch topic
-      const { data: topicData, error: topicError } = await supabase
+      const { data: topicData, error: topicError } = await (supabase as any)
         .from("forum_topics")
         .select("*")
         .eq("id", id)
@@ -76,17 +76,17 @@ const TopicDetail = () => {
       if (topicError) throw topicError;
 
       if (topicData) {
-        setTopic(topicData as ForumTopic);
+        setTopic(topicData as unknown as ForumTopic);
 
         // Increment views
-        await supabase
+        await (supabase as any)
           .from("forum_topics")
-          .update({ views: (topicData.views || 0) + 1 })
+          .update({ views: ((topicData as any).views || 0) + 1 })
           .eq("id", id);
       }
 
       // Fetch replies
-      const { data: repliesData, error: repliesError } = await supabase
+      const { data: repliesData, error: repliesError } = await (supabase as any)
         .from("forum_replies")
         .select("*")
         .eq("topic_id", id)
@@ -108,7 +108,7 @@ const TopicDetail = () => {
   const checkIfTopicLiked = async () => {
     if (!user || !topic) return;
 
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("forum_likes")
       .select("*")
       .eq("topic_id", topic.id)
@@ -130,7 +130,7 @@ const TopicDetail = () => {
     try {
       if (isTopicLiked) {
         // Remove like
-        await supabase
+        await (supabase as any)
           .from("forum_likes")
           .delete()
           .eq("topic_id", topic.id)
@@ -140,7 +140,7 @@ const TopicDetail = () => {
         setIsTopicLiked(false);
       } else {
         // Add like
-        await supabase.from("forum_likes").insert({
+        await (supabase as any).from("forum_likes").insert({
           topic_id: topic.id,
           user_id: user.id,
         });
@@ -170,7 +170,7 @@ const TopicDetail = () => {
     try {
       setIsSubmitting(true);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("forum_replies")
         .insert({
           topic_id: id,

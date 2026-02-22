@@ -35,6 +35,13 @@ export interface ForumReply {
   author_name?: string;
 }
 
+// Helper to access forum tables that aren't in generated types yet
+const forumDb = {
+  topics: () => (supabase as any).from("forum_topics"),
+  likes: () => (supabase as any).from("forum_likes"),
+  replies: () => (supabase as any).from("forum_replies"),
+};
+
 export const useWebboard = () => {
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,8 +53,7 @@ export const useWebboard = () => {
       setLoading(true);
       setError(null);
 
-      let query = supabase
-        .from("forum_topics")
+      let query = forumDb.topics()
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -62,19 +68,15 @@ export const useWebboard = () => {
         throw err;
       }
 
-      console.log("[useWebboard] Fetched topics:", data);
-
       // Fetch additional data and enrich topics
       const enrichedTopics = await Promise.all(
-        (data || []).map(async (topic) => {
+        (data || []).map(async (topic: any) => {
           try {
             const [likesResult, repliesResult, profileResult] = await Promise.all([
-              supabase
-                .from("forum_likes")
+              forumDb.likes()
                 .select("id")
                 .eq("topic_id", topic.id),
-              supabase
-                .from("forum_replies")
+              forumDb.replies()
                 .select("id")
                 .eq("topic_id", topic.id),
               supabase
@@ -102,8 +104,7 @@ export const useWebboard = () => {
         })
       );
 
-      console.log("[useWebboard] Enriched topics:", enrichedTopics);
-      setTopics(enrichedTopics);
+      setTopics(enrichedTopics as ForumTopic[]);
       return enrichedTopics;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch topics";
@@ -126,8 +127,7 @@ export const useWebboard = () => {
     try {
       setError(null);
 
-      const { data, error: err } = await supabase
-        .from("forum_topics")
+      const { data, error: err } = await forumDb.topics()
         .insert([
           {
             user_id: userId,
@@ -143,7 +143,6 @@ export const useWebboard = () => {
 
       if (err) throw err;
 
-      // Fetch updated list
       await fetchTopics();
       return data;
     } catch (err) {
@@ -162,8 +161,7 @@ export const useWebboard = () => {
     try {
       setError(null);
 
-      const { error: err } = await supabase
-        .from("forum_topics")
+      const { error: err } = await forumDb.topics()
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
@@ -172,7 +170,6 @@ export const useWebboard = () => {
 
       if (err) throw err;
 
-      // Fetch updated list
       await fetchTopics();
       return true;
     } catch (err) {
@@ -188,14 +185,12 @@ export const useWebboard = () => {
     try {
       setError(null);
 
-      const { error: err } = await supabase
-        .from("forum_topics")
+      const { error: err } = await forumDb.topics()
         .delete()
         .eq("id", topicId);
 
       if (err) throw err;
 
-      // Fetch updated list
       await fetchTopics();
       return true;
     } catch (err) {
@@ -245,32 +240,25 @@ export const useWebboard = () => {
     try {
       setError(null);
 
-      // Check if already liked
-      const { data: existingLike } = await supabase
-        .from("forum_likes")
+      const { data: existingLike } = await forumDb.likes()
         .select("id")
         .eq("topic_id", topicId)
         .eq("user_id", userId)
         .single();
 
       if (existingLike) {
-        // Unlike
-        const { error: err } = await supabase
-          .from("forum_likes")
+        const { error: err } = await forumDb.likes()
           .delete()
           .eq("id", existingLike.id);
 
         if (err) throw err;
       } else {
-        // Like
-        const { error: err } = await supabase
-          .from("forum_likes")
+        const { error: err } = await forumDb.likes()
           .insert([{ topic_id: topicId, user_id: userId }]);
 
         if (err) throw err;
       }
 
-      // Fetch updated list
       await fetchTopics();
       return true;
     } catch (err) {
@@ -286,15 +274,13 @@ export const useWebboard = () => {
     try {
       setError(null);
 
-      const { data, error: err } = await supabase
-        .from("forum_replies")
+      const { data, error: err } = await forumDb.replies()
         .insert([{ topic_id: topicId, user_id: userId, content: content.trim() }])
         .select()
         .single();
 
       if (err) throw err;
 
-      // Fetch updated list to refresh reply count
       await fetchTopics();
       return data;
     } catch (err) {
@@ -310,25 +296,22 @@ export const useWebboard = () => {
     try {
       setError(null);
 
-      const { data: topic, error: topicErr } = await supabase
-        .from("forum_topics")
+      const { data: topic, error: topicErr } = await forumDb.topics()
         .select("*")
         .eq("id", topicId)
         .single();
 
       if (topicErr) throw topicErr;
 
-      const { data: replies, error: repliesErr } = await supabase
-        .from("forum_replies")
+      const { data: replies, error: repliesErr } = await forumDb.replies()
         .select("*")
         .eq("topic_id", topicId)
         .order("created_at", { ascending: true });
 
       if (repliesErr) throw repliesErr;
 
-      // Enrich with author names
       const enrichedReplies = await Promise.all(
-        (replies || []).map(async (reply) => {
+        (replies || []).map(async (reply: any) => {
           const { data: profile } = await supabase
             .from("profiles")
             .select("display_name")

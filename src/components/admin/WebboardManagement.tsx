@@ -80,7 +80,7 @@ export const WebboardManagement = () => {
         const controller = new AbortController();
         timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("forum_topics")
           .select("id", { count: "exact", head: true });
 
@@ -139,7 +139,7 @@ export const WebboardManagement = () => {
 
   const handleViewDetails = async (topic: ForumTopic) => {
     setSelectedTopic(topic);
-    const { data: repliesData } = await supabase
+    const { data: repliesData } = await (supabase as any)
       .from("forum_replies")
       .select("*")
       .eq("topic_id", topic.id)
@@ -147,7 +147,7 @@ export const WebboardManagement = () => {
 
     if (repliesData) {
       const enrichedReplies = await Promise.all(
-        repliesData.map(async (reply) => {
+        (repliesData as any[]).map(async (reply: any) => {
           const { data: profile } = await supabase
             .from("profiles")
             .select("display_name")
@@ -160,7 +160,7 @@ export const WebboardManagement = () => {
           };
         })
       );
-      setReplies(enrichedReplies);
+      setReplies(enrichedReplies as ForumReply[]);
     }
 
     setShowDetailModal(true);
@@ -204,7 +204,7 @@ export const WebboardManagement = () => {
 
   const handleDeleteReply = async (replyId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("forum_replies")
         .delete()
         .eq("id", replyId);
