@@ -41,7 +41,7 @@ export const translations = {
     viewRooms: "ดูห้องพัก",
     
     // Features
-    featuresTitle: "ทำไมต้องเลือก Plern Ping",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "ประสบการณ์ที่ไม่เหมือนใคร",
     traditionalArchitecture: "สถาปัตยกรรมล้านนาแท้",
     traditionalArchitectureDesc: "บ้านไม้สไตล์ล้านนาที่สวยงามในบรรยากาศธรรมชาติ",
@@ -177,7 +177,7 @@ export const translations = {
     viewRooms: "View Rooms",
     
     // Features
-    featuresTitle: "Why Choose Plern Ping",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "A unique experience awaits",
     traditionalArchitecture: "Traditional Architecture",
     traditionalArchitectureDesc: "Beautiful Lanna-style wooden houses in natural surroundings",
@@ -313,7 +313,7 @@ export const translations = {
     viewRooms: "查看客房",
     
     // Features
-    featuresTitle: "为什么选择 Plern Ping",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "独特的体验等着您",
     traditionalArchitecture: "传统建筑",
     traditionalArchitectureDesc: "自然环境中美丽的兰纳风格木屋",
@@ -449,7 +449,7 @@ export const translations = {
     viewRooms: "客室を見る",
 
     // Features
-    featuresTitle: "なぜ Plern Ping を選ぶのか",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "唯一無二の体験があなたを待っています",
     traditionalArchitecture: "伝統的な建築",
     traditionalArchitectureDesc: "自然の中に佇む美しいランナー様式の木造建築",
