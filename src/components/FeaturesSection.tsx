@@ -100,11 +100,6 @@ const FeaturesSection = () => {
                   <div className="hidden sm:block mt-6 h-0.5 w-0 bg-gradient-to-r from-primary to-primary/50 transition-all duration-500 group-hover:w-full rounded-full" />
                 </div>
               </div>
-
-              {/* Card number indicator - hidden on mobile */}
-              <div className="hidden sm:flex absolute -top-3 -left-3 w-8 h-8 rounded-full bg-background border border-border items-center justify-center text-xs font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                0{index + 1}
-              </div>
             </div>
           ))}
         </StaggerReveal>
