@@ -57,7 +57,7 @@ export const sweetAlert = {
         icon: 'success',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -66,7 +66,7 @@ export const sweetAlert = {
         icon: 'error',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -75,7 +75,7 @@ export const sweetAlert = {
         icon: 'warning',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
@@ -84,24 +84,60 @@ export const sweetAlert = {
         icon: 'info',
         title,
         text,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
       });
     },
 
-    confirm: async (title: string, text?: string, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก') => {
-      const result = await Swal.fire({
+    confirm: async (title: string, text?: string, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก', useHtml = false) => {
+      const options: Record<string, any> = {
         icon: 'question',
         title,
-        text,
         showCancelButton: true,
-        confirmButtonColor: '#8B6F47',
+        confirmButtonColor: '#c65539',
         cancelButtonColor: '#6b7280',
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,
-        customClass: {
-          container: '!z-[9999]',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: (dialog: HTMLElement) => {
+          const confirmBtn = dialog.querySelector('.swal2-confirm') as HTMLElement;
+          const cancelBtn = dialog.querySelector('.swal2-cancel') as HTMLElement;
+          const backdrop = dialog.parentElement?.querySelector('.swal2-backdrop') as HTMLElement;
+          if (confirmBtn) {
+            confirmBtn.style.pointerEvents = 'auto';
+            confirmBtn.style.cursor = 'pointer';
+          }
+          if (cancelBtn) {
+            cancelBtn.style.pointerEvents = 'auto';
+            cancelBtn.style.cursor = 'pointer';
+          }
+          if (backdrop) {
+            backdrop.style.pointerEvents = 'none';
+          }
         },
-      });
+        customClass: {
+          container: '!z-[99999]',
+          popup: '!z-[99999]',
+          backdrop: '!z-[99998]',
+          title: '!text-[hsl(12,55%,50%)]',
+          htmlContainer: '!text-[hsl(12,55%,50%)]',
+          confirmButton: '!pointer-events-auto',
+          cancelButton: '!pointer-events-auto',
+        },
+        titleColor: 'hsl(12, 55%, 50%)',
+        didRender: (dialog: HTMLElement) => {
+          const content = dialog.querySelector('.swal2-html-container') as HTMLElement;
+          if (content) {
+            content.style.color = 'hsl(12, 55%, 50%)';
+          }
+        },
+      };
+      if (useHtml) {
+        options.html = text;
+      } else {
+        options.text = text;
+      }
+      const result = await Swal.fire(options);
       return result.isConfirmed;
     },
 

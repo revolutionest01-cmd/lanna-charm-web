@@ -37,30 +37,29 @@ export const translations = {
     location: "กรุงเทพ ดอนเมือง, ประเทศไทย",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "สัมผัสการผสมผสานที่ลงตัวระหว่างเสน่ห์ล้านนาแท้และความสะดวกสบายสมัยใหม่",
-    heroDescription: "ท่ามกลางธรรมชาติที่สงบ ที่ซึ่งอาหารรสเลิศผสานกับกาแฟชั้นเยี่ยมในสวนอันเงียบสงบ",
     exploreMenu: "สำรวจเมนู",
     viewRooms: "ดูห้องพัก",
     
     // Features
-    featuresTitle: "ทำไมต้องเลือก Plern Ping",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "ประสบการณ์ที่ไม่เหมือนใคร",
     traditionalArchitecture: "สถาปัตยกรรมล้านนาแท้",
     traditionalArchitectureDesc: "บ้านไม้สไตล์ล้านนาที่สวยงามในบรรยากาศธรรมชาติ",
     artisanCoffee: "กาแฟชั้นเยี่ยม",
-    artisanCoffeeDesc: "เมือกาแฟคั่วพิเศษและเครื่องดื่มสไตล์ไทย",
+    artisanCoffeeDesc: "กาแฟคั่วพิเศษและเครื่องดื่มสไตล์ไทย",
     authenticCuisine: "อาหารไทยแท้",
     authenticCuisineDesc: "อาหารล้านนาและไทยต้นตำรับจากเชฟท้องถิ่น",
-    gardenSetting: "ในสวนธรรมชาติ",
+    gardenSetting: "ท่ามกลางธรรมชาติ",
     gardenSettingDesc: "ที่นั่งในร่มและกลางแจ้งท่ามกลางสวนเขียวขจี",
     
     // Events
     eventsTitle: "ห้องประชุม & งานเลี้ยง",
-    eventsSubtitle: "พื้นที่จองแบบพิเศษสำหรับการจัดงาน การนำเสนอ และงานสังสรรค์ รองรับได้ทุกรูปแบบ",
+    eventsSubtitle: "พื้นที่พิเศษสำหรับจัดงานเลี้ยง",
     eventsMainTitle: "คาแฟล้านนาและห้องอเนกประสงค์",
     eventsMainDesc: "พื้นที่ห้องแบบพิเศษพร้อมอุปกรณ์ทุกสิ่งอย่าง ตั้งแต่การประชุม การนำเสนอ ไปจนถึงงานสังสรรค์ พร้อมบริการจัดเลี้ยงและอุปกรณ์ครบครัน",
     ourServices: "บริการของเรา",
     presentationRoom: "ห้องบรรยาย/นำเสนอ",
-    presentationRoomDesc: "พร้อมโปรเจคเตอร์ ระบบเสียง และระบบควบคุมความเข้าใจ",
+    presentationRoomDesc: "ห้องบรรยายพร้อมอุปกรณ์ทันสมัย",
     cateringService: "บริการจัดเลี้ยง",
     cateringServiceDesc: "อาหารและเครื่องดื่มคุณภาพ ปรับเมนูตามความต้องการ",
     privateEvents: "ห้องการไอทีและส่วนตัว",
@@ -110,7 +109,7 @@ export const translations = {
     
     // Gallery
     galleryTitle: "แกลเลอรี",
-    gallerySubtitle: "เหลือบมองสถานที่อันเงียบสงบของเรา",
+    gallerySubtitle: "มุมพิงเพลินๆที่เพลินพิง",
     
     // Reviews
     reviewsTitle: "รีวิวจากลูกค้า",
@@ -174,12 +173,11 @@ export const translations = {
     location: "Bangkok Don Mueang, Thailand",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "Experience the perfect blend of traditional Lanna charm and modern comfort",
-    heroDescription: "Nestled in nature's embrace, where exceptional food meets artisan coffee in a tranquil garden setting",
     exploreMenu: "Explore Menu",
     viewRooms: "View Rooms",
     
     // Features
-    featuresTitle: "Why Choose Plern Ping",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "A unique experience awaits",
     traditionalArchitecture: "Traditional Architecture",
     traditionalArchitectureDesc: "Beautiful Lanna-style wooden houses in natural surroundings",
@@ -311,12 +309,11 @@ export const translations = {
     location: "泰国曼谷廊曼",
     heroTitle: "Plern Ping 咖啡馆",
     heroSubtitle: "体验传统兰纳魅力与现代舒适的完美融合",
-    heroDescription: "坐落在大自然的怀抱中，在宁静的花园环境中，特色美食与精品咖啡相遇",
     exploreMenu: "探索菜单",
     viewRooms: "查看客房",
     
     // Features
-    featuresTitle: "为什么选择 Plern Ping",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "独特的体验等着您",
     traditionalArchitecture: "传统建筑",
     traditionalArchitectureDesc: "自然环境中美丽的兰纳风格木屋",
@@ -448,12 +445,11 @@ export const translations = {
     location: "タイ・バンコク ドンムアン",
     heroTitle: "Plern Ping Cafe",
     heroSubtitle: "伝統的なランナーの魅力と現代の快適さの完璧な融合を体験してください",
-    heroDescription: "自然の中に佇む静寂な庭園で、絶品料理とアルチザンコーヒーが出会う場所",
     exploreMenu: "メニューを見る",
     viewRooms: "客室を見る",
 
     // Features
-    featuresTitle: "なぜ Plern Ping を選ぶのか",
+    featuresTitle: "PlernPing Cafe & Stay",
     featuresSubtitle: "唯一無二の体験があなたを待っています",
     traditionalArchitecture: "伝統的な建築",
     traditionalArchitectureDesc: "自然の中に佇む美しいランナー様式の木造建築",

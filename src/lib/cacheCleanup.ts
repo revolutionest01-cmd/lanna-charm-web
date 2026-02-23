@@ -4,6 +4,8 @@
  */
 
 export const initializeCacheCleanup = () => {
+  console.log('[Cache Cleanup] Initializing...');
+  
   // Clear all old caches on app load
   if ('caches' in window) {
     caches.keys().then((cacheNames) => {
@@ -18,6 +20,7 @@ export const initializeCacheCleanup = () => {
   }
 
   // Clear old localStorage keys that might cause issues
+  // BUT preserve Supabase auth-related keys
   const keysToCheck = [
     'language-storage',
     'app-cache-metadata',
@@ -35,19 +38,42 @@ export const initializeCacheCleanup = () => {
     }
   });
 
-  // Unregister all service workers to force fresh load
+  // Check for Supabase auth keys and preserve them
+  const preservedAuthKeys: string[] = [];
+  const allKeys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key) {
+      allKeys.push(key);
+      if (key.includes('sb-') || key.includes('auth') || key.includes('supabase')) {
+        preservedAuthKeys.push(key);
+      }
+    }
+  }
+  
+  console.log('[Cache Cleanup] Total localStorage keys:', allKeys.length);
+  if (preservedAuthKeys.length > 0) {
+    console.log('[Cache Cleanup] Preserving', preservedAuthKeys.length, 'Supabase auth keys:', preservedAuthKeys);
+  }
+
+  // Unregister all service workers to force fresh load (but don't wait for it)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => {
-        console.log('[Cache Cleanup] Unregistering SW:', registration.scope);
-        registration.unregister();
-      });
+      if (registrations.length > 0) {
+        console.log('[Cache Cleanup] Found', registrations.length, 'service worker(s)');
+        registrations.forEach((registration) => {
+          console.log('[Cache Cleanup] Unregistering SW:', registration.scope);
+          registration.unregister();
+        });
+      }
+    }).catch(err => {
+      console.log('[Cache Cleanup] Error getting SW registrations:', err);
     });
   }
 
   // Set a flag to indicate fresh load
   sessionStorage.setItem('app-fresh-load', 'true');
-  console.log('[Cache Cleanup] App started with fresh cache');
+  console.log('[Cache Cleanup] App started with fresh cache (auth keys preserved)');
 };
 
 /**

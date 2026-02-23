@@ -63,11 +63,23 @@ const ContactSection = () => {
       .string()
       .trim()
       .min(1, { message: language === "th" ? "กรุณากรอกชื่อ" : "Please enter your name" })
+      .min(2, {
+        message:
+          language === "th"
+            ? "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"
+            : "Name must be at least 2 characters",
+      })
       .max(100, {
         message:
           language === "th"
             ? "ชื่อต้องไม่เกิน 100 ตัวอักษร"
             : "Name must be less than 100 characters",
+      })
+      .regex(/^[\u0E00-\u0E7Fa-zA-Z\s]+$/, {
+        message:
+          language === "th"
+            ? "ชื่อควรประกอบด้วยตัวอักษร (ไทย/อังกฤษ) และเว้นวรรคเท่านั้น"
+            : "Name must contain only letters (Thai/English) and spaces",
       }),
     email: z
       .string()
@@ -85,17 +97,11 @@ const ContactSection = () => {
     phone: z
       .string()
       .trim()
-      .min(1, {
+      .regex(/^\d{10}$/, {
         message:
           language === "th"
-            ? "กรุณากรอกเบอร์โทร"
-            : "Please enter your phone number",
-      })
-      .max(20, {
-        message:
-          language === "th"
-            ? "เบอร์โทรต้องไม่เกิน 20 ตัวอักษร"
-            : "Phone must be less than 20 characters",
+            ? "เบอร์โทรต้องมี 10 หลักและประกอบด้วยตัวเลขเท่านั้น"
+            : "Phone number must be exactly 10 digits",
       }),
     topic: z
       .string()
@@ -113,11 +119,11 @@ const ContactSection = () => {
     message: z
       .string()
       .trim()
-      .min(1, {
+      .min(10, {
         message:
           language === "th"
-            ? "กรุณากรอกข้อความ"
-            : "Please enter your message",
+            ? "ข้อความต้องมีอย่างน้อย 10 ตัวอักษร"
+            : "Message must be at least 10 characters",
       })
       .max(1000, {
         message:
@@ -196,9 +202,20 @@ const ContactSection = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    let processedValue = value;
+
+    // Validate and process input based on field type
+    if (name === "name") {
+      // Allow only Thai and English letters and spaces
+      processedValue = value.replace(/[^ก-๙a-zA-Z\s]/g, "");
+    } else if (name === "phone") {
+      // Allow only digits and limit to 10
+      processedValue = value.replace(/[^\d]/g, "").slice(0, 10);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
     // Clear error when user starts typing
     if (errors[name]) {
@@ -212,6 +229,22 @@ const ContactSection = () => {
   return (
     <section id="contact" className="py-16 sm:py-20 bg-background">
       <div className="container mx-auto px-5 sm:px-6">
+        {/* Google Maps */}
+        {businessInfo?.address_th && (
+          <div className="mb-10 sm:mb-16 animate-fade-in rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-primary/20">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1369.0154984267165!2d100.58045831684991!3d13.94904317189059!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e28325db535c0f%3A0x2dd936aab31792a2!2sPlern%20Ping%20Hotel%20%26%20Cafe!5e0!3m2!1sth!2sth!4v1771762338979!5m2!1sth!2sth" 
+              width="100%" 
+              height="450" 
+              style={{ border: 0 }}
+              allowFullScreen 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              className="w-full"
+            />
+          </div>
+        )}
+
         <div className="text-center mb-10 sm:mb-16 animate-fade-in">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-foreground">
             {t.contactTitle}
@@ -227,8 +260,8 @@ const ContactSection = () => {
             {/* Address */}
             {businessInfo && (businessInfo.address_th || businessInfo.address_en) && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -244,8 +277,8 @@ const ContactSection = () => {
             {/* Phone Numbers */}
             {businessInfo && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -272,8 +305,8 @@ const ContactSection = () => {
             {/* Email */}
             {businessInfo?.email && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -292,8 +325,8 @@ const ContactSection = () => {
             {/* LINE ID */}
             {businessInfo?.line_id && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -307,8 +340,8 @@ const ContactSection = () => {
             {/* Opening Hours */}
             {businessInfo && (businessInfo.opening_hours_th || businessInfo.opening_hours_en) && (
               <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="bg-muted p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-highlight" />
+                <div className="bg-background/20 backdrop-blur-md p-2.5 sm:p-3 rounded-xl flex-shrink-0 border border-background/30 hover:border-background/50 transition-all duration-300 hover:shadow-lg hover:shadow-black/10">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-foreground/70" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 text-foreground">
@@ -391,7 +424,7 @@ const ContactSection = () => {
                 <label htmlFor="name" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.nameLabel}
                 </label>
-                <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder={t.namePlaceholder} className={`h-11 sm:h-10 ${errors.name ? "border-destructive" : ""}`} />
+                <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder={t.namePlaceholder} className={`h-11 sm:h-10 bg-white ${errors.name ? "border-destructive" : ""}`} />
                 {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
               </div>
 
@@ -399,7 +432,7 @@ const ContactSection = () => {
                 <label htmlFor="email" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.emailLabel}
                 </label>
-                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder={t.emailPlaceholder} className={`h-11 sm:h-10 ${errors.email ? "border-destructive" : ""}`} />
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder={t.emailPlaceholder} className={`h-11 sm:h-10 bg-white ${errors.email ? "border-destructive" : ""}`} />
                 {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
               </div>
 
@@ -407,7 +440,7 @@ const ContactSection = () => {
                 <label htmlFor="phone" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.phoneLabel}
                 </label>
-                <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder={t.phonePlaceholder} className={`h-11 sm:h-10 ${errors.phone ? "border-destructive" : ""}`} />
+                <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder={t.phonePlaceholder} className={`h-11 sm:h-10 bg-white ${errors.phone ? "border-destructive" : ""}`} />
                 {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
               </div>
 
@@ -415,7 +448,7 @@ const ContactSection = () => {
                 <label htmlFor="topic" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.topicLabel}
                 </label>
-                <Input id="topic" name="topic" type="text" value={formData.topic} onChange={handleChange} placeholder={t.topicPlaceholder} className={`h-11 sm:h-10 ${errors.topic ? "border-destructive" : ""}`} />
+                <Input id="topic" name="topic" type="text" value={formData.topic} onChange={handleChange} placeholder={t.topicPlaceholder} className={`h-11 sm:h-10 bg-white ${errors.topic ? "border-destructive" : ""}`} />
                 {errors.topic && <p className="text-sm text-destructive mt-1">{errors.topic}</p>}
               </div>
 
@@ -423,11 +456,11 @@ const ContactSection = () => {
                 <label htmlFor="message" className="block text-sm font-medium mb-1.5 sm:mb-2 text-foreground">
                   {t.messageLabel}
                 </label>
-                <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder={t.messagePlaceholder} rows={4} className={errors.message ? "border-destructive" : ""} />
+                <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder={t.messagePlaceholder} rows={4} className={`bg-white ${errors.message ? "border-destructive" : ""}`} />
                 {errors.message && <p className="text-sm text-destructive mt-1">{errors.message}</p>}
               </div>
 
-              <Button type="submit" variant="highlight" size="lg" className="w-full h-12 sm:h-11 text-base rounded-xl sm:rounded-lg">
+              <Button type="submit" size="lg" className="w-full h-12 sm:h-11 text-base rounded-xl sm:rounded-lg bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl transition-all">
                 <Send className="mr-2 h-5 w-5" />
                 {t.sendMessage}
               </Button>

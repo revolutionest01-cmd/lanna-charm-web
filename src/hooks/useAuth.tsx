@@ -81,98 +81,104 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
 // Initialize auth state
 const initializeAuth = async () => {
   try {
-    // Set a timeout to ensure auth initializes within 2 seconds max
-    let authCompleted = false;
-    const authTimeoutId = setTimeout(() => {
-      if (!authCompleted && authState.isLoading) {
-        console.warn('Auth initialization timeout - forcing completion');
-        setAuthState({
-          user: null,
-          session: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-        authCompleted = true;
-      }
-    }, 2000);
-
-    // Set up auth state listener FIRST
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      try {
-        if (session?.user) {
-          // Set basic user immediately so isLoading clears
-          const basicUser = buildUserFromSession(session);
-          setAuthState({
-            user: basicUser,
-            session,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          authCompleted = true;
-          clearTimeout(authTimeoutId);
-
-          // Enrich with profile data in background
-          const enrichedUser = await fetchAndEnrichUser(session);
-          setAuthState({ user: enrichedUser });
-        } else {
-          setAuthState({
-            user: null,
-            session: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-          authCompleted = true;
-          clearTimeout(authTimeoutId);
-        }
-      } catch (error) {
-        console.error('Auth state change error:', error);
-        setAuthState({
-          user: null,
-          session,
-          isAuthenticated: !!session,
-          isLoading: false,
-        });
-        authCompleted = true;
-        clearTimeout(authTimeoutId);
-      }
-    });
-
-    // THEN check for existing session
+    console.log('[Auth] Starting initialization...');
+    
+    // First, get the session from localStorage/Supabase
+    console.log('[Auth] Getting initial session...');
     const { data: { session }, error } = await supabase.auth.getSession();
-
-    if (error && error.message !== 'JSON.parse: unexpected character') {
-      console.error('Error getting session:', error);
+    
+    if (error) {
+      console.error('[Auth] Error getting session:', error.message);
     }
-
+    
     if (session?.user) {
+      console.log('[Auth] Found existing session:', session.user.email);
       const basicUser = buildUserFromSession(session);
-      setAuthState({
-        user: basicUser,
-        session,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-      authCompleted = true;
-      clearTimeout(authTimeoutId);
-
-      // Enrich in background
-      fetchAndEnrichUser(session).then(enrichedUser => {
-        setAuthState({ user: enrichedUser });
-      }).catch(err => {
-        console.error('Error enriching user:', err);
-      });
+      
+      // Enrich with profile data BEFORE marking loading complete
+      try {
+        const enrichedUser = await fetchAndEnrichUser(session);
+        setAuthState({
+          user: enrichedUser,
+          session,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } catch (err) {
+        console.error('[Auth] Error enriching user:', err);
+        // Fallback to basic user
+        setAuthState({
+          user: basicUser,
+          session,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      }
     } else {
+      console.log('[Auth] No existing session found');
       setAuthState({
         user: null,
         session: null,
         isAuthenticated: false,
         isLoading: false,
       });
-      authCompleted = true;
-      clearTimeout(authTimeoutId);
     }
+    
+    // Set up auth state listener for future changes (login/logout/refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      try {
+        console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
+        
+        if (newSession?.user) {
+          const basicUser = buildUserFromSession(newSession);
+          console.log('[Auth] Session updated in listener:', basicUser.email);
+          
+          // Keep loading state during enrichment
+          setAuthState({
+            user: basicUser,
+            session: newSession,
+            isAuthenticated: true,
+            isLoading: true, // Keep loading during enrichment
+          });
+          
+          // Enrich with profile data and update when complete
+          try {
+            const enrichedUser = await fetchAndEnrichUser(newSession);
+            setAuthState({ 
+              user: enrichedUser,
+              isLoading: false,
+            });
+          } catch (err) {
+            console.error('[Auth] Error enriching user in listener:', err);
+            setAuthState({
+              user: basicUser,
+              isLoading: false,
+            });
+          }
+        } else {
+          console.log('[Auth] Session cleared in listener');
+          setAuthState({
+            user: null,
+            session: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } catch (error) {
+        console.error('[Auth] Error in state change handler:', error);
+        setAuthState({
+          user: null,
+          session: newSession || null,
+          isAuthenticated: !!newSession,
+          isLoading: false,
+        });
+      }
+    });
+    
+    // Keep the unsubscribe for potential cleanup
+    return () => subscription?.unsubscribe();
   } catch (error) {
-    console.error('Auth initialization error:', error);
+    console.error('[Auth] Initialization error:', error);
     setAuthState({
       user: null,
       session: null,
@@ -240,18 +246,45 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    // Clear all localStorage except language
+    console.log('[Auth] Logging out...');
+    
+    // Preserve language preference and admin cache
     const language = localStorage.getItem('language-storage');
-    localStorage.clear();
+    
+    // Sign out from Supabase FIRST (this will clear auth tokens)
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('[Auth] Error during signOut:', error);
+    }
+    
+    // Clear admin cache explicitly on logout
+    localStorage.removeItem('app-admin-status');
+    localStorage.removeItem('app-admin-status-time');
+    
+    // Clear non-auth localStorage items only
+    const keysToPreserve = ['language-storage'];
+    const keysToDelete: string[] = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && !keysToPreserve.includes(key) && !key.includes('sb-') && !key.includes('auth') && !key.includes('supabase') && !key.includes('admin')) {
+        keysToDelete.push(key);
+      }
+    }
+    
+    // Delete non-auth keys
+    keysToDelete.forEach(key => localStorage.removeItem(key));
+    
+    // Preserve language
     if (language) {
       localStorage.setItem('language-storage', language);
     }
     
-    // Clear sessionStorage
+    // Clear sessionStorage (it's not persisted anyway)
     sessionStorage.clear();
     
-    // Sign out from Supabase
-    await supabase.auth.signOut();
+    console.log('[Auth] Logout complete');
   };
 
   return {

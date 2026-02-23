@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useModalState } from "@/contexts/ModalContext";
 
 interface Leaf {
   id: number;
@@ -13,6 +14,7 @@ interface Leaf {
 
 const FallingLeaves = () => {
   const [leaves, setLeaves] = useState<Leaf[]>([]);
+  const { isModalOpen } = useModalState();
 
   useEffect(() => {
     // Generate random leaves with green and yellow colors
@@ -75,7 +77,12 @@ const FallingLeaves = () => {
   };
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div 
+      className="fixed inset-0 pointer-events-none overflow-hidden" 
+      style={{ 
+        zIndex: isModalOpen ? 40 : 50 
+      }}
+    >
       {leaves.map((leaf) => (
         <div
           key={leaf.id}

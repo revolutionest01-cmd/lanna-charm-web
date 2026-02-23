@@ -55,6 +55,9 @@ interface Room {
   description_th?: string;
   description_en?: string;
   price: number;
+  capacity?: string;
+  amenities_th?: string;
+  amenities_en?: string;
   is_active: boolean;
   sort_order: number;
   images?: RoomImage[];
@@ -222,10 +225,15 @@ export const RoomsManagement = () => {
     try {
       setLoading(true);
 
-      // Delete from storage
-      const fileName = image.image_url.split("/").pop();
-      if (fileName) {
-        await supabase.storage.from("rooms").remove([fileName]);
+      // Extract correct storage path from public URL
+      // URL format: https://xxx.supabase.co/storage/v1/object/public/rooms/filename.jpg
+      const urlParts = image.image_url.split('/storage/v1/object/public/rooms/');
+      const storagePath = urlParts.length > 1 ? urlParts[1] : image.image_url.split("/").pop();
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage.from("rooms").remove([storagePath]);
+        if (storageError) {
+          console.warn("Storage delete warning:", storageError);
+        }
       }
 
       // Delete from database
@@ -262,6 +270,9 @@ export const RoomsManagement = () => {
         description_th: values.description_th || null,
         description_en: values.description_en || null,
         price: parseFloat(values.price),
+        capacity: values.capacity || null,
+        amenities_th: values.amenities_th || null,
+        amenities_en: values.amenities_en || null,
         is_active: true,
       };
 
@@ -329,9 +340,9 @@ export const RoomsManagement = () => {
       description_th: room.description_th || "",
       description_en: room.description_en || "",
       price: room.price.toString(),
-      capacity: "",
-      amenities_th: "",
-      amenities_en: "",
+      capacity: (room as any).capacity || "",
+      amenities_th: (room as any).amenities_th || "",
+      amenities_en: (room as any).amenities_en || "",
     });
     setIsDialogOpen(true);
   };
@@ -432,7 +443,7 @@ export const RoomsManagement = () => {
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className={selectedRoom ? "text-amber-900" : ""}>
                 {selectedRoom
                   ? language === "th"
                     ? "แก้ไขห้องพัก"
@@ -455,7 +466,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (ไทย)" : "Room Name (Thai)"}
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="เช่น ห้องประชุมเล็ก" {...field} disabled={submitting} />
+                          <Input placeholder="เช่น ห้องประชุมเล็ก" className="bg-white text-foreground" {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -471,7 +482,7 @@ export const RoomsManagement = () => {
                           {language === "th" ? "ชื่อห้อง (อังกฤษ)" : "Room Name (English)"}
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Small Conference Room" {...field} disabled={submitting} />
+                          <Input placeholder="e.g. Small Conference Room" className="bg-white text-foreground" {...field} disabled={submitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -494,6 +505,7 @@ export const RoomsManagement = () => {
                             type="number"
                             step="100"
                             placeholder="2000"
+                            className="bg-white text-foreground"
                             disabled={submitting}
                           />
                         </FormControl>
@@ -515,6 +527,7 @@ export const RoomsManagement = () => {
                             {...field}
                             type="number"
                             placeholder="10-15"
+                            className="bg-white text-foreground"
                             disabled={submitting}
                           />
                         </FormControl>
@@ -533,7 +546,7 @@ export const RoomsManagement = () => {
                         {language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={submitting} rows={3} placeholder="เช่น ห้องประชุมสำหรับ 10-15 คน พร้อมเอก สารและห้องค้นหา..." />
+                        <Textarea {...field} disabled={submitting} rows={3} placeholder="เช่น ห้องประชุมสำหรับ 10-15 คน พร้อมเอก สารและห้องค้นหา..." className="bg-white text-foreground" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -551,7 +564,7 @@ export const RoomsManagement = () => {
                           : "Description (English)"}
                       </FormLabel>
                       <FormControl>
-                        <Textarea {...field} disabled={submitting} rows={3} placeholder="e.g. Conference room for 10-15 people with projector..." />
+                        <Textarea {...field} disabled={submitting} rows={3} placeholder="e.g. Conference room for 10-15 people with projector..." className="bg-white text-foreground" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -571,7 +584,8 @@ export const RoomsManagement = () => {
                           {...field} 
                           disabled={submitting} 
                           rows={2} 
-                          placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน" 
+                          placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน"
+                          className="bg-white text-foreground" 
                         />
                       </FormControl>
                       <p className="text-xs text-foreground/70 mt-1">
@@ -597,7 +611,8 @@ export const RoomsManagement = () => {
                           {...field} 
                           disabled={submitting} 
                           rows={2} 
-                          placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs" 
+                          placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs"
+                          className="bg-white text-foreground" 
                         />
                       </FormControl>
                       <p className="text-xs text-foreground/70 mt-1">
@@ -619,20 +634,20 @@ export const RoomsManagement = () => {
                     </FormLabel>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {selectedRoom.images.map((image, idx) => (
-                        <div key={image.id} className="group relative aspect-square rounded-lg overflow-hidden bg-background border border-border">
+                        <div key={image.id} className="group relative aspect-square rounded-lg bg-background border border-border">
                           <img
                             src={image.image_url}
                             alt="Room"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover rounded-lg"
                           />
-                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center text-xs font-bold">
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center text-xs font-bold z-10">
                             {idx + 1}
                           </div>
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity z-20"
                             onClick={() => setImageToDelete(image)}
                           >
                             <Trash2 className="h-3 w-3" />

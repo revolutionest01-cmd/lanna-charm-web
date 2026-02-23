@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { Portal } from "@/components/ui/portal";
 
 interface QuickInfoPopupProps {
   isOpen: boolean;
@@ -80,8 +81,9 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <Card className="relative w-full max-w-[95vw] md:max-w-2xl max-h-[90vh] md:max-h-[85vh] bg-background rounded-3xl shadow-2xl border-0 overflow-hidden animate-scale-in">
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <Card className="relative w-full max-w-[95vw] md:max-w-2xl max-h-[90vh] md:max-h-[85vh] bg-background rounded-3xl shadow-2xl border-0 overflow-hidden">
         {/* Header with gradient background */}
         <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-primary/90 to-primary">
           <div className="flex items-center gap-3">
@@ -357,7 +359,8 @@ const QuickInfoPopup = ({ isOpen, onClose }: QuickInfoPopupProps) => {
           </div>
         </ScrollArea>
       </Card>
-    </div>
+      </div>
+    </Portal>
   );
 };
 

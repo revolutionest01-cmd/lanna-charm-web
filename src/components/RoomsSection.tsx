@@ -25,6 +25,7 @@ interface Room {
   description_en: string | null;
   price: number;
   is_active: boolean | null;
+  is_available?: boolean; // Room availability status (for bookings)
   images: RoomImage[];
 }
 
@@ -50,6 +51,10 @@ const RoomsSection = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedRoom(null);
+  };
+
+  const handleRoomChange = (room: Room) => {
+    setSelectedRoom(room);
   };
 
   if (loading) {
@@ -159,6 +164,8 @@ const RoomsSection = () => {
         room={selectedRoom}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        allRooms={rooms}
+        onRoomChange={handleRoomChange}
       />
     </section>
   );

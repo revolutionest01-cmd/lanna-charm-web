@@ -11,13 +11,13 @@ const FloatingActionButton = () => {
   const t = translations[language];
   return <div className="fixed bottom-20 sm:bottom-24 right-4 sm:right-8 z-40 flex flex-col gap-2 sm:gap-3 items-end">
       {isExpanded && <div className="flex flex-col gap-2 animate-fade-in">
-          <Button size="lg" variant="highlight" className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2 h-11 sm:h-10 px-4 sm:px-6" onClick={() => window.open('tel:+66812345678')}>
+          <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2 h-11 sm:h-10 px-4 sm:px-6 bg-[#c65539] text-white hover:bg-[#c65539]/90" onClick={() => window.open('tel:+66812345678')}>
             <Phone size={18} />
             <span className="hidden sm:inline">{language === 'th' ? 'โทรเลย' : 'Call Now'}</span>
           </Button>
           
           <BookingDialog>
-            <Button size="lg" variant="highlight" className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2 h-11 sm:h-10 px-4 sm:px-6">
+            <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all gap-2 h-11 sm:h-10 px-4 sm:px-6 bg-[#c65539] text-white hover:bg-[#c65539]/90">
               <MessageCircle size={18} />
               <span className="hidden sm:inline">{language === 'th' ? 'จองเลย' : 'Book Now'}</span>
             </Button>

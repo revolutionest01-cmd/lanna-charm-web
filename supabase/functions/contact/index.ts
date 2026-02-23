@@ -29,11 +29,19 @@ function validateEmail(email: string): boolean {
   return emailRegex.test(email) && email.length <= 255;
 }
 
+function validateName(name: string): boolean {
+  // Allow only Thai and English letters and spaces
+  // Must be at least 2 characters
+  const cleanName = name.trim();
+  const nameRegex = /^[\u0E00-\u0E7Fa-zA-Z\s]{2,100}$/;
+  return nameRegex.test(cleanName);
+}
+
 function validatePhone(phone: string): boolean {
-  // Allow Thai phone formats: 0xx-xxx-xxxx, 0xxxxxxxxx, +66xxxxxxxxx
-  const phoneRegex = /^(\+66|0)[0-9]{8,9}$/;
-  const cleanPhone = phone.replace(/[-\s]/g, '');
-  return phoneRegex.test(cleanPhone) && cleanPhone.length <= 15;
+  // Allow only 10 digits
+  const cleanPhone = phone.trim();
+  const phoneRegex = /^\d{10}$/;
+  return phoneRegex.test(cleanPhone);
 }
 
 function sanitizeString(str: string, maxLength: number = 500): string {
@@ -51,6 +59,7 @@ interface ContactRequest {
   phone: string;
   topic: string;
   message: string;
+  language?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -79,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     
     // Validate required fields exist
-    const { name, email, phone, topic, message } = body as ContactRequest;
+    const { name, email, phone, topic, message, language = 'en' } = body as ContactRequest;
     
     if (!name || !email || !phone || !topic || !message) {
       return new Response(
@@ -94,14 +103,18 @@ const handler = async (req: Request): Promise<Response> => {
     // Sanitize and validate inputs
     const sanitizedName = sanitizeString(name, 100);
     const sanitizedEmail = sanitizeString(email, 255);
-    const sanitizedPhone = sanitizeString(phone, 20);
+    const sanitizedPhone = sanitizeString(phone, 10);
     const sanitizedTopic = sanitizeString(topic, 200);
     const sanitizedMessage = sanitizeString(message, 1000);
 
     // Validate input formats
-    if (sanitizedName.length < 2) {
+    if (!validateName(sanitizedName)) {
       return new Response(
-        JSON.stringify({ error: "Invalid name" }),
+        JSON.stringify({ 
+          error: language === 'th' 
+            ? "ชื่อควรประกอบด้วยตัวอักษร (ไทย/อังกฤษ) และเว้นวรรคเท่านั้น"
+            : "Name must contain only letters (Thai/English) and spaces"
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -121,7 +134,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!validatePhone(sanitizedPhone)) {
       return new Response(
-        JSON.stringify({ error: "Invalid phone format" }),
+        JSON.stringify({ 
+          error: language === 'th' 
+            ? "เบอร์โทรต้องมี 10 หลักและประกอบด้วยตัวเลขเท่านั้น"
+            : "Phone number must be exactly 10 digits"
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },

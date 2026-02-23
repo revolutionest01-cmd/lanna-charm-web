@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useModalState } from "@/contexts/ModalContext";
+import { Portal } from "@/components/ui/portal";
 
 interface RoomImage {
   id: string;
@@ -22,6 +24,7 @@ interface Room {
   description_en: string | null;
   price: number;
   is_active: boolean | null;
+  is_available?: boolean; // Room availability status (for bookings)
   images: RoomImage[];
 }
 
@@ -29,37 +32,199 @@ interface RoomDetailModalProps {
   room: Room | null;
   isOpen: boolean;
   onClose: () => void;
+  allRooms?: Room[];
+  onRoomChange?: (room: Room) => void;
 }
 
-const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
+const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }: RoomDetailModalProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const { user } = useAuth();
+  const { setIsModalOpen } = useModalState();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [isTogglingAvailability, setIsTogglingAvailability] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
+  const minSwipeDistance = 50;
+
+  // Get current room index
+  const currentRoomIndex = room ? allRooms.findIndex(r => r.id === room.id) : -1;
+  const hasNextRoom = currentRoomIndex < allRooms.length - 1;
+  const hasPrevRoom = currentRoomIndex > 0;
+
+  const handlePrevRoom = () => {
+    if (hasPrevRoom && allRooms[currentRoomIndex - 1] && onRoomChange) {
+      onRoomChange(allRooms[currentRoomIndex - 1]);
+      setCurrentImageIndex(0);
+    }
+  };
+
+  const handleNextRoom = () => {
+    if (hasNextRoom && allRooms[currentRoomIndex + 1] && onRoomChange) {
+      onRoomChange(allRooms[currentRoomIndex + 1]);
+      setCurrentImageIndex(0);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNextRoom();
+    } else if (isRightSwipe) {
+      handlePrevRoom();
+    }
+  };
+
+  // Update Modal state when isOpen changes
+  useEffect(() => {
+    setIsModalOpen(isOpen);
+  }, [isOpen, setIsModalOpen]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevRoom();
+      } else if (e.key === 'ArrowRight') {
+        handleNextRoom();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, currentRoomIndex, allRooms, onRoomChange]);
 
   // Check admin status
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) {
+        console.log('[RoomModal] No user, setting isAdmin to false');
         setIsAdmin(false);
         return;
       }
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-      setIsAdmin(!!data && !error);
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        const isAdminUser = !!data && !error;
+        setIsAdmin(isAdminUser);
+        console.log('[RoomModal] Admin status check - user:', user.id, 'isAdmin:', isAdminUser, 'data:', data, 'error:', error);
+      } catch (err) {
+        console.error('[RoomModal] Error checking admin status:', err);
+        setIsAdmin(false);
+      }
     };
     checkAdminStatus();
   }, [user]);
+
+  // Load room availability status from prop
+  useEffect(() => {
+    if (room) {
+      // Default to true if is_available field doesn't exist (before migration)
+      const available = room.is_available !== null && room.is_available !== undefined 
+        ? room.is_available 
+        : true;
+      setIsAvailable(available);
+      console.log(`[RoomModal] Room ${room.id} availability loaded from prop:`, available, 'is_available field exists:', 'is_available' in room);
+    }
+  }, [room]);
+
+  // Fetch fresh availability status from database when modal opens
+  useEffect(() => {
+    if (isOpen && room) {
+      const fetchFreshAvailability = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('rooms')
+            .select('is_available')
+            .eq('id', room.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('[RoomModal] Error fetching fresh availability:', error);
+            return;
+          }
+
+          if (data) {
+            const available = data.is_available !== null && data.is_available !== undefined 
+              ? data.is_available 
+              : true;
+            setIsAvailable(available);
+            console.log(`[RoomModal] Fresh availability loaded from DB for room ${room.id}:`, available);
+          }
+        } catch (err) {
+          console.error('[RoomModal] Error fetching fresh availability:', err);
+        }
+      };
+
+      fetchFreshAvailability();
+    }
+  }, [isOpen, room?.id]);
+
+  // Toggle room availability
+  const handleToggleAvailability = async () => {
+    if (!isAdmin || !room) {
+      console.warn('[RoomModal] Cannot toggle - isAdmin:', isAdmin, 'room exists:', !!room);
+      return;
+    }
+    
+    try {
+      setIsTogglingAvailability(true);
+      const newAvailabilityStatus = !isAvailable;
+      
+      console.log(`[RoomModal] Toggling room ${room.id} availability to: ${newAvailabilityStatus}`);
+      console.log('[RoomModal] isAdmin:', isAdmin, 'isAvailable:', isAvailable);
+      
+      const { data, error } = await supabase
+        .from('rooms')
+        .update({ is_available: newAvailabilityStatus } as any)
+        .eq('id', room.id)
+        .select();
+      
+      if (error) {
+        console.error('[RoomModal] Error updating availability - Error:', error);
+        console.error('[RoomModal] Error details:', error.message, error.code, error.details);
+        
+        // Check if it's a column doesn't exist error
+        if (error.message?.includes('column') || error.code === '42703') {
+          console.error('[RoomModal] Column not found - migration not run yet');
+        }
+        return;
+      }
+      
+      setIsAvailable(newAvailabilityStatus);
+      console.log(`[RoomModal] Room availability updated successfully`, data);
+    } catch (error) {
+      console.error('[RoomModal] Toggle availability error:', error);
+    } finally {
+      setIsTogglingAvailability(false);
+    }
+  };
 
   if (!isOpen || !room) return null;
 
@@ -157,24 +322,28 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
   const totalImages = allImages.length;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
-        onClick={onClose}
-      />
-
-      {/* Modal Container - Better for mobile */}
-      <div 
-        className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-4"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
+    <Portal>
+      <>
+        {/* Backdrop */}
         <div
-          className="relative bg-background rounded-t-3xl lg:rounded-3xl shadow-2xl w-full lg:w-full lg:max-w-5xl max-h-[95vh] lg:max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-bottom-5 lg:motion-safe:slide-in-from-center"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={onClose}
+        />
+
+        {/* Modal Container - Centered on viewport */}
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            className="relative bg-background rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button - Fixed at top */}
@@ -462,27 +631,103 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                     <span className="text-muted-foreground text-sm">
                       {language === 'th' ? 'สถานะ' : 'Status'}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-500/20 text-green-600 rounded-full text-xs font-semibold">
-                      <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                      {language === 'th' ? 'ว่าง' : 'Available'}
-                    </span>
+                    {isAdmin ? (
+                      <button
+                        onClick={() => handleToggleAvailability()}
+                        disabled={isTogglingAvailability}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300',
+                          isAvailable
+                            ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+                            : 'bg-red-500/20 text-red-600 hover:bg-red-500/30',
+                          'disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-95'
+                        )}
+                        title={language === 'th' ? 'กดเพื่อสลับสถานะ' : 'Click to toggle status'}
+                      >
+                        <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
+                        {isTogglingAvailability ? (
+                          <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : isAvailable ? (
+                          language === 'th' ? 'ว่าง' : 'Available'
+                        ) : (
+                          language === 'th' ? 'ไม่ว่าง' : 'Not Available'
+                        )}
+                      </button>
+                    ) : (
+                      <span className={cn(
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
+                        isAvailable ? 'bg-green-500/20 text-green-600' : 'bg-red-500/20 text-red-600'
+                      )}>
+                        <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
+                        {isAvailable ? (language === 'th' ? 'ว่าง' : 'Available') : (language === 'th' ? 'ไม่ว่าง' : 'Not Available')}
+                      </span>
+                    )}
                   </div>
                 </div>
 
+                {/* Room Navigation - Horizontal Layout */}
+                {allRooms.length > 1 && (
+                  <div className="flex items-center justify-between gap-3 px-2 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrevRoom();
+                      }}
+                      disabled={!hasPrevRoom}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                        hasPrevRoom
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Previous room"
+                    >
+                      <ChevronLeft size={18} />
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'ห้องก่อนหน้า' : 'Previous'}
+                      </span>
+                    </button>
+
+                    <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
+                      <span className="font-semibold text-sm text-foreground">
+                        {currentRoomIndex + 1} / {allRooms.length}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextRoom();
+                      }}
+                      disabled={!hasNextRoom}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                        hasNextRoom
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Next room"
+                    >
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'ห้องถัดไป' : 'Next'}
+                      </span>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+
                 {/* Action Buttons - Mobile stacked */}
                 <div className="flex flex-col gap-2 pt-2">
-                  <BookingDialog>
+                  <BookingDialog roomId={room.id}>
                     <Button
-                      variant="highlight"
-                      className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105"
+                      className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
                     >
                       {t.bookRoom}
                     </Button>
                   </BookingDialog>
                   <Button
-                    variant="outline"
                     onClick={onClose}
-                    className="w-full font-semibold h-11 rounded-lg transition-all"
+                    className="w-full font-semibold h-11 rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                   >
                     {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                   </Button>
@@ -665,29 +910,123 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
                         </div>
                         <div className="h-px bg-primary/20" />
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground font-medium">Available</span>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/20 text-green-600 rounded-full text-xs font-semibold">
-                            <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                            {language === 'th' ? 'ว่าง' : 'Available'}
+                          <span className="text-muted-foreground font-medium">
+                            {language === 'th' ? 'สถานะ' : 'Status'}
                           </span>
+                          {isAdmin ? (
+                            <button
+                              onClick={() => {
+                                console.log('[RoomModal] Status button clicked! isAdmin:', isAdmin, 'room:', room?.id, 'isAvailable:', isAvailable);
+                                handleToggleAvailability();
+                              }}
+                              disabled={isTogglingAvailability}
+                              className={cn(
+                                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300',
+                                isAvailable
+                                  ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+                                  : 'bg-red-500/20 text-red-600 hover:bg-red-500/30',
+                                'disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-95'
+                              )}
+                              title={language === 'th' ? 'กดเพื่อสลับสถานะ' : 'Click to toggle status'}
+                            >
+                              <span
+                                className={cn(
+                                  'w-2 h-2 rounded-full',
+                                  isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600'
+                                )}
+                              />
+                              {isTogglingAvailability ? (
+                                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : isAvailable ? (
+                                language === 'th' ? 'ว่าง' : 'Available'
+                              ) : (
+                                language === 'th' ? 'ไม่ว่าง' : 'Not Available'
+                              )}
+                            </button>
+                          ) : (
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold',
+                                isAvailable
+                                  ? 'bg-green-500/20 text-green-600'
+                                  : 'bg-red-500/20 text-red-600'
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'w-2 h-2 rounded-full',
+                                  isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600'
+                                )}
+                              />
+                              {isAvailable
+                                ? language === 'th' ? 'ว่าง' : 'Available'
+                                : language === 'th' ? 'ไม่ว่าง' : 'Not Available'
+                              }
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
+                    {/* Room Navigation - Horizontal Layout */}
+                    {allRooms.length > 1 && (
+                      <div className="flex items-center justify-between gap-3 px-3 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePrevRoom();
+                          }}
+                          disabled={!hasPrevRoom}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                            hasPrevRoom
+                              ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                              : "opacity-40 cursor-not-allowed text-muted-foreground"
+                          )}
+                          aria-label="Previous room"
+                        >
+                          <ChevronLeft size={18} />
+                          <span>{language === 'th' ? 'ก่อนหน้า' : 'Previous'}</span>
+                        </button>
+
+                        <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
+                          <span className="font-semibold text-sm text-foreground">
+                            {currentRoomIndex + 1} / {allRooms.length}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNextRoom();
+                          }}
+                          disabled={!hasNextRoom}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                            hasNextRoom
+                              ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                              : "opacity-40 cursor-not-allowed text-muted-foreground"
+                          )}
+                          aria-label="Next room"
+                        >
+                          <span>{language === 'th' ? 'ถัดไป' : 'Next'}</span>
+                          <ChevronRight size={18} />
+                        </button>
+                      </div>
+                    )}
+
                     {/* Action Buttons */}
                     <div className="space-y-3">
-                      <BookingDialog>
+                      <BookingDialog roomId={room.id}>
                         <Button
-                          variant="highlight"
-                          className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105"
+                          className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
                         >
                           {t.bookRoom}
                         </Button>
                       </BookingDialog>
                       <Button
-                        variant="outline"
                         onClick={onClose}
-                        className="w-full font-semibold h-11 rounded-lg transition-all"
+                        className="w-full font-semibold h-11 rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                       >
                         {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                       </Button>
@@ -705,8 +1044,9 @@ const RoomDetailModal = ({ room, isOpen, onClose }: RoomDetailModalProps) => {
             </div>
           </div>
         </div>
-      </div>
-    </>
+        </div>
+      </>
+    </Portal>
   );
 };
 

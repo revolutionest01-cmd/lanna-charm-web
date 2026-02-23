@@ -18,6 +18,7 @@ const languages: LanguageOption[] = [
   { code: 'th', flag: '🇹🇭', name: 'Thai', nativeName: 'ไทย' },
   { code: 'zh', flag: '🇨🇳', name: 'Chinese', nativeName: '中文' },
   { code: 'en', flag: '🇬🇧', name: 'English', nativeName: 'English' },
+  { code: 'ja', flag: '🇯🇵', name: 'Japanese', nativeName: '日本語' },
 ];
 
 interface LanguageDropdownProps {
@@ -35,7 +36,7 @@ const LanguageDropdown = ({ variant = 'dark', className = '' }: LanguageDropdown
       <DropdownMenuTrigger asChild>
         <button
           className={`
-            inline-flex items-center gap-2 px-3 py-2 rounded-xl
+            flex items-center justify-center gap-2 px-3 py-2 rounded-xl
             border transition-colors duration-300
             focus:outline-none focus:ring-2 focus:ring-highlight/50
             ${variant === 'light' 
@@ -45,10 +46,10 @@ const LanguageDropdown = ({ variant = 'dark', className = '' }: LanguageDropdown
             ${className}
           `}
         >
-          <Globe size={16} className="opacity-70" />
-          <span className="text-xl">{currentLanguage.flag}</span>
-          <span className="font-medium text-sm hidden sm:inline">{currentLanguage.nativeName}</span>
-          <ChevronDown size={14} className="opacity-60" />
+          <Globe size={16} className="opacity-70 flex-shrink-0" />
+          <span className="text-xl flex-shrink-0">{currentLanguage.flag}</span>
+          <span className="font-medium text-sm hidden sm:inline whitespace-nowrap overflow-hidden text-ellipsis">{currentLanguage.nativeName}</span>
+          <ChevronDown size={14} className="opacity-60 flex-shrink-0" />
         </button>
       </DropdownMenuTrigger>
       
@@ -78,11 +79,11 @@ const LanguageDropdown = ({ variant = 'dark', className = '' }: LanguageDropdown
             `}
           >
             <span className="text-2xl">{lang.flag}</span>
-            <div className="flex flex-col">
-              <span className={`font-semibold text-sm ${language === lang.code ? 'text-highlight' : ''}`}>
+            <div className="flex flex-col min-w-0">
+              <span className={`font-semibold text-sm whitespace-nowrap overflow-hidden text-ellipsis ${language === lang.code ? 'text-highlight' : ''}`}>
                 {lang.nativeName}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">
                 {lang.name}
               </span>
             </div>

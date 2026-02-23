@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateContentCache } from "@/hooks/useContentData";
@@ -8,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   ArrowLeft,
   Image,
@@ -32,6 +39,7 @@ import { RoomsManagement } from "@/components/admin/RoomsManagement";
 import { MenusManagement } from "@/components/admin/MenusManagement";
 import { GalleryManagement } from "@/components/admin/GalleryManagement";
 import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
+import { WebboardManagement } from "@/components/admin/WebboardManagement";
 import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
 import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 import {
@@ -50,6 +58,7 @@ const TABS = [
   { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus" },
   { id: "gallery", icon: ImageIcon, labelTh: "แกลเลอรี่", labelEn: "Gallery" },
   { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews" },
+  { id: "webboard", icon: MessageSquare, labelTh: "กระทู้", labelEn: "Webboard" },
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles" },
 ];
@@ -65,8 +74,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const { isAdmin, isChecking } = useAdminStatus();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({
     rooms: 0,
@@ -74,30 +82,6 @@ const Admin = () => {
     gallery: 0,
     reviews: 0,
   });
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!isAuthenticated || !user) {
-        setIsAdmin(false);
-        setCheckingAdmin(false);
-        return;
-      }
-      try {
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        setIsAdmin(!!data && !error);
-      } catch {
-        setIsAdmin(false);
-      } finally {
-        setCheckingAdmin(false);
-      }
-    };
-    if (!isLoading) checkAdminStatus();
-  }, [isAuthenticated, user, isLoading]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -123,7 +107,7 @@ const Admin = () => {
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!checkingAdmin && !isLoading) {
+    if (!isChecking && !isLoading) {
       if (!isAuthenticated) {
         sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
         navigate("/auth");
@@ -132,7 +116,7 @@ const Admin = () => {
         navigate("/");
       }
     }
-  }, [isAuthenticated, isAdmin, checkingAdmin, isLoading, navigate, language]);
+}, [isAuthenticated, isAdmin, isChecking, isLoading, navigate, language]);
 
   useEffect(() => {
     return () => {
@@ -153,7 +137,7 @@ const Admin = () => {
     value: { label: language === "th" ? "จำนวน" : "Count" },
   };
 
-  if (isLoading || checkingAdmin) {
+  if (isLoading || isChecking) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -188,6 +172,7 @@ const Admin = () => {
       case "menus": return <MenusManagement />;
       case "gallery": return <GalleryManagement />;
       case "reviews": return <ReviewsManagement />;
+      case "webboard": return <WebboardManagement />;
       case "business": return <BusinessInfoManagement />;
       case "roles": return <UserRolesManagement />;
       default: return null;
@@ -223,26 +208,34 @@ const Admin = () => {
         {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
         <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0">
           <ScrollArea className="lg:h-[calc(100vh-60px)]">
-            <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible">
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0
-                      ${isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      }`}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span>{language === "th" ? tab.labelTh : tab.labelEn}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <TooltipProvider>
+              <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible md:overflow-x-visible smooth-scroll scroll-smooth">
+                {TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <Tooltip key={tab.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start md:px-3 md:py-2.5 px-2.5 py-2.5
+                            ${isActive
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span className="hidden md:inline">{language === "th" ? tab.labelTh : tab.labelEn}</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="md:hidden">
+                        {language === "th" ? tab.labelTh : tab.labelEn}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </ScrollArea>
         </nav>
 

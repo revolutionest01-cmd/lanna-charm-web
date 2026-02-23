@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
@@ -58,6 +59,10 @@ const MenuSection = () => {
   const handleMenuClick = (menu: Menu) => {
     setSelectedMenu(menu);
     setIsModalOpen(true);
+  };
+
+  const handleMenuChange = (menu: Menu) => {
+    setSelectedMenu(menu);
   };
 
   const handleCloseModal = () => {
@@ -182,20 +187,46 @@ const MenuSection = () => {
         <div className="max-w-4xl mx-auto">
           {categories.length > 0 ? (
             <Tabs defaultValue={categories[0]?.id} className="w-full">
-              <div className="overflow-x-auto mb-6 sm:mb-8 -mx-2 px-2 pb-2">
-                <TabsList 
-                  className="inline-flex w-auto min-w-full justify-start md:grid md:w-full md:grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 bg-muted/50 p-1 rounded-xl"
-                >
-                  {categories.map((cat) => (
-                    <TabsTrigger 
-                      key={cat.id} 
-                      value={cat.id} 
-                      className="text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap flex-shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg"
+              <div className="mb-6 sm:mb-8 w-full">
+                {/* Mobile & Tablet: Scrollable */}
+                <div className="lg:hidden">
+                  <ScrollArea className="w-full">
+                    <TabsList 
+                      className="inline-flex gap-2 bg-transparent p-0 h-auto"
                     >
-                      {language === "th" ? cat.name_th : cat.name_en}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+                      {categories.map((cat) => (
+                        <TabsTrigger 
+                          key={cat.id} 
+                          value={cat.id} 
+                          className="text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg font-semibold whitespace-nowrap flex-shrink-0 min-h-[42px] flex items-center justify-center transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-muted/80 border border-transparent data-[state=active]:border-primary/30"
+                        >
+                          {language === "th" ? cat.name_th : cat.name_en}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    <ScrollBar orientation="horizontal" className="h-1.5" />
+                  </ScrollArea>
+                </div>
+
+                {/* Desktop: Grid Layout */}
+                <div className="hidden lg:block">
+                  <TabsList 
+                    className="w-full grid grid-cols-auto-fit gap-3 bg-transparent p-0 h-auto"
+                    style={{
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))'
+                    }}
+                  >
+                    {categories.map((cat) => (
+                      <TabsTrigger 
+                        key={cat.id} 
+                        value={cat.id} 
+                        className="text-sm md:text-base px-4 sm:px-5 py-3 sm:py-3.5 rounded-lg font-semibold whitespace-nowrap text-center min-h-[44px] flex items-center justify-center transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-muted/80 border border-transparent data-[state=active]:border-primary/30"
+                      >
+                        {language === "th" ? cat.name_th : cat.name_en}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
               </div>
 
               {categories.map((cat) => {
@@ -207,38 +238,61 @@ const MenuSection = () => {
                         <button
                           key={item.id}
                           onClick={() => handleMenuClick(item)}
-                          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all animate-fade-in"
-                          style={{ animationDelay: `${index * 50}ms` }}
+                          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background rounded-xl transition-all animate-fade-in"
+                          style={{ animationDelay: `${index * 70}ms` }}
                         >
                           <Card
-                            className="border-border hover:border-primary hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105"
+                            className="border-border/60 hover:border-primary/40 hover:shadow-xl transition-all duration-500 cursor-pointer group overflow-hidden rounded-xl"
                           >
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
-                                <div className="flex-1 flex items-start gap-3 min-w-0">
-                                  {item.icon_url && (
+                            <CardContent className="p-0">
+                              <div className="flex items-stretch">
+                                {/* Image thumbnail */}
+                                <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-l-xl bg-muted">
+                                  {item.image_url ? (
                                     <img
-                                      src={item.icon_url}
-                                      alt="icon"
-                                      className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0 mt-0.5"
+                                      src={item.image_url}
+                                      alt={language === "th" ? item.name_th : item.name_en}
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
+                                  ) : item.icon_url ? (
+                                    <div className="w-full h-full flex items-center justify-center bg-accent/50">
+                                      <img
+                                        src={item.icon_url}
+                                        alt="icon"
+                                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-accent/30">
+                                      <span className="text-3xl">🍽️</span>
+                                    </div>
                                   )}
+                                  {/* Subtle gradient overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/10 pointer-events-none" />
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 min-w-0 gap-3">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground mb-0.5 sm:mb-1 break-words">
+                                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-0.5 break-words line-clamp-1 tracking-wide">
                                       {language === "th" ? item.name_th : item.name_en}
                                     </h3>
                                     {(item.description_th || item.description_en) && (
-                                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground break-words line-clamp-2">
+                                      <p className="text-xs sm:text-sm text-muted-foreground break-words line-clamp-1 mb-1">
                                         {language === "th" ? item.description_th : item.description_en}
                                       </p>
                                     )}
-                                    <p className="text-primary text-xs font-semibold mt-1">
+                                    <p className="text-xs text-muted-foreground/70 group-hover:text-primary transition-colors duration-300">
                                       {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
                                     </p>
                                   </div>
-                                </div>
-                                <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary flex-shrink-0">
-                                  ฿{item.price}
+
+                                  {/* Price badge */}
+                                  <div className="flex-shrink-0 text-right">
+                                    <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-highlight">
+                                      ฿{item.price}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
@@ -262,9 +316,8 @@ const MenuSection = () => {
 
           <div className="text-center mt-8 sm:mt-10">
             <Button 
-              variant="highlight" 
               size="lg" 
-              className="font-semibold w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg"
+              className="font-semibold w-full sm:w-auto h-12 sm:h-11 text-base rounded-xl sm:rounded-lg bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl transition-all"
               onClick={() => navigate('/menu')}
             >
               {t.viewFullMenu}
@@ -277,6 +330,8 @@ const MenuSection = () => {
           menu={selectedMenu}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
+          allMenus={menus}
+          onMenuChange={handleMenuChange}
         />
       </div>
     </section>

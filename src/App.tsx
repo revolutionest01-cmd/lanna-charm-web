@@ -11,6 +11,7 @@ import AppUpdateNotifier from "./components/AppUpdateNotifier";
 import DataLoadError from "./components/DataLoadError";
 import { useGAPageTracking } from "./lib/googleAnalytics";
 import { setGlobalQueryClient } from "./hooks/useContentData";
+import { ModalProvider } from "./contexts/ModalContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +42,20 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
 };
 
 const App = () => {
-  const [showLoading, setShowLoading] = useState(true);
+  // Show loading screen only on first load, not on refresh
+  const [showLoading, setShowLoading] = useState(() => {
+    // Check if this is the first load in this session
+    const isFirstLoad = !sessionStorage.getItem('app-initialized');
+    if (isFirstLoad) {
+      // Mark as initialized in this session
+      sessionStorage.setItem('app-initialized', 'true');
+      console.log('[App] First load - showing loading screen');
+      return true;
+    } else {
+      console.log('[App] Refresh detected - skipping loading screen');
+      return false;
+    }
+  });
 
   const handleLoadingComplete = useCallback(() => {
     setShowLoading(false);
@@ -51,12 +65,14 @@ const App = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes showLoading={showLoading} onLoadingComplete={handleLoadingComplete} />
-            {/* DataLoadError disabled - was causing false positives on refresh */}
-          </BrowserRouter>
+          <ModalProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes showLoading={showLoading} onLoadingComplete={handleLoadingComplete} />
+              {/* DataLoadError disabled - was causing false positives on refresh */}
+            </BrowserRouter>
+          </ModalProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>

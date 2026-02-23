@@ -98,6 +98,8 @@ export const MenusManagement = () => {
   const [iconPreview, setIconPreview] = useState<string>("");
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [isDraggingIcon, setIsDraggingIcon] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<{ url: string; isExisting: boolean } | null>(null);
+  const [iconToDelete, setIconToDelete] = useState<{ url: string; isExisting: boolean } | null>(null);
 
   const categoryForm = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
@@ -249,8 +251,8 @@ export const MenusManagement = () => {
       previews.push(URL.createObjectURL(file));
     }
 
-    setImageFiles(validFiles);
-    setImagePreviews(previews);
+    setImageFiles(prev => [...prev, ...validFiles]);
+    setImagePreviews(prev => [...prev, ...previews]);
   };
 
   const handleIconSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -300,8 +302,8 @@ export const MenusManagement = () => {
       previews.push(URL.createObjectURL(file));
     }
 
-    setImageFiles(validFiles);
-    setImagePreviews(previews);
+    setImageFiles(prev => [...prev, ...validFiles]);
+    setImagePreviews(prev => [...prev, ...previews]);
   };
 
   const handleIconDragOver = (e: React.DragEvent) => {
@@ -332,8 +334,54 @@ export const MenusManagement = () => {
   };
 
   const uploadImages = async (): Promise<string[]> => {
+    // In edit mode, return the remaining previews that include both existing and new images
+    // Filter out the ones that are URLs (existing from DB) vs Object URLs (new uploads)
+    if (selectedMenu) {
+      // For edit mode: use all imagePreviews as they represent the desired state
+      // But only upload the new files from imageFiles
+      if (imageFiles.length === 0) {
+        // No new files uploaded, return existing preview URLs that are from the database
+        return imagePreviews.filter(p => p.includes('http'));
+      }
+      
+      // Upload new files and return their URLs
+      const uploadedUrls: string[] = [];
+      try {
+        setUploadingImage(true);
+        for (const imageFile of imageFiles) {
+          const fileExt = imageFile.name.split(".").pop();
+          const fileName = `menu-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("menus")
+            .upload(fileName, imageFile, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("menus")
+            .getPublicUrl(fileName);
+
+          uploadedUrls.push(publicUrl);
+        }
+        return uploadedUrls;
+      } catch (error) {
+        console.error("Error uploading images:", error);
+        toast.error(
+          language === "th" ? "ไม่สามารถอัพโหลดรูปภาพได้" : "Failed to upload images"
+        );
+        return [];
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+    
+    // Create mode: previous behavior
     if (imageFiles.length === 0) {
-      return selectedMenu?.image_url ? [selectedMenu.image_url] : [];
+      return [];
     }
 
     try {
@@ -438,20 +486,33 @@ export const MenusManagement = () => {
       };
 
       if (selectedMenu) {
-        // Edit mode: update the existing menu with first image
-        // Delete old image if exists and we have a new one
-        if (imageUrls.length > 0 && selectedMenu.image_url) {
-          const oldFileName = selectedMenu.image_url.split("/").pop();
-          if (oldFileName) {
-            await supabase.storage.from("menus").remove([oldFileName]);
+        // Edit mode: update the existing menu
+        // Determine the final image URL to save
+        let finalImageUrl: string | null = null;
+        
+        // If there are image URLs from upload, use the first one
+        if (imageUrls.length > 0) {
+          finalImageUrl = imageUrls[0];
+          
+          // Delete old image if exists and we're uploading a new one
+          if (selectedMenu.image_url && imageFiles.length > 0) {
+            const oldFileName = selectedMenu.image_url.split("/").pop();
+            if (oldFileName) {
+              await supabase.storage.from("menus").remove([oldFileName]);
+            }
           }
+        } else {
+          // No new images uploaded, check if there are remaining images in previews
+          // (the user may have deleted some images)
+          const remainingImages = imagePreviews.filter(p => p.includes('http'));
+          finalImageUrl = remainingImages.length > 0 ? remainingImages[0] : null;
         }
 
         const { error } = await supabase
           .from("menus")
           .update({
             ...baseMenuData,
-            image_url: imageUrls[0] || selectedMenu.image_url,
+            image_url: finalImageUrl,
           })
           .eq("id", selectedMenu.id);
 
@@ -520,16 +581,18 @@ export const MenusManagement = () => {
 
       // Delete images from storage
       if (menuToDelete.image_url) {
-        const fileName = menuToDelete.image_url.split("/").pop();
-        if (fileName) {
-          await supabase.storage.from("menus").remove([fileName]);
+        const pathMatch = menuToDelete.image_url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : menuToDelete.image_url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
         }
       }
 
       if (menuToDelete.icon_url) {
-        const fileName = menuToDelete.icon_url.split("/").pop();
-        if (fileName) {
-          await supabase.storage.from("menus").remove([fileName]);
+        const pathMatch = menuToDelete.icon_url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : menuToDelete.icon_url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
         }
       }
 
@@ -546,6 +609,185 @@ export const MenusManagement = () => {
     } catch (error) {
       console.error("Error deleting menu:", error);
       toast.error(language === "th" ? "ไม่สามารถลบเมนูได้" : "Failed to delete menu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Direct delete without confirmation (used inside edit dialog to avoid modal stacking)
+  const handleDirectImageDelete = async (url: string, isExisting: boolean, index: number) => {
+    try {
+      setLoading(true);
+
+      if (isExisting) {
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
+        }
+        if (selectedMenu) {
+          await supabase.from("menus").update({ image_url: null }).eq("id", selectedMenu.id);
+          setSelectedMenu({ ...selectedMenu, image_url: undefined });
+        }
+      }
+
+      setImagePreviews(prev => prev.filter(p => p !== url));
+      if (!isExisting) {
+        const existingCount = imagePreviews.filter(p => p.startsWith("http")).length;
+        const fileIndex = index - existingCount;
+        if (fileIndex >= 0) {
+          setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+        }
+      }
+
+      toast.success(language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted");
+      if (isExisting) loadMenus();
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error(language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDirectIconDelete = async (url: string) => {
+    try {
+      setLoading(true);
+      const isExisting = url.startsWith("http");
+
+      if (isExisting) {
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
+        }
+        if (selectedMenu) {
+          await supabase.from("menus").update({ icon_url: null }).eq("id", selectedMenu.id);
+        }
+      }
+
+      setIconPreview("");
+      setIconFile(null);
+      toast.success(language === "th" ? "ลบไอคอนสำเร็จ" : "Icon deleted");
+      if (isExisting) loadMenus();
+    } catch (error) {
+      console.error("Error deleting icon:", error);
+      toast.error(language === "th" ? "ไม่สามารถลบไอคอนได้" : "Failed to delete icon");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!imageToDelete) return;
+
+    try {
+      setLoading(true);
+
+      if (imageToDelete.isExisting) {
+        // Delete from storage - extract path after /public/menus/
+        const url = imageToDelete.url;
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        
+        if (storagePath) {
+          const { error: storageError } = await supabase.storage.from("menus").remove([storagePath]);
+          if (storageError) {
+            console.warn("Storage delete warning:", storageError);
+          }
+        }
+
+        // Update database to remove image
+        if (selectedMenu) {
+          const { error } = await supabase
+            .from("menus")
+            .update({ image_url: null })
+            .eq("id", selectedMenu.id);
+
+          if (error) throw error;
+          
+          // Update local selectedMenu state
+          setSelectedMenu({ ...selectedMenu, image_url: undefined });
+        }
+      }
+
+      // Remove from preview arrays
+      const deletedUrl = imageToDelete.url;
+      const deleteIndex = imagePreviews.indexOf(deletedUrl);
+      
+      setImagePreviews(prev => prev.filter(p => p !== deletedUrl));
+      
+      // Remove corresponding file from imageFiles if it's a new upload (blob URL)
+      if (!imageToDelete.isExisting && deleteIndex >= 0) {
+        // Calculate the index within imageFiles (subtract existing image count)
+        const existingCount = imagePreviews.filter(p => p.startsWith("http")).length;
+        const fileIndex = deleteIndex - existingCount;
+        if (fileIndex >= 0 && fileIndex < imageFiles.length) {
+          setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+        }
+      }
+
+      toast.success(
+        language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully"
+      );
+      setImageToDelete(null);
+      
+      if (imageToDelete.isExisting) {
+        loadMenus();
+      }
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error(
+        language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteIcon = async () => {
+    if (!iconToDelete) return;
+
+    try {
+      setLoading(true);
+
+      if (iconToDelete.isExisting) {
+        // Delete from storage
+        const url = iconToDelete.url;
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
+        }
+
+        // Update database
+        if (selectedMenu) {
+          const { error } = await supabase
+            .from("menus")
+            .update({ icon_url: null })
+            .eq("id", selectedMenu.id);
+
+          if (error) throw error;
+        }
+      }
+
+      setIconPreview("");
+      setIconFile(null);
+
+      toast.success(
+        language === "th" ? "ลบไอคอนสำเร็จ" : "Icon deleted successfully"
+      );
+      setIconToDelete(null);
+      
+      if (iconToDelete.isExisting) {
+        loadMenus();
+      }
+    } catch (error) {
+      console.error("Error deleting icon:", error);
+      toast.error(
+        language === "th" ? "ไม่สามารถลบไอคอนได้" : "Failed to delete icon"
+      );
     } finally {
       setLoading(false);
     }
@@ -593,7 +835,7 @@ export const MenusManagement = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="menus" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full md:grid-cols-2 grid-cols-1 md:w-auto overflow-x-auto inline-flex md:inline-grid">
           <TabsTrigger value="menus">
             {language === "th" ? "จัดการเมนู" : "Manage Menus"}
           </TabsTrigger>
@@ -630,7 +872,7 @@ export const MenusManagement = () => {
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className={selectedMenu ? "text-amber-900" : ""}>
                     {selectedMenu
                       ? language === "th" ? "แก้ไขเมนู" : "Edit Menu"
                       : language === "th" ? "เพิ่มเมนูใหม่" : "Add New Menu"}
@@ -647,7 +889,7 @@ export const MenusManagement = () => {
                           <FormItem>
                             <FormLabel className="text-primary">{language === "th" ? "ชื่อเมนู (ไทย)" : "Menu Name (Thai)"}</FormLabel>
                             <FormControl>
-                              <Input {...field} disabled={submitting} />
+                              <Input {...field} disabled={submitting} className="bg-white text-foreground" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -661,7 +903,7 @@ export const MenusManagement = () => {
                           <FormItem>
                             <FormLabel className="text-primary">{language === "th" ? "ชื่อเมนู (อังกฤษ)" : "Menu Name (English)"}</FormLabel>
                             <FormControl>
-                              <Input {...field} disabled={submitting} />
+                              <Input {...field} disabled={submitting} className="bg-white text-foreground" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -675,9 +917,9 @@ export const MenusManagement = () => {
                         name="price"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{language === "th" ? "ราคา (บาท)" : "Price (THB)"}</FormLabel>
+                            <FormLabel className="text-primary">{language === "th" ? "ราคาอาหาร (บาท)" : "Food Price (THB)"}</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" step="0.01" disabled={submitting} />
+                              <Input {...field} type="number" step="0.01" disabled={submitting} className="bg-white text-foreground" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -687,30 +929,36 @@ export const MenusManagement = () => {
                       <FormField
                         control={menuForm.control}
                         name="category_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{language === "th" ? "หมวดหมู่" : "Category"}</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              disabled={submitting}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder={language === "th" ? "เลือกหมวดหมู่" : "Select category"} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {categories.map((cat) => (
-                                  <SelectItem key={cat.id} value={cat.id}>
-                                    {language === "th" ? cat.name_th : cat.name_en}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          const selectedCategoryObj = categories.find(c => c.id === field.value);
+                          const selectedCategoryName = selectedCategoryObj 
+                            ? (language === "th" ? selectedCategoryObj.name_th : selectedCategoryObj.name_en)
+                            : null;
+                          return (
+                            <FormItem>
+                              <FormLabel className="text-primary">{language === "th" ? "หมวดหมู่" : "Category"}</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value || ""}
+                                disabled={submitting}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="bg-white text-foreground">
+                                    <SelectValue>{selectedCategoryName || (language === "th" ? "เลือกหมวดหมู่" : "Select category")}</SelectValue>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {categories.map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.id}>
+                                      {language === "th" ? cat.name_th : cat.name_en}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                     </div>
 
@@ -721,7 +969,7 @@ export const MenusManagement = () => {
                         <FormItem>
                           <FormLabel className="text-primary">{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
                           <FormControl>
-                            <Textarea {...field} disabled={submitting} rows={3} />
+                            <Textarea {...field} disabled={submitting} rows={3} className="bg-white text-foreground" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -735,7 +983,7 @@ export const MenusManagement = () => {
                         <FormItem>
                           <FormLabel className="text-primary">{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
                           <FormControl>
-                            <Textarea {...field} disabled={submitting} rows={3} />
+                            <Textarea {...field} disabled={submitting} rows={3} className="bg-white text-foreground" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -770,7 +1018,7 @@ export const MenusManagement = () => {
 
                     {/* Image Upload */}
                     <div className="space-y-2">
-                      <Label className="text-primary">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
+                      <Label className="text-primary font-semibold">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
                       <div
                         onDragOver={handleImageDragOver}
                         onDragLeave={handleImageDragLeave}
@@ -803,35 +1051,54 @@ export const MenusManagement = () => {
                         </label>
                       </div>
                       {imagePreviews.length > 0 && (
-                        <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {imagePreviews.map((preview, index) => (
-                            <div key={index} className="relative">
-                              <img
-                                src={preview}
-                                alt={`Menu preview ${index + 1}`}
-                                className="w-full h-32 object-cover rounded-lg"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-1 right-1 h-6 w-6 p-0"
-                                onClick={() => {
-                                  setImageFiles(prev => prev.filter((_, i) => i !== index));
-                                  setImagePreviews(prev => prev.filter((_, i) => i !== index));
-                                }}
-                              >
-                                ×
-                              </Button>
-                            </div>
-                          ))}
+                        <div className="mt-2">
+                          <p className="text-xs text-foreground/70 mb-2">
+                            {language === "th"
+                              ? `แสดง ${imagePreviews.length} รูป (วางเมาส์เพื่อลบ)`
+                              : `${imagePreviews.length} image${imagePreviews.length > 1 ? "s" : ""} (hover to delete)`}
+                          </p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {imagePreviews.map((preview, index) => {
+                              const isExisting = preview.startsWith("http");
+                              return (
+                                <div key={index} className="relative group">
+                                  <img
+                                    src={preview}
+                                    alt={`Menu preview ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-lg"
+                                  />
+                                  {isExisting && selectedMenu && (
+                                    <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md opacity-80">
+                                      {language === "th" ? "ปัจจุบัน" : "Current"}
+                                    </div>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="absolute top-1 right-1 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const isExistingUrl = preview.startsWith("http");
+                                      // Delete directly without confirmation dialog
+                                      handleDirectImageDelete(preview, isExistingUrl, index);
+                                    }}
+                                    disabled={loading}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* Icon Upload */}
                     <div className="space-y-2">
-                      <Label className="text-primary">{language === "th" ? "ไอคอนเมนู" : "Menu Icon"}</Label>
+                      <Label className="text-primary font-semibold">{language === "th" ? "ไอคอนเมนู" : "Menu Icon"}</Label>
                       <div
                         onDragOver={handleIconDragOver}
                         onDragLeave={handleIconDragLeave}
@@ -863,7 +1130,7 @@ export const MenusManagement = () => {
                         </label>
                       </div>
                       {iconPreview && (
-                        <div className="mt-2 relative inline-block">
+                        <div className="mt-2 relative inline-block group">
                           <img
                             src={iconPreview}
                             alt="Icon preview"
@@ -873,13 +1140,15 @@ export const MenusManagement = () => {
                             type="button"
                             variant="destructive"
                             size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                            onClick={() => {
-                              setIconFile(null);
-                              setIconPreview("");
+                            className="absolute -top-2 -right-2 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDirectIconDelete(iconPreview);
                             }}
+                            disabled={loading}
                           >
-                            ×
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       )}
@@ -1178,6 +1447,60 @@ export const MenusManagement = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>{language === "th" ? "ยกเลิก" : "Cancel"}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteMenu}>
+              {language === "th" ? "ลบ" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Image Confirmation */}
+      <AlertDialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === "th" ? "ยืนยันการลบรูปภาพ" : "Confirm Delete Image"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === "th"
+                ? "คุณต้องการลบรูปภาพนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+                : "Are you sure you want to delete this image? This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {language === "th" ? "ยกเลิก" : "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => imageToDelete && handleDeleteImage()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {language === "th" ? "ลบ" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Icon Confirmation */}
+      <AlertDialog open={!!iconToDelete} onOpenChange={() => setIconToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === "th" ? "ยืนยันการลบไอคอน" : "Confirm Delete Icon"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === "th"
+                ? "คุณต้องการลบไอคอนนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+                : "Are you sure you want to delete this icon? This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {language === "th" ? "ยกเลิก" : "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => iconToDelete && handleDeleteIcon()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {language === "th" ? "ลบ" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

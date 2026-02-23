@@ -8,10 +8,35 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Custom storage adapter that logs session operations
+const customStorage = {
+  getItem: (key: string) => {
+    const value = localStorage.getItem(key);
+    if (key.includes('auth') || key.includes('sb-')) {
+      console.log('[Storage] getItem:', key, ':', !!value);
+    }
+    return value;
+  },
+  setItem: (key: string, value: string) => {
+    localStorage.setItem(key, value);
+    if (key.includes('auth') || key.includes('sb-')) {
+      console.log('[Storage] setItem:', key);
+    }
+  },
+  removeItem: (key: string) => {
+    localStorage.removeItem(key);
+    if (key.includes('auth') || key.includes('sb-')) {
+      console.log('[Storage] removeItem:', key);
+    }
+  },
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: customStorage as any,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce', // Use PKCE flow for better security and session persistence
   }
 });

@@ -20,6 +20,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const eventSpaceFormSchema = z.object({
   title_th: z.string().min(1, "กรุณากรอกชื่อภาษาไทย"),
@@ -41,6 +51,7 @@ export const EventSpaceManagement = () => {
   const [currentEventSpace, setCurrentEventSpace] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [isDeletingImage, setIsDeletingImage] = useState(false);
 
   const form = useForm<EventSpaceFormValues>({
     resolver: zodResolver(eventSpaceFormSchema),
@@ -168,6 +179,43 @@ export const EventSpaceManagement = () => {
     }
   };
 
+  const handleDeleteImage = async () => {
+    if (!currentEventSpace?.image_url) return;
+
+    try {
+      setLoading(true);
+
+      // Delete from storage
+      const fileName = currentEventSpace.image_url.split("/").pop();
+      if (fileName) {
+        await supabase.storage.from("event-spaces").remove([fileName]);
+      }
+
+      // Update database
+      const { error } = await supabase
+        .from("event_spaces")
+        .update({ image_url: null })
+        .eq("id", currentEventSpace.id);
+
+      if (error) throw error;
+
+      toast.success(
+        language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully"
+      );
+
+      setImagePreview("");
+      loadEventSpaceData();
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error(
+        language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image"
+      );
+    } finally {
+      setLoading(false);
+      setIsDeletingImage(false);
+    }
+  };
+
   const onSubmit = async (values: EventSpaceFormValues) => {
     try {
       setSubmitting(true);
@@ -271,12 +319,24 @@ export const EventSpaceManagement = () => {
                 </FormLabel>
                 <div className="flex flex-col gap-4">
                   {imagePreview && (
-                    <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
+                    <div className="relative w-full aspect-video rounded-lg border border-border group">
                       <img
                         src={imagePreview}
                         alt="Event space preview"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-lg"
                       />
+                      {currentEventSpace?.image_url && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                          disabled={loading}
+                          onClick={() => setIsDeletingImage(true)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   )}
                   <div className="flex items-center gap-4">
@@ -490,6 +550,33 @@ export const EventSpaceManagement = () => {
           </div>
         </form>
       </Form>
+
+      {/* Delete Image Confirmation */}
+      <AlertDialog open={isDeletingImage} onOpenChange={setIsDeletingImage}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === "th" ? "ยืนยันการลบรูปภาพ" : "Confirm Delete Image"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === "th"
+                ? "คุณต้องการลบรูปภาพนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+                : "Are you sure you want to delete this image? This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {language === "th" ? "ยกเลิก" : "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteImage}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {language === "th" ? "ลบ" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

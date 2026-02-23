@@ -22,6 +22,33 @@ const versionInjectionPlugin = (): Plugin => {
   };
 };
 
+// Plugin to handle SPA routing fallback for React Router
+const spaFallbackPlugin = (): Plugin => {
+  return {
+    name: "spa-fallback",
+    configureServer(server: any) {
+      return () => {
+        server.middlewares.use((req: any, res: any, next: any) => {
+          // Skip middleware mode routes and assets
+          if (
+            req.method !== "GET" ||
+            req.url.startsWith("/@") ||
+            req.url.startsWith("/.") ||
+            /\.(js|css|json|png|jpg|jpeg|gif|svg|ico|webmanifest|js\.map)$/.test(req.url)
+          ) {
+            next();
+            return;
+          }
+          
+          // For all other GET requests (SPA routes), serve index.html
+          req.url = "/index.html";
+          next();
+        });
+      };
+    },
+  };
+};
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -31,6 +58,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     versionInjectionPlugin(),
+    spaFallbackPlugin(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {

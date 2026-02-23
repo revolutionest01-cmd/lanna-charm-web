@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Heart, Share2, Upload, Loader2 } from "lucide-react";
+import { X, Heart, Share2, Upload, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useModalState } from "@/contexts/ModalContext";
+import { Portal } from "@/components/ui/portal";
 
 interface Menu {
   id: string;
@@ -18,35 +20,90 @@ interface Menu {
   icon_url: string | null;
   is_recommended: boolean;
   is_active: boolean;
-  ingredients_th?: string | null;
-  ingredients_en?: string | null;
-  temperature_options?: string | null;
-  size_options?: string | null;
-  allergens_th?: string | null;
-  allergens_en?: string | null;
-  calories?: number | null;
-  preparation_method_th?: string | null;
-  preparation_method_en?: string | null;
-  customization_options_th?: string | null;
-  customization_options_en?: string | null;
 }
 
 interface MenuDetailModalProps {
   menu: Menu | null;
   isOpen: boolean;
   onClose: () => void;
+  allMenus?: Menu[];
+  onMenuChange?: (menu: Menu) => void;
 }
 
-const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
+const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }: MenuDetailModalProps) => {
   const { language } = useLanguage();
   const t = translations[language];
   const { user } = useAuth();
+  const { setIsModalOpen } = useModalState();
   const [isLiked, setIsLiked] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
+  const minSwipeDistance = 50;
+
+  // Get current menu index
+  const currentMenuIndex = menu ? allMenus.findIndex(m => m.id === menu.id) : -1;
+  const hasNextMenu = currentMenuIndex < allMenus.length - 1;
+  const hasPrevMenu = currentMenuIndex > 0;
+
+  const handlePrevMenu = () => {
+    if (hasPrevMenu && allMenus[currentMenuIndex - 1] && onMenuChange) {
+      onMenuChange(allMenus[currentMenuIndex - 1]);
+    }
+  };
+
+  const handleNextMenu = () => {
+    if (hasNextMenu && allMenus[currentMenuIndex + 1] && onMenuChange) {
+      onMenuChange(allMenus[currentMenuIndex + 1]);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNextMenu();
+    } else if (isRightSwipe) {
+      handlePrevMenu();
+    }
+  };
+
+  // Update Modal state when isOpen changes
+  useEffect(() => {
+    setIsModalOpen(isOpen);
+  }, [isOpen, setIsModalOpen]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevMenu();
+      } else if (e.key === 'ArrowRight') {
+        handleNextMenu();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, currentMenuIndex, allMenus, onMenuChange]);
 
   // Check admin status
   useEffect(() => {
@@ -146,24 +203,28 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
   ];
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
-        onClick={onClose}
-      />
-
-      {/* Modal Container - Centered on viewport */}
-      <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
+    <Portal>
+      <>
+        {/* Backdrop */}
         <div
-          className="relative bg-background rounded-xl sm:rounded-xl md:rounded-2xl shadow-2xl w-full max-w-4xl md:max-w-5xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={onClose}
+        />
+
+        {/* Modal Container - Centered on viewport */}
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+        <div
+          className="relative bg-background rounded-2xl shadow-2xl w-full max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Action Buttons */}
@@ -171,7 +232,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             {/* Like Button */}
             <button
               onClick={toggleLike}
-              className="p-1.5 sm:p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-all"
+              className="p-1.5 sm:p-2 rounded-full bg-white hover:bg-white/90 transition-all"
               aria-label="Toggle like"
             >
               <Heart
@@ -183,7 +244,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             {/* Share Button */}
             <button
               onClick={handleShare}
-              className="p-1.5 sm:p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full bg-white hover:bg-white/90 transition-colors"
               aria-label="Share menu"
             >
               <Share2 size={20} className="text-foreground" />
@@ -192,7 +253,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full bg-white hover:bg-white/90 transition-colors"
               aria-label="Close modal"
             >
               <X size={20} className="text-foreground" />
@@ -200,12 +261,12 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
           </div>
 
           {/* Content Container */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
             {/* Image Section */}
             <div className="flex flex-col gap-3 sm:gap-4">
               {/* Main Image */}
               {allImages.length > 0 || menu.icon_url ? (
-                <div className="relative bg-foreground/5 rounded-lg sm:rounded-xl overflow-hidden aspect-square lg:h-80">
+                <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72">
                   <img
                     src={allImages.length > 0 ? allImages[0].url : menu.icon_url || "/placeholder.svg"}
                     alt={menuName}
@@ -213,8 +274,8 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
                   />
                 </div>
               ) : (
-                <div className="relative bg-foreground/5 rounded-lg sm:rounded-xl overflow-hidden aspect-square lg:h-80 flex items-center justify-center">
-                  <p className="text-muted-foreground">
+                <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72 flex items-center justify-center">
+                  <p className="text-muted-foreground text-sm">
                     {language === 'th' ? 'ไม่มีรูปภาพ' : language === 'zh' ? '无图片' : 'No image'}
                   </p>
                 </div>
@@ -223,10 +284,10 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
               {/* Uploaded Images - Admin Only */}
               {isAdmin && uploadedImages.length > 0 && (
                 <div>
-                  <h4 className="text-xs sm:text-sm font-semibold text-foreground mb-2">
+                  <h4 className="text-xs font-semibold text-foreground mb-2">
                     {language === 'th' ? 'ภาพที่อัพโหลด' : language === 'zh' ? '上传的图片' : 'Uploaded Images'}
                   </h4>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {uploadedImages.map((imgUrl, index) => (
                       <button
                         key={imgUrl}
@@ -246,7 +307,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
               {/* Image Upload Section - Admin Only */}
               {isAdmin && uploadedImages.length < maxImages && (
                 <div 
-                  className="border-2 border-dashed border-primary/40 rounded-lg p-3 sm:p-4 text-center hover:border-primary/60 transition-colors cursor-pointer"
+                  className="border-2 border-dashed border-primary/40 rounded-lg p-3 text-center hover:border-primary/60 transition-colors cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
@@ -258,24 +319,24 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
                     className="hidden"
                     disabled={isUploading}
                   />
-                  <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+                  <div className="flex flex-col items-center gap-1">
                     {isUploading ? (
                       <>
-                        <Loader2 size={20} className="text-primary animate-spin" />
-                        <p className="text-xs sm:text-sm text-muted-foreground">
+                        <Loader2 size={18} className="text-primary animate-spin" />
+                        <p className="text-xs text-muted-foreground">
                           {language === 'th' ? 'กำลังอัพโหลด...' : language === 'zh' ? '上传中...' : 'Uploading...'}
                         </p>
                       </>
                     ) : (
                       <>
-                        <Upload size={20} className="text-primary" />
-                        <p className="text-xs sm:text-sm font-medium text-foreground">
-                          {language === 'th' ? `อัพโหลดภาพ (${maxImages - uploadedImages.length} ภาพเหลือ)` :
-                           language === 'zh' ? `上传图片 (还可上传 ${maxImages - uploadedImages.length} 张)` :
-                           `Upload images (${maxImages - uploadedImages.length} remaining)`}
+                        <Upload size={18} className="text-primary" />
+                        <p className="text-xs font-medium text-foreground">
+                          {language === 'th' ? `อัพโหลดภาพ (${maxImages - uploadedImages.length} เหลือ)` :
+                           language === 'zh' ? `上传图片 (还可 ${maxImages - uploadedImages.length} 张)` :
+                           `Upload (${maxImages - uploadedImages.length} left)`}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          {language === 'th' ? 'คลิกหรือลากไฟล์มาวาง' : language === 'zh' ? '点击或拖拽文件' : 'Click or drag files'}
+                        <p className="text-[10px] text-muted-foreground">
+                          {language === 'th' ? 'คลิกหรือลากไฟล์' : language === 'zh' ? '点击或拖拽' : 'Click or drag'}
                         </p>
                       </>
                     )}
@@ -285,151 +346,93 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             </div>
 
             {/* Details Section */}
-            <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Menu Name & Price */}
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground mb-2 sm:mb-3">
+                <h1 className="text-xl sm:text-2xl font-bold font-serif text-foreground mb-1.5">
                   {menuName}
                 </h1>
-                <div className="flex items-baseline gap-2 sm:gap-3">
-                  <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl sm:text-2xl font-bold text-primary">
                     ฿{menu.price}
                   </span>
-                  {menu.calories && (
-                    <span className="text-xs sm:text-sm text-muted-foreground">
-                      {menu.calories} {language === 'th' ? 'แคลลอรี่' : language === 'zh' ? '卡路里' : 'cal'}
-                    </span>
-                  )}
                 </div>
               </div>
 
-              {/* Main Description */}
+              {/* Description */}
               {menuDescription && (
-                <div className="pb-3 sm:pb-4 border-b border-border/50">
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <div>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {menuDescription}
                   </p>
                 </div>
               )}
 
-              {/* Ingredients */}
-              {menu.ingredients_th || menu.ingredients_en ? (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 sm:p-4">
-                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <span className="text-lg">🥘</span>
-                    {language === 'th' ? 'วัตถุดิบ' : language === 'zh' ? '成分' : 'Ingredients'}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {language === 'th' && menu.ingredients_th ? menu.ingredients_th : 
-                     language === 'en' && menu.ingredients_en ? menu.ingredients_en : 
-                     menu.ingredients_th || menu.ingredients_en}
-                  </p>
-                </div>
-              ) : null}
-
-              {/* Temperature & Size Options */}
-              {menu.temperature_options || menu.size_options ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {menu.temperature_options && (
-                    <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
-                      <h4 className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-1.5">
-                        <span className="text-base">🌡️</span>
-                        {language === 'th' ? 'อุณหภูมิ' : language === 'zh' ? '温度' : 'Temperature'}
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {menu.temperature_options.split(',').map((option, idx) => (
-                          <span key={idx} className="text-xs sm:text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 px-2.5 sm:px-3 py-1 rounded-full">
-                            {option.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {menu.size_options && (
-                    <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
-                      <h4 className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-1.5">
-                        <span className="text-base">📏</span>
-                        {language === 'th' ? 'ขนาด' : language === 'zh' ? '大小' : 'Size'}
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {menu.size_options.split(',').map((option, idx) => (
-                          <span key={idx} className="text-xs sm:text-sm bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 px-2.5 sm:px-3 py-1 rounded-full">
-                            {option.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              {/* Customization Options */}
-              {menu.customization_options_th || menu.customization_options_en ? (
-                <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 sm:p-4">
-                  <h3 className="text-sm sm:text-base font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
-                    <span className="text-lg">✨</span>
-                    {language === 'th' ? 'ปรับแต่งได้' : language === 'zh' ? '自定义' : 'Customization'}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-purple-900/70 dark:text-purple-100/70 whitespace-pre-wrap leading-relaxed">
-                    {language === 'th' && menu.customization_options_th ? menu.customization_options_th : 
-                     language === 'en' && menu.customization_options_en ? menu.customization_options_en : 
-                     menu.customization_options_th || menu.customization_options_en}
-                  </p>
-                </div>
-              ) : null}
-
-              {/* Preparation Method */}
-              {menu.preparation_method_th || menu.preparation_method_en ? (
-                <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3 sm:p-4">
-                  <h3 className="text-sm sm:text-base font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
-                    <span className="text-lg">⏱️</span>
-                    {language === 'th' ? 'วิธีเตรียม' : language === 'zh' ? '制作方法' : 'Preparation'}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-green-900/70 dark:text-green-100/70 whitespace-pre-wrap leading-relaxed">
-                    {language === 'th' && menu.preparation_method_th ? menu.preparation_method_th : 
-                     language === 'en' && menu.preparation_method_en ? menu.preparation_method_en : 
-                     menu.preparation_method_th || menu.preparation_method_en}
-                  </p>
-                </div>
-              ) : null}
-
-              {/* Allergens Warning */}
-              {menu.allergens_th || menu.allergens_en ? (
-                <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
-                  <h3 className="text-sm sm:text-base font-semibold text-red-900 dark:text-red-100 mb-2 flex items-center gap-2">
-                    <span className="text-lg">⚠️</span>
-                    {language === 'th' ? 'สารก่อแพ้' : language === 'zh' ? '过敏原' : 'Allergens'}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-red-900/70 dark:text-red-100/70">
-                    {language === 'th' && menu.allergens_th ? menu.allergens_th : 
-                     language === 'en' && menu.allergens_en ? menu.allergens_en : 
-                     menu.allergens_th || menu.allergens_en}
-                  </p>
-                </div>
-              ) : null}
-
               {/* Recommended Badge */}
               {menu.is_recommended && (
-                <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 sm:p-4 text-center">
-                  <p className="font-semibold text-primary text-sm sm:text-base">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg p-2.5 sm:p-3 text-center">
+                  <p className="font-semibold text-primary text-xs sm:text-sm">
                     ⭐ {language === 'th' ? 'เมนูแนะนำของเรา' : language === 'zh' ? '我们推荐' : 'Our Recommendation'}
                   </p>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-primary/20">
+              <div className="flex flex-col gap-2 pt-2 border-t border-primary/20">
+                {/* Menu Navigation - Horizontal Layout */}
+                {allMenus.length > 1 && (
+                  <div className="flex items-center justify-between gap-3 px-2 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrevMenu();
+                      }}
+                      disabled={!hasPrevMenu}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                        hasPrevMenu
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Previous menu"
+                    >
+                      <ChevronLeft size={18} />
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'เมนูก่อนหน้า' : 'Previous'}
+                      </span>
+                    </button>
+
+                    <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
+                      <span className="font-semibold text-sm text-foreground">
+                        {currentMenuIndex + 1} / {allMenus.length}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextMenu();
+                      }}
+                      disabled={!hasNextMenu}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                        hasNextMenu
+                          ? "hover:bg-primary/20 cursor-pointer text-foreground"
+                          : "opacity-40 cursor-not-allowed text-muted-foreground"
+                      )}
+                      aria-label="Next menu"
+                    >
+                      <span className="hidden sm:inline">
+                        {language === 'th' ? 'เมนูถัดไป' : 'Next'}
+                      </span>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+
                 <Button
-                  variant="highlight"
-                  className="w-full font-bold h-11 sm:h-12 text-sm sm:text-base rounded-xl"
-                >
-                  {language === 'th' ? 'เพิ่มไปยังตะกร้า' : language === 'zh' ? '加入购物车' : 'Add to Cart'}
-                </Button>
-                <Button
-                  variant="outline"
                   onClick={onClose}
-                  className="w-full font-semibold h-10 sm:h-11 rounded-xl text-sm sm:text-base"
+                  className="w-full font-semibold h-10 rounded-lg text-sm bg-foreground text-background hover:bg-foreground/90"
                 >
                   {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                 </Button>
@@ -437,8 +440,9 @@ const MenuDetailModal = ({ menu, isOpen, onClose }: MenuDetailModalProps) => {
             </div>
           </div>
         </div>
-      </div>
-    </>
+        </div>
+      </>
+    </Portal>
   );
 };
 

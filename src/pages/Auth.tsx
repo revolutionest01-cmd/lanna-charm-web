@@ -25,6 +25,45 @@ const Auth = () => {
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(false);
+  const STORAGE_KEY = 'plernping_login_data';
+
+  // Load saved credentials from localStorage on component mount
+  useEffect(() => {
+    const loadSavedCredentials = () => {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        console.log('Checking localStorage:', STORAGE_KEY, savedData);
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          console.log('Loaded credentials:', parsed);
+          setLoginForm({ email: parsed.email || "", password: parsed.password || "" });
+          setRememberPassword(true);
+        }
+      } catch (error) {
+        console.error('Failed to load saved credentials:', error);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    };
+    loadSavedCredentials();
+  }, []);
+
+  // Save credentials whenever loginForm changes and rememberPassword is checked
+  useEffect(() => {
+    if (rememberPassword && loginForm.email && loginForm.password) {
+      try {
+        console.log('Saving credentials to localStorage');
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          email: loginForm.email,
+          password: loginForm.password,
+        }));
+      } catch (error) {
+        console.error('Failed to save credentials:', error);
+      }
+    }
+  }, [rememberPassword, loginForm.email, loginForm.password]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -50,10 +89,12 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
+        // Credentials will be automatically saved by the useEffect hook
+        sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : language === 'ja' ? 'ログイン成功' : 'Login successful');
         // Show quick success feedback then navigate
         setTimeout(() => {
           navigate("/");
-        }, 300);
+        }, 500);
       } else {
         sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : language === 'ja' ? 'メールアドレスまたはパスワードが無効です' : 'Invalid email or password. Please check and try again.'));
       }
@@ -109,6 +150,61 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Validate email
+      const validation = createAuthValidation(language);
+      const emailSchema = z.object({
+        email: validation.email,
+      });
+      
+      emailSchema.parse({ email: forgotPasswordEmail });
+
+      // Send password reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) {
+        sweetAlert.error(
+          language === 'th' 
+            ? 'ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่' 
+            : language === 'zh'
+            ? '无法发送密码重置电子邮件，请重试'
+            : 'Unable to send password reset email. Please try again.'
+        );
+      } else {
+        sweetAlert.success(
+          language === 'th' 
+            ? 'ลิงก์รีเซ็ตรหัสผ่านส่งไปแล้ว กรุณาตรวจสอบอีเมล' 
+            : language === 'zh'
+            ? '密码重置链接已发送。请检查您的电子邮件'
+            : 'Password reset link sent! Please check your email.'
+        );
+        setForgotPasswordEmail("");
+        setIsForgotPasswordMode(false);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        sweetAlert.error(firstError.message);
+      } else {
+        sweetAlert.error(
+          language === 'th' 
+            ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' 
+            : language === 'zh'
+            ? '发生错误，请重试'
+            : 'An error occurred. Please try again.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       // Use production domain for redirect
@@ -140,11 +236,10 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Button
-          variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-4"
+          className="mb-4 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" />
           {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
         </Button>
 
@@ -160,22 +255,67 @@ const Auth = () => {
 
         <Card className="animate-fade-in border-border/50 shadow-xl">
           <CardHeader>
-            <CardTitle className="text-center">
-              {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register'}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {language === 'th' 
-                ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ' 
-                : language === 'zh'
-                ? '加入我们的社区，分享您的体验'
-                : language === 'ja'
-                ? 'コミュニティに参加して体験を共有してください'
-                : 'Join our community and share your experiences'}
-            </CardDescription>
+            {isForgotPasswordMode ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2 p-2"
+                    onClick={() => setIsForgotPasswordMode(false)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <CardTitle>
+                    {language === 'th' ? 'รีเซ็ตหัสผ่าน' : language === 'zh' ? '重置密码' : 'Reset Password'}
+                  </CardTitle>
+                </div>
+                <CardDescription>
+                  {language === 'th' ? 'กรอกอีเมลของคุณเพื่อรับลิงก์รีเซ็ต' : language === 'zh' ? '输入您的电子邮件以接收重置链接' : 'Enter your email to receive reset link'}
+                </CardDescription>
+              </>
+            ) : (
+              <>
+                <CardTitle className="text-center">
+                  {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register'}
+                </CardTitle>
+                <CardDescription className="text-center">
+                  {language === 'th' 
+                    ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ' 
+                    : language === 'zh'
+                    ? '加入我们的社区，分享您的体验'
+                    : language === 'ja'
+                    ? 'コミュニティに参加して体験を共有してください'
+                    : 'Join our community and share your experiences'}
+                </CardDescription>
+              </>
+            )}
           </CardHeader>
           <CardContent>
+            {isForgotPasswordMode ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">
+                    {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
+                  </Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder={language === 'th' ? 'กรอกอีเมล' : language === 'zh' ? '请输入电子邮件' : 'Enter your email'}
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {language === 'th' ? 'ส่งลิงก์รีเซ็ต' : language === 'zh' ? '发送重置链接' : 'Send Reset Link'}
+                </Button>
+              </form>
+            ) : (
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full md:grid-cols-2 grid-cols-1 md:w-auto overflow-x-auto inline-flex md:inline-grid">
                 <TabsTrigger value="login">
                   {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
                 </TabsTrigger>
@@ -228,10 +368,44 @@ const Auth = () => {
                       </Button>
                     </div>
                   </div>
+
+                  <div className="flex items-center gap-2 py-2">
+                    <input
+                      type="checkbox"
+                      id="remember-password"
+                      checked={rememberPassword}
+                      onChange={(e) => {
+                        setRememberPassword(e.target.checked);
+                        if (!e.target.checked) {
+                          localStorage.removeItem(STORAGE_KEY);
+                        }
+                      }}
+                      className="w-4 h-4 cursor-pointer accent-primary"
+                    />
+                    <label htmlFor="remember-password" className="text-sm text-muted-foreground cursor-pointer select-none">
+                      {language === 'th' ? 'จดจำรหัสผ่าน' : language === 'zh' ? '记住密码' : 'Remember password'}
+                    </label>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {language === 'th' ? '(ไม่แนะนำบนคอมพิวเตอร์ของคนอื่น)' : language === 'zh' ? '(不建议在公用电脑上使用)' : '(not recommended on shared devices)'}
+                    </span>
+                  </div>
+
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
                   </Button>
+
+                  <div className="text-right">
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="p-0 h-auto"
+                      onClick={() => setIsForgotPasswordMode(true)}
+                    >
+                      {language === 'th' ? 'ลืมรหัสผ่าน?' : language === 'zh' ? '忘记密码?' : 'Forgot password?'}
+                    </Button>
+                  </div>
 
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
@@ -375,16 +549,9 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </CardContent>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          {language === 'th' 
-            ? '* นี่คือระบบ mockup สำหรับทดสอบการใช้งาน' 
-            : language === 'zh'
-            ? '* 这是一个用于测试的模拟系统'
-            : '* This is a mockup system for testing purposes'}
-        </p>
       </div>
     </div>
   );

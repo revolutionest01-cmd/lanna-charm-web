@@ -4,16 +4,17 @@ import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
 import Forum from "@/pages/Forum";
-import TopicDetail from "@/pages/TopicDetail";
 import Admin from "@/pages/Admin";
+import TopicDetail from "@/pages/TopicDetail";
 import Gallery from "@/pages/Gallery";
 import Reviews from "@/pages/Reviews";
 import Menu from "@/pages/Menu";
 import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
-import Secondbar from "@/components/Secondbar";
 import TabBar from "@/components/TabBar";
+import Secondbar from "@/components/Secondbar";
 import BottomBar from "@/components/BottomBar";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import { cn } from "@/lib/utils";
 
 // Wrapper component to access sidebar state
@@ -32,12 +33,12 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
   return (
     <SidebarInset className={cn(
       "flex-1 overflow-x-hidden",
-      // Mobile: Secondbar (12) + TabBar (10) = 22 = ~5.5rem, bottom for BottomBar (14)
-      "pt-[5.5rem] pb-16",
-      // Tablet (sm): Secondbar (14) + TabBar (11) = 25 = ~6.25rem
-      "sm:pt-[6.25rem] sm:pb-18",
-      // Desktop: only Secondbar (16 = 4rem), no bottom bar
-      "md:pt-16 md:pb-0"
+      // Mobile: no TabBar, bottom for BottomBar (14)
+      "pb-16",
+      // Tablet (sm): no TabBar
+      "sm:pb-18",
+      // Desktop: no top or bottom bar
+      "md:pt-0 md:pb-0"
     )}>
       {/* Overlay when sidebar is open - GPU-accelerated */}
       <div 
@@ -108,17 +109,18 @@ const AnimatedRoutes = () => {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex flex-col w-full">
         <Secondbar />
-        <TabBar />
-        <AppSidebar />
+        <div className="flex w-full flex-1">
+          <TabBar />
+          <AppSidebar />
         
         <MainContent animationClass={getAnimationClass()}>
           <Routes location={displayLocation}>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/forum" element={<Forum />} />
-            <Route path="/forum/:id" element={<TopicDetail />} />
+            <Route path="/forum/:topicId" element={<TopicDetail />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/reviews" element={<Reviews />} />
@@ -127,8 +129,10 @@ const AnimatedRoutes = () => {
           </Routes>
         </MainContent>
         
-        {/* Bottom Bar for mobile */}
-        <BottomBar />
+          {/* Bottom Bar for mobile */}
+          <BottomBar />
+          <FloatingChatButton />
+        </div>
       </div>
     </SidebarProvider>
   );

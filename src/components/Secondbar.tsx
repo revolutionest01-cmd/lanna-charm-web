@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, Volume2, VolumeX, X, ChevronDown, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -23,6 +24,7 @@ const languages = [
 ];
 
 const Secondbar = () => {
+  const navigate = useNavigate();
   const { toggleSidebar, state } = useSidebar();
   const { language, setLanguage } = useLanguage();
   const currentLang = languages.find(l => l.code === language) || languages[0];
@@ -147,7 +149,11 @@ const Secondbar = () => {
           {/* Subtle vertical divider */}
           <div className={cn("w-px h-6 sm:h-7", themeStyles.divider)} />
 
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200 active:scale-95"
+            aria-label="Go to home"
+          >
             <img 
               src={logo} 
               alt="Plern Ping" 
@@ -167,7 +173,7 @@ const Secondbar = () => {
                 Cafe & Stay
               </span>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Right side - Language + Sound Controls */}
@@ -209,8 +215,8 @@ const Secondbar = () => {
             className={cn(
               "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0",
               isPlaying
-                ? "bg-background/30 text-background shadow-md hover:bg-background/40"
-                : "bg-background/20 text-background hover:bg-background/30"
+                ? "bg-[#c65539] text-white shadow-lg hover:bg-[#c65539]/90"
+                : "bg-background/40 text-background hover:bg-background/60"
             )}
             aria-label={isPlaying ? "ปิดเสียง" : "เปิดเสียงธรรมชาติ"}
           >
@@ -228,7 +234,7 @@ const Secondbar = () => {
             onClick={toggleTheme}
             className={cn(
               "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0",
-              "bg-background/20 text-background hover:bg-background/30"
+              "bg-background/40 text-background hover:bg-background/60"
             )}
             aria-label={isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"}
             title={isDarkMode ? "Light mode" : "Dark mode"}

@@ -86,7 +86,7 @@ const TabBar = () => {
   return (
     <div
       className={cn(
-        "fixed left-0 right-0 z-40 md:hidden overflow-hidden",
+        "fixed left-0 right-0 z-40 hidden overflow-hidden",
         "transition-all duration-300 ease-out",
         "top-12 sm:top-14",
         isVisible

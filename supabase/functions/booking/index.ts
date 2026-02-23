@@ -57,6 +57,7 @@ interface BookingRequest {
   checkIn: string;
   checkOut: string;
   guests: number;
+  roomId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -85,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     
     // Validate required fields exist
-    const { name, email, phone, checkIn, checkOut, guests } = body as BookingRequest;
+    const { name, email, phone, checkIn, checkOut, guests, roomId } = body as BookingRequest;
     
     if (!name || !email || !phone || !checkIn || !checkOut || !guests) {
       return new Response(
@@ -103,6 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     const sanitizedPhone = sanitizeString(phone, 20);
     const sanitizedCheckIn = sanitizeString(checkIn, 20);
     const sanitizedCheckOut = sanitizeString(checkOut, 20);
+    const sanitizedRoomId = roomId ? sanitizeString(roomId, 100) : '';
     const sanitizedGuests = Math.min(Math.max(1, Number(guests) || 1), 50);
 
     // Validate input formats
@@ -172,6 +174,53 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Fetch room details if roomId provided
+    let roomName = '';
+    let roomPrice = '';
+    
+    console.log('roomId from body:', roomId);
+    console.log('sanitizedRoomId:', sanitizedRoomId);
+    
+    if (sanitizedRoomId) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+        
+        const fetchUrl = `${supabaseUrl}/rest/v1/rooms?id=eq.${sanitizedRoomId}&select=name_th,price`;
+        console.log('Fetching room from:', fetchUrl);
+        
+        const roomResponse = await fetch(fetchUrl, {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          }
+        });
+
+        console.log('Room response status:', roomResponse.status);
+        
+        if (roomResponse.ok) {
+          const rooms = await roomResponse.json();
+          console.log('Room data received:', rooms);
+          
+          if (rooms && rooms.length > 0) {
+            roomName = rooms[0].name_th || '';
+            roomPrice = `${rooms[0].price} บาท/คืน` || '';
+            console.log('Room name:', roomName, 'Room price:', roomPrice);
+          } else {
+            console.log('No room found with id:', sanitizedRoomId);
+          }
+        } else {
+          const errorText = await roomResponse.text();
+          console.error('Room fetch error response:', errorText);
+        }
+      } catch (err) {
+        console.error('Error fetching room details:', err);
+        // Continue without room details
+      }
+    } else {
+      console.log('No roomId provided in booking');
+    }
+
     // Format message for LINE using sanitized inputs
     const lineMessage = `
 🏨 การจองห้องพักใหม่
@@ -179,6 +228,7 @@ const handler = async (req: Request): Promise<Response> => {
 👤 ชื่อ: ${sanitizedName}
 📧 อีเมล: ${sanitizedEmail}
 📱 เบอร์โทร: ${sanitizedPhone}
+${roomName ? `🛏️ ประเภทห้อง: ${roomName}${roomPrice ? ` (${roomPrice})` : ''}` : ''}
 📅 เช็คอิน: ${sanitizedCheckIn}
 📅 เช็คเอาท์: ${sanitizedCheckOut}
 👥 จำนวนผู้เข้าพัก: ${sanitizedGuests} คน
