@@ -194,9 +194,9 @@ const Forum = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/5 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/5 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pt-12 sm:pt-[3.5rem]">
       {/* Premium Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 dark:border-primary/20 shadow-sm">
+      <header className="sticky top-12 sm:top-[3.5rem] z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 dark:border-primary/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             {/* Brand */}
@@ -253,10 +253,10 @@ const Forum = () => {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Hero Section */}
-        <div className="mb-12">
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 dark:from-primary/30 dark:via-primary/20 dark:to-primary/30 rounded-2xl border border-primary/20 dark:border-primary/30 p-8 sm:p-12">
+        <div className="mb-6 sm:mb-8 lg:mb-12">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 dark:from-primary/30 dark:via-primary/20 dark:to-primary/30 rounded-2xl border border-primary/20 dark:border-primary/30 p-4 sm:p-6 lg:p-8">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
                 <Sparkles className="h-8 w-8 text-primary" />
@@ -276,7 +276,7 @@ const Forum = () => {
         </div>
 
         {/* Search & Create Section */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 sm:mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
@@ -421,7 +421,7 @@ const Forum = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="mb-8 overflow-x-auto">
+        <div className="mb-6 sm:mb-8 overflow-x-auto">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
             <TabsList className="bg-white dark:bg-slate-800 border border-primary/10 dark:border-primary/20 rounded-xl p-1 shadow-sm">
               {categories.map((cat) => (
@@ -438,7 +438,7 @@ const Forum = () => {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Main Topics Section */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2">
@@ -479,7 +479,7 @@ const Forum = () => {
 
           {/* Sidebar - Popular Topics */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-4">
+            <div className="sticky top-[calc(3rem+5rem)] space-y-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-6 h-6 text-primary dark:text-primary/80" />
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">

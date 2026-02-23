@@ -233,8 +233,8 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]">
+      <div className="w-full max-w-md my-auto">
         <Button
           onClick={() => navigate("/")}
           className="mb-4 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
@@ -243,9 +243,9 @@ const Auth = () => {
           {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
         </Button>
 
-        <div className="text-center mb-8 animate-fade-in">
-          <img src={logo} alt="Plern Ping Cafe" className="h-20 mx-auto mb-4" />
-          <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
+        <div className="text-center mb-6 sm:mb-8 animate-fade-in">
+          <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
             {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : language === 'ja' ? 'ようこそ' : 'Welcome'}
           </h1>
           <p className="text-muted-foreground">
