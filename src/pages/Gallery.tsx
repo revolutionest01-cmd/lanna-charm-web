@@ -160,6 +160,7 @@ const Gallery = () => {
         <DialogContent 
           className="max-w-6xl w-full max-h-[95vh] p-0 bg-black/98 border-none rounded-2xl overflow-hidden"
           onKeyDown={handleKeyDown}
+          hideDefaultClose={true}
         >
           {selectedImageIndex !== null && images[selectedImageIndex] && (
             <div 
