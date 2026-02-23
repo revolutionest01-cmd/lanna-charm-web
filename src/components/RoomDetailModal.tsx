@@ -332,7 +332,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
         {/* Modal Container - Centered on viewport */}
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               onClose();
@@ -343,7 +343,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
           onTouchEnd={handleTouchEnd}
         >
           <div
-            className="relative bg-background rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
+            className="relative bg-background rounded-2xl sm:rounded-3xl shadow-2xl w-full sm:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button - Fixed at top */}

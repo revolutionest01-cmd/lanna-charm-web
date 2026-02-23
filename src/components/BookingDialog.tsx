@@ -7,14 +7,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +23,6 @@ import { CalendarIcon, Users, User, Mail, Phone, Sparkles, AlertCircle, Bed } fr
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useRooms } from "@/hooks/useContentData";
 import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +43,6 @@ interface BookingDialogProps {
 const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const { language } = useLanguage();
   const t = translations[language];
-  const isMobile = useIsMobile();
   const { setIsModalOpen } = useModalState();
   const { data: rooms = [] } = useRooms();
   
@@ -77,7 +67,16 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     setIsModalOpen(newOpen);
-    if (!newOpen) {
+    
+    // Prevent body scroll when modal is open on mobile
+    if (newOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
       // Reset form when closing
       setCheckIn(undefined);
       setCheckOut(undefined);
@@ -231,11 +230,11 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   }));
 
   const bookingForm = (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
       {/* Date pickers */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="checkIn" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-0.5">
+          <Label htmlFor="checkIn" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {language === 'th' ? 'เช็คอิน' : language === 'zh' ? '入住' : 'Check-in'}
           </Label>
           <Popover>
@@ -243,11 +242,11 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border text-foreground font-semibold bg-white border-2",
+                  "w-full justify-start text-left font-normal h-10 sm:h-11 rounded-xl border-border text-foreground font-semibold bg-white border-2 text-sm",
                   !checkIn && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4 text-[hsl(var(--highlight))]" />
+                <CalendarIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[hsl(var(--highlight))]" />
                 {checkIn ? format(checkIn, "dd MMM") : <span className="text-xs">{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick date'}</span>}
               </Button>
             </PopoverTrigger>
@@ -264,8 +263,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
           </Popover>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="checkOut" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-0.5">
+          <Label htmlFor="checkOut" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {language === 'th' ? 'เช็คเอาท์' : language === 'zh' ? '退房' : 'Check-out'}
           </Label>
           <Popover>
@@ -273,11 +272,11 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal h-11 rounded-xl border-border text-foreground font-semibold bg-white border-2",
+                  "w-full justify-start text-left font-normal h-10 sm:h-11 rounded-xl border-border text-foreground font-semibold bg-white border-2 text-sm",
                   !checkOut && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4 text-[hsl(var(--highlight))]" />
+                <CalendarIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[hsl(var(--highlight))]" />
                 {checkOut ? format(checkOut, "dd MMM") : <span className="text-xs">{language === 'th' ? 'เลือกวัน' : language === 'zh' ? '选择日期' : 'Pick date'}</span>}
               </Button>
             </PopoverTrigger>
@@ -296,14 +295,14 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       </div>
 
       {/* Room Type Selection */}
-      <div className="space-y-1.5">
-        <Label htmlFor="room" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-0.5">
+        <Label htmlFor="room" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {language === 'th' ? 'ประเภทห้องพัก' : language === 'zh' ? '房间类型' : 'Room Type'}
         </Label>
         <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-          <SelectTrigger className="h-11 rounded-xl border-2 bg-white text-foreground font-semibold">
+          <SelectTrigger className="h-10 sm:h-11 rounded-xl border-2 bg-white text-foreground font-semibold text-sm">
             <div className="flex items-center gap-2">
-              <Bed className="h-4 w-4 text-muted-foreground" />
+              <Bed className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
               <SelectValue 
                 placeholder={language === 'th' ? 'เลือกประเภทห้องพัก' : language === 'zh' ? '选择房间类型' : 'Select room type'} 
               />
@@ -320,85 +319,89 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       </div>
 
       {/* Guests */}
-      <div className="space-y-1.5">
-        <Label htmlFor="guests" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-0.5">
+        <Label htmlFor="guests" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {language === 'th' ? 'จำนวนผู้เข้าพัก' : language === 'zh' ? '人数' : 'Guests'}
         </Label>
         <div className="relative">
-          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           <Input
             id="guests"
             type="text"
+            inputMode="numeric"
             placeholder="2"
             value={guests}
             onChange={handleGuestsChange}
             maxLength={2}
-            className={cn("pl-10 h-11 rounded-xl", errors.guests && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.guests && "border-destructive focus-visible:ring-destructive")}
+            style={{ fontSize: "16px" }}
           />
         </div>
         {errors.guests && (
           <div className="flex items-center gap-1.5 text-xs text-destructive">
-            <AlertCircle className="h-3.5 w-3.5" />
+            <AlertCircle className="h-3 w-3" />
             <span>{errors.guests}</span>
           </div>
         )}
       </div>
 
       {/* Name */}
-      <div className="space-y-1.5">
-        <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-0.5">
+        <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {language === 'th' ? 'ชื่อ-นามสกุล' : language === 'zh' ? '姓名' : 'Full Name'}
         </Label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           <Input
             id="name"
             type="text"
             placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : language === 'zh' ? '请输入您的姓名' : 'Enter your name'}
             value={name}
             onChange={handleNameChange}
-            className={cn("pl-10 h-11 rounded-xl", errors.name && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.name && "border-destructive focus-visible:ring-destructive")}
+            style={{ fontSize: "16px" }}
           />
         </div>
         {errors.name && (
           <div className="flex items-center gap-1.5 text-xs text-destructive">
-            <AlertCircle className="h-3.5 w-3.5" />
+            <AlertCircle className="h-3 w-3" />
             <span>{errors.name}</span>
           </div>
         )}
       </div>
 
       {/* Email */}
-      <div className="space-y-1.5">
-        <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-0.5">
+        <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
         </Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           <Input
             id="email"
             type="text"
             placeholder="example@email.com"
             value={email}
             onChange={handleEmailChange}
-            className={cn("pl-10 h-11 rounded-xl", errors.email && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.email && "border-destructive focus-visible:ring-destructive")}
+            style={{ fontSize: "16px" }}
           />
         </div>
         {errors.email && (
           <div className="flex items-center gap-1.5 text-xs text-destructive">
-            <AlertCircle className="h-3.5 w-3.5" />
+            <AlertCircle className="h-3 w-3" />
             <span>{errors.email}</span>
           </div>
         )}
       </div>
 
       {/* Phone */}
-      <div className="space-y-1.5">
-        <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-0.5">
+        <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {language === 'th' ? 'เบอร์โทรศัพท์' : language === 'zh' ? '电话号码' : 'Phone'}
         </Label>
         <div className="relative">
-          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           <Input
             id="phone"
             type="text"
@@ -406,20 +409,21 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
             value={phone}
             onChange={handlePhoneChange}
             maxLength={10}
-            className={cn("pl-10 h-11 rounded-xl", errors.phone && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.phone && "border-destructive focus-visible:ring-destructive")}
+            style={{ fontSize: "16px" }}
           />
         </div>
         {errors.phone && (
           <div className="flex items-center gap-1.5 text-xs text-destructive">
-            <AlertCircle className="h-3.5 w-3.5" />
+            <AlertCircle className="h-3 w-3" />
             <span>{errors.phone}</span>
           </div>
         )}
       </div>
 
       {/* Submit */}
-      <Button type="submit" className="w-full h-12 rounded-xl text-base font-bold tracking-wide bg-[#c65539] text-white hover:bg-[#c65539]/90 shadow-lg hover:shadow-xl transition-all" size="lg">
-        <Sparkles className="h-4 w-4 mr-1" />
+      <Button type="submit" className="w-full h-10 sm:h-12 rounded-xl text-sm sm:text-base font-bold tracking-wide bg-[#c65539] text-white hover:bg-[#c65539]/90 shadow-lg hover:shadow-xl transition-all" size="lg">
+        <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
         {language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking'}
       </Button>
     </form>
@@ -440,50 +444,26 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     </>
   );
 
-  // Mobile: use Drawer (bottom sheet)
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerTrigger asChild>
-          {children}
-        </DrawerTrigger>
-        <DrawerContent className="max-h-[92dvh]">
-          <DrawerHeader className="text-center pb-4 px-3">
-            <div className="text-xl sm:text-2xl font-bold font-serif tracking-tight text-foreground mb-2">
-              {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
-            </div>
-            <DrawerTitle className="text-sm sm:text-base font-semibold font-serif tracking-tight text-foreground/70 leading-relaxed">
-              {language === 'th' ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping' : language === 'zh' ? '填写详细信息以预订房间' : 'Fill in the details to book your room'}
-            </DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6 overflow-y-auto">
-            {bookingForm}
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  // Desktop: use Dialog
+  // Dialog: Centered on all devices (Mobile, Tablet, Desktop)
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] rounded-2xl p-6 md:p-8">
-        <DialogHeader className="text-center mb-1">
-          <div className="text-2xl md:text-3xl font-bold font-serif tracking-tight text-foreground mb-3 leading-tight">
+      <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[70vw] xl:w-[60vw] xl:max-w-[550px] rounded-2xl p-3 sm:p-4 md:p-6 max-h-[90vh] flex flex-col gap-0 overflow-hidden">
+        <DialogHeader className="text-center mb-3 sm:mb-4 flex-shrink-0">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold font-serif tracking-tight text-foreground mb-1.5 sm:mb-2 leading-tight">
             {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
           </div>
-          <DialogTitle className="text-sm md:text-base font-semibold font-serif tracking-tight text-foreground/70 leading-relaxed px-2">
+          <DialogTitle className="text-xs sm:text-sm font-semibold font-serif tracking-tight text-foreground/70 leading-snug px-1">
             {language === 'th'
               ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
               : language === 'zh'
               ? '填写详细信息以预订房间'
-              : 'Fill in the details to book your room'}
+              : 'Fill in details to book your room'}
           </DialogTitle>
         </DialogHeader>
-        <div className="mt-2">
+        <div className="flex-1 overflow-y-auto scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden sm:[&::-webkit-scrollbar]:w-2 sm:[&::-webkit-scrollbar-track]:bg-transparent sm:[&::-webkit-scrollbar-thumb]:bg-[#c65539]/30 sm:[&::-webkit-scrollbar-thumb]:rounded-full sm:[&::-webkit-scrollbar-thumb]:hover:bg-[#c65539]/60 px-0.5">
           {bookingForm}
         </div>
       </DialogContent>
