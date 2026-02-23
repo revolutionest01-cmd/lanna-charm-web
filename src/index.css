@@ -368,3 +368,46 @@ html {
     transform: translateY(-10px) scale(0.99);
   }
 }
+
+/* Global smooth transitions for interactive elements */
+@layer components {
+  button {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  [role="button"],
+  .cursor-pointer {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Smooth hover transitions for clickable elements */
+  button:hover,
+  [role="button"]:hover {
+    @apply duration-200;
+  }
+
+  /* Focus state transitions */
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Card hover transitions */
+  .card,
+  [role="article"] {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Modal backdrop transitions */
+  [role="dialog"] {
+    @apply transition-all duration-300 ease-out;
+  }
+}
