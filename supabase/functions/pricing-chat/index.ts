@@ -209,23 +209,24 @@ serve(async (req) => {
       intent = 'room';
       if (rooms && rooms.length > 0) {
         const roomInfo = rooms.map(r => {
-          let info = `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน`;
+          let info = `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: 💰 ${r.price} บาท/คืน`;
           if (r.description_th || r.description_en) {
             info += `\n  📍 ${sanitizedLanguage === 'th' ? r.description_th : r.description_en}`;
           }
           if (r.capacity) {
-            info += `\n  👥 ความจุ: ${r.capacity}`;
+            info += `\n  👥 ความจุ: ${r.capacity} คน`;
           }
-          // Include amenities if parking question
-          if (hasParkingKeyword && r.amenities_th) {
+          if (r.amenities_th || r.amenities_en) {
             const amenities = sanitizedLanguage === 'th' ? r.amenities_th : r.amenities_en;
-            if (amenities?.toLowerCase().includes('จอด') || amenities?.toLowerCase().includes('park')) {
-              info += `\n  🚗 ${amenities}`;
-            }
+            info += `\n  ✨ ${amenities}`;
           }
           return info;
-        }).join('\n');
-        contexts.push(`ข้อมูลห้องพัก:\n${roomInfo}`);
+        }).join('\n\n');
+        contexts.push(`📋 ข้อมูลห้องพักอย่างละเอียด:\n${roomInfo}`);
+        
+        // Add price summary for easy reference
+        const priceList = rooms.map(r => `• ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน`).join('\n');
+        contexts.push(`💳 สรุปราคาห้องพัก:\n${priceList}`);
       }
       
       // Add parking info if asked
@@ -327,22 +328,25 @@ serve(async (req) => {
 
 🎯 หน้าที่หลัก:
 1. ตอบคำถาม เกี่ยวกับ ห้องพัก ราคา ที่จอดรถ เมนูอาหาร กาแฟ และ บริการจัดงาน
-2. แนะนำเมนูแนะนำ (⭐) และอาการยอดนิยม
+2. แนะนำเมนูแนะนำ (⭐) และสินค้ายอดนิยม
 3. ตัดสินใจอย่างฉลาด จากข้อมูล DATABASE ที่ให้มา
+4. ใช้ข้อมูลจริงเพื่อให้คำแนะนำที่เป็นประโยชน์
 
 📋 กฎการตอบ:
-✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร
-✓ **ตอบสั้นกระชับ** (2-3 บรรทัด ไม่เกิน 100 คำ)
-✓ ใช้ข้อมูลจาก context เท่านั้น ห้ามสร้างข้อมูลเอง
+✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร หลากหลายวิธี
+✓ ตอบให้ชัดเจน หากถามราคา ให้แสดงราคาทั้งหมด
+✓ ใช้ข้อมูลจาก context และปรับให้เข้ากับความต้องการ
 ✓ ถ้าชื่อเมนู/ห้อง -> ระบุ ราคา + คำบรรยาย + (⭐ ถ้าแนะนำ)
-✓ ถ้าถาม ที่จอดรถ -> บอกว่ามี/مี่ และรายละเอียด
+✓ ถ้าถาม ที่จอดรถ -> บอกว่ามี และรายละเอียด + ห้องไหนมี
 ✓ ถ้าไม่มีข้อมูล -> บอกให้ติดต่อเจ้าหน้าที่
-✓ ให้ตัวเลือก/สาขาอื่น ถ้ามีหลายอย่าง
+✓ ให้ตัวเลือก/เสนอแนะ ถ้ามีหลายอย่าง
+✓ ตอบยาวได้ถ้าจำเป็น แต่ยังคง อ่านใจการถาม
 
-🌟 ลำดับความสำคัญ:
-1. เมนูแนะนำ (⭐)
-2. ข้อมูลที่ตรงกับคำถาม
-3. ข้อเสริมเพิ่มเติม (ถ้าเกี่ยวข้อง)
+⭐ จุดเน้น:
+• **ราคาห้องพัก**: ตั้งใจสำคัญ! ลูกค้าต้องการรู้ราคา
+• **เมนูแนะนำ (⭐)**: ยกให้เด่น และเหตุผลที่ดี
+• **ทางเลือก**: เสนอทีมเลือก ห้องอื่น เมนูอื่น
+• **ส่วนตัว**: ให้ความรู้สึกอบอุ่น ไม่เพียงข้อมูล
 
 \`\`\`
 ${context}
@@ -353,20 +357,23 @@ ${context}
 1. Answer about rooms, prices, parking, menus, coffee, and event services
 2. Recommend special items (⭐) and popular options
 3. Use DATABASE information smartly
+4. Provide helpful and varied responses
 
 📋 Rules:
 ✓ Answer in English, polite and friendly
-✓ **Keep it SHORT** (2-3 lines, max 100 words)
-✓ Use ONLY provided information - no making up data
+✓ Be clear and comprehensive - if they ask about prices, show all options
+✓ Use provided information and adapt to their needs
 ✓ For menus/rooms: Show name + price + description + (⭐ if recommended)
-✓ For parking: Mention availability and details
+✓ For parking: Mention availability and which rooms have it
 ✓ If no info: Suggest contacting staff
-✓ Offer alternatives when available
+✓ Offer alternatives and suggestions
+✓ Longer answers are OK if helpful - prioritize clarity over brevity
 
-🌟 Priority:
-1. Recommended items (⭐)
-2. Direct answers to the question
-3. Related additional info (if relevant)
+⭐ Key Points:
+• **Room Prices**: Most important! Be explicit about pricing
+• **Recommended Items (⭐)**: Highlight and explain why
+• **Options**: Offer choices - different rooms, different menu items
+• **Personal Touch**: Feel warm and welcoming, not just data
 
 \`\`\`
 ${context}
