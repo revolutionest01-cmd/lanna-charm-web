@@ -57,7 +57,7 @@ export const useWebboard = () => {
 
       let query = forumDb.topics()
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("updated_at", { ascending: false });
 
       if (!includeInactive) {
         query = query.eq("is_active", true);
@@ -282,6 +282,15 @@ export const useWebboard = () => {
         .single();
 
       if (err) throw err;
+
+      // Update topic's updated_at to bump it to top
+      const updateError = await forumDb.topics()
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", topicId);
+
+      if (updateError) {
+        console.warn("[useWebboard] Error updating topic timestamp:", updateError);
+      }
 
       await fetchTopics(lastIncludeInactive);
       return data;

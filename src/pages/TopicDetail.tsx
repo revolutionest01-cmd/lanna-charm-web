@@ -208,12 +208,12 @@ const TopicDetail = () => {
 
   const loadNavigationTopics = async () => {
     try {
-      // Fetch all active topics ordered by creation date
+      // Fetch all active topics ordered by most recent activity
       const { data: allTopics, error } = await (supabase as any)
         .from("forum_topics")
-        .select("id, created_at")
+        .select("id, updated_at")
         .eq("is_active", true)
-        .order("created_at", { ascending: false });
+        .order("updated_at", { ascending: false });
 
       if (error || !allTopics) {
         console.error("[TopicDetail] Error loading navigation topics:", error);
@@ -341,6 +341,14 @@ const TopicDetail = () => {
 
       if (data) {
         console.log('[TopicDetail] Reply inserted successfully:', data);
+        
+        // Update topic's updated_at to bump it to top of forum
+        await (supabase as any)
+          .from("forum_topics")
+          .update({ updated_at: new Date().toISOString() })
+          .eq("id", id)
+          .catch((err: any) => console.warn('[TopicDetail] Error updating topic timestamp:', err));
+        
         setReplies([...replies, data as ForumReply]);
         setReplyContent("");
         
@@ -694,7 +702,7 @@ const TopicDetail = () => {
                     onChange={(e) => setReplyContent(e.target.value)}
                     placeholder={language === "th" ? "เขียนความคิดเห็น..." : "Write your reply..."}
                     rows={4}
-                    className="resize-none rounded-lg border-blue-200 dark:border-blue-800 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    className="resize-none rounded-lg bg-white text-gray-900 border-blue-200 dark:border-blue-800 focus:ring-blue-500 dark:focus:ring-blue-400"
                     disabled={isSubmitting}
                   />
                 </div>
