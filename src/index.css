@@ -187,23 +187,24 @@ All colors MUST be HSL.
 
   html {
     font-family: var(--font-sans);
-    /* Hide scrollbar on mobile, show on tablet and up */
+    /* Hide scrollbar by default - only show on desktop */
     scrollbar-width: none;
   }
 
-  /* Hide scrollbar in Chrome/Edge/Safari on mobile */
+  /* Hide scrollbar in Chrome/Edge/Safari by default */
   html::-webkit-scrollbar {
     display: none;
   }
 
-  @media (min-width: 640px) {
+  /* Show scrollbar only on large desktop screens (lg: 1280px and up) */
+  @media (min-width: 1280px) {
     html {
       scrollbar-width: auto;
     }
 
     html::-webkit-scrollbar {
       display: block;
-      width: 8px;
+      width: 10px;
     }
 
     html::-webkit-scrollbar-track {
@@ -211,12 +212,17 @@ All colors MUST be HSL.
     }
 
     html::-webkit-scrollbar-thumb {
-      background: hsl(var(--highlight) / 0.3);
+      background: hsl(var(--highlight) / 0.35);
       border-radius: 9999px;
+      transition: background-color 0.3s ease-out;
     }
 
     html::-webkit-scrollbar-thumb:hover {
-      background: hsl(var(--highlight) / 0.6);
+      background: hsl(var(--highlight) / 0.65);
+    }
+
+    html::-webkit-scrollbar-thumb:active {
+      background: hsl(var(--highlight) / 0.8);
     }
   }
 
