@@ -35,7 +35,7 @@ interface ForumReply {
 
 const TopicDetail = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { topicId: id } = useParams();
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
 
