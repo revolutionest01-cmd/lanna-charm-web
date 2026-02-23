@@ -289,7 +289,7 @@ const MenuSection = () => {
 
                                   {/* Price badge */}
                                   <div className="flex-shrink-0 text-right">
-                                    <span className="text-xl sm:text-2xl font-extrabold tracking-tight" style={{ color: 'hsl(35, 70%, 45%)' }}>
+                                    <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-highlight">
                                       ฿{item.price}
                                     </span>
                                   </div>
