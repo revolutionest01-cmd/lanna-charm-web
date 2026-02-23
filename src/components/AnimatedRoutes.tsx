@@ -37,8 +37,10 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
       "pb-16",
       // Tablet (sm): no TabBar
       "sm:pb-18",
-      // Desktop: no top or bottom bar
-      "md:pt-0 md:pb-0"
+      // Tablet/iPad (md): keep bottom bar padding
+      "md:pb-18",
+      // Large Desktop (lg): no top or bottom bar
+      "lg:pt-0 lg:pb-0"
     )}>
       {/* Overlay when sidebar is open - GPU-accelerated */}
       <div 
