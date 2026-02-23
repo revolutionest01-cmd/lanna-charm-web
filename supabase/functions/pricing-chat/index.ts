@@ -193,7 +193,9 @@ serve(async (req) => {
     };
 
     // Build context based on detected categories and intent
+    // **IMPORTANT**: Only include data if it actually exists in the database
     const menuMatches = findMatchingMenus(message);
+    
     if (menuMatches.length > 0) {
       // Found matching menu items - show them prominently
       intent = 'menu';
@@ -205,7 +207,7 @@ serve(async (req) => {
         return menuInfo;
       }).join('\n')}`);
     } else if (hasRoomKeyword || (detectedCategories.includes('pricing') && messageLower.includes('ห้อง'))) {
-      // Room-related queries
+      // Room-related queries - ONLY include if data exists
       intent = 'room';
       if (rooms && rooms.length > 0) {
         const roomInfo = rooms.map(r => {
@@ -227,6 +229,9 @@ serve(async (req) => {
         // Add price summary for easy reference
         const priceList = rooms.map(r => `• ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน`).join('\n');
         contexts.push(`💳 สรุปราคาห้องพัก:\n${priceList}`);
+      } else {
+        // No rooms found - add note to AI
+        contexts.push(`⚠️ ไม่มีข้อมูลห้องพักในระบบ - ให้ตอบสุภาพว่าไม่สามารถแสดงข้อมูล สามารถติดต่อเจ้าหน้าที่ได้`);
       }
       
       // Add parking info if asked
@@ -242,14 +247,18 @@ serve(async (req) => {
     } else if (messageLower.includes('ห้องประชุม') || messageLower.includes('meeting') || 
         messageLower.includes('งานเลี้ยง') || messageLower.includes('event') ||
         messageLower.includes('conference') || messageLower.includes('wedding')) {
+      // Event/meeting space query - ONLY show if data exists
       intent = 'event';
       if (events && events.length > 0) {
         contexts.push(`ข้อมูลห้องประชุม & งานเลี้ยง:\n${events.map(e => 
           `- ${sanitizedLanguage === 'th' ? e.title_th : e.title_en}\n  ${sanitizedLanguage === 'th' ? e.description_th : e.description_en}`
         ).join('\n')}`);
+      } else {
+        // No event spaces found - add note to AI
+        contexts.push(`⚠️ ไม่มีข้อมูลห้องประชุมหรือบริการจัดงานในระบบ - ให้ตอบสุภาพว่าไม่สามารถแสดงข้อมูล สามารถติดต่อเจ้าหน้าที่ได้`);
       }
     } else if (hasMenuKeyword) {
-      // Menu-related queries (including coffee)
+      // Menu-related queries (including coffee) - ONLY show if data exists
       intent = 'menu';
       if (menus && menus.length > 0) {
         const menusByCategory: { [key: string]: typeof menus } = {};
@@ -277,36 +286,38 @@ serve(async (req) => {
             ).join('\n')}`);
           }
         }
+      } else {
+        // No menus found - add note to AI
+        contexts.push(`⚠️ ไม่มีข้อมูลเมนูในระบบ - ให้ตอบสุภาพว่าไม่สามารถแสดงข้อมูล สามารถติดต่อเจ้าหน้าที่ได้`);
       }
     }
 
-    // **ALWAYS Include Summary of Services** in any context if no specific match
-    if (contexts.length === 0) {
-      // Comprehensive fallback - include everything
-      if (menus && menus.length > 0) {
-        const recommendedMenus = menus.filter(m => m.is_recommended);
-        if (recommendedMenus.length > 0) {
-          contexts.push(`⭐ เมนูแนะนำ:\n${recommendedMenus.map(m => 
-            `  - ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท`
-          ).join('\n')}`);
+    // **SMART FALLBACK**: Only include if no specific keyword matched
+    if (contexts.length === 0 || (contexts.length === 1 && contexts[0]?.startsWith('⚠️'))) {
+      // No specific match found - provide general info only
+      const hasAnyData = (menus && menus.length > 0) || (rooms && rooms.length > 0) || (events && events.length > 0);
+      
+      if (hasAnyData) {
+        if (menus && menus.length > 0) {
+          const recommendedMenus = menus.filter(m => m.is_recommended);
+          if (recommendedMenus.length > 0) {
+            contexts.push(`⭐ เมนูแนะนำ:\n${recommendedMenus.map(m => 
+              `  - ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท`
+            ).join('\n')}`);
+          }
         }
-        
-        const allMenusStr = menus.map(m => `${sanitizedLanguage === 'th' ? m.name_th : m.name_en} (${m.price})`).join(', ');
-        contexts.push(`📋 เมนูทั้งหมด: ${allMenusStr.substring(0, 200)}${allMenusStr.length > 200 ? '...' : ''}`);
-      }
-      if (rooms && rooms.length > 0) {
-        contexts.push(`🛏️ ห้องพัก: ${rooms.map(r => `${sanitizedLanguage === 'th' ? r.name_th : r.name_en} (${r.price} บาท/คืน)`).join(', ')}`);
-        
-        // Include parking info in fallback
-        const parkingRooms = rooms.filter(r => r.amenities_th?.toLowerCase().includes('จอด') || r.amenities_en?.toLowerCase().includes('park'));
-        if (parkingRooms.length > 0) {
-          contexts.push(`🚗 ที่จอด: มีให้ใช้อย่างปลอดภัย`);
+        if (rooms && rooms.length > 0) {
+          contexts.push(`🛏️ ห้องพัก: ${rooms.map(r => `${sanitizedLanguage === 'th' ? r.name_th : r.name_en} (${r.price} บาท/คืน)`).join(', ')}`);
         }
+        if (events && events.length > 0) {
+          contexts.push(`🎪 บริการจัดงาน: ${events.map(e => sanitizedLanguage === 'th' ? e.title_th : e.title_en).join(', ')}`);
+        }
+        intent = 'general';
+      } else {
+        // No data at all in database
+        contexts.push(`⚠️ ขณะนี้ยังไม่มีข้อมูลในระบบ - ให้ตอบสุภาพและแนะนำให้ติดต่อเจ้าหน้าที่`);
+        intent = 'no_data';
       }
-      if (events && events.length > 0) {
-        contexts.push(`🎪 บริการจัดงาน: ${events.map(e => sanitizedLanguage === 'th' ? e.title_th : e.title_en).join(', ')}`);
-      }
-      intent = 'general';
     }
 
     if (reviews && reviews.length > 0) {
@@ -327,26 +338,26 @@ serve(async (req) => {
       ? `คุณเป็น Plernping AI - ผู้ช่วยตอบคำถามของ Plern Ping Cafe & Resort
 
 🎯 หน้าที่หลัก:
-1. ตอบคำถาม เกี่ยวกับ ห้องพัก ราคา ที่จอดรถ เมนูอาหาร กาแฟ และ บริการจัดงาน
-2. แนะนำเมนูแนะนำ (⭐) และสินค้ายอดนิยม
-3. ตัดสินใจอย่างฉลาด จากข้อมูล DATABASE ที่ให้มา
-4. ใช้ข้อมูลจริงเพื่อให้คำแนะนำที่เป็นประโยชน์
+1. ค้นหาข้อมูลจาก Database ตามคำที่ลูกค้าถาม ก่อนตอบ
+2. ตอบเฉพาะข้อมูลที่จริง ๆ มีอยู่ใน Database
+3. ถ้าหาไม่เจอ ให้ตอบสุภาพและแนะนำติดต่อเจ้าหน้าที่
 
 📋 กฎการตอบ:
-✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร หลากหลายวิธี
-✓ ตอบให้ชัดเจน หากถามราคา ให้แสดงราคาทั้งหมด
-✓ ใช้ข้อมูลจาก context และปรับให้เข้ากับความต้องการ
-✓ ถ้าชื่อเมนู/ห้อง -> ระบุ ราคา + คำบรรยาย + (⭐ ถ้าแนะนำ)
-✓ ถ้าถาม ที่จอดรถ -> บอกว่ามี และรายละเอียด + ห้องไหนมี
-✓ ถ้าไม่มีข้อมูล -> บอกให้ติดต่อเจ้าหน้าที่
-✓ ให้ตัวเลือก/เสนอแนะ ถ้ามีหลายอย่าง
-✓ ตอบยาวได้ถ้าจำเป็น แต่ยังคง อ่านใจการถาม
+✓ **ค้นหาก่อนตอบ**: ถ้าถามห้องพัก → ดูว่า Database มีห้องพักหรือไม่
+✓ ถ้ามีข้อมูล → แสดงข้อมูลทั้งหมด พร้อมราคา / รายละเอียด
+✓ ถ้าหาไม่เจอ → ตอบแบบนี้: "ขออภัยค่ะ, ขณะนี้ไม่มีข้อมูล [อะไร] ในระบบ กรุณาติดต่อเจ้าหน้าที่ได้"
+✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร
+✓ ไม่สร้างข้อมูลที่ไม่มี - บอกความจริง
 
-⭐ จุดเน้น:
-• **ราคาห้องพัก**: ตั้งใจสำคัญ! ลูกค้าต้องการรู้ราคา
-• **เมนูแนะนำ (⭐)**: ยกให้เด่น และเหตุผลที่ดี
-• **ทางเลือก**: เสนอทีมเลือก ห้องอื่น เมนูอื่น
-• **ส่วนตัว**: ให้ความรู้สึกอบอุ่น ไม่เพียงข้อมูล
+⚠️ สำคัญ:
+• ลูกค้าถามห้องพัก แต่ Database ว่างเปล่า → ตอบสุภาพ ไม่ได้ตอบข้อมูลที่ไม่มี
+• ลูกค้าถามห้องประชุม แต่ไม่มี → ตอบสุภาพ แนะนำติดต่อให้
+• ลูกค้าถามเมนู แต่ Database ว่าง → ตอบสุภาพ ไม่บอกเมนูที่ไม่มี
+
+🌟 ตัวอย่างการตอบ:
+Q: มีห้องพักไหม?
+A (ถ้ามีข้อมูล): มีครับ/ ค่ะ! ห้องพัก... [ขอมูลจริง]
+A (ถ้าไม่มีข้อมูล): ขออภัยค่ะ, ขณะนี้ไม่มีข้อมูลห้องพักในระบบ กรุณาติดต่อเจ้าหน้าที่ได้
 
 \`\`\`
 ${context}
@@ -354,26 +365,26 @@ ${context}
       : `You are Plernping AI - your mission is to help with Plern Ping Cafe & Resort inquiries
 
 🎯 Your Role:
-1. Answer about rooms, prices, parking, menus, coffee, and event services
-2. Recommend special items (⭐) and popular options
-3. Use DATABASE information smartly
-4. Provide helpful and varied responses
+1. Search the Database for information about what customer asks - BEFORE answering
+2. Only provide information that actually exists in the Database
+3. If no data found, answer politely and suggest contacting staff
 
 📋 Rules:
+✓ **Search first, then answer**: If asking about rooms → check if Database has rooms
+✓ If data exists → show all information with prices and details
+✓ If not found → answer politely: "Sorry, we don't have [something] information. Please contact our staff."
 ✓ Answer in English, polite and friendly
-✓ Be clear and comprehensive - if they ask about prices, show all options
-✓ Use provided information and adapt to their needs
-✓ For menus/rooms: Show name + price + description + (⭐ if recommended)
-✓ For parking: Mention availability and which rooms have it
-✓ If no info: Suggest contacting staff
-✓ Offer alternatives and suggestions
-✓ Longer answers are OK if helpful - prioritize clarity over brevity
+✓ Don't make up information - always tell the truth
 
-⭐ Key Points:
-• **Room Prices**: Most important! Be explicit about pricing
-• **Recommended Items (⭐)**: Highlight and explain why
-• **Options**: Offer choices - different rooms, different menu items
-• **Personal Touch**: Feel warm and welcoming, not just data
+⚠️ Important:
+• Customer asks for rooms but Database is empty → Answer politely, don't show fake data
+• Customer asks for meeting rooms but no data → Answer politely, suggest contact
+• Customer asks for menu but Database is empty → Answer politely, don't show fake menu
+
+🌟 Example Answers:
+Q: Do you have rooms?
+A (if data exists): Yes! We have... [actual data]
+A (if no data): Sorry, we don't have room information available right now. Please contact our staff.
 
 \`\`\`
 ${context}
