@@ -29,7 +29,8 @@ import {
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useActiveSection, type SectionTheme } from "@/hooks/useActiveSection";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/plernping-logo-White.png";
+import logoNormal from "@/assets/logo.png";
 
 const AppSidebar = () => {
   const navigate = useNavigate();
@@ -38,6 +39,11 @@ const AppSidebar = () => {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<string>('hero');
   const [isBookingHovered, setIsBookingHovered] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme-mode');
+    if (saved) return saved === 'dark';
+    return document.documentElement.classList.contains('dark');
+  });
   const { language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
   const { isAdmin } = useAdminStatus();
@@ -67,6 +73,25 @@ const AppSidebar = () => {
       setSelectedMenuItem(activeSection || 'hero');
     }
   }, [activeSection, location.pathname]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+    };
+
+    const observer = new MutationObserver(() => {
+      handleThemeChange();
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
 
   const navItems = useMemo(() => ([
@@ -139,7 +164,7 @@ const AppSidebar = () => {
           <button
             onClick={() => navigate("/")}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg",
+              "flex items-center gap-3.5 px-4 py-3 rounded-lg flex-1",
               "border shadow-sm transition-all duration-200",
               "bg-primary/40 hover:shadow-md hover:bg-primary/50",
               "border-primary/50 hover:border-primary/60",
@@ -147,12 +172,12 @@ const AppSidebar = () => {
             )}
             aria-label="Go to home"
           >
-            <img src={logo} alt="Plern Ping" className="h-9 w-auto" />
-            <div>
-              <h2 className={cn("text-lg font-bold tracking-wide", themeStyles.text)}>
+            <img src={isDarkMode ? logoNormal : logo} alt="Plern Ping" className="h-12 w-auto object-contain" />
+            <div className="flex-1">
+              <h2 className={cn("text-base font-bold tracking-wide leading-tight", themeStyles.text)}>
                 Plern Ping
               </h2>
-              <p className={cn("text-[10px]", themeStyles.muted)}>
+              <p className={cn("text-[9px]", themeStyles.muted)}>
                 {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
               </p>
             </div>

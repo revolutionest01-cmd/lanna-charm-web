@@ -35,22 +35,22 @@ const FloatingChatButton = () => {
     {
       icon: Phone,
       label: language === 'th' ? 'โทรเลย' : language === 'zh' ? '立即致电' : 'Call Now',
-      color: 'text-blue-600',
-      bg: 'bg-blue-100 dark:bg-blue-950',
+      color: 'text-foreground',
+      bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
       onClick: () => window.open('tel:+66818469098'),
     },
     {
       icon: HelpCircle,
       label: language === 'th' ? 'สอบถามข้อมูล' : language === 'zh' ? '查询信息' : 'Quick Info',
-      color: 'text-amber-600',
-      bg: 'bg-amber-100 dark:bg-amber-950',
+      color: 'text-foreground',
+      bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
       onClick: () => { setIsQuickInfoOpen(true); setIsOpen(false); },
     },
     {
       icon: MessageCircle,
       label: 'Plernping AI',
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-100 dark:bg-emerald-950',
+      color: 'text-foreground',
+      bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
       onClick: () => { setIsChatOpen(true); setIsOpen(false); },
     },
   ];
@@ -95,7 +95,7 @@ const FloatingChatButton = () => {
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="bg-card border border-border/60 rounded-l-2xl shadow-2xl overflow-hidden">
+        <div className="bg-card rounded-l-2xl shadow-2xl overflow-hidden">
           {/* Panel Header */}
           <div className="px-5 py-4 bg-foreground">
             <p className="text-background font-bold text-base">

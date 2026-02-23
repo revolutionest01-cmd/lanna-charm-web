@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/plernping-logo-White.png";
+import logoNormal from "@/assets/logo.png";
 import natureSound from "@/assets/nature-ambient.m4a";
 import { type SectionTheme } from "@/hooks/useActiveSection";
 import { useLanguage, Language } from "@/hooks/useLanguage";
@@ -77,6 +78,25 @@ const Secondbar = () => {
       audioRef.current.volume = volume;
     }
   }, [volume]);
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+    };
+
+    const observer = new MutationObserver(() => {
+      handleThemeChange();
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const togglePlay = async () => {
     if (!audioRef.current) return;
@@ -151,23 +171,23 @@ const Secondbar = () => {
 
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200 active:scale-95"
+            className="flex items-center gap-3 hover:opacity-85 transition-all duration-200 active:scale-95 px-3 py-1.5 rounded-lg hover:bg-background/10"
             aria-label="Go to home"
           >
             <img 
-              src={logo} 
+              src={isDarkMode ? logoNormal : logo}
               alt="Plern Ping" 
-              className="h-6 sm:h-7 md:h-8 w-auto" 
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain" 
             />
             <div className="flex flex-col">
               <span className={cn(
-                "text-sm sm:text-base md:text-lg font-semibold tracking-wide leading-tight transition-colors duration-300",
+                "text-sm sm:text-base md:text-lg font-bold tracking-wide leading-tight transition-colors duration-300",
                 themeStyles.text
               )}>
                 Plern Ping
               </span>
               <span className={cn(
-                "text-[8px] sm:text-[9px] md:text-[10px] font-medium tracking-[0.15em] uppercase leading-tight transition-colors duration-300",
+                "text-[7px] sm:text-[8px] md:text-[9px] font-semibold tracking-[0.15em] uppercase leading-tight transition-colors duration-300",
                 themeStyles.subText
               )}>
                 Cafe & Stay
