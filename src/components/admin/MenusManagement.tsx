@@ -581,16 +581,18 @@ export const MenusManagement = () => {
 
       // Delete images from storage
       if (menuToDelete.image_url) {
-        const fileName = menuToDelete.image_url.split("/").pop();
-        if (fileName) {
-          await supabase.storage.from("menus").remove([fileName]);
+        const pathMatch = menuToDelete.image_url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : menuToDelete.image_url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
         }
       }
 
       if (menuToDelete.icon_url) {
-        const fileName = menuToDelete.icon_url.split("/").pop();
-        if (fileName) {
-          await supabase.storage.from("menus").remove([fileName]);
+        const pathMatch = menuToDelete.icon_url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : menuToDelete.icon_url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
         }
       }
 
@@ -618,28 +620,47 @@ export const MenusManagement = () => {
     try {
       setLoading(true);
 
-      // Delete from storage
-      const fileName = imageToDelete.url.split("/").pop();
-      if (fileName) {
-        await supabase.storage.from("menus").remove([fileName]);
+      if (imageToDelete.isExisting) {
+        // Delete from storage - extract path after /public/menus/
+        const url = imageToDelete.url;
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        
+        if (storagePath) {
+          const { error: storageError } = await supabase.storage.from("menus").remove([storagePath]);
+          if (storageError) {
+            console.warn("Storage delete warning:", storageError);
+          }
+        }
+
+        // Update database to remove image
+        if (selectedMenu) {
+          const { error } = await supabase
+            .from("menus")
+            .update({ image_url: null })
+            .eq("id", selectedMenu.id);
+
+          if (error) throw error;
+          
+          // Update local selectedMenu state
+          setSelectedMenu({ ...selectedMenu, image_url: undefined });
+        }
       }
 
-      // If it's an existing menu image, update database
-      if (imageToDelete.isExisting && selectedMenu) {
-        const { error } = await supabase
-          .from("menus")
-          .update({ image_url: null })
-          .eq("id", selectedMenu.id);
-
-        if (error) throw error;
-      }
-
-      // Remove from preview array regardless of whether it's existing or new
-      setImagePreviews(prev => prev.filter(p => p !== imageToDelete.url));
+      // Remove from preview arrays
+      const deletedUrl = imageToDelete.url;
+      const deleteIndex = imagePreviews.indexOf(deletedUrl);
       
-      // Also remove from imageFiles if it's a new preview
-      if (!imageToDelete.isExisting) {
-        setImageFiles(prev => prev.filter(f => URL.createObjectURL(f) !== imageToDelete.url));
+      setImagePreviews(prev => prev.filter(p => p !== deletedUrl));
+      
+      // Remove corresponding file from imageFiles if it's a new upload (blob URL)
+      if (!imageToDelete.isExisting && deleteIndex >= 0) {
+        // Calculate the index within imageFiles (subtract existing image count)
+        const existingCount = imagePreviews.filter(p => p.startsWith("http")).length;
+        const fileIndex = deleteIndex - existingCount;
+        if (fileIndex >= 0 && fileIndex < imageFiles.length) {
+          setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+        }
       }
 
       toast.success(
@@ -666,23 +687,27 @@ export const MenusManagement = () => {
     try {
       setLoading(true);
 
-      // Delete from storage
-      const fileName = iconToDelete.url.split("/").pop();
-      if (fileName) {
-        await supabase.storage.from("menus").remove([fileName]);
+      if (iconToDelete.isExisting) {
+        // Delete from storage
+        const url = iconToDelete.url;
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
+        }
+
+        // Update database
+        if (selectedMenu) {
+          const { error } = await supabase
+            .from("menus")
+            .update({ icon_url: null })
+            .eq("id", selectedMenu.id);
+
+          if (error) throw error;
+        }
       }
 
-      // If it's an existing menu icon, update database
-      if (iconToDelete.isExisting && selectedMenu) {
-        const { error } = await supabase
-          .from("menus")
-          .update({ icon_url: null })
-          .eq("id", selectedMenu.id);
-
-        if (error) throw error;
-      }
-
-      // Clear preview
       setIconPreview("");
       setIconFile(null);
 
@@ -970,7 +995,7 @@ export const MenusManagement = () => {
                           </p>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                             {imagePreviews.map((preview, index) => {
-                              const isExisting = selectedMenu && selectedMenu.image_url === preview;
+                              const isExisting = preview.startsWith("http");
                               return (
                                 <div key={index} className="relative group">
                                   <img
@@ -987,10 +1012,10 @@ export const MenusManagement = () => {
                                     type="button"
                                     variant="destructive"
                                     size="sm"
-                                    className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                                    onClick={() => setImageToDelete({ url: preview, isExisting: isExisting })}
+                                    className="absolute top-1 right-1 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
+                                    onClick={() => setImageToDelete({ url: preview, isExisting })}
                                   >
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
                               );
@@ -1044,10 +1069,10 @@ export const MenusManagement = () => {
                             type="button"
                             variant="destructive"
                             size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                            onClick={() => setIconToDelete({ url: iconPreview, isExisting: !!selectedMenu })}
+                            className="absolute -top-2 -right-2 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
+                            onClick={() => setIconToDelete({ url: iconPreview, isExisting: iconPreview.startsWith("http") })}
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       )}
