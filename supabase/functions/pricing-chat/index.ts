@@ -105,6 +105,7 @@ serve(async (req) => {
     };
 
     // Extract keywords from message
+    const messageLower = message.toLowerCase();
     const detectedCategories: string[] = [];
     let hasRoomKeyword = false, hasPricingKeyword = false, hasParkingKeyword = false;
     let hasMenuKeyword = false, hasRecommendedKeyword = false;
@@ -126,7 +127,6 @@ serve(async (req) => {
     }
 
     // Always fetch ALL relevant data
-    const messageLower = message.toLowerCase();
     let contexts: string[] = [];
     let intent = 'general';
 
@@ -193,7 +193,7 @@ serve(async (req) => {
     };
 
     // Build context based on detected categories and intent
-    const menuMatches = findMatchingMenus(sanitizedMessage);
+    const menuMatches = findMatchingMenus(message);
     if (menuMatches.length > 0) {
       // Found matching menu items - show them prominently
       intent = 'menu';
