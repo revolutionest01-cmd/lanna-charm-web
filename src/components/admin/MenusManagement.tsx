@@ -466,7 +466,6 @@ export const MenusManagement = () => {
       setSubmitting(true);
 
       const imageUrls = await uploadImages();
-      const iconUrl = await uploadIcon();
 
       if (imageUrls.length === 0 && !selectedMenu) {
         toast.error(language === "th" ? "กรุณาเลือกรูปภาพอย่างน้อย 1 รูป" : "Please select at least one image");
@@ -480,7 +479,6 @@ export const MenusManagement = () => {
         description_en: values.description_en || null,
         price: parseFloat(values.price),
         category_id: values.category_id || null,
-        icon_url: iconUrl,
         is_recommended: values.is_recommended,
         is_active: true,
       };
@@ -1096,64 +1094,6 @@ export const MenusManagement = () => {
                       )}
                     </div>
 
-                    {/* Icon Upload */}
-                    <div className="space-y-2">
-                      <Label className="text-primary font-semibold">{language === "th" ? "ไอคอนเมนู" : "Menu Icon"}</Label>
-                      <div
-                        onDragOver={handleIconDragOver}
-                        onDragLeave={handleIconDragLeave}
-                        onDrop={handleIconDrop}
-                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                          isDraggingIcon
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleIconSelect}
-                          disabled={loading || uploadingIcon}
-                          className="hidden"
-                          id="menu-icon-upload"
-                        />
-                        <label
-                          htmlFor="menu-icon-upload"
-                          className="cursor-pointer flex flex-col items-center"
-                        >
-                          <ImageIcon className="w-8 h-8 text-foreground/50 mb-2" />
-                          <p className="text-sm text-foreground/70">
-                            {language === "th"
-                              ? "คลิกหรือลากไฟล์มาวาง"
-                              : "Click or drag file here"}
-                          </p>
-                        </label>
-                      </div>
-                      {iconPreview && (
-                        <div className="mt-2 relative inline-block group">
-                          <img
-                            src={iconPreview}
-                            alt="Icon preview"
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleDirectIconDelete(iconPreview);
-                            }}
-                            disabled={loading}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
                     <div className="flex justify-end gap-2">
                       <Button
                         type="button"
@@ -1210,13 +1150,6 @@ export const MenusManagement = () => {
                     <CardTitle className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          {menu.icon_url && (
-                            <img
-                              src={menu.icon_url}
-                              alt="icon"
-                              className="w-6 h-6 object-contain"
-                            />
-                          )}
                           <span className="text-lg">
                             {language === "th" ? menu.name_th : menu.name_en}
                           </span>

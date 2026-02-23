@@ -254,14 +254,6 @@ const MenuSection = () => {
                                       alt={language === "th" ? item.name_th : item.name_en}
                                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
-                                  ) : item.icon_url ? (
-                                    <div className="w-full h-full flex items-center justify-center bg-accent/50">
-                                      <img
-                                        src={item.icon_url}
-                                        alt="icon"
-                                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
-                                      />
-                                    </div>
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-accent/30">
                                       <span className="text-3xl">🍽️</span>
