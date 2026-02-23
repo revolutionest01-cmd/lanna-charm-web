@@ -46,12 +46,14 @@ export const useWebboard = () => {
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastIncludeInactive, setLastIncludeInactive] = useState(false);
 
   // Fetch all topics
   const fetchTopics = async (includeInactive = false) => {
     try {
       setLoading(true);
       setError(null);
+      setLastIncludeInactive(includeInactive);
 
       let query = forumDb.topics()
         .select("*")
@@ -143,7 +145,7 @@ export const useWebboard = () => {
 
       if (err) throw err;
 
-      await fetchTopics();
+      await fetchTopics(lastIncludeInactive);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to create topic";
@@ -170,7 +172,7 @@ export const useWebboard = () => {
 
       if (err) throw err;
 
-      await fetchTopics();
+      await fetchTopics(lastIncludeInactive);
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to update topic";
@@ -191,7 +193,7 @@ export const useWebboard = () => {
 
       if (err) throw err;
 
-      await fetchTopics();
+      await fetchTopics(lastIncludeInactive);
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to delete topic";
@@ -259,7 +261,7 @@ export const useWebboard = () => {
         if (err) throw err;
       }
 
-      await fetchTopics();
+      await fetchTopics(lastIncludeInactive);
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to toggle like";
@@ -281,7 +283,7 @@ export const useWebboard = () => {
 
       if (err) throw err;
 
-      await fetchTopics();
+      await fetchTopics(lastIncludeInactive);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to add reply";
