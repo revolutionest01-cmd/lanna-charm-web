@@ -243,7 +243,7 @@ const Reviews = () => {
             <Star
               className={`w-5 h-5 ${
                 star <= rating
-                  ? "fill-yellow-400 text-yellow-400"
+                  ? "fill-yellow-500 text-yellow-500"
                   : "text-muted-foreground"
               }`}
             />
@@ -285,11 +285,11 @@ const Reviews = () => {
             
             {/* Review Stats */}
             {reviews.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-2xl mx-auto bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg p-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-2xl mx-auto bg-card rounded-2xl p-8 mb-8 border border-border shadow-lg">
                 <div className="text-center">
                   <div className="flex justify-center gap-1 mb-2">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                      <Star key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
                     ))}
                   </div>
                   <p className="text-3xl font-bold text-foreground">{averageRating}</p>
@@ -304,13 +304,13 @@ const Reviews = () => {
                   </p>
                 </div>
                 <div className="text-center border-l border-border">
-                  <p className="text-3xl font-bold text-green-600">{reviewsByRating[5]}</p>
+                  <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{reviewsByRating[5]}</p>
                   <p className="text-sm text-muted-foreground">
                     {language === "th" ? "5 ดาว" : language === "zh" ? "5星" : "5 Stars"}
                   </p>
                 </div>
                 <div className="text-center border-l border-border">
-                  <p className="text-3xl font-bold text-blue-600">{topReviews[0]?.helpful_count || 0}</p>
+                  <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{topReviews[0]?.helpful_count || 0}</p>
                   <p className="text-sm text-muted-foreground">
                     {language === "th" ? "ไลค์มากที่สุด" : language === "zh" ? "最受欢迎" : "Most Liked"}
                   </p>
@@ -321,11 +321,11 @@ const Reviews = () => {
 
           {/* Write Review Form (Authenticated Users Only) */}
           {isAuthenticated ? (
-            <Card className="mb-12 max-w-2xl mx-auto bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-2 border-blue-200 dark:border-blue-800">
+            <Card className="mb-12 max-w-2xl mx-auto bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-yellow-950/40 border-2 border-amber-200 dark:border-amber-800/70 shadow-lg">
               <CardContent className="pt-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <Send className="w-6 h-6 text-blue-600" />
-                  <h2 className="text-2xl font-bold text-foreground">
+                  <Send className="w-6 h-6 text-orange-700 dark:text-orange-400" />
+                  <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-amber-600 dark:from-yellow-300 dark:to-orange-300">
                     {language === "th" ? "เขียนรีวิวของคุณ" : language === "zh" ? "撰写您的评价" : "Share Your Review"}
                   </h2>
                 </div>
@@ -398,7 +398,7 @@ const Reviews = () => {
                     type="submit" 
                     size="lg" 
                     disabled={submitReviewMutation.isPending}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                    className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold shadow-lg"
                   >
                     {submitReviewMutation.isPending ? (
                       <>
@@ -423,9 +423,9 @@ const Reviews = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="mb-12 max-w-2xl mx-auto bg-gradient-to-r from-muted to-muted/50 border-2 border-dashed">
+            <Card className="mb-12 max-w-2xl mx-auto bg-gradient-to-br from-orange-100/50 to-amber-100/50 dark:from-orange-900/20 dark:to-amber-900/20 border-2 border-dashed border-orange-200 dark:border-orange-800/50">
               <CardContent className="pt-8 text-center">
-                <Send className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <Send className="w-12 h-12 text-orange-400 dark:text-orange-300 mx-auto mb-4 opacity-70" />
                 <p className="text-lg font-semibold text-foreground mb-4">
                   {language === "th" 
                     ? "ต้องการแชร์ประสบการณ์ของคุณ?" 
@@ -440,7 +440,7 @@ const Reviews = () => {
                     ? "请登录后撰写评价"
                     : "Please login to write a review"}
                 </p>
-                <Button onClick={() => navigate("/auth")} size="lg">
+                <Button onClick={() => navigate("/auth")} size="lg" className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold">
                   {language === "th" ? "เข้าสู่ระบบ" : language === "zh" ? "登录" : "Login Now"}
                 </Button>
               </CardContent>
@@ -453,10 +453,10 @@ const Reviews = () => {
               <div className="flex items-center gap-3 mb-8">
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="w-6 h-6 fill-yellow-500 text-yellow-500" />
                   ))}
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+                <h2 className="text-3xl md:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-amber-600 dark:from-yellow-300 dark:to-orange-300">
                   {language === "th" ? "รีวิวยอดนิยม" : language === "zh" ? "热门评价" : "Most Popular Reviews"}
                 </h2>
               </div>
@@ -464,10 +464,10 @@ const Reviews = () => {
                 {topReviews.map((review, index) => (
                   <Card 
                     key={review.id}
-                    className="relative overflow-hidden border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/30 dark:to-background shadow-lg hover:shadow-xl transition-shadow"
+                    className="relative overflow-hidden border-2 border-amber-200 dark:border-amber-800/70 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-yellow-950/40 shadow-xl hover:shadow-2xl transition-all"
                   >
                     {/* Popular Badge */}
-                    <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-orange-500 text-white px-4 py-2 rounded-bl-lg font-semibold text-sm">
+                    <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-600 to-orange-500 text-white px-4 py-2 rounded-bl-lg font-semibold text-sm shadow-md">
                       #{index + 1}
                     </div>
                     
@@ -497,10 +497,10 @@ const Reviews = () => {
                       </p>
 
                       {/* Helpful Count */}
-                      <div className="flex items-center justify-between pt-4 border-t border-amber-200 dark:border-amber-800">
+                      <div className="flex items-center justify-between pt-4 border-t border-amber-200 dark:border-amber-800/50">
                         <div className="flex items-center gap-2">
-                          <ThumbsUp className="w-4 h-4 fill-blue-500 text-blue-500" />
-                          <span className="font-semibold text-blue-600 dark:text-blue-400">{review.helpful_count}</span>
+                          <ThumbsUp className="w-4 h-4 fill-amber-500 text-amber-500" />
+                          <span className="font-semibold text-amber-600 dark:text-amber-400">{review.helpful_count}</span>
                           <span className="text-xs text-muted-foreground">
                             {language === "th" ? "คนกดไลค์" : language === "zh" ? "点赞" : "likes"}
                           </span>
@@ -524,7 +524,7 @@ const Reviews = () => {
           )}
 
           {/* Filter Section */}
-          <div className="mb-12 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900/50 dark:to-blue-900/50 rounded-xl p-8 border border-blue-100 dark:border-blue-900/50">
+          <div className="mb-12 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950/40 dark:via-amber-950/40 dark:to-yellow-950/40 rounded-2xl p-8 border-2 border-amber-100 dark:border-amber-900/50 shadow-lg">
             <h3 className="text-3xl md:text-4xl font-black mb-8 tracking-tight text-foreground">
               {language === "th" ? "🔍 ค้นหารีวิวตามคะแนน" : language === "zh" ? "🔍 按评分筛选" : "🔍 Filter by Rating"}
             </h3>
@@ -536,7 +536,7 @@ const Reviews = () => {
               <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-2 bg-transparent p-0 h-auto">
                 <TabsTrigger 
                   value="all"
-                  className="text-sm md:text-base font-bold py-3 px-4 rounded-lg border-2 border-blue-200 dark:border-blue-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-500 hover:border-blue-400 transition-all"
+                  className="text-sm md:text-base font-bold py-3 px-4 rounded-lg border-2 border-orange-200 dark:border-orange-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:border-orange-600 hover:border-orange-400 dark:hover:border-orange-500 transition-all"
                 >
                   {language === "th" ? "ทั้งหมด" : language === "zh" ? "全部" : "All"}
                 </TabsTrigger>
@@ -544,7 +544,7 @@ const Reviews = () => {
                   <TabsTrigger 
                     key={rating} 
                     value={rating.toString()}
-                    className="flex items-center justify-center gap-2 text-sm md:text-base font-bold py-3 px-3 rounded-lg border-2 border-yellow-200 dark:border-yellow-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-400 data-[state=active]:to-yellow-500 data-[state=active]:text-white data-[state=active]:border-yellow-500 hover:border-yellow-400 transition-all"
+                    className="flex items-center justify-center gap-2 text-sm md:text-base font-bold py-3 px-3 rounded-lg border-2 border-amber-200 dark:border-amber-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-yellow-500 data-[state=active]:text-white data-[state=active]:border-amber-500 hover:border-amber-400 dark:hover:border-amber-500 transition-all"
                   >
                     <span>{rating}</span>
                     <Star className="w-4 h-4 md:w-5 md:h-5 fill-current" />
@@ -555,7 +555,7 @@ const Reviews = () => {
             
             {/* Rating Distribution Bar */}
             {reviews.length > 0 && (
-              <div className="mt-8 space-y-3 bg-white dark:bg-slate-800/50 rounded-lg p-6 border border-blue-100 dark:border-blue-900/30">
+              <div className="mt-8 space-y-3 bg-white dark:bg-amber-950/20 rounded-xl p-6 border-2 border-orange-100 dark:border-orange-900/50 shadow-md">
                 <p className="text-sm font-semibold text-foreground mb-4">
                   {language === "th" ? "📊 การกระจายของคะแนน" : language === "zh" ? "📊 评分分布" : "📊 Rating Distribution"}
                 </p>
@@ -563,11 +563,11 @@ const Reviews = () => {
                   const count = reviewsByRating[rating];
                   const percentage = (count / reviews.length) * 100;
                   const colors = {
-                    5: 'from-green-400 to-green-500',
-                    4: 'from-blue-400 to-blue-500',
-                    3: 'from-yellow-400 to-yellow-500',
-                    2: 'from-orange-400 to-orange-500',
-                    1: 'from-red-400 to-red-500',
+                    5: 'from-emerald-500 to-teal-500',
+                    4: 'from-orange-500 to-amber-500',
+                    3: 'from-amber-400 to-yellow-500',
+                    2: 'from-orange-400 to-red-400',
+                    1: 'from-red-500 to-red-600',
                   };
                   return (
                     <div key={rating} className="flex items-center gap-4">
@@ -575,12 +575,12 @@ const Reviews = () => {
                         <span className="font-bold text-lg text-foreground">{rating}</span>
                         <div className="flex gap-0.5">
                           {[...Array(rating)].map((_, i) => (
-                            <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                            <Star key={i} className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
                           ))}
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="relative bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner">
+                        <div className="relative bg-orange-100 dark:bg-orange-900/30 rounded-full h-3 overflow-hidden shadow-inner">
                           <div 
                             className={`bg-gradient-to-r ${colors[rating as keyof typeof colors]} h-full transition-all duration-500 rounded-full shadow-md`}
                             style={{ width: `${percentage}%` }}
@@ -637,7 +637,7 @@ const Reviews = () => {
                       key={review.id}
                       className={`animate-scale-in hover:shadow-lg transition-all ${
                         isPopular 
-                          ? "border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background" 
+                          ? "border-2 border-orange-300 dark:border-orange-700/70 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950/30 dark:via-amber-950/30 dark:to-yellow-950/30" 
                           : ""
                       }`}
                       style={{ animationDelay: `${index * 50}ms` }}
@@ -645,7 +645,7 @@ const Reviews = () => {
                       <CardContent className="pt-6">
                         {/* Popular Badge */}
                         {isPopular && (
-                          <div className="absolute top-3 right-3 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                          <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-md">
                             <ThumbsUp className="w-3 h-3 fill-current" />
                             {language === "th" ? "ยอดนิยม" : language === "zh" ? "热门" : "Popular"}
                           </div>
@@ -663,7 +663,7 @@ const Reviews = () => {
                         {/* Star Rating */}
                         <div className="mb-4 flex items-center gap-2">
                           {renderStars(review.rating)}
-                          <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
+                          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
                             {review.rating}.0
                           </span>
                         </div>
@@ -685,8 +685,8 @@ const Reviews = () => {
                         {/* Helpful Button with Count */}
                         <div className="flex items-center justify-between pt-4 border-t border-border">
                           <div className="flex items-center gap-2">
-                            <ThumbsUp className={`w-4 h-4 ${review.helpful_count > 0 ? 'fill-blue-500 text-blue-500' : 'text-muted-foreground'}`} />
-                            <span className={`text-sm font-semibold ${review.helpful_count > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
+                            <ThumbsUp className={`w-4 h-4 ${review.helpful_count > 0 ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground'}`} />
+                            <span className={`text-sm font-semibold ${review.helpful_count > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
                               {review.helpful_count}
                             </span>
                           </div>
