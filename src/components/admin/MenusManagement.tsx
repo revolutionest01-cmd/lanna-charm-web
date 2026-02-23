@@ -868,9 +868,9 @@ export const MenusManagement = () => {
                   {language === "th" ? "เพิ่มเมนู" : "Add Menu"}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="w-full sm:w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] overflow-y-auto p-4 sm:p-6">
                 <DialogHeader>
-                  <DialogTitle className={selectedMenu ? "text-xl md:text-2xl font-bold text-amber-900" : "text-lg md:text-xl font-bold"}>
+                  <DialogTitle className={selectedMenu ? "text-lg sm:text-xl md:text-2xl font-bold text-amber-900" : "text-base sm:text-lg md:text-xl font-bold"}>
                     {selectedMenu
                       ? language === "th" ? "แก้ไขเมนู" : "Edit Menu"
                       : language === "th" ? "เพิ่มเมนูใหม่" : "Add New Menu"}
@@ -878,8 +878,8 @@ export const MenusManagement = () => {
                 </DialogHeader>
 
                 <Form {...menuForm}>
-                  <form onSubmit={menuForm.handleSubmit(onSubmitMenu)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form onSubmit={menuForm.handleSubmit(onSubmitMenu)} className="space-y-4 sm:space-y-5 md:space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <FormField
                         control={menuForm.control}
                         name="name_th"
@@ -909,7 +909,7 @@ export const MenusManagement = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <FormField
                         control={menuForm.control}
                         name="price"
@@ -1016,12 +1016,12 @@ export const MenusManagement = () => {
 
                     {/* Image Upload */}
                     <div className="space-y-2">
-                      <Label className="text-primary font-semibold bg-white px-2 py-1 rounded inline-block">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
+                      <Label className="text-primary font-semibold bg-white px-2 py-1 rounded inline-block text-sm sm:text-base">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
                       <div
                         onDragOver={handleImageDragOver}
                         onDragLeave={handleImageDragLeave}
                         onDrop={handleImageDrop}
-                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${
                           isDraggingImage
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
@@ -1055,7 +1055,7 @@ export const MenusManagement = () => {
                               ? `แสดง ${imagePreviews.length} รูป (วางเมาส์เพื่อลบ)`
                               : `${imagePreviews.length} image${imagePreviews.length > 1 ? "s" : ""} (hover to delete)`}
                           </p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {imagePreviews.map((preview, index) => {
                               const isExisting = preview.startsWith("http");
                               return (
@@ -1094,11 +1094,11 @@ export const MenusManagement = () => {
                       )}
                     </div>
 
-                    <div className="flex justify-end gap-2">
+                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                       <Button
                         type="button"
                         variant="secondary"
-                        className="font-semibold text-foreground hover:bg-secondary/80"
+                        className="font-semibold text-foreground hover:bg-secondary/80 w-full sm:w-auto"
                         onClick={() => {
                           setIsMenuDialogOpen(false);
                           resetMenuForm();
@@ -1107,7 +1107,7 @@ export const MenusManagement = () => {
                       >
                         {language === "th" ? "ยกเลิก" : "Cancel"}
                       </Button>
-                      <Button type="submit" disabled={submitting || uploadingImage || uploadingIcon}>
+                      <Button type="submit" disabled={submitting || uploadingImage || uploadingIcon} className="w-full sm:w-auto">
                         {submitting || uploadingImage || uploadingIcon ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
