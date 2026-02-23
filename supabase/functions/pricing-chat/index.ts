@@ -231,7 +231,7 @@ serve(async (req) => {
         contexts.push(`💳 สรุปราคาห้องพัก:\n${priceList}`);
       } else {
         // No rooms found - add note to AI
-        contexts.push(`⚠️ ไม่มีข้อมูลห้องพักในระบบ - ให้ตอบสุภาพว่าไม่สามารถแสดงข้อมูล สามารถติดต่อเจ้าหน้าที่ได้`);
+        contexts.push(`⚠️ ไม่มีข้อมูลห้องพักในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
       }
       
       // Add parking info if asked
@@ -255,7 +255,7 @@ serve(async (req) => {
         ).join('\n')}`);
       } else {
         // No event spaces found - add note to AI
-        contexts.push(`⚠️ ไม่มีข้อมูลห้องประชุมหรือบริการจัดงานในระบบ - ให้ตอบสุภาพว่าไม่สามารถแสดงข้อมูล สามารถติดต่อเจ้าหน้าที่ได้`);
+        contexts.push(`⚠️ ไม่มีข้อมูลห้องประชุมหรือบริการจัดงานในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
       }
     } else if (hasMenuKeyword) {
       // Menu-related queries (including coffee) - ONLY show if data exists
@@ -288,7 +288,7 @@ serve(async (req) => {
         }
       } else {
         // No menus found - add note to AI
-        contexts.push(`⚠️ ไม่มีข้อมูลเมนูในระบบ - ให้ตอบสุภาพว่าไม่สามารถแสดงข้อมูล สามารถติดต่อเจ้าหน้าที่ได้`);
+        contexts.push(`⚠️ ไม่มีข้อมูลเมนูในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
       }
     }
 
@@ -315,7 +315,7 @@ serve(async (req) => {
         intent = 'general';
       } else {
         // No data at all in database
-        contexts.push(`⚠️ ขณะนี้ยังไม่มีข้อมูลในระบบ - ให้ตอบสุภาพและแนะนำให้ติดต่อเจ้าหน้าที่`);
+        contexts.push(`⚠️ ขณะนี้ยังไม่มีข้อมูลในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
         intent = 'no_data';
       }
     }
@@ -345,19 +345,19 @@ serve(async (req) => {
 📋 กฎการตอบ:
 ✓ **ค้นหาก่อนตอบ**: ถ้าถามห้องพัก → ดูว่า Database มีห้องพักหรือไม่
 ✓ ถ้ามีข้อมูล → แสดงข้อมูลทั้งหมด พร้อมราคา / รายละเอียด
-✓ ถ้าหาไม่เจอ → ตอบแบบนี้: "ขออภัยค่ะ, ขณะนี้ไม่มีข้อมูล [อะไร] ในระบบ กรุณาติดต่อเจ้าหน้าที่ได้"
+✓ ถ้าหาไม่เจอ → ตอบแบบนี้: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
 ✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร
 ✓ ไม่สร้างข้อมูลที่ไม่มี - บอกความจริง
 
 ⚠️ สำคัญ:
-• ลูกค้าถามห้องพัก แต่ Database ว่างเปล่า → ตอบสุภาพ ไม่ได้ตอบข้อมูลที่ไม่มี
-• ลูกค้าถามห้องประชุม แต่ไม่มี → ตอบสุภาพ แนะนำติดต่อให้
-• ลูกค้าถามเมนู แต่ Database ว่าง → ตอบสุภาพ ไม่บอกเมนูที่ไม่มี
+• ลูกค้าถามห้องพัก แต่ Database ว่างเปล่า → ตอบ: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
+• ลูกค้าถามห้องประชุม แต่ไม่มี → ตอบ: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
+• ลูกค้าถามเมนู แต่ Database ว่าง → ตอบ: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
 
 🌟 ตัวอย่างการตอบ:
 Q: มีห้องพักไหม?
-A (ถ้ามีข้อมูล): มีครับ/ ค่ะ! ห้องพัก... [ขอมูลจริง]
-A (ถ้าไม่มีข้อมูล): ขออภัยค่ะ, ขณะนี้ไม่มีข้อมูลห้องพักในระบบ กรุณาติดต่อเจ้าหน้าที่ได้
+A (ถ้ามีข้อมูล): มีค่ะ! ห้องพัก... [ข้อมูลจริง]
+A (ถ้าไม่มีข้อมูล): ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ
 
 \`\`\`
 ${context}
@@ -372,19 +372,19 @@ ${context}
 📋 Rules:
 ✓ **Search first, then answer**: If asking about rooms → check if Database has rooms
 ✓ If data exists → show all information with prices and details
-✓ If not found → answer politely: "Sorry, we don't have [something] information. Please contact our staff."
+✓ If not found → answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
 ✓ Answer in English, polite and friendly
 ✓ Don't make up information - always tell the truth
 
 ⚠️ Important:
-• Customer asks for rooms but Database is empty → Answer politely, don't show fake data
-• Customer asks for meeting rooms but no data → Answer politely, suggest contact
-• Customer asks for menu but Database is empty → Answer politely, don't show fake menu
+• Customer asks for rooms but Database is empty → Answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
+• Customer asks for meeting rooms but no data → Answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
+• Customer asks for menu but Database is empty → Answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
 
 🌟 Example Answers:
 Q: Do you have rooms?
 A (if data exists): Yes! We have... [actual data]
-A (if no data): Sorry, we don't have room information available right now. Please contact our staff.
+A (if no data): Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features.
 
 \`\`\`
 ${context}
