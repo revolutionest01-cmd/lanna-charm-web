@@ -870,7 +870,7 @@ export const MenusManagement = () => {
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className={selectedMenu ? "text-amber-900" : ""}>
+                  <DialogTitle className={selectedMenu ? "text-xl md:text-2xl font-bold text-amber-900" : "text-lg md:text-xl font-bold"}>
                     {selectedMenu
                       ? language === "th" ? "แก้ไขเมนู" : "Edit Menu"
                       : language === "th" ? "เพิ่มเมนูใหม่" : "Add New Menu"}
@@ -1016,7 +1016,7 @@ export const MenusManagement = () => {
 
                     {/* Image Upload */}
                     <div className="space-y-2">
-                      <Label className="text-primary font-semibold">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
+                      <Label className="text-primary font-semibold bg-white px-2 py-1 rounded inline-block">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
                       <div
                         onDragOver={handleImageDragOver}
                         onDragLeave={handleImageDragLeave}
@@ -1097,7 +1097,8 @@ export const MenusManagement = () => {
                     <div className="flex justify-end gap-2">
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="secondary"
+                        className="font-semibold text-foreground hover:bg-secondary/80"
                         onClick={() => {
                           setIsMenuDialogOpen(false);
                           resetMenuForm();
