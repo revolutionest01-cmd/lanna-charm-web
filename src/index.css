@@ -185,12 +185,43 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-foreground text-background;
+  html {
     font-family: var(--font-sans);
+    /* Hide scrollbar on mobile, show on tablet and up */
+    scrollbar-width: none;
   }
 
-  html {
+  /* Hide scrollbar in Chrome/Edge/Safari on mobile */
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      scrollbar-width: auto;
+    }
+
+    html::-webkit-scrollbar {
+      display: block;
+      width: 8px;
+    }
+
+    html::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    html::-webkit-scrollbar-thumb {
+      background: hsl(var(--highlight) / 0.3);
+      border-radius: 9999px;
+    }
+
+    html::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--highlight) / 0.6);
+    }
+  }
+
+  body {
+    @apply bg-foreground text-background;
     font-family: var(--font-sans);
   }
 }
