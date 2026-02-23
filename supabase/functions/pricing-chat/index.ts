@@ -193,9 +193,7 @@ serve(async (req) => {
     };
 
     // Build context based on detected categories and intent
-    // **IMPORTANT**: Only include data if it actually exists in the database
     const menuMatches = findMatchingMenus(message);
-    
     if (menuMatches.length > 0) {
       // Found matching menu items - show them prominently
       intent = 'menu';
@@ -207,31 +205,27 @@ serve(async (req) => {
         return menuInfo;
       }).join('\n')}`);
     } else if (hasRoomKeyword || (detectedCategories.includes('pricing') && messageLower.includes('ห้อง'))) {
-      // Room-related queries - ONLY include if data exists
+      // Room-related queries
       intent = 'room';
       if (rooms && rooms.length > 0) {
         const roomInfo = rooms.map(r => {
-          let info = `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: 💰 ${r.price} บาท/คืน`;
+          let info = `- ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน`;
           if (r.description_th || r.description_en) {
             info += `\n  📍 ${sanitizedLanguage === 'th' ? r.description_th : r.description_en}`;
           }
           if (r.capacity) {
-            info += `\n  👥 ความจุ: ${r.capacity} คน`;
+            info += `\n  👥 ความจุ: ${r.capacity}`;
           }
-          if (r.amenities_th || r.amenities_en) {
+          // Include amenities if parking question
+          if (hasParkingKeyword && r.amenities_th) {
             const amenities = sanitizedLanguage === 'th' ? r.amenities_th : r.amenities_en;
-            info += `\n  ✨ ${amenities}`;
+            if (amenities?.toLowerCase().includes('จอด') || amenities?.toLowerCase().includes('park')) {
+              info += `\n  � ${amenities}`;
+            }
           }
           return info;
-        }).join('\n\n');
-        contexts.push(`📋 ข้อมูลห้องพักอย่างละเอียด:\n${roomInfo}`);
-        
-        // Add price summary for easy reference
-        const priceList = rooms.map(r => `• ${sanitizedLanguage === 'th' ? r.name_th : r.name_en}: ${r.price} บาท/คืน`).join('\n');
-        contexts.push(`💳 สรุปราคาห้องพัก:\n${priceList}`);
-      } else {
-        // No rooms found - add note to AI
-        contexts.push(`⚠️ ไม่มีข้อมูลห้องพักในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
+        }).join('\n');
+        contexts.push(`ข้อมูลห้องพัก:\n${roomInfo}`);
       }
       
       // Add parking info if asked
@@ -247,18 +241,14 @@ serve(async (req) => {
     } else if (messageLower.includes('ห้องประชุม') || messageLower.includes('meeting') || 
         messageLower.includes('งานเลี้ยง') || messageLower.includes('event') ||
         messageLower.includes('conference') || messageLower.includes('wedding')) {
-      // Event/meeting space query - ONLY show if data exists
       intent = 'event';
       if (events && events.length > 0) {
         contexts.push(`ข้อมูลห้องประชุม & งานเลี้ยง:\n${events.map(e => 
           `- ${sanitizedLanguage === 'th' ? e.title_th : e.title_en}\n  ${sanitizedLanguage === 'th' ? e.description_th : e.description_en}`
         ).join('\n')}`);
-      } else {
-        // No event spaces found - add note to AI
-        contexts.push(`⚠️ ไม่มีข้อมูลห้องประชุมหรือบริการจัดงานในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
       }
     } else if (hasMenuKeyword) {
-      // Menu-related queries (including coffee) - ONLY show if data exists
+      // Menu-related queries (including coffee)
       intent = 'menu';
       if (menus && menus.length > 0) {
         const menusByCategory: { [key: string]: typeof menus } = {};
@@ -286,38 +276,36 @@ serve(async (req) => {
             ).join('\n')}`);
           }
         }
-      } else {
-        // No menus found - add note to AI
-        contexts.push(`⚠️ ไม่มีข้อมูลเมนูในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
       }
     }
 
-    // **SMART FALLBACK**: Only include if no specific keyword matched
-    if (contexts.length === 0 || (contexts.length === 1 && contexts[0]?.startsWith('⚠️'))) {
-      // No specific match found - provide general info only
-      const hasAnyData = (menus && menus.length > 0) || (rooms && rooms.length > 0) || (events && events.length > 0);
-      
-      if (hasAnyData) {
-        if (menus && menus.length > 0) {
-          const recommendedMenus = menus.filter(m => m.is_recommended);
-          if (recommendedMenus.length > 0) {
-            contexts.push(`⭐ เมนูแนะนำ:\n${recommendedMenus.map(m => 
-              `  - ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท`
-            ).join('\n')}`);
-          }
+    // **ALWAYS Include Summary of Services** in any context if no specific match
+    if (contexts.length === 0) {
+      // Comprehensive fallback - include everything
+      if (menus && menus.length > 0) {
+        const recommendedMenus = menus.filter(m => m.is_recommended);
+        if (recommendedMenus.length > 0) {
+          contexts.push(`⭐ เมนูแนะนำ:\n${recommendedMenus.map(m => 
+            `  - ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท`
+          ).join('\n')}`);
         }
-        if (rooms && rooms.length > 0) {
-          contexts.push(`🛏️ ห้องพัก: ${rooms.map(r => `${sanitizedLanguage === 'th' ? r.name_th : r.name_en} (${r.price} บาท/คืน)`).join(', ')}`);
-        }
-        if (events && events.length > 0) {
-          contexts.push(`🎪 บริการจัดงาน: ${events.map(e => sanitizedLanguage === 'th' ? e.title_th : e.title_en).join(', ')}`);
-        }
-        intent = 'general';
-      } else {
-        // No data at all in database
-        contexts.push(`⚠️ ขณะนี้ยังไม่มีข้อมูลในระบบ - ให้ตอบว่า "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"`);
-        intent = 'no_data';
+        
+        const allMenusStr = menus.map(m => `${sanitizedLanguage === 'th' ? m.name_th : m.name_en} (${m.price})`).join(', ');
+        contexts.push(`📋 เมนูทั้งหมด: ${allMenusStr.substring(0, 200)}${allMenusStr.length > 200 ? '...' : ''}`);
       }
+      if (rooms && rooms.length > 0) {
+        contexts.push(`🛏️ ห้องพัก: ${rooms.map(r => `${sanitizedLanguage === 'th' ? r.name_th : r.name_en} (${r.price} บาท/คืน)`).join(', ')}`);
+        
+        // Include parking info in fallback
+        const parkingRooms = rooms.filter(r => r.amenities_th?.toLowerCase().includes('จอด') || r.amenities_en?.toLowerCase().includes('park'));
+        if (parkingRooms.length > 0) {
+          contexts.push(`🚗 ที่จอด: มีให้ใช้อย่างปลอดภัย`);
+        }
+      }
+      if (events && events.length > 0) {
+        contexts.push(`🎪 บริการจัดงาน: ${events.map(e => sanitizedLanguage === 'th' ? e.title_th : e.title_en).join(', ')}`);
+      }
+      intent = 'general';
     }
 
     if (reviews && reviews.length > 0) {
@@ -338,26 +326,23 @@ serve(async (req) => {
       ? `คุณเป็น Plernping AI - ผู้ช่วยตอบคำถามของ Plern Ping Cafe & Resort
 
 🎯 หน้าที่หลัก:
-1. ค้นหาข้อมูลจาก Database ตามคำที่ลูกค้าถาม ก่อนตอบ
-2. ตอบเฉพาะข้อมูลที่จริง ๆ มีอยู่ใน Database
-3. ถ้าหาไม่เจอ ให้ตอบสุภาพและแนะนำติดต่อเจ้าหน้าที่
+1. ตอบคำถาม เกี่ยวกับ ห้องพัก ราคา ที่จอดรถ เมนูอาหาร กาแฟ และ บริการจัดงาน
+2. แนะนำเมนูแนะนำ (⭐) และอาการยอดนิยม
+3. ตัดสินใจอย่างฉลาด จากข้อมูล DATABASE ที่ให้มา
 
 📋 กฎการตอบ:
-✓ **ค้นหาก่อนตอบ**: ถ้าถามห้องพัก → ดูว่า Database มีห้องพักหรือไม่
-✓ ถ้ามีข้อมูล → แสดงข้อมูลทั้งหมด พร้อมราคา / รายละเอียด
-✓ ถ้าหาไม่เจอ → ตอบแบบนี้: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
 ✓ ตอบเป็นภาษาไทยสุภาพและเป็นมิตร
-✓ ไม่สร้างข้อมูลที่ไม่มี - บอกความจริง
+✓ **ตอบสั้นกระชับ** (2-3 บรรทัด ไม่เกิน 100 คำ)
+✓ ใช้ข้อมูลจาก context เท่านั้น ห้ามสร้างข้อมูลเอง
+✓ ถ้าชื่อเมนู/ห้อง -> ระบุ ราคา + คำบรรยาย + (⭐ ถ้าแนะนำ)
+✓ ถ้าถาม ที่จอดรถ -> บอกว่ามี/مี่ และรายละเอียด
+✓ ถ้าไม่มีข้อมูล -> บอกให้ติดต่อเจ้าหน้าที่
+✓ ให้ตัวเลือก/สาขาอื่น ถ้ามีหลายอย่าง
 
-⚠️ สำคัญ:
-• ลูกค้าถามห้องพัก แต่ Database ว่างเปล่า → ตอบ: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
-• ลูกค้าถามห้องประชุม แต่ไม่มี → ตอบ: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
-• ลูกค้าถามเมนู แต่ Database ว่าง → ตอบ: "ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ"
-
-🌟 ตัวอย่างการตอบ:
-Q: มีห้องพักไหม?
-A (ถ้ามีข้อมูล): มีค่ะ! ห้องพัก... [ข้อมูลจริง]
-A (ถ้าไม่มีข้อมูล): ขอโทษค่ะ Plernping AI เป็นผู้ช่วยตอบคำถามเบื้องต้น ยังต้องรอเจ้าหน้าที่พัฒนาเพิ่มเติมค่ะ
+🌟 ลำดับความสำคัญ:
+1. เมนูแนะนำ (⭐)
+2. ข้อมูลที่ตรงกับคำถาม
+3. ข้อเสริมเพิ่มเติม (ถ้าเกี่ยวข้อง)
 
 \`\`\`
 ${context}
@@ -365,26 +350,23 @@ ${context}
       : `You are Plernping AI - your mission is to help with Plern Ping Cafe & Resort inquiries
 
 🎯 Your Role:
-1. Search the Database for information about what customer asks - BEFORE answering
-2. Only provide information that actually exists in the Database
-3. If no data found, answer politely and suggest contacting staff
+1. Answer about rooms, prices, parking, menus, coffee, and event services
+2. Recommend special items (⭐) and popular options
+3. Use DATABASE information smartly
 
 📋 Rules:
-✓ **Search first, then answer**: If asking about rooms → check if Database has rooms
-✓ If data exists → show all information with prices and details
-✓ If not found → answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
 ✓ Answer in English, polite and friendly
-✓ Don't make up information - always tell the truth
+✓ **Keep it SHORT** (2-3 lines, max 100 words)
+✓ Use ONLY provided information - no making up data
+✓ For menus/rooms: Show name + price + description + (⭐ if recommended)
+✓ For parking: Mention availability and details
+✓ If no info: Suggest contacting staff
+✓ Offer alternatives when available
 
-⚠️ Important:
-• Customer asks for rooms but Database is empty → Answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
-• Customer asks for meeting rooms but no data → Answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
-• Customer asks for menu but Database is empty → Answer: "Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features."
-
-🌟 Example Answers:
-Q: Do you have rooms?
-A (if data exists): Yes! We have... [actual data]
-A (if no data): Sorry, Plernping AI is a basic assistant. Please wait for our team to develop more features.
+🌟 Priority:
+1. Recommended items (⭐)
+2. Direct answers to the question
+3. Related additional info (if relevant)
 
 \`\`\`
 ${context}
