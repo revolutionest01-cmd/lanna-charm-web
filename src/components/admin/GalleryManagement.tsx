@@ -32,6 +32,11 @@ export const GalleryManagement = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<{ title_en: string; title_th: string }>({
+    title_en: "",
+    title_th: "",
+  });
   const [formData, setFormData] = useState({
     title_en: "",
     title_th: "",
@@ -201,6 +206,43 @@ export const GalleryManagement = () => {
     }
   };
 
+  const handleEditStart = (image: GalleryImage) => {
+    setEditingId(image.id);
+    setEditData({
+      title_en: image.title_en || "",
+      title_th: image.title_th || "",
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("gallery_images")
+        .update({
+          title_en: editData.title_en,
+          title_th: editData.title_th,
+        })
+        .eq("id", editingId);
+
+      if (error) throw error;
+
+      toast.success(language === "th" ? "แก้ไขสำเร็จ" : "Updated successfully");
+      
+      // Update cache version and force refetch
+      invalidateContentCache();
+      await queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      await queryClient.refetchQueries({ queryKey: ["gallery"] });
+      
+      setEditingId(null);
+      fetchGalleryImages();
+    } catch (error: any) {
+      console.error("Error updating image:", error);
+      toast.error(language === "th" ? "เกิดข้อผิดพลาดในการแก้ไข" : "Error updating image");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -224,6 +266,7 @@ export const GalleryManagement = () => {
                 value={formData.title_en}
                 onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
                 placeholder="Beautiful garden"
+                className="!bg-white !text-black"
               />
             </div>
             <div>
@@ -232,6 +275,7 @@ export const GalleryManagement = () => {
                 value={formData.title_th}
                 onChange={(e) => setFormData({ ...formData, title_th: e.target.value })}
                 placeholder="สวนสวยงาม"
+                className="!bg-white !text-black"
               />
             </div>
           </div>
@@ -244,20 +288,20 @@ export const GalleryManagement = () => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+              className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer bg-white ${
                 isDragging 
-                  ? 'border-primary bg-primary/10' 
-                  : 'border-border hover:border-primary/50'
+                  ? 'border-primary bg-primary/20' 
+                  : 'border-primary/30 hover:border-primary/50'
               }`}
               onClick={() => document.getElementById('gallery-upload')?.click()}
             >
-              <Upload className="w-12 h-12 mx-auto mb-4 text-foreground/50" />
-              <p className="text-sm text-foreground/70 mb-2">
+              <Upload className="w-12 h-12 mx-auto mb-4 text-primary/70" />
+              <p className="text-sm text-gray-700 mb-2">
                 {language === "th" 
                   ? "ลากหลายไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก" 
                   : "Drag multiple files here or click to select"}
               </p>
-              <p className="text-xs text-foreground/70">
+              <p className="text-xs text-gray-600">
                 {language === "th" 
                   ? `รองรับไฟล์ภาพ (สูงสุด 5MB ต่อไฟล์) • ${formData.files.length} ไฟล์ที่เลือก` 
                   : `Supports image files (max 5MB per file) • ${formData.files.length} files selected`}
@@ -318,26 +362,71 @@ export const GalleryManagement = () => {
       {/* Gallery Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {images.map((image) => (
-          <Card key={image.id} className="group relative">
+          <Card key={image.id} className="group relative overflow-hidden">
             <CardContent className="p-0">
               <img
                 src={image.image_url}
                 alt={language === "th" ? image.title_th || "" : image.title_en || ""}
-                className="w-full h-48 object-cover rounded-t-lg"
+                className="w-full h-48 object-cover"
               />
-              <div className="p-3">
-                <p className="text-sm font-medium truncate">
-                  {language === "th" ? image.title_th : image.title_en}
-                </p>
-              </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                onClick={() => handleDelete(image)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              
+              {editingId === image.id ? (
+                <div className="p-3 space-y-2 bg-background">
+                  <Input
+                    value={editData.title_en}
+                    onChange={(e) => setEditData({ ...editData, title_en: e.target.value })}
+                    placeholder="English title"
+                    className="!bg-white !text-black text-xs h-8"
+                  />
+                  <Input
+                    value={editData.title_th}
+                    onChange={(e) => setEditData({ ...editData, title_th: e.target.value })}
+                    placeholder="ชื่อภาษาไทย"
+                    className="!bg-white !text-black text-xs h-8"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleEditSave}
+                      className="flex-1 h-7 text-xs"
+                    >
+                      {language === "th" ? "บันทึก" : "Save"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingId(null)}
+                      className="flex-1 h-7 text-xs"
+                    >
+                      {language === "th" ? "ยกเลิก" : "Cancel"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3">
+                  <p className="text-xs font-medium truncate mb-2">
+                    {language === "th" ? image.title_th : image.title_en}
+                  </p>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditStart(image)}
+                      className="flex-1 h-7 text-xs"
+                    >
+                      {language === "th" ? "แก้ไข" : "Edit"}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(image)}
+                      className="h-7"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

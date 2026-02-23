@@ -61,14 +61,27 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="pt-8 pb-20">
-        <div className="container mx-auto px-4">
-          {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif">
+      <main className="pt-16 sm:pt-20 pb-20 relative">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
+          <div className="absolute bottom-32 left-0 w-80 h-80 bg-primary/50 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-5 sm:px-6 relative z-10">
+          {/* Page Header with Premium Treatment */}
+          <div className="text-center mb-12 sm:mb-20">
+            <div className="inline-flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-primary/60" />
+              <span className="text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.3em] text-primary font-medium">
+                {language === 'th' ? 'ชุมชนของเรา' : 'Our Gallery'}
+              </span>
+              <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-primary/60" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-3 sm:mb-4 font-serif leading-tight">
               {t.galleryTitle}
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-2">
               {t.gallerySubtitle}
             </p>
           </div>
@@ -85,26 +98,35 @@ const Gallery = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {images.map((image, index) => (
-                <div
-                  key={image.id}
-                  onClick={() => openLightbox(index)}
-                  className="relative overflow-hidden rounded-lg aspect-square group cursor-pointer animate-scale-in"
-                  style={{ animationDelay: `${index * 30}ms` }}
+                <div 
+                  key={image.id} 
+                  className="group animate-scale-in" 
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <img
-                    src={image.image_url}
-                    alt={language === "th" ? image.title_th || "" : image.title_en || ""}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="bg-background px-6 py-3 rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 shadow-lg">
-                      <p className="text-foreground font-medium text-sm">
-                        {language === "th" ? image.title_th : image.title_en}
-                      </p>
+                  <div
+                    onClick={() => openLightbox(index)}
+                    className="relative overflow-hidden rounded-xl sm:rounded-2xl aspect-square group cursor-pointer mb-3 sm:mb-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-border/30 hover:border-primary/50"
+                  >
+                    <img
+                      src={image.image_url}
+                      alt={language === "th" ? image.title_th || "" : image.title_en || ""}
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                      <div className="bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 shadow-xl border border-border/50">
+                        <p className="text-foreground font-semibold text-xs sm:text-sm">
+                          {language === "th" ? "คลิกเพื่อดูเต็มหน้าจอ" : "Click to view"}
+                        </p>
+                      </div>
                     </div>
+                  </div>
+                  <div className="px-2">
+                    <p className="text-center text-xs sm:text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                      {language === "th" ? image.title_th : image.title_en}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -165,14 +187,14 @@ const Gallery = () => {
 
               {/* Image Title */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
-                <div className="bg-background px-6 py-3 rounded-full shadow-lg">
-                  <p className="text-foreground font-medium">
+                <div className="bg-background/90 backdrop-blur-md px-6 sm:px-8 py-3 sm:py-4 rounded-full shadow-2xl border border-border/50">
+                  <p className="text-foreground font-semibold text-sm sm:text-base">
                     {language === "th" 
                       ? images[selectedImageIndex].title_th 
                       : images[selectedImageIndex].title_en
                     }
                   </p>
-                  <p className="text-muted-foreground text-sm text-center mt-1">
+                  <p className="text-muted-foreground text-xs sm:text-sm text-center mt-2">
                     {selectedImageIndex + 1} / {images.length}
                   </p>
                 </div>

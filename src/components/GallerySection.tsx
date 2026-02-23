@@ -39,9 +39,9 @@ const GallerySection = () => {
   }
 
   return (
-    <section id="gallery" className="py-16 sm:py-20 bg-background">
+    <section id="gallery" className="py-16 sm:py-24 bg-background">
       <div className="container mx-auto px-5 sm:px-6">
-        <div className="text-center mb-10 sm:mb-16">
+        <div className="text-center mb-12 sm:mb-20">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 font-serif">
             {t.galleryTitle}
           </h2>
