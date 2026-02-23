@@ -167,6 +167,7 @@ const Gallery = () => {
               className="relative w-full h-[70vh] sm:h-[85vh] flex items-center justify-center touch-none"
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <button
