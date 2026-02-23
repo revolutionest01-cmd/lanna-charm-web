@@ -503,17 +503,18 @@ export const WebboardManagement = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleViewDetails(topic)}
                           title="View details and replies"
+                          className="text-foreground hover:bg-accent"
                         >
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleToggleStatus(topic)}
                           title={
@@ -521,6 +522,7 @@ export const WebboardManagement = () => {
                               ? "Hide topic"
                               : "Show topic"
                           }
+                          className="text-foreground hover:bg-accent"
                         >
                           {topic.is_active ? (
                             <Eye className="h-4 w-4" />
@@ -529,9 +531,10 @@ export const WebboardManagement = () => {
                           )}
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleEditTopic(topic)}
+                          className="text-foreground hover:bg-accent"
                         >
                           Edit
                         </Button>
