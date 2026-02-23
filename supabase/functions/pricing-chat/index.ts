@@ -193,6 +193,7 @@ serve(async (req) => {
     };
 
     // Build context based on detected categories and intent
+    const menuMatches = findMatchingMenus(sanitizedMessage);
     if (menuMatches.length > 0) {
       // Found matching menu items - show them prominently
       intent = 'menu';
