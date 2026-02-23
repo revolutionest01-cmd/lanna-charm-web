@@ -238,38 +238,61 @@ const MenuSection = () => {
                         <button
                           key={item.id}
                           onClick={() => handleMenuClick(item)}
-                          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all animate-fade-in"
-                          style={{ animationDelay: `${index * 50}ms` }}
+                          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background rounded-xl transition-all animate-fade-in"
+                          style={{ animationDelay: `${index * 70}ms` }}
                         >
                           <Card
-                            className="border-border hover:border-primary hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105"
+                            className="border-border/60 hover:border-primary/40 hover:shadow-xl transition-all duration-500 cursor-pointer group overflow-hidden rounded-xl"
                           >
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
-                                <div className="flex-1 flex items-start gap-3 min-w-0">
-                                  {item.icon_url && (
+                            <CardContent className="p-0">
+                              <div className="flex items-stretch">
+                                {/* Image thumbnail */}
+                                <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-l-xl bg-muted">
+                                  {item.image_url ? (
                                     <img
-                                      src={item.icon_url}
-                                      alt="icon"
-                                      className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0 mt-0.5"
+                                      src={item.image_url}
+                                      alt={language === "th" ? item.name_th : item.name_en}
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
+                                  ) : item.icon_url ? (
+                                    <div className="w-full h-full flex items-center justify-center bg-accent/50">
+                                      <img
+                                        src={item.icon_url}
+                                        alt="icon"
+                                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-accent/30">
+                                      <span className="text-3xl">🍽️</span>
+                                    </div>
                                   )}
+                                  {/* Subtle gradient overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/10 pointer-events-none" />
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 min-w-0 gap-3">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground mb-0.5 sm:mb-1 break-words">
+                                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-0.5 break-words line-clamp-1 tracking-wide">
                                       {language === "th" ? item.name_th : item.name_en}
                                     </h3>
                                     {(item.description_th || item.description_en) && (
-                                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground break-words line-clamp-2">
+                                      <p className="text-xs sm:text-sm text-muted-foreground break-words line-clamp-1 mb-1">
                                         {language === "th" ? item.description_th : item.description_en}
                                       </p>
                                     )}
-                                    <p className="text-primary text-xs font-semibold mt-1">
+                                    <p className="text-xs text-muted-foreground/70 group-hover:text-primary transition-colors duration-300">
                                       {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
                                     </p>
                                   </div>
-                                </div>
-                                <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary flex-shrink-0">
-                                  ฿{item.price}
+
+                                  {/* Price badge */}
+                                  <div className="flex-shrink-0 text-right">
+                                    <span className="text-xl sm:text-2xl font-extrabold tracking-tight" style={{ color: 'hsl(35, 70%, 45%)' }}>
+                                      ฿{item.price}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
