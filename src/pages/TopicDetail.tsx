@@ -18,6 +18,11 @@ import {
   Loader2,
   Share2,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,13 +52,59 @@ const TopicDetail = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
   const [isTopicLiked, setIsTopicLiked] = useState(false);
+  const [previousTopicId, setPreviousTopicId] = useState<string | null>(null);
+  const [nextTopicId, setNextTopicId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
 
   // Load topic and replies
   useEffect(() => {
     if (id) {
       loadTopicAndReplies();
+      loadNavigationTopics();
     }
   }, [id]);
+
+  // Handle Escape key to close image modal
+  useEffect(() => {
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isImageModalOpen) {
+        console.log('[TopicDetail] Escape key pressed, closing modal');
+        setIsImageModalOpen(false);
+      }
+    };
+
+    if (isImageModalOpen) {
+      window.addEventListener('keydown', handleEscapeKey);
+      return () => window.removeEventListener('keydown', handleEscapeKey);
+    }
+  }, [isImageModalOpen]);
+
+  // Reset zoom and pan when modal is closed
+  useEffect(() => {
+    if (!isImageModalOpen) {
+      setImageZoom(1);
+      setImagePan({ x: 0, y: 0 });
+    }
+  }, [isImageModalOpen]);
+
+  // Handle wheel zoom for image
+  const handleImageWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!isImageModalOpen) return;
+    
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.max(1, Math.min(imageZoom + delta, 5));
+    setImageZoom(newZoom);
+  };
+
+  // Reset zoom
+  const resetImageZoom = () => {
+    setImageZoom(1);
+    setImagePan({ x: 0, y: 0 });
+  };
 
   // Check if user has liked the topic
   useEffect(() => {
@@ -76,7 +127,19 @@ const TopicDetail = () => {
       if (topicError) throw topicError;
 
       if (topicData) {
-        setTopic(topicData as unknown as ForumTopic);
+        // Fetch author_name from profiles
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", topicData.user_id)
+          .maybeSingle();
+
+        const enrichedTopic = {
+          ...topicData,
+          author_name: profileData?.display_name || "Anonymous",
+        };
+
+        setTopic(enrichedTopic as unknown as ForumTopic);
 
         // Increment views
         await (supabase as any)
@@ -95,7 +158,30 @@ const TopicDetail = () => {
       if (repliesError) throw repliesError;
 
       if (repliesData) {
-        setReplies(repliesData as ForumReply[]);
+        // Enrich replies with author_name from profiles
+        const enrichedReplies = await Promise.all(
+          (repliesData || []).map(async (reply: any) => {
+            try {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("display_name")
+                .eq("id", reply.user_id)
+                .maybeSingle();
+
+              return {
+                ...reply,
+                author_name: profile?.display_name || "Anonymous",
+              };
+            } catch (err) {
+              console.warn("[TopicDetail] Error fetching profile for reply:", err);
+              return {
+                ...reply,
+                author_name: "Anonymous",
+              };
+            }
+          })
+        );
+        setReplies(enrichedReplies as ForumReply[]);
       }
     } catch (error) {
       console.error("Error loading topic:", error);
@@ -117,6 +203,43 @@ const TopicDetail = () => {
 
     if (data) {
       setIsTopicLiked(true);
+    }
+  };
+
+  const loadNavigationTopics = async () => {
+    try {
+      // Fetch all active topics ordered by creation date
+      const { data: allTopics, error } = await (supabase as any)
+        .from("forum_topics")
+        .select("id, created_at")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error || !allTopics) {
+        console.error("[TopicDetail] Error loading navigation topics:", error);
+        return;
+      }
+
+      // Find current topic index
+      const currentIndex = allTopics.findIndex((t: any) => t.id === id);
+
+      if (currentIndex !== -1) {
+        // Set next topic (more recent)
+        if (currentIndex > 0) {
+          setNextTopicId(allTopics[currentIndex - 1].id);
+        } else {
+          setNextTopicId(null);
+        }
+
+        // Set previous topic (older)
+        if (currentIndex < allTopics.length - 1) {
+          setPreviousTopicId(allTopics[currentIndex + 1].id);
+        } else {
+          setPreviousTopicId(null);
+        }
+      }
+    } catch (error) {
+      console.error("[TopicDetail] Error in loadNavigationTopics:", error);
     }
   };
 
@@ -406,12 +529,26 @@ const TopicDetail = () => {
 
             {/* Image */}
             {topic.image_url && (
-              <div className="my-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 shadow-sm">
-                <img
-                  src={topic.image_url}
-                  alt={topic.title}
-                  className="w-full h-auto object-cover max-h-96"
-                />
+              <div 
+                className="my-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 shadow-sm hover:shadow-lg transition-shadow cursor-pointer group relative"
+                onClick={() => {
+                  console.log('[TopicDetail] Image clicked:', topic.image_url);
+                  setSelectedImage(topic.image_url || null);
+                  setIsImageModalOpen(true);
+                }}
+              >
+                <div className="relative overflow-hidden">
+                  <img
+                    src={topic.image_url}
+                    alt={topic.title}
+                    className="w-full h-auto object-cover max-h-96 group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="bg-white/90 dark:bg-slate-800/90 p-3 rounded-full">
+                      <ZoomIn className="w-6 h-6 text-slate-900 dark:text-white" />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -420,6 +557,63 @@ const TopicDetail = () => {
               <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
                 {topic.content}
               </p>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="mt-8 pt-6 border-t border-blue-100/50 dark:border-blue-800/50">
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                {/* Previous Topic Button */}
+                <Button
+                  onClick={() => previousTopicId && navigate(`/forum/${previousTopicId}`)}
+                  disabled={!previousTopicId}
+                  className={`flex-1 ${
+                    previousTopicId
+                      ? "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold shadow-md hover:shadow-lg transition-all active:scale-95"
+                      : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">
+                    {language === "th" ? "ก่อนหน้า" : "Previous"}
+                  </span>
+                  <span className="sm:hidden text-xs">
+                    {language === "th" ? "ก่อน" : "Prev"}
+                  </span>
+                </Button>
+
+                {/* Back to Forum Button */}
+                <Button
+                  onClick={() => navigate("/forum")}
+                  className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">
+                    {language === "th" ? "กลับไป Forum" : "Back to Forum"}
+                  </span>
+                  <span className="sm:hidden text-xs">
+                    {language === "th" ? "Forum" : "Back"}
+                  </span>
+                </Button>
+
+                {/* Next Topic Button */}
+                <Button
+                  onClick={() => nextTopicId && navigate(`/forum/${nextTopicId}`)}
+                  disabled={!nextTopicId}
+                  className={`flex-1 ${
+                    nextTopicId
+                      ? "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold shadow-md hover:shadow-lg transition-all active:scale-95"
+                      : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <span className="hidden sm:inline">
+                    {language === "th" ? "ถัดไป" : "Next"}
+                  </span>
+                  <span className="sm:hidden text-xs">
+                    {language === "th" ? "ถัด" : "Next"}
+                  </span>
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -467,18 +661,13 @@ const TopicDetail = () => {
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(reply.created_at).toLocaleDateString(
                               language === "th" ? "th-TH" : "en-US",
-                              { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+                              { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }
                             )}
                           </span>
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-wrap">
                           {reply.content}
                         </p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(reply.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -557,6 +746,114 @@ const TopicDetail = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Image Lightbox Modal */}
+      {isImageModalOpen && selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center cursor-pointer overflow-hidden"
+          onClick={() => {
+            console.log('[TopicDetail] Background clicked, closing modal');
+            setIsImageModalOpen(false);
+          }}
+          onWheel={handleImageWheel}
+        >
+          {/* Image Container with Controls */}
+          <div 
+            className="relative w-full h-full flex items-center justify-center"
+            onClick={(e) => {
+              console.log('[TopicDetail] Image container clicked');
+              e.stopPropagation();
+            }}
+          >
+            {/* Close Button - Positioned at top-right */}
+            <button
+              onClick={(e) => {
+                console.log('[TopicDetail] Close button clicked');
+                e.stopPropagation();
+                setIsImageModalOpen(false);
+              }}
+              className="absolute top-20 right-6 sm:top-24 sm:right-8 bg-white/30 hover:bg-white/50 text-white p-3 rounded-full transition-all duration-200 z-[9999] shadow-lg hover:shadow-xl"
+              aria-label="Close image"
+              title="ปิด (กด Esc หรือคลิก X)"
+            >
+              <X className="w-8 h-8" />
+            </button>
+
+            {/* Image with Zoom */}
+            <img
+              src={selectedImage}
+              alt="Fullscreen view"
+              className="w-full h-full object-contain transition-transform duration-200"
+              style={{
+                transform: `scale(${imageZoom}) translate(${imagePan.x}px, ${imagePan.y}px)`,
+                cursor: imageZoom > 1 ? 'grab' : 'default',
+              }}
+            />
+
+            {/* Zoom Controls - Bottom Left */}
+            <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-white/10 backdrop-blur-sm p-3 rounded-full shadow-lg">
+              {/* Zoom Out */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageZoom(Math.max(1, imageZoom - 0.5));
+                }}
+                disabled={imageZoom <= 1}
+                className="bg-white/20 hover:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all"
+                title="ย่อ (Zoom Out)"
+              >
+                <span className="text-xl font-bold">−</span>
+              </button>
+
+              {/* Zoom Level Display */}
+              <div className="text-white text-xs font-semibold min-w-[40px] text-center">
+                {Math.round(imageZoom * 100)}%
+              </div>
+
+              {/* Zoom In */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageZoom(Math.min(5, imageZoom + 0.5));
+                }}
+                disabled={imageZoom >= 5}
+                className="bg-white/20 hover:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all"
+                title="ขยาย (Zoom In)"
+              >
+                <span className="text-xl font-bold">+</span>
+              </button>
+
+              {/* Reset */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resetImageZoom();
+                }}
+                disabled={imageZoom === 1}
+                className="bg-white/20 hover:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all"
+                title="รีเซต (Reset)"
+              >
+                <span className="text-xs font-bold">↺</span>
+              </button>
+            </div>
+
+            {/* Hint Text - Bottom Right (Mobile) / Bottom Center (Desktop) */}
+            <div className="absolute bottom-6 right-6 sm:right-auto sm:left-1/2 sm:transform sm:-translate-x-1/2 text-white/60 text-xs sm:text-sm text-center pointer-events-none">
+              <div className="hidden sm:block">
+                {language === "th" ? "หมุนเมาส์เพื่อขยาย/ย่อ, คลิก X หรือกด Esc เพื่อปิด" : "Scroll to zoom, click X or press Esc to close"}
+              </div>
+              <div className="sm:hidden">
+                {language === "th" ? "ใช้ปุ่มควบคุมหรือคลิก X เพื่อปิด" : "Use controls or click X to close"}
+              </div>
+            </div>
+          </div>
+
+          {/* Hint Text */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-white/60 text-sm text-center pointer-events-none hidden sm:block">
+            {language === "th" ? "คลิกนอกภาพ, กดปุ่ม X, หรือกด Esc เพื่อปิด" : "Click outside, X button, or press Esc to close"}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -189,7 +189,7 @@ export const translations = {
     gardenSettingDesc: "Indoor and outdoor seating amid lush greenery",
     
     // Events
-    eventsTitle: "Conference Room & Events",
+    eventsTitle: "Event services",
     eventsSubtitle: "Special event spaces for meetings, presentations, and gatherings supporting all formats",
     eventsMainTitle: "Lanna Cafe and Multi-purpose Room",
     eventsMainDesc: "Special room facilities with all equipment, from meetings and presentations to social gatherings, with complete catering services and equipment",
