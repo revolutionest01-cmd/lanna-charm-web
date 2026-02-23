@@ -614,6 +614,70 @@ export const MenusManagement = () => {
     }
   };
 
+  // Direct delete without confirmation (used inside edit dialog to avoid modal stacking)
+  const handleDirectImageDelete = async (url: string, isExisting: boolean, index: number) => {
+    try {
+      setLoading(true);
+
+      if (isExisting) {
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
+        }
+        if (selectedMenu) {
+          await supabase.from("menus").update({ image_url: null }).eq("id", selectedMenu.id);
+          setSelectedMenu({ ...selectedMenu, image_url: undefined });
+        }
+      }
+
+      setImagePreviews(prev => prev.filter(p => p !== url));
+      if (!isExisting) {
+        const existingCount = imagePreviews.filter(p => p.startsWith("http")).length;
+        const fileIndex = index - existingCount;
+        if (fileIndex >= 0) {
+          setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+        }
+      }
+
+      toast.success(language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted");
+      if (isExisting) loadMenus();
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error(language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDirectIconDelete = async (url: string) => {
+    try {
+      setLoading(true);
+      const isExisting = url.startsWith("http");
+
+      if (isExisting) {
+        const pathMatch = url.match(/\/storage\/v1\/object\/public\/menus\/(.+)$/);
+        const storagePath = pathMatch ? pathMatch[1] : url.split("/").pop();
+        if (storagePath) {
+          await supabase.storage.from("menus").remove([storagePath]);
+        }
+        if (selectedMenu) {
+          await supabase.from("menus").update({ icon_url: null }).eq("id", selectedMenu.id);
+        }
+      }
+
+      setIconPreview("");
+      setIconFile(null);
+      toast.success(language === "th" ? "ลบไอคอนสำเร็จ" : "Icon deleted");
+      if (isExisting) loadMenus();
+    } catch (error) {
+      console.error("Error deleting icon:", error);
+      toast.error(language === "th" ? "ไม่สามารถลบไอคอนได้" : "Failed to delete icon");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteImage = async () => {
     if (!imageToDelete) return;
 
@@ -1013,7 +1077,14 @@ export const MenusManagement = () => {
                                     variant="destructive"
                                     size="sm"
                                     className="absolute top-1 right-1 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
-                                    onClick={() => setImageToDelete({ url: preview, isExisting })}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const isExistingUrl = preview.startsWith("http");
+                                      // Delete directly without confirmation dialog
+                                      handleDirectImageDelete(preview, isExistingUrl, index);
+                                    }}
+                                    disabled={loading}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
@@ -1070,7 +1141,12 @@ export const MenusManagement = () => {
                             variant="destructive"
                             size="sm"
                             className="absolute -top-2 -right-2 h-7 w-7 p-0 opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
-                            onClick={() => setIconToDelete({ url: iconPreview, isExisting: iconPreview.startsWith("http") })}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDirectIconDelete(iconPreview);
+                            }}
+                            disabled={loading}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
