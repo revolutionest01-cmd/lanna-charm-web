@@ -5,6 +5,7 @@ import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
 import Forum from "@/pages/Forum";
 import Admin from "@/pages/Admin";
+import TopicDetail from "@/pages/TopicDetail";
 import Gallery from "@/pages/Gallery";
 import Reviews from "@/pages/Reviews";
 import Menu from "@/pages/Menu";
@@ -119,6 +120,7 @@ const AnimatedRoutes = () => {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/forum" element={<Forum />} />
+            <Route path="/forum/:topicId" element={<TopicDetail />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/reviews" element={<Reviews />} />
