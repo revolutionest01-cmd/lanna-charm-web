@@ -671,9 +671,9 @@ const Reviews = () => {
               <Button
                 onClick={handleRefreshReviews}
                 disabled={isRefreshing || isLoading}
-                variant="outline"
+                variant="default"
                 size="sm"
-                className="gap-2 border-2 hover:bg-primary/10"
+                className="gap-2 bg-primary/30 hover:bg-primary/40 text-foreground"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {language === "th" ? "รีโหลด" : language === "zh" ? "刷新" : "Refresh"}
