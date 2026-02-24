@@ -172,33 +172,29 @@ const AppSidebar = () => {
             )}
             aria-label="Go to home"
           >
-            <img src={isDarkMode ? logoNormal : logo} alt="Plern Ping" className="h-12 w-auto object-contain" />
+            <img src={isDarkMode ? logoNormal : logo} alt="Plern Ping" className="h-16 w-auto object-contain" />
             <div className="flex-1">
-              <h2 className={cn("text-base font-bold tracking-wide leading-tight", themeStyles.text)}>
+              <h2 className={cn("text-xl font-black tracking-wider leading-tight", themeStyles.text)}>
                 Plern Ping
               </h2>
-              <p className={cn("text-[9px]", themeStyles.muted)}>
+              <p className={cn("text-xs font-semibold tracking-wide", themeStyles.muted)}>
                 {language === 'th' ? 'คาเฟ่ & ที่พัก' : language === 'zh' ? '咖啡馆 & 住宿' : 'Cafe & Stay'}
               </p>
             </div>
           </button>
-          <Button
-            aria-label={isMobile ? 'Close mobile menu' : 'Toggle sidebar'}
-            variant="ghost"
-            size="icon"
-            onClick={() => isMobile ? setOpenMobile(false) : toggleSidebar()}
-            className={cn("h-8 w-8 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40", themeStyles.hover, themeStyles.text)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Navigation */}
         <SidebarContent className="px-3 py-4">
           <ScrollArea className="flex-1">
+            <div className="mb-3 px-2">
+              <p className={cn("text-sm font-semibold italic text-center", themeStyles.muted)}>
+                {language === 'th' ? 'ค้นหามุมสงบ จบที่เพลินพิง' : language === 'zh' ? '宻找一个安静的角久，就在橫汇沧' : 'Find Your Sanctuary, Stay With Plern Ping'}
+              </p>
+            </div>
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
-                {language === 'th' ? 'นำทาง' : language === 'zh' ? '导航' : 'Navigation'}
+              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center", themeStyles.muted)}>
+                {language === 'th' ? 'เลือกหัวข้อขี่ที่คุณต้องการ' : language === 'zh' ? '选择您要的主题' : 'Choose Your Topic'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1 relative">
