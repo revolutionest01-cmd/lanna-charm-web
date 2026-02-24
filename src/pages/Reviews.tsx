@@ -44,10 +44,18 @@ type ReviewLike = {
   user_id: string;
 };
 
+const AVATAR_OPTIONS = [
+  "😊", "😄", "😎", "🤩", "😍", 
+  "🥳", "😇", "🤓", "😌", "😊",
+  "👨", "👩", "👴", "👵", "👦",
+  "👧", "🧔", "👱", "🤵", "💼"
+];
+
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
   review_text_en: z.string().trim().min(10, "Review must be at least 10 characters").max(500, "Review must be less than 500 characters"),
   review_text_th: z.string().trim().min(10, "รีวิวต้องมีอย่างน้อย 10 ตัวอักษร").max(500, "รีวิวต้องมีไม่เกิน 500 ตัวอักษร"),
+  avatar: z.string().default("😊"),
 });
 
 const Reviews = () => {
@@ -68,6 +76,7 @@ const Reviews = () => {
     rating: 5,
     review_text_en: "",
     review_text_th: "",
+    avatar: "😊",
   });
 
   // Manual refresh handler
@@ -335,6 +344,7 @@ const Reviews = () => {
           rating: validated.rating,
           review_text_en: validated.review_text_en,
           review_text_th: validated.review_text_th,
+          avatar: validated.avatar || "😊",
           user_id: user?.id || null,
           image_url: imageUrl,
           is_active: false, // Pending admin approval
@@ -354,6 +364,7 @@ const Reviews = () => {
         rating: 5,
         review_text_en: "",
         review_text_th: "",
+        avatar: "😊",
       });
       setReviewImage(null);
       setReviewImagePreview(null);
@@ -735,6 +746,28 @@ const Reviews = () => {
                     <p className="text-xs text-muted-foreground mt-2">
                       {language === "th" ? "ระบบจะใช้ชื่อที่ลงทะเบียนของคุณโดยอัติโนมัติ" : language === "zh" ? "系统将自动使用您的注册名称" : "Your registered name will be used automatically"}
                     </p>
+                  </div>
+
+                  <div>
+                    <Label className="font-semibold mb-3 block">
+                      {language === "th" ? "เลือก Avatar" : language === "zh" ? "选择头像" : "Select Avatar"}
+                    </Label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {AVATAR_OPTIONS.map((avatar) => (
+                        <button
+                          key={avatar}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, avatar })}
+                          className={`text-3xl p-2 rounded-lg transition-all border-2 ${
+                            formData.avatar === avatar
+                              ? "border-primary bg-primary/10 scale-110"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {avatar}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div>
