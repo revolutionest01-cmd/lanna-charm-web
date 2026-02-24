@@ -79,113 +79,58 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
 };
 
 // Initialize auth state
-const initializeAuth = async () => {
-  try {
-    console.log('[Auth] Starting initialization...');
-    
-    // First, get the session from localStorage/Supabase
-    console.log('[Auth] Getting initial session...');
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error('[Auth] Error getting session:', error.message);
-    }
-    
-    if (session?.user) {
-      console.log('[Auth] Found existing session:', session.user.email);
-      const basicUser = buildUserFromSession(session);
+const initializeAuth = () => {
+  console.log('[Auth] Starting initialization...');
+  
+  // CRITICAL: Set up onAuthStateChange FIRST before getSession
+  // This ensures we don't miss any auth events
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    try {
+      console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
       
-      // Enrich with profile data BEFORE marking loading complete
-      try {
-        const enrichedUser = await fetchAndEnrichUser(session);
+      if (newSession?.user) {
+        const basicUser = buildUserFromSession(newSession);
+        console.log('[Auth] Session found via listener:', basicUser.email, 'event:', _event);
+        
+        // Set authenticated immediately with basic user
         setAuthState({
-          user: enrichedUser,
-          session,
+          user: basicUser,
+          session: newSession,
           isAuthenticated: true,
           isLoading: false,
         });
-      } catch (err) {
-        console.error('[Auth] Error enriching user:', err);
-        // Fallback to basic user
+        
+        // Enrich with profile data in background (don't block UI)
+        fetchAndEnrichUser(newSession).then(enrichedUser => {
+          setAuthState({ user: enrichedUser });
+        }).catch(err => {
+          console.error('[Auth] Error enriching user:', err);
+        });
+      } else {
+        console.log('[Auth] No session in listener, event:', _event);
         setAuthState({
-          user: basicUser,
-          session,
-          isAuthenticated: true,
+          user: null,
+          session: null,
+          isAuthenticated: false,
           isLoading: false,
         });
       }
-    } else {
-      console.log('[Auth] No existing session found');
+    } catch (error) {
+      console.error('[Auth] Error in state change handler:', error);
       setAuthState({
         user: null,
-        session: null,
-        isAuthenticated: false,
+        session: newSession || null,
+        isAuthenticated: !!newSession,
         isLoading: false,
       });
     }
-    
-    // Set up auth state listener for future changes (login/logout/refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      try {
-        console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
-        
-        if (newSession?.user) {
-          const basicUser = buildUserFromSession(newSession);
-          console.log('[Auth] Session updated in listener:', basicUser.email);
-          
-          // Keep loading state during enrichment
-          setAuthState({
-            user: basicUser,
-            session: newSession,
-            isAuthenticated: true,
-            isLoading: true, // Keep loading during enrichment
-          });
-          
-          // Enrich with profile data and update when complete
-          try {
-            const enrichedUser = await fetchAndEnrichUser(newSession);
-            setAuthState({ 
-              user: enrichedUser,
-              isLoading: false,
-            });
-          } catch (err) {
-            console.error('[Auth] Error enriching user in listener:', err);
-            setAuthState({
-              user: basicUser,
-              isLoading: false,
-            });
-          }
-        } else {
-          console.log('[Auth] Session cleared in listener');
-          setAuthState({
-            user: null,
-            session: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      } catch (error) {
-        console.error('[Auth] Error in state change handler:', error);
-        setAuthState({
-          user: null,
-          session: newSession || null,
-          isAuthenticated: !!newSession,
-          isLoading: false,
-        });
-      }
-    });
-    
-    // Keep the unsubscribe for potential cleanup
-    return () => subscription?.unsubscribe();
-  } catch (error) {
-    console.error('[Auth] Initialization error:', error);
-    setAuthState({
-      user: null,
-      session: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
-  }
+  });
+
+  // Then call getSession to handle existing session from storage
+  // The onAuthStateChange listener above will fire INITIAL_SESSION automatically
+  // so we don't need to handle getSession result separately
+  
+  return () => subscription?.unsubscribe();
 };
 
 // Initialize on module load
