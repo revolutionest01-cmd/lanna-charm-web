@@ -118,6 +118,16 @@ const RoomsSection = () => {
                           alt={language === "th" ? room.name_th : room.name_en}
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                         />
+                        {/* Room Status Badge */}
+                        <div className={`absolute top-3 right-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-xs sm:text-sm font-semibold ${
+                          room.is_available === false 
+                            ? 'bg-red-500/90 hover:bg-red-600' 
+                            : 'bg-green-500/90 hover:bg-green-600'
+                        } shadow-lg transition-colors`}>
+                          {room.is_available === false 
+                            ? (language === 'th' ? 'ไม่ว่าง' : language === 'zh' ? '已满房' : 'Unavailable')
+                            : (language === 'th' ? 'ว่าง' : language === 'zh' ? '有房' : 'Available')}
+                        </div>
                       </div>
                       
                       <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
