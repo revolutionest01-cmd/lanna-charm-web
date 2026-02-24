@@ -868,9 +868,9 @@ export const MenusManagement = () => {
                   {language === "th" ? "เพิ่มเมนู" : "Add Menu"}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-full sm:w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] overflow-y-auto p-4 sm:p-6">
-                <DialogHeader>
-                  <DialogTitle className={selectedMenu ? "text-lg sm:text-xl md:text-2xl font-bold text-amber-900" : "text-base sm:text-lg md:text-xl font-bold"}>
+              <DialogContent className="w-full sm:w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto p-3 sm:p-4 md:p-5">
+                <DialogHeader className="pb-2">
+                  <DialogTitle className={selectedMenu ? "text-base sm:text-lg md:text-xl font-bold text-amber-900" : "text-sm sm:text-base md:text-lg font-bold"}>
                     {selectedMenu
                       ? language === "th" ? "แก้ไขเมนู" : "Edit Menu"
                       : language === "th" ? "เพิ่มเมนูใหม่" : "Add New Menu"}
@@ -878,14 +878,14 @@ export const MenusManagement = () => {
                 </DialogHeader>
 
                 <Form {...menuForm}>
-                  <form onSubmit={menuForm.handleSubmit(onSubmitMenu)} className="space-y-4 sm:space-y-5 md:space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <form onSubmit={menuForm.handleSubmit(onSubmitMenu)} className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       <FormField
                         control={menuForm.control}
                         name="name_th"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-primary">{language === "th" ? "ชื่อเมนู (ไทย)" : "Menu Name (Thai)"}</FormLabel>
+                            <FormLabel className="text-primary text-sm">{language === "th" ? "ชื่อเมนู (ไทย)" : "Menu Name (Thai)"}</FormLabel>
                             <FormControl>
                               <Input {...field} disabled={submitting} className="bg-white text-foreground" />
                             </FormControl>
@@ -899,7 +899,7 @@ export const MenusManagement = () => {
                         name="name_en"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-primary">{language === "th" ? "ชื่อเมนู (อังกฤษ)" : "Menu Name (English)"}</FormLabel>
+                            <FormLabel className="text-primary text-sm">{language === "th" ? "ชื่อเมนู (อังกฤษ)" : "Menu Name (English)"}</FormLabel>
                             <FormControl>
                               <Input {...field} disabled={submitting} className="bg-white text-foreground" />
                             </FormControl>
@@ -909,13 +909,13 @@ export const MenusManagement = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       <FormField
                         control={menuForm.control}
                         name="price"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-primary">{language === "th" ? "ราคาอาหาร (บาท)" : "Food Price (THB)"}</FormLabel>
+                            <FormLabel className="text-primary text-sm">{language === "th" ? "ราคาอาหาร (บาท)" : "Food Price (THB)"}</FormLabel>
                             <FormControl>
                               <Input {...field} type="number" step="0.01" disabled={submitting} className="bg-white text-foreground" />
                             </FormControl>
@@ -965,9 +965,9 @@ export const MenusManagement = () => {
                       name="description_th"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-primary">{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
+                          <FormLabel className="text-primary text-sm">{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
                           <FormControl>
-                            <Textarea {...field} disabled={submitting} rows={3} className="bg-white text-foreground" />
+                            <Textarea {...field} disabled={submitting} rows={2} className="bg-white text-foreground" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -979,9 +979,9 @@ export const MenusManagement = () => {
                       name="description_en"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-primary">{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
+                          <FormLabel className="text-primary text-sm">{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
                           <FormControl>
-                            <Textarea {...field} disabled={submitting} rows={3} className="bg-white text-foreground" />
+                            <Textarea {...field} disabled={submitting} rows={2} className="bg-white text-foreground" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -992,12 +992,12 @@ export const MenusManagement = () => {
                       control={menuForm.control}
                       name="is_recommended"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2 sm:p-3">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base text-primary">
+                            <FormLabel className="text-sm text-primary">
                               {language === "th" ? "เมนูแนะนำ" : "Recommended Menu"}
                             </FormLabel>
-                            <FormDescription>
+                            <FormDescription className="text-xs">
                               {language === "th"
                                 ? "แสดงเมนูนี้ในส่วนเมนูแนะนำ"
                                 : "Show this menu in recommended section"}
@@ -1015,13 +1015,13 @@ export const MenusManagement = () => {
                     />
 
                     {/* Image Upload */}
-                    <div className="space-y-2">
-                      <Label className="text-primary font-semibold bg-white px-2 py-1 rounded inline-block text-sm sm:text-base">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-primary font-semibold bg-white px-2 py-0.5 rounded inline-block text-xs sm:text-sm">{language === "th" ? "รูปภาพเมนู" : "Menu Image"}</Label>
                       <div
                         onDragOver={handleImageDragOver}
                         onDragLeave={handleImageDragLeave}
                         onDrop={handleImageDrop}
-                        className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${
+                        className={`border-2 border-dashed rounded-lg p-3 sm:p-4 text-center transition-colors ${
                           isDraggingImage
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
@@ -1040,11 +1040,11 @@ export const MenusManagement = () => {
                           htmlFor="menu-image-upload"
                           className="cursor-pointer flex flex-col items-center"
                         >
-                          <ImageIcon className="w-8 h-8 text-foreground/50 mb-2" />
-                          <p className="text-sm text-foreground/70">
+                          <ImageIcon className="w-6 h-6 text-foreground/50 mb-1" />
+                          <p className="text-xs text-foreground/70">
                             {language === "th"
                               ? "คลิกหรือลากไฟล์มาวาง (อัพโหลดได้หลายรูป)"
-                              : "Click or drag files here (Multiple uploads)"}
+                              : "Click or drag files here (Multiple)"}
                           </p>
                         </label>
                       </div>
@@ -1094,11 +1094,11 @@ export const MenusManagement = () => {
                       )}
                     </div>
 
-                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
+                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-1.5 sm:gap-2 pt-1">
                       <Button
                         type="button"
                         variant="secondary"
-                        className="font-semibold text-foreground hover:bg-secondary/80 w-full sm:w-auto"
+                        className="font-semibold text-foreground hover:bg-secondary/80 w-full sm:w-auto text-sm"
                         onClick={() => {
                           setIsMenuDialogOpen(false);
                           resetMenuForm();
@@ -1107,10 +1107,10 @@ export const MenusManagement = () => {
                       >
                         {language === "th" ? "ยกเลิก" : "Cancel"}
                       </Button>
-                      <Button type="submit" disabled={submitting || uploadingImage || uploadingIcon} className="w-full sm:w-auto">
+                      <Button type="submit" disabled={submitting || uploadingImage || uploadingIcon} className="w-full sm:w-auto text-sm">
                         {submitting || uploadingImage || uploadingIcon ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                             {language === "th" ? "กำลังบันทึก..." : "Saving..."}
                           </>
                         ) : (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import { Loader2, Star, Send, ThumbsUp, ImagePlus, X } from "lucide-react";
+import { Loader2, Star, Send, ThumbsUp, ImagePlus, X, RefreshCw, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,16 @@ type Review = {
   created_at: string;
   user_id: string | null;
   helpful_count: number;
+  user_name?: string;
+};
+
+type ReviewReply = {
+  id: string;
+  review_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user_name?: string;
 };
 
 type ReviewLike = {
@@ -35,7 +45,6 @@ type ReviewLike = {
 };
 
 const reviewSchema = z.object({
-  customer_name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
   rating: z.number().min(1).max(5),
   review_text_en: z.string().trim().min(10, "Review must be at least 10 characters").max(500, "Review must be less than 500 characters"),
   review_text_th: z.string().trim().min(10, "รีวิวต้องมีอย่างน้อย 10 ตัวอักษร").max(500, "รีวิวต้องมีไม่เกิน 500 ตัวอักษร"),
@@ -52,12 +61,21 @@ const Reviews = () => {
   const [reviewImage, setReviewImage] = useState<File | null>(null);
   const [reviewImagePreview, setReviewImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
+  const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    customer_name: "",
     rating: 5,
     review_text_en: "",
     review_text_th: "",
   });
+
+  // Manual refresh handler
+  const handleRefreshReviews = async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
+    setIsRefreshing(false);
+  };
 
   const { data: reviews = [], isLoading, error: reviewsError } = useQuery({
     queryKey: ["reviews-all"],
@@ -73,16 +91,67 @@ const Reviews = () => {
         throw error;
       }
       
-      // Ensure helpful_count is included (default to 0 if missing)
-      return (data || []).map(review => ({
-        ...review,
-        helpful_count: review.helpful_count || 0
-      })) as Review[];
+      // Fetch user information for reviews with user_id
+      const reviewsWithUsers = await Promise.all(
+        (data || []).map(async (review) => {
+          let user_name: string | undefined;
+          
+          if (review.user_id) {
+            try {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("display_name")
+                .eq("id", review.user_id)
+                .single();
+              
+              if (profile) {
+                user_name = profile.display_name;
+              }
+            } catch (err) {
+              console.log("[Reviews] Could not fetch user profile:", err);
+            }
+          }
+          
+          return {
+            ...review,
+            helpful_count: review.helpful_count || 0,
+            user_name,
+          };
+        })
+      );
+      
+      return reviewsWithUsers as Review[];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds cache
     retry: 1,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+
+  // Set up real-time subscription for review updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("reviews:is_active=true")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "reviews",
+        },
+        (payload) => {
+          console.log("[Reviews] Real-time update received:", payload);
+          // Invalidate the reviews query to refetch when any changes occur
+          queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
+        }
+      )
+      .subscribe((status) => {
+        console.log("[Reviews] Subscription status:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Fetch user's likes
   const { data: userLikes = [], isLoading: userLikesLoading } = useQuery({
@@ -173,10 +242,67 @@ const Reviews = () => {
     },
   });
 
+  const submitReplyMutation = useMutation({
+    mutationFn: async ({ reviewId, content }: { reviewId: string; content: string }) => {
+      if (!user?.id) {
+        throw new Error("Must be logged in");
+      }
+      
+      const trimmedContent = content.trim();
+      if (trimmedContent.length < 2) {
+        throw new Error(language === "th" ? "ความเห็นต้องมีอย่างน้อย 2 ตัวอักษร" : "Reply must be at least 2 characters");
+      }
+      
+      const { error } = await supabase
+        .from("review_replies")
+        .insert({
+          review_id: reviewId,
+          user_id: user.id,
+          content: trimmedContent,
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      // Clear the reply input for that review
+      setReplyContent(prev => ({
+        ...prev,
+        [variables.reviewId]: ""
+      }));
+      
+      // Invalidate both the reviews cache and the specific review-replies cache
+      queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["review-replies", variables.reviewId], exact: true });
+      
+      sweetAlert.success(
+        language === "th" 
+          ? "ส่งความเห็นสำเร็จ!" 
+          : language === "zh"
+          ? "评论已提交！"
+          : "Reply submitted!"
+      );
+    },
+    onError: (error: any) => {
+      console.error("Error submitting reply:", error);
+      sweetAlert.error(
+        language === "th" 
+          ? "เกิดข้อผิดพลาด: " + (error.message || "ไม่ทราบข้อผิดพลาด") 
+          : language === "zh"
+          ? "发生错误: " + (error.message || "未知错误")
+          : "An error occurred: " + (error.message || "Unknown error")
+      );
+    },
+  });
+
   const submitReviewMutation = useMutation({
     mutationFn: async (reviewData: typeof formData) => {
       // Validate
       const validated = reviewSchema.parse(reviewData);
+      
+      // Get user's registered name from profile
+      if (!user?.name) {
+        throw new Error(language === 'th' ? 'ไม่พบข้อมูลชื่อผู้ใช้' : 'User name not found');
+      }
       
       let imageUrl: string | null = null;
 
@@ -205,7 +331,7 @@ const Reviews = () => {
       const { error } = await supabase
         .from("reviews")
         .insert({
-          customer_name: validated.customer_name,
+          customer_name: user.name, // Use registered user name
           rating: validated.rating,
           review_text_en: validated.review_text_en,
           review_text_th: validated.review_text_th,
@@ -225,7 +351,6 @@ const Reviews = () => {
           : "Review submitted! Pending admin approval"
       );
       setFormData({
-        customer_name: "",
         rating: 5,
         review_text_en: "",
         review_text_th: "",
@@ -282,6 +407,122 @@ const Reviews = () => {
     submitReviewMutation.mutate(formData);
   };
 
+  const toggleExpandReview = (reviewId: string) => {
+    setExpandedReviews(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(reviewId)) {
+        newSet.delete(reviewId);
+      } else {
+        newSet.add(reviewId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSubmitReply = (reviewId: string) => {
+    const content = replyContent[reviewId]?.trim();
+    if (!content) {
+      sweetAlert.error(language === "th" ? "กรุณากรอกความเห็น" : "Please enter a reply");
+      return;
+    }
+    submitReplyMutation.mutate({ reviewId, content });
+  };
+
+  // Hook to fetch replies for a review
+  const useReviewReplies = (reviewId: string) => {
+    return useQuery({
+      queryKey: ["review-replies", reviewId],
+      queryFn: async () => {
+        try {
+          // Try joining with profiles table via foreign key
+          const { data, error } = await supabase
+            .from("review_replies")
+            .select(
+              `
+                id,
+                review_id,
+                user_id,
+                content,
+                created_at,
+                profiles:user_id (
+                  display_name
+                )
+              `
+            )
+            .eq("review_id", reviewId)
+            .order("created_at", { ascending: true });
+          
+          if (error) {
+            console.error("[ReviewReplies] Join query error:", error);
+            // Fallback to batch fetch if join fails
+            throw error;
+          }
+          
+          if (!data) {
+            return [];
+          }
+          
+          // Map replies with user names from the join
+          return (data || []).map((reply: any) => ({
+            id: reply.id,
+            review_id: reply.review_id,
+            user_id: reply.user_id,
+            content: reply.content,
+            created_at: reply.created_at,
+            user_name: reply.profiles?.[0]?.display_name || reply.profiles?.display_name,
+          })) as ReviewReply[];
+        } catch (joinError) {
+          console.warn("[ReviewReplies] Join failed, using batch fetch:", joinError);
+          
+          // Fallback: Batch fetch approach
+          const { data: repliesData, error: repliesError } = await supabase
+            .from("review_replies")
+            .select("*")
+            .eq("review_id", reviewId)
+            .order("created_at", { ascending: true });
+          
+          if (repliesError) throw repliesError;
+          if (!repliesData || repliesData.length === 0) return [];
+          
+          // Get unique user IDs
+          const userIds = [...new Set(repliesData.map((r: any) => r.user_id).filter(Boolean))];
+          
+          if (userIds.length === 0) {
+            return repliesData.map((r: any) => ({
+              ...r,
+              user_name: undefined,
+            })) as ReviewReply[];
+          }
+          
+          // Batch fetch all user profiles at once
+          const { data: profiles, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, display_name")
+            .in("id", userIds);
+          
+          if (profilesError) {
+            console.warn("[ReviewReplies] Profile fetch error:", profilesError);
+          }
+          
+          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p.display_name]));
+          
+          // Map replies with user names from the batch fetch
+          return (repliesData || []).map((reply: any) => ({
+            id: reply.id,
+            review_id: reply.review_id,
+            user_id: reply.user_id,
+            content: reply.content,
+            created_at: reply.created_at,
+            user_name: profileMap.get(reply.user_id),
+          })) as ReviewReply[];
+        }
+      },
+      staleTime: 15 * 1000,
+      retry: 1,
+      enabled: !!reviewId,
+    });
+  };
+
   const filteredReviews = filterRating 
     ? reviews.filter(review => review.rating === filterRating)
     : reviews;
@@ -323,6 +564,91 @@ const Reviews = () => {
     1: reviews.filter(r => r.rating === 1).length,
   };
 
+
+  // Inline component for rendering replies
+  const RepliesSection = ({ reviewId }: { reviewId: string }) => {
+    const { data: replies = [], isLoading: repliesLoading } = useReviewReplies(reviewId);
+    
+    return (
+      <div className="mt-6 pt-4 border-t border-border/50 space-y-4">
+        <h4 className="font-semibold text-sm">
+          {language === "th" ? "ความเห็น" : language === "zh" ? "评论" : "Comments"} ({replies.length})
+        </h4>
+
+        {/* Existing Replies */}
+        {repliesLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          </div>
+        ) : replies.length > 0 ? (
+          <div className="space-y-3 bg-muted/20 rounded-lg p-3">
+            {replies.map((reply) => (
+              <div key={reply.id} className="flex gap-3 text-sm">
+                <div className="flex-1">
+                  <p className="font-semibold text-xs text-primary">
+                    {reply.user_name || "Anonymous"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {format(new Date(reply.created_at), "MMM dd, yyyy HH:mm")}
+                  </p>
+                  <p className="text-sm mt-1 text-foreground">{reply.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            {language === "th" ? "ยังไม่มีความเห็น" : language === "zh" ? "暂无评论" : "No comments yet"}
+          </p>
+        )}
+
+        {/* Reply Form */}
+        {isAuthenticated ? (
+          <div className="flex gap-2">
+            <Textarea
+              value={replyContent[reviewId] || ""}
+              onChange={(e) => setReplyContent(prev => ({
+                ...prev,
+                [reviewId]: e.target.value
+              }))}
+              placeholder={language === "th" ? "เพิ่มความเห็น..." : language === "zh" ? "添加评论..." : "Add a comment..."}
+              rows={2}
+              maxLength={300}
+              className="border-2 text-sm"
+            />
+            <Button
+              onClick={() => handleSubmitReply(reviewId)}
+              disabled={submitReplyMutation.isPending}
+              size="sm"
+              className="gap-2 self-end"
+            >
+              {submitReplyMutation.isPending ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {language === "th" ? "ส่ง..." : "Sending..."}
+                </>
+              ) : (
+                <>
+                  <Send className="w-3 h-3" />
+                  {language === "th" ? "ส่ง" : "Send"}
+                </>
+              )}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={() => navigate("/auth")}
+            variant="outline"
+            size="sm"
+            className="w-full"
+          >
+            {language === "th" ? "เข้าสู่ระบบเพื่อเพิ่มความเห็น" : language === "zh" ? "登录后评论" : "Login to comment"}
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <main className="pt-20 pb-20">
@@ -339,6 +665,20 @@ const Reviews = () => {
                 ? "来自尊贵客户的反馈和体验"
                 : "Feedback and experiences from our valued customers"}
             </p>
+            
+            {/* Refresh Button */}
+            <div className="mb-6 flex justify-center">
+              <Button
+                onClick={handleRefreshReviews}
+                disabled={isRefreshing || isLoading}
+                variant="outline"
+                size="sm"
+                className="gap-2 border-2 hover:bg-primary/10"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {language === "th" ? "รีโหลด" : language === "zh" ? "刷新" : "Refresh"}
+              </Button>
+            </div>
             
             {/* Review Stats */}
             {reviews.length > 0 && (
@@ -387,19 +727,14 @@ const Reviews = () => {
                   </h2>
                 </div>
                 <form onSubmit={handleSubmitReview} className="space-y-4">
-                  <div>
-                    <Label htmlFor="customer_name" className="font-semibold">
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-semibold text-foreground">
                       {language === "th" ? "ชื่อของคุณ" : language === "zh" ? "您的姓名" : "Your Name"}
-                    </Label>
-                    <Input
-                      id="customer_name"
-                      value={formData.customer_name}
-                      onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                      placeholder={language === "th" ? "กรอกชื่อของคุณ" : language === "zh" ? "请输入您的姓名" : "Enter your name"}
-                      maxLength={100}
-                      required
-                      className="border-2"
-                    />
+                    </p>
+                    <p className="text-lg font-bold text-primary mt-1">{user?.name}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {language === "th" ? "ระบบจะใช้ชื่อที่ลงทะเบียนของคุณโดยอัติโนมัติ" : language === "zh" ? "系统将自动使用您的注册名称" : "Your registered name will be used automatically"}
+                    </p>
                   </div>
 
                   <div>
@@ -567,9 +902,14 @@ const Reviews = () => {
                     
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between mb-4">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-bold text-lg text-foreground">{review.customer_name}</h3>
-                          <p className="text-xs text-muted-foreground">
+                          {review.user_name && (
+                            <p className="text-xs text-primary/80 font-semibold">
+                              👤 {review.user_name}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
                             {format(new Date(review.created_at), "MMM dd, yyyy")}
                           </p>
                         </div>
@@ -746,9 +1086,14 @@ const Reviews = () => {
                         )}
                         
                         <div className="flex items-start justify-between mb-4">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold text-lg text-foreground">{review.customer_name}</h3>
-                            <p className="text-sm text-muted-foreground">
+                            {review.user_name && (
+                              <p className="text-xs text-primary/80 font-semibold">
+                                👤 {review.user_name}
+                              </p>
+                            )}
+                            <p className="text-sm text-muted-foreground mt-1">
                               {format(new Date(review.created_at), "MMM dd, yyyy")}
                             </p>
                           </div>
@@ -784,16 +1129,27 @@ const Reviews = () => {
                               {review.helpful_count}
                             </span>
                           </div>
-                          <Button
-                            variant={isLiked ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked })}
-                            disabled={toggleLikeMutation.isPending || !isAuthenticated}
-                            className="gap-2"
-                          >
-                            <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-                            {language === "th" ? "เป็นประโยชน์" : language === "zh" ? "有帮助" : "Helpful"}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant={isLiked ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked })}
+                              disabled={toggleLikeMutation.isPending || !isAuthenticated}
+                              className="gap-2"
+                            >
+                              <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                              {language === "th" ? "เป็นประโยชน์" : language === "zh" ? "有帮助" : "Helpful"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toggleExpandReview(review.id)}
+                              className="gap-2"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              {language === "th" ? "ความเห็น" : language === "zh" ? "评论" : "Comments"}
+                            </Button>
+                          </div>
                         </div>
                         
                         {!isAuthenticated && (
@@ -801,6 +1157,9 @@ const Reviews = () => {
                             {language === "th" ? "เข้าสู่ระบบเพื่อกดถูกใจ" : language === "zh" ? "登录后可点赞" : "Login to like"}
                           </p>
                         )}
+
+                        {/* Replies Section */}
+                        {expandedReviews.has(review.id) && <RepliesSection reviewId={review.id} />}
                       </CardContent>
                     </Card>
                   );

@@ -369,7 +369,7 @@ export const ReviewsManagement = () => {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-primary">
                 {editingReview
                   ? language === "th"
                     ? "แก้ไขรีวิว"
@@ -388,7 +388,7 @@ export const ReviewsManagement = () => {
                     value={formData.customer_name}
                     onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
                     placeholder={language === "th" ? "คุณสมชาย" : "John Doe"}
-                    className="mt-2"
+                    className="mt-2 !bg-white"
                   />
                 </div>
                 <div>
@@ -420,7 +420,7 @@ export const ReviewsManagement = () => {
                     value={formData.rating.toString()}
                     onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-32 !bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -456,7 +456,7 @@ export const ReviewsManagement = () => {
                     onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
                     placeholder="Great service and delicious food!"
                     rows={3}
-                    className="mt-2"
+                    className="mt-2 !bg-white"
                   />
                 </div>
                 <div>
@@ -466,7 +466,7 @@ export const ReviewsManagement = () => {
                     onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
                     placeholder="บริการดีมาก อาหารอร่อย!"
                     rows={3}
-                    className="mt-2"
+                    className="mt-2 !bg-white"
                   />
                 </div>
               </div>
@@ -478,9 +478,9 @@ export const ReviewsManagement = () => {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors !bg-white ${
                     isDragging
-                      ? "border-primary bg-primary/5"
+                      ? "border-primary !bg-white"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
