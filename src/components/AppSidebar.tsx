@@ -174,7 +174,7 @@ const AppSidebar = () => {
           >
             <img src={isDarkMode ? logoNormal : logo} alt="Plern Ping" className="h-16 w-auto object-contain" />
             <div className="flex-1">
-              <h2 className={cn("text-xl font-black tracking-wider leading-tight", themeStyles.text)}>
+              <h2 className={cn("text-lg font-black tracking-wider leading-tight", themeStyles.text)}>
                 Plern Ping
               </h2>
               <p className={cn("text-xs font-semibold tracking-wide", themeStyles.muted)}>
@@ -193,7 +193,7 @@ const AppSidebar = () => {
               </p>
             </div>
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center", themeStyles.muted)}>
+              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center w-full flex justify-center", themeStyles.muted)}>
                 {language === 'th' ? 'กรุณาเลือกหัวข้อที่ต้องการ' : language === 'zh' ? '选择您要的主题' : 'Choose Your Topic'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -279,7 +279,7 @@ const AppSidebar = () => {
 
             {/* Community */}
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
+              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center w-full flex justify-center", themeStyles.muted)}>
                 {language === 'th' ? 'เข้าร่วมชุมชนของเรา' : language === 'zh' ? '社区' : 'Community'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
