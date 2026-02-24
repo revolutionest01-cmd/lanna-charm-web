@@ -294,25 +294,17 @@ const AppSidebar = () => {
                       onMouseEnter={() => setHoveredIndex(8)}
                       onMouseLeave={() => setHoveredIndex(null)}
                       className={cn(
-                        "group relative w-full pl-2 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
+                        "group relative w-full pl-0 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
                         location.pathname === '/forum' 
-                          ? "bg-primary/35 shadow-lg" 
+                          ? "bg-primary/35 shadow-lg border-l-4 border-primary" 
                           : hoveredIndex === 8
                             ? "bg-primary/15 shadow-sm"
                             : "hover:bg-primary/10",
                       )}
                     >
-                      {/* Highlight bar - ONLY shows when ACTIVE, not on hover */}
-                      {location.pathname === '/forum' && (
-                        <div className={cn(
-                          "absolute left-0 top-0 bottom-0 w-1.5 rounded-r-xl transition-all duration-300 ease-out",
-                          "bg-gradient-to-b from-primary via-primary to-primary/50 shadow-lg shadow-primary/60"
-                        )} />
-                      )}
-                      
                       {/* Icon */}
                       <div className={cn(
-                        "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0",
+                        "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0 ml-2",
                         location.pathname === '/forum' 
                           ? "bg-background/20 shadow-md" 
                           : hoveredIndex === 8 || focusedIndex === 8
@@ -338,9 +330,12 @@ const AppSidebar = () => {
                         {t.forum}
                       </span>
                       
-                      {/* Active indicator dot - only shows when active */}
+                      {/* Active indicator - arrow and dot */}
                       {location.pathname === '/forum' && (
-                        <div className="w-2 h-2 rounded-full bg-background animate-pulse shadow-lg shadow-background/50 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <ChevronRight className="h-4 w-4 animate-bounce text-primary drop-shadow-sm" />
+                          <div className="w-2 h-2 rounded-full bg-background animate-pulse shadow-lg shadow-background/50" />
+                        </div>
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
