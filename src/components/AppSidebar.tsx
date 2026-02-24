@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
-  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2, Heart, Map
+  MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2, Heart, Map, ChevronRight, Compass, Users
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -193,7 +193,8 @@ const AppSidebar = () => {
               </p>
             </div>
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center w-full flex justify-center", themeStyles.muted)}>
+              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center w-full flex justify-center items-center gap-2", themeStyles.muted)}>
+                <Compass className="h-3.5 w-3.5" />
                 {language === 'th' ? 'กรุณาเลือกหัวข้อที่ต้องการ' : language === 'zh' ? '选择您要的主题' : 'Choose Your Topic'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -263,9 +264,12 @@ const AppSidebar = () => {
                             {item.label}
                           </span>
                           
-                          {/* Active indicator dot - only shows when active */}
+                          {/* Active indicator - arrow and dot */}
                           {active && (
-                            <div className="w-2 h-2 rounded-full bg-background animate-pulse shadow-lg shadow-background/50 flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <ChevronRight className="h-4 w-4 animate-bounce text-primary drop-shadow-sm" />
+                              <div className="w-2 h-2 rounded-full bg-background animate-pulse shadow-lg shadow-background/50" />
+                            </div>
                           )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -279,7 +283,8 @@ const AppSidebar = () => {
 
             {/* Community */}
             <SidebarGroup>
-              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center w-full flex justify-center", themeStyles.muted)}>
+              <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center w-full flex justify-center items-center gap-2", themeStyles.muted)}>
+                <Users className="h-3.5 w-3.5" />
                 {language === 'th' ? 'เข้าร่วมชุมชนของเรา' : language === 'zh' ? '社区' : 'Community'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
