@@ -194,7 +194,7 @@ const AppSidebar = () => {
             </div>
             <SidebarGroup>
               <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2 text-center", themeStyles.muted)}>
-                {language === 'th' ? 'เลือกหัวข้อขี่ที่คุณต้องการ' : language === 'zh' ? '选择您要的主题' : 'Choose Your Topic'}
+                {language === 'th' ? 'กรุณาเลือกหัวข้อที่ต้องการ' : language === 'zh' ? '选择您要的主题' : 'Choose Your Topic'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1 relative">
@@ -280,7 +280,7 @@ const AppSidebar = () => {
             {/* Community */}
             <SidebarGroup>
               <SidebarGroupLabel className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2", themeStyles.muted)}>
-                {language === 'th' ? 'ชุมชน' : language === 'zh' ? '社区' : 'Community'}
+                {language === 'th' ? 'เข้าร่วมชุมชนของเรา' : language === 'zh' ? '社区' : 'Community'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -562,7 +562,7 @@ const AppSidebar = () => {
                     isBookingHovered ? "bg-white/10" : "bg-black/0"
                   )} />
                   <Heart className={cn(
-                    "h-4 w-4 flex-shrink-0 relative z-10 fill-current text-background",
+                    "h-4 w-4 flex-shrink-0 relative z-10 fill-current text-pink-500",
                     isBookingHovered && "animate-pulse"
                   )} style={{ animationDelay: '0s' }} />
                   <span className="truncate relative z-10 ml-1">{t.bookNow}</span>
