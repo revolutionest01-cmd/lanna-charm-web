@@ -194,10 +194,10 @@ serve(async (req) => {
 
     // Build context based on detected categories and intent
     const menuMatches = findMatchingMenus(message);
-    if (menuMatches.length > 0) {
+    if (menuMatches && menuMatches.length > 0) {
       // Found matching menu items - show them prominently
       intent = 'menu';
-      contexts.push(`🍽️ เมนูที่ตรงกับคำถาม:\n${menuMatches.map(m => {
+      contexts.push(`🍽️ เมนูที่ตรงกับคำถาม:\n${menuMatches!.map(m => {
         let menuInfo = `- ${sanitizedLanguage === 'th' ? m.name_th : m.name_en}: ${m.price} บาท${m.is_recommended ? ' ⭐' : ''}`;
         if (m.description_th || m.description_en) {
           menuInfo += `\n  📝 ${sanitizedLanguage === 'th' ? m.description_th : m.description_en}`;

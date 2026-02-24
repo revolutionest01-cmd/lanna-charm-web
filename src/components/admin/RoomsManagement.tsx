@@ -82,7 +82,7 @@ export const RoomsManagement = () => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
-  const [imageToDelete, setImageToDelete] = useState<RoomImage | null>(null);
+  const [_imageToDelete, _setImageToDelete] = useState<RoomImage | null>(null);
 
   const form = useForm<RoomFormValues>({
     resolver: zodResolver(roomFormSchema),
@@ -223,10 +223,9 @@ export const RoomsManagement = () => {
 
   const handleDeleteImage = async (image: RoomImage) => {
     try {
-      setLoading(true);
+      setUploadingImages(true);
 
       // Extract correct storage path from public URL
-      // URL format: https://xxx.supabase.co/storage/v1/object/public/rooms/filename.jpg
       const urlParts = image.image_url.split('/storage/v1/object/public/rooms/');
       const storagePath = urlParts.length > 1 ? urlParts[1] : image.image_url.split("/").pop();
       if (storagePath) {
@@ -244,11 +243,16 @@ export const RoomsManagement = () => {
 
       if (error) throw error;
 
+      // Update selectedRoom state immediately so UI reflects the change
+      if (selectedRoom) {
+        const updatedImages = (selectedRoom.images || []).filter(img => img.id !== image.id);
+        setSelectedRoom({ ...selectedRoom, images: updatedImages });
+      }
+
       toast.success(
         language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully"
       );
       
-      setImageToDelete(null);
       loadRooms();
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -256,7 +260,7 @@ export const RoomsManagement = () => {
         language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image"
       );
     } finally {
-      setLoading(false);
+      setUploadingImages(false);
     }
   };
 
@@ -648,7 +652,11 @@ export const RoomsManagement = () => {
                             variant="destructive"
                             size="icon"
                             className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                            onClick={() => setImageToDelete(image)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteImage(image);
+                            }}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -818,31 +826,7 @@ export const RoomsManagement = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Image Confirmation */}
-      <AlertDialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {language === "th" ? "ยืนยันการลบรูปภาพ" : "Confirm Delete Image"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {language === "th"
-                ? "คุณต้องการลบรูปภาพนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-                : "Are you sure you want to delete this image? This action cannot be undone."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              {language === "th" ? "ยกเลิก" : "Cancel"}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => imageToDelete && handleDeleteImage(imageToDelete)}
-            >
-              {language === "th" ? "ลบ" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Image deletion is now handled directly without confirmation dialog */}
     </div>
   );
 };
