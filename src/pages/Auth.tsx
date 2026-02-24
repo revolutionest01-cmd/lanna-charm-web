@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -207,25 +208,12 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      // Use production domain for redirect
-      const productionUrl = 'https://www.plernping.com';
-      const redirectUrl = window.location.hostname === 'localhost' 
-        ? `${window.location.origin}/`
-        : `${productionUrl}/`;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
 
       if (error) {
-        sweetAlert.error(error.message);
+        sweetAlert.error(error.message || (language === 'th' ? 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google' : 'Error signing in with Google'));
       }
     } catch (error) {
       sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google' : language === 'zh' ? '使用Google登录时出错' : language === 'ja' ? 'Googleでのログイン中にエラーが発生しました' : 'Error signing in with Google');
