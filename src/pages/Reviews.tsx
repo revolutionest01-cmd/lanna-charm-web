@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import { Loader2, Star, Send, ThumbsUp } from "lucide-react";
+import { Loader2, Star, Send, ThumbsUp, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +49,9 @@ const Reviews = () => {
   const queryClient = useQueryClient();
   
   const [filterRating, setFilterRating] = useState<number | null>(null);
+  const [reviewImage, setReviewImage] = useState<File | null>(null);
+  const [reviewImagePreview, setReviewImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: "",
     rating: 5,
@@ -175,6 +178,30 @@ const Reviews = () => {
       // Validate
       const validated = reviewSchema.parse(reviewData);
       
+      let imageUrl: string | null = null;
+
+      // Upload image if provided
+      if (reviewImage) {
+        setUploadingImage(true);
+        const fileExt = reviewImage.name.split('.').pop();
+        const fileName = `${user?.id}_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('reviews')
+          .upload(fileName, reviewImage, { upsert: true });
+        
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw new Error(language === 'th' ? 'อัพโหลดรูปภาพไม่สำเร็จ' : 'Failed to upload image');
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('reviews')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrlData.publicUrl;
+      }
+
       const { error } = await supabase
         .from("reviews")
         .insert({
@@ -183,6 +210,7 @@ const Reviews = () => {
           review_text_en: validated.review_text_en,
           review_text_th: validated.review_text_th,
           user_id: user?.id || null,
+          image_url: imageUrl,
           is_active: false, // Pending admin approval
         });
       
@@ -202,9 +230,13 @@ const Reviews = () => {
         review_text_en: "",
         review_text_th: "",
       });
+      setReviewImage(null);
+      setReviewImagePreview(null);
+      setUploadingImage(false);
       queryClient.invalidateQueries({ queryKey: ["reviews-all"] });
     },
     onError: (error: any) => {
+      setUploadingImage(false);
       console.error("Error submitting review:", error);
       if (error instanceof z.ZodError) {
         sweetAlert.error(error.errors[0].message);
@@ -219,6 +251,31 @@ const Reviews = () => {
       }
     },
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type and size (max 5MB)
+    if (!file.type.startsWith('image/')) {
+      sweetAlert.error(language === 'th' ? 'กรุณาเลือกไฟล์รูปภาพเท่านั้น' : 'Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      sweetAlert.error(language === 'th' ? 'รูปภาพต้องมีขนาดไม่เกิน 5MB' : 'Image must be less than 5MB');
+      return;
+    }
+    
+    setReviewImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setReviewImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setReviewImage(null);
+    setReviewImagePreview(null);
+  };
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
@@ -394,8 +451,45 @@ const Reviews = () => {
                     </p>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  {/* Image Upload */}
+                  <div>
+                    <Label className="font-semibold mb-2 block">
+                      {language === "th" ? "แนบรูปภาพ (ไม่บังคับ)" : language === "zh" ? "附加图片（可选）" : "Attach Image (Optional)"}
+                    </Label>
+                    {reviewImagePreview ? (
+                      <div className="relative inline-block">
+                        <img 
+                          src={reviewImagePreview} 
+                          alt="Preview" 
+                          className="w-32 h-32 object-cover rounded-lg border-2 border-border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                          onClick={removeImage}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-3 cursor-pointer border-2 border-dashed border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
+                        <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {language === "th" ? "คลิกเพื่อเลือกรูปภาพ (สูงสุด 5MB)" : language === "zh" ? "点击选择图片（最大5MB）" : "Click to select image (max 5MB)"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  <Button
                     size="lg" 
                     disabled={submitReviewMutation.isPending}
                     className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold shadow-lg"
