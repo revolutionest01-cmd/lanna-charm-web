@@ -218,25 +218,17 @@ const AppSidebar = () => {
                           onMouseEnter={() => setHoveredIndex(index)}
                           onMouseLeave={() => setHoveredIndex(null)}
                           className={cn(
-                            "group relative w-full pl-2 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
+                            "group relative w-full pl-0 pr-4 py-3 rounded-lg transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground/5",
                             active 
-                              ? "bg-primary/35 shadow-lg" 
+                              ? "bg-primary/35 shadow-lg border-l-4 border-primary" 
                               : isHovered || isFocused
                                 ? "bg-primary/15 shadow-sm"
                                 : "hover:bg-primary/10",
                           )}
                         >
-                          {/* Highlight bar - ONLY shows when ACTIVE, not on hover/focus */}
-                          {active && (
-                            <div className={cn(
-                              "absolute left-0 top-0 bottom-0 w-1.5 rounded-r-xl transition-all duration-300 ease-out",
-                              "bg-gradient-to-b from-primary via-primary to-primary/50 shadow-lg shadow-primary/60"
-                            )} />
-                          )}
-                          
                           {/* Icon */}
                           <div className={cn(
-                            "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0",
+                            "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0 ml-2",
                             active 
                               ? "bg-background/20 shadow-md" 
                               : isHovered || isFocused
