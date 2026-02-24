@@ -686,6 +686,7 @@ export const RoomsManagement = () => {
                   <Button
                     type="button"
                     variant="outline"
+                    className="border-2 border-muted-foreground/40 hover:bg-muted/50 hover:text-foreground font-semibold"
                     onClick={() => {
                       setIsDialogOpen(false);
                       resetForm();

@@ -308,10 +308,8 @@ const Reviews = () => {
       // Validate
       const validated = reviewSchema.parse(reviewData);
       
-      // Get user's registered name from profile
-      if (!user?.name) {
-        throw new Error(language === 'th' ? 'ไม่พบข้อมูลชื่อผู้ใช้' : 'User name not found');
-      }
+      // Get user's registered name from profile with fallback
+      const userName = user?.name || user?.email?.split('@')[0] || 'User';
       
       let imageUrl: string | null = null;
 
@@ -340,7 +338,7 @@ const Reviews = () => {
       const { error } = await supabase
         .from("reviews")
         .insert({
-          customer_name: user.name, // Use registered user name
+          customer_name: userName,
           rating: validated.rating,
           review_text_en: validated.review_text_en,
           review_text_th: validated.review_text_th,
@@ -377,13 +375,15 @@ const Reviews = () => {
       if (error instanceof z.ZodError) {
         sweetAlert.error(error.errors[0].message);
       } else {
-        sweetAlert.error(
+        // Show actual error message if available
+        const errorMessage = error?.message || (
           language === "th" 
             ? "เกิดข้อผิดพลาดในการส่งรีวิว" 
             : language === "zh"
             ? "提交评论失败"
             : "Failed to submit review"
         );
+        sweetAlert.error(errorMessage);
       }
     },
   });

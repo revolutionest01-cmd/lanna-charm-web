@@ -107,7 +107,7 @@ export const ImageUploadZone = ({
           "relative border-2 border-dashed rounded-lg p-8 transition-all duration-200",
           isDragActive && !disabled
             ? "border-primary bg-primary/5 shadow-lg scale-105"
-            : "border-muted-foreground/30 bg-muted/50",
+            : "border-muted-foreground/30 bg-white",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
