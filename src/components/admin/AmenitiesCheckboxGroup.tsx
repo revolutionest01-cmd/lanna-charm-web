@@ -100,8 +100,8 @@ export const AmenitiesCheckboxGroup = ({
             className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all
               ${
                 isChecked(amenity)
-                  ? "bg-primary/10 border-primary/40"
-                  : "bg-background border-border hover:border-primary/30"
+                  ? "bg-white border-primary/60 shadow-sm"
+                  : "bg-white border-primary/30 hover:border-primary/50 hover:shadow-sm"
               }
               ${disabled ? "opacity-50 cursor-not-allowed" : ""}
             `}
@@ -112,7 +112,7 @@ export const AmenitiesCheckboxGroup = ({
               disabled={disabled}
               className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            <span className="text-sm">
+            <span className="text-sm font-medium text-foreground">
               {amenity.icon} {language === "th" ? amenity.th : amenity.en}
             </span>
           </label>
@@ -161,9 +161,9 @@ export const AmenitiesCheckboxGroup = ({
 
       {/* Show current selected items summary */}
       {valueTh && (
-        <div className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2">
-          <span className="font-medium">{language === "th" ? "รายการที่เลือก:" : "Selected:"}</span>{" "}
-          {valueTh}
+        <div className="text-sm font-medium text-foreground bg-white rounded-md p-3 border border-primary/30">
+          <span className="text-primary">{language === "th" ? "รายการที่เลือก:" : "Selected:"}</span>{" "}
+          <span className="text-foreground">{valueTh}</span>
         </div>
       )}
     </div>
