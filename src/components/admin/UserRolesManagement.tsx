@@ -152,7 +152,10 @@ export const UserRolesManagement = () => {
     );
   }
 
-  // Filter out developer from the list for admin view (they see it but can't change it)
+  // Hide developer from non-developer users
+  const isDeveloperUser = currentUser?.id === DEVELOPER_ID;
+  const visibleUsers = isDeveloperUser ? users : users.filter((u) => u.user_id !== DEVELOPER_ID);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -163,14 +166,14 @@ export const UserRolesManagement = () => {
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             {language === "th"
-              ? `ทั้งหมด ${users.length} ผู้ใช้ — Admin: เพิ่ม/ลบ Staff, Staff: แก้ไขเนื้อหา`
-              : `${users.length} users — Admin: manage staff, Staff: edit content`}
+              ? `ทั้งหมด ${visibleUsers.length} ผู้ใช้ — Admin: เพิ่ม/ลบ Staff, Staff: แก้ไขเนื้อหา`
+              : `${visibleUsers.length} users — Admin: manage staff, Staff: edit content`}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {/* Mobile */}
           <div className="sm:hidden space-y-3">
-            {users.map((u) => {
+            {visibleUsers.map((u) => {
               const config = roleConfig[u.role as keyof typeof roleConfig] || roleConfig.user;
               const RoleIcon = config.icon;
               const isDev = u.user_id === DEVELOPER_ID;
@@ -247,7 +250,7 @@ export const UserRolesManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => {
+                {visibleUsers.map((u) => {
                   const config = roleConfig[u.role as keyof typeof roleConfig] || roleConfig.user;
                   const RoleIcon = config.icon;
                   const isDev = u.user_id === DEVELOPER_ID;
