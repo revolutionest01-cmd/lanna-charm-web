@@ -132,6 +132,14 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
     setIsModalOpen(isOpen);
   }, [isOpen, setIsModalOpen]);
 
+  // Reset uploaded images and image index when modal opens or room changes
+  useEffect(() => {
+    if (isOpen && room) {
+      setUploadedImages([]);
+      setCurrentImageIndex(0);
+    }
+  }, [isOpen, room?.id]);
+
   // Handle keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
@@ -276,13 +284,21 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
     const files = e.target.files;
     if (!files) return;
 
-    const filesToUpload = Array.from(files).slice(0, maxImages - uploadedImages.length);
+    // Calculate total images (existing + uploaded) to respect maxImages limit
+    const totalCurrentImages = images.length + uploadedImages.length;
+    const filesToUpload = Array.from(files).slice(0, maxImages - totalCurrentImages);
+    
+    if (filesToUpload.length === 0) {
+      console.warn(`Maximum ${maxImages} images allowed. Current total: ${totalCurrentImages}`);
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       for (const file of filesToUpload) {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${room!.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${room!.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
         const { data, error } = await supabase.storage
           .from("rooms")
@@ -299,6 +315,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
         if (urlData?.publicUrl) {
           setUploadedImages((prev) => [...prev, urlData.publicUrl]);
+          console.log("Image uploaded successfully:", urlData.publicUrl);
         }
       }
     } catch (error) {
@@ -572,7 +589,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       </div>
                     )}
 
-                    {uploadedImages.length < maxImages && (
+                    {totalImages < maxImages && (
                       <div className="border-2 border-dashed border-primary/40 rounded-lg p-3 text-center hover:border-primary/60 hover:bg-primary/5 transition-all cursor-pointer"
                         onClick={() => fileInputRef.current?.click()}
                       >
@@ -828,7 +845,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                         </div>
                       )}
 
-                      {uploadedImages.length < maxImages && (
+                      {totalImages < maxImages && (
                         <div className="border-2 border-dashed border-primary/40 rounded-xl p-6 text-center hover:border-primary/60 hover:bg-primary/5 transition-all cursor-pointer"
                           onClick={() => fileInputRef.current?.click()}
                         >
