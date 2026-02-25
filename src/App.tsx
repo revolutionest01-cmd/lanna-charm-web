@@ -42,19 +42,19 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
 };
 
 const App = () => {
+  // Show loading screen only on first load, not on refresh
   const [showLoading, setShowLoading] = useState(() => {
-    // Skip loading screen if returning from OAuth callback
-    const hash = window.location.hash;
-    if (hash.includes('access_token') || hash.includes('refresh_token')) {
-      return false;
-    }
-    // Show loading screen only on first visit in this session
+    // Check if this is the first load in this session
     const isFirstLoad = !sessionStorage.getItem('app-initialized');
     if (isFirstLoad) {
+      // Mark as initialized in this session
       sessionStorage.setItem('app-initialized', 'true');
+      console.log('[App] First load - showing loading screen');
       return true;
+    } else {
+      console.log('[App] Refresh detected - skipping loading screen');
+      return false;
     }
-    return false;
   });
 
   const handleLoadingComplete = useCallback(() => {
