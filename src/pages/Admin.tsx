@@ -26,6 +26,7 @@ import {
   Activity,
   Bot,
   Headphones,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -40,6 +41,7 @@ import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
 import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 import { ChatLogsManagement } from "@/components/admin/ChatLogsManagement";
 import { LiveChatManagement } from "@/components/admin/LiveChatManagement";
+import { ChatAnalyticsDashboard } from "@/components/admin/ChatAnalyticsDashboard";
 import {
   ChartContainer,
   ChartTooltip,
@@ -60,6 +62,7 @@ const TABS = [
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
   { id: "livechat", icon: Headphones, labelTh: "Live Chat", labelEn: "Live Chat" },
   { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat" },
+  { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles" },
 ];
 
@@ -176,6 +179,7 @@ const Admin = () => {
       case "business": return <BusinessInfoManagement />;
       case "livechat": return <LiveChatManagement />;
       case "chatlog": return <ChatLogsManagement />;
+      case "chatanalytics": return <ChatAnalyticsDashboard />;
       case "roles": return <UserRolesManagement />;
       default: return null;
     }
