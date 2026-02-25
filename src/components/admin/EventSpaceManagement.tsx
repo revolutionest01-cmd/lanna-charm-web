@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Save, X, Plus, Image as ImageIcon, Trash2, Upload } from "lucide-react";
+import { Loader2, Save, X, Plus, Image as ImageIcon, Trash2, Upload, GripVertical } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +31,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Available icons for features
+const AVAILABLE_ICONS = [
+  "Presentation", "Utensils", "Wifi", "Monitor", "Mic", "Music",
+  "Camera", "Projector", "Coffee", "UtensilsCrossed", "Wine",
+  "Tv", "Speaker", "Headphones", "Laptop", "Printer",
+  "AirVent", "Lightbulb", "Armchair", "Car", "ParkingCircle",
+  "Shield", "Lock", "Users", "UserCheck", "Star",
+  "Heart", "Zap", "Clock", "CalendarDays", "MapPin",
+];
+
+const getIcon = (iconName: string) => {
+  const Icon = (LucideIcons as any)[iconName];
+  return Icon || LucideIcons.HelpCircle;
+};
 
 const eventSpaceFormSchema = z.object({
   title_th: z.string().min(1, "กรุณากรอกชื่อภาษาไทย"),
@@ -41,6 +64,18 @@ const eventSpaceFormSchema = z.object({
 });
 
 type EventSpaceFormValues = z.infer<typeof eventSpaceFormSchema>;
+
+type Feature = {
+  id?: string;
+  event_space_id: string;
+  icon_name: string;
+  title_th: string;
+  title_en: string;
+  description_th: string;
+  description_en: string;
+  sort_order: number;
+  is_active: boolean;
+};
 
 export const EventSpaceManagement = () => {
   const { language } = useLanguage();
@@ -54,6 +89,8 @@ export const EventSpaceManagement = () => {
   const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [savingFeatures, setSavingFeatures] = useState(false);
 
   const form = useForm<EventSpaceFormValues>({
     resolver: zodResolver(eventSpaceFormSchema),
@@ -67,7 +104,6 @@ export const EventSpaceManagement = () => {
     },
   });
 
-  // Load current event space data
   useEffect(() => {
     loadEventSpaceData();
   }, []);
@@ -94,16 +130,12 @@ export const EventSpaceManagement = () => {
           keywords_en: data.keywords_en || "",
         });
         setImagePreview(data.image_url || "");
-        // Load gallery images
         loadGalleryImages(data.id);
+        loadFeatures(data.id);
       }
     } catch (error) {
       console.error("Error loading event space data:", error);
-      toast.error(
-        language === "th"
-          ? "ไม่สามารถโหลดข้อมูลได้"
-          : "Failed to load data"
-      );
+      toast.error(language === "th" ? "ไม่สามารถโหลดข้อมูลได้" : "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -118,6 +150,15 @@ export const EventSpaceManagement = () => {
     setGalleryImages(data || []);
   };
 
+  const loadFeatures = async (eventSpaceId: string) => {
+    const { data } = await (supabase as any)
+      .from("event_space_features")
+      .select("*")
+      .eq("event_space_id", eventSpaceId)
+      .order("sort_order");
+    setFeatures(data || []);
+  };
+
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !currentEventSpace?.id) return;
@@ -127,24 +168,19 @@ export const EventSpaceManagement = () => {
       for (const file of files) {
         if (!file.type.startsWith("image/")) continue;
         if (file.size > 5 * 1024 * 1024) continue;
-
         const fileExt = file.name.split(".").pop();
         const fileName = `gallery-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-        
         const { error: uploadError } = await supabase.storage
           .from("event-spaces")
           .upload(fileName, file, { cacheControl: "3600", upsert: false });
         if (uploadError) throw uploadError;
-
         const { data: { publicUrl } } = supabase.storage.from("event-spaces").getPublicUrl(fileName);
-
         await supabase.from("event_space_images").insert({
           event_space_id: currentEventSpace.id,
           image_url: publicUrl,
           sort_order: galleryImages.length + 1,
         });
       }
-
       toast.success(language === "th" ? "อัพโหลดสำเร็จ" : "Upload successful");
       loadGalleryImages(currentEventSpace.id);
       invalidateContentCache();
@@ -160,11 +196,8 @@ export const EventSpaceManagement = () => {
 
   const handleDeleteGalleryImage = async (imageId: string, imageUrl: string) => {
     try {
-      // Extract file name from URL
       const match = imageUrl.match(/event-spaces\/(.+)$/);
-      if (match) {
-        await supabase.storage.from("event-spaces").remove([match[1]]);
-      }
+      if (match) await supabase.storage.from("event-spaces").remove([match[1]]);
       await supabase.from("event_space_images").delete().eq("id", imageId);
       toast.success(language === "th" ? "ลบรูปสำเร็จ" : "Image deleted");
       loadGalleryImages(currentEventSpace.id);
@@ -178,71 +211,37 @@ export const EventSpaceManagement = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error(
-        language === "th"
-          ? "กรุณาเลือกไฟล์รูปภาพ"
-          : "Please select an image file"
-      );
+      toast.error(language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file");
       return;
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(
-        language === "th"
-          ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB"
-          : "File size must not exceed 5MB"
-      );
+      toast.error(language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB");
       return;
     }
-
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
 
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return currentEventSpace?.image_url || null;
-
     try {
       setUploading(true);
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `event-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Delete old image if exists
       if (currentEventSpace?.image_url) {
         const oldFileName = currentEventSpace.image_url.split("/").pop();
-        if (oldFileName) {
-          await supabase.storage.from("event-spaces").remove([oldFileName]);
-        }
+        if (oldFileName) await supabase.storage.from("event-spaces").remove([oldFileName]);
       }
-
-      // Upload new image
       const { error: uploadError } = await supabase.storage
         .from("event-spaces")
-        .upload(filePath, imageFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
+        .upload(fileName, imageFile, { cacheControl: "3600", upsert: false });
       if (uploadError) throw uploadError;
-
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("event-spaces").getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage.from("event-spaces").getPublicUrl(fileName);
       return publicUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error(
-        language === "th"
-          ? "ไม่สามารถอัพโหลดรูปภาพได้"
-          : "Failed to upload image"
-      );
+      toast.error(language === "th" ? "ไม่สามารถอัพโหลดรูปภาพได้" : "Failed to upload image");
       return null;
     } finally {
       setUploading(false);
@@ -251,56 +250,95 @@ export const EventSpaceManagement = () => {
 
   const handleDeleteImage = async () => {
     if (!currentEventSpace?.image_url) return;
-
     try {
       setLoading(true);
-
-      // Delete from storage
       const fileName = currentEventSpace.image_url.split("/").pop();
-      if (fileName) {
-        await supabase.storage.from("event-spaces").remove([fileName]);
-      }
-
-      // Update database
-      const { error } = await supabase
-        .from("event_spaces")
-        .update({ image_url: null })
-        .eq("id", currentEventSpace.id);
-
+      if (fileName) await supabase.storage.from("event-spaces").remove([fileName]);
+      const { error } = await supabase.from("event_spaces").update({ image_url: null }).eq("id", currentEventSpace.id);
       if (error) throw error;
-
-      toast.success(
-        language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully"
-      );
-
+      toast.success(language === "th" ? "ลบรูปภาพสำเร็จ" : "Image deleted successfully");
       setImagePreview("");
       loadEventSpaceData();
     } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error(
-        language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image"
-      );
+      toast.error(language === "th" ? "ไม่สามารถลบรูปภาพได้" : "Failed to delete image");
     } finally {
       setLoading(false);
       setIsDeletingImage(false);
     }
   };
 
+  const addFeature = () => {
+    if (!currentEventSpace?.id) return;
+    setFeatures((prev) => [
+      ...prev,
+      {
+        event_space_id: currentEventSpace.id,
+        icon_name: "Presentation",
+        title_th: "",
+        title_en: "",
+        description_th: "",
+        description_en: "",
+        sort_order: prev.length + 1,
+        is_active: true,
+      },
+    ]);
+  };
+
+  const updateFeature = (index: number, field: keyof Feature, value: any) => {
+    setFeatures((prev) => prev.map((f, i) => (i === index ? { ...f, [field]: value } : f)));
+  };
+
+  const removeFeature = async (index: number) => {
+    const feature = features[index];
+    if (feature.id) {
+      await (supabase as any).from("event_space_features").delete().eq("id", feature.id);
+    }
+    setFeatures((prev) => prev.filter((_, i) => i !== index));
+    toast.success(language === "th" ? "ลบสำเร็จ" : "Removed");
+    invalidateContentCache();
+    queryClient.invalidateQueries({ queryKey: ["event-space-features"] });
+  };
+
+  const saveFeatures = async () => {
+    if (!currentEventSpace?.id) return;
+    setSavingFeatures(true);
+    try {
+      for (let i = 0; i < features.length; i++) {
+        const f = features[i];
+        const payload = {
+          event_space_id: currentEventSpace.id,
+          icon_name: f.icon_name,
+          title_th: f.title_th,
+          title_en: f.title_en,
+          description_th: f.description_th || null,
+          description_en: f.description_en || null,
+          sort_order: i + 1,
+          is_active: f.is_active,
+        };
+        if (f.id) {
+          await (supabase as any).from("event_space_features").update(payload).eq("id", f.id);
+        } else {
+          await (supabase as any).from("event_space_features").insert(payload);
+        }
+      }
+      toast.success(language === "th" ? "บันทึกบริการสำเร็จ" : "Features saved");
+      loadFeatures(currentEventSpace.id);
+      invalidateContentCache();
+      queryClient.invalidateQueries({ queryKey: ["event-space-features"] });
+    } catch (error) {
+      console.error("Error saving features:", error);
+      toast.error(language === "th" ? "บันทึกล้มเหลว" : "Save failed");
+    } finally {
+      setSavingFeatures(false);
+    }
+  };
+
   const onSubmit = async (values: EventSpaceFormValues) => {
     try {
       setSubmitting(true);
-
-      // Upload image if there's a new one
       const imageUrl = await uploadImage();
 
-      const eventSpaceData = {
-        ...values,
-        image_url: imageUrl || currentEventSpace?.image_url,
-        is_active: true,
-      };
-
       if (currentEventSpace) {
-        // Update existing event space
         const { error } = await supabase
           .from("event_spaces")
           .update({
@@ -314,10 +352,8 @@ export const EventSpaceManagement = () => {
             is_active: true,
           })
           .eq("id", currentEventSpace.id);
-
         if (error) throw error;
       } else {
-        // Create new event space
         const { error } = await supabase
           .from("event_spaces")
           .insert([{
@@ -330,26 +366,18 @@ export const EventSpaceManagement = () => {
             image_url: imageUrl || null,
             is_active: true,
           }]);
-
         if (error) throw error;
       }
 
-      toast.success(
-        language === "th" ? "บันทึกสำเร็จ" : "Saved successfully"
-      );
-      
-      // Update cache version and force refetch
+      toast.success(language === "th" ? "บันทึกสำเร็จ" : "Saved successfully");
       invalidateContentCache();
       await queryClient.invalidateQueries({ queryKey: ["event-spaces"] });
       await queryClient.refetchQueries({ queryKey: ["event-spaces"] });
-      
       loadEventSpaceData();
       setImageFile(null);
     } catch (error) {
       console.error("Error saving event space:", error);
-      toast.error(
-        language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save"
-      );
+      toast.error(language === "th" ? "ไม่สามารถบันทึกได้" : "Failed to save");
     } finally {
       setSubmitting(false);
     }
@@ -367,14 +395,10 @@ export const EventSpaceManagement = () => {
     <div className="space-y-6">
       <div>
         <h3 className="text-base sm:text-lg font-semibold mb-2">
-          {language === "th"
-            ? "จัดการห้องประชุม & งานเลี้ยง"
-            : "Manage Meeting & Event Space"}
+          {language === "th" ? "จัดการห้องประชุม & งานเลี้ยง" : "Manage Meeting & Event Space"}
         </h3>
         <p className="text-xs sm:text-sm text-foreground/70">
-          {language === "th"
-            ? "อัพโหลดรูปภาพและแก้ไขข้อมูล"
-            : "Upload images and edit information"}
+          {language === "th" ? "อัพโหลดรูปภาพและแก้ไขข้อมูล" : "Upload images and edit information"}
         </p>
       </div>
 
@@ -384,49 +408,25 @@ export const EventSpaceManagement = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <FormLabel>
-                  {language === "th" ? "รูปภาพหลัก" : "Main Image"}
-                </FormLabel>
+                <FormLabel>{language === "th" ? "รูปภาพหลัก" : "Main Image"}</FormLabel>
                 <div className="flex flex-col gap-4">
                   {imagePreview && (
                     <div className="relative w-full aspect-video rounded-lg border border-border group">
-                      <img
-                        src={imagePreview}
-                        alt="Event space preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
+                      <img src={imagePreview} alt="Event space preview" className="w-full h-full object-cover rounded-lg" />
                       {currentEventSpace?.image_url && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
+                        <Button type="button" variant="destructive" size="icon"
                           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                          disabled={loading}
-                          onClick={() => setIsDeletingImage(true)}
-                        >
+                          disabled={loading} onClick={() => setIsDeletingImage(true)}>
                           <X className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
                   )}
                   <div className="flex items-center gap-4">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      disabled={loading || uploading}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
+                    <Input type="file" accept="image/*" onChange={handleImageChange} disabled={loading || uploading} className="flex-1" />
+                    <Button type="button" variant="outline" size="icon"
                       disabled={!imageFile || loading || uploading}
-                      onClick={() => {
-                        setImageFile(null);
-                        setImagePreview(currentEventSpace?.image_url || "");
-                      }}
-                    >
+                      onClick={() => { setImageFile(null); setImagePreview(currentEventSpace?.image_url || ""); }}>
                       <ImageIcon className="w-4 h-4" />
                     </Button>
                   </div>
@@ -440,25 +440,13 @@ export const EventSpaceManagement = () => {
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <FormLabel>
-                    {language === "th" ? "รูปภาพเพิ่มเติม (Gallery)" : "Gallery Images"}
-                  </FormLabel>
+                  <FormLabel>{language === "th" ? "รูปภาพเพิ่มเติม (Gallery)" : "Gallery Images"}</FormLabel>
                   <label className="cursor-pointer">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={handleGalleryUpload}
-                      disabled={uploadingGallery || !currentEventSpace}
-                    />
+                    <Input type="file" accept="image/*" multiple className="hidden"
+                      onChange={handleGalleryUpload} disabled={uploadingGallery || !currentEventSpace} />
                     <Button type="button" variant="outline" size="sm" disabled={uploadingGallery || !currentEventSpace} asChild>
                       <span>
-                        {uploadingGallery ? (
-                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4 mr-1" />
-                        )}
+                        {uploadingGallery ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
                         {language === "th" ? "เพิ่มรูป" : "Add Images"}
                       </span>
                     </Button>
@@ -473,13 +461,9 @@ export const EventSpaceManagement = () => {
                     {galleryImages.map((img) => (
                       <div key={img.id} className="relative group aspect-video rounded-lg overflow-hidden border border-border">
                         <img src={img.image_url} alt="" className="w-full h-full object-cover" />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
+                        <Button type="button" variant="destructive" size="icon"
                           className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}
-                        >
+                          onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}>
                           <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
@@ -494,209 +478,201 @@ export const EventSpaceManagement = () => {
           <Card>
             <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="title_th"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {language === "th" ? "ชื่อ (ไทย)" : "Title (Thai)"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder={
-                            language === "th"
-                              ? "กรอกชื่อภาษาไทย"
-                              : "Enter Thai title"
-                          }
-                          disabled={submitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="title_en"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {language === "th"
-                          ? "ชื่อ (อังกฤษ)"
-                          : "Title (English)"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder={
-                            language === "th"
-                              ? "กรอกชื่อภาษาอังกฤษ"
-                              : "Enter English title"
-                          }
-                          disabled={submitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="title_th" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{language === "th" ? "ชื่อ (ไทย)" : "Title (Thai)"}</FormLabel>
+                    <FormControl><Input {...field} disabled={submitting} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="title_en" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{language === "th" ? "ชื่อ (อังกฤษ)" : "Title (English)"}</FormLabel>
+                    <FormControl><Input {...field} disabled={submitting} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </div>
 
-              <FormField
-                control={form.control}
-                name="description_th"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {language === "th"
-                        ? "รายละเอียด (ไทย)"
-                        : "Description (Thai)"}
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder={
-                          language === "th"
-                            ? "กรอกรายละเอียดภาษาไทย"
-                            : "Enter Thai description"
-                        }
-                        disabled={submitting}
-                        rows={4}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="description_th" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{language === "th" ? "รายละเอียด (ไทย)" : "Description (Thai)"}</FormLabel>
+                  <FormControl><Textarea {...field} disabled={submitting} rows={4} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-              <FormField
-                control={form.control}
-                name="description_en"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {language === "th"
-                        ? "รายละเอียด (อังกฤษ)"
-                        : "Description (English)"}
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder={
-                          language === "th"
-                            ? "กรอกรายละเอียดภาษาอังกฤษ"
-                            : "Enter English description"
-                        }
-                        disabled={submitting}
-                        rows={4}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="description_en" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{language === "th" ? "รายละเอียด (อังกฤษ)" : "Description (English)"}</FormLabel>
+                  <FormControl><Textarea {...field} disabled={submitting} rows={4} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-              <FormField
-                control={form.control}
-                name="keywords_th"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {language === "th"
-                        ? "คำสำคัญ (ไทย)"
-                        : "Keywords (Thai)"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={
-                          language === "th"
-                            ? "กรอกคำสำคัญภาษาไทย (คั่นด้วยจุลภาค)"
-                            : "Enter Thai keywords (comma separated)"
-                        }
-                        disabled={submitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="keywords_th" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{language === "th" ? "คำสำคัญ (ไทย)" : "Keywords (Thai)"}</FormLabel>
+                  <FormControl><Input {...field} disabled={submitting} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-              <FormField
-                control={form.control}
-                name="keywords_en"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {language === "th"
-                        ? "คำสำคัญ (อังกฤษ)"
-                        : "Keywords (English)"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={
-                          language === "th"
-                            ? "กรอกคำสำคัญภาษาอังกฤษ (คั่นด้วยจุลภาค)"
-                            : "Enter English keywords (comma separated)"
-                        }
-                        disabled={submitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="keywords_en" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{language === "th" ? "คำสำคัญ (อังกฤษ)" : "Keywords (English)"}</FormLabel>
+                  <FormControl><Input {...field} disabled={submitting} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </CardContent>
           </Card>
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={submitting || uploading}
-              className="min-w-[120px]"
-            >
+            <Button type="submit" disabled={submitting || uploading} className="min-w-[120px]">
               {submitting || uploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {language === "th" ? "กำลังบันทึก..." : "Saving..."}
-                </>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{language === "th" ? "กำลังบันทึก..." : "Saving..."}</>
               ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  {language === "th" ? "บันทึก" : "Save"}
-                </>
+                <><Save className="mr-2 h-4 w-4" />{language === "th" ? "บันทึก" : "Save"}</>
               )}
             </Button>
           </div>
         </form>
       </Form>
 
+      {/* Features / Services Management */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-sm sm:text-base">
+                {language === "th" ? "จัดการบริการ / จุดเด่น" : "Manage Features / Services"}
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                {language === "th" ? "เพิ่ม ลบ แก้ไข Icon และข้อความสำหรับแต่ละบริการ" : "Add, remove, edit icons and text for each service"}
+              </p>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={addFeature} disabled={!currentEventSpace}>
+              <Plus className="w-4 h-4 mr-1" />
+              {language === "th" ? "เพิ่ม" : "Add"}
+            </Button>
+          </div>
+
+          {features.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              {language === "th" ? "ยังไม่มีบริการ — กดเพิ่มเพื่อสร้าง" : "No features yet — click Add to create"}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {features.map((feature, index) => {
+                const IconComponent = getIcon(feature.icon_name);
+                return (
+                  <div key={feature.id || `new-${index}`} className="border border-border rounded-xl p-4 space-y-3 relative">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <IconComponent className="w-4 h-4 text-primary" />
+                        </div>
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => removeFeature(index)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+
+                    {/* Icon selector */}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                        {language === "th" ? "เลือก Icon" : "Select Icon"}
+                      </label>
+                      <Select value={feature.icon_name} onValueChange={(val) => updateFeature(index, "icon_name", val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {AVAILABLE_ICONS.map((iconName) => {
+                            const Ic = getIcon(iconName);
+                            return (
+                              <SelectItem key={iconName} value={iconName}>
+                                <div className="flex items-center gap-2">
+                                  <Ic className="w-4 h-4" />
+                                  <span>{iconName}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Title fields */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                          {language === "th" ? "ชื่อ (ไทย)" : "Title (Thai)"}
+                        </label>
+                        <Input value={feature.title_th} onChange={(e) => updateFeature(index, "title_th", e.target.value)}
+                          placeholder="ห้องบรรยาย/นำเสนอ" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                          {language === "th" ? "ชื่อ (อังกฤษ)" : "Title (English)"}
+                        </label>
+                        <Input value={feature.title_en} onChange={(e) => updateFeature(index, "title_en", e.target.value)}
+                          placeholder="Presentation Room" />
+                      </div>
+                    </div>
+
+                    {/* Description fields */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                          {language === "th" ? "คำอธิบาย (ไทย)" : "Description (Thai)"}
+                        </label>
+                        <Input value={feature.description_th || ""} onChange={(e) => updateFeature(index, "description_th", e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                          {language === "th" ? "คำอธิบาย (อังกฤษ)" : "Description (English)"}
+                        </label>
+                        <Input value={feature.description_en || ""} onChange={(e) => updateFeature(index, "description_en", e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {features.length > 0 && (
+            <div className="flex justify-end pt-2">
+              <Button type="button" onClick={saveFeatures} disabled={savingFeatures}>
+                {savingFeatures ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{language === "th" ? "กำลังบันทึก..." : "Saving..."}</>
+                ) : (
+                  <><Save className="mr-2 h-4 w-4" />{language === "th" ? "บันทึกบริการ" : "Save Features"}</>
+                )}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Delete Image Confirmation */}
       <AlertDialog open={isDeletingImage} onOpenChange={setIsDeletingImage}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {language === "th" ? "ยืนยันการลบรูปภาพ" : "Confirm Delete Image"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{language === "th" ? "ยืนยันการลบรูปภาพ" : "Confirm Delete Image"}</AlertDialogTitle>
             <AlertDialogDescription>
-              {language === "th"
-                ? "คุณต้องการลบรูปภาพนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-                : "Are you sure you want to delete this image? This action cannot be undone."}
+              {language === "th" ? "คุณต้องการลบรูปภาพนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้" : "Are you sure you want to delete this image? This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>
-              {language === "th" ? "ยกเลิก" : "Cancel"}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteImage}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogCancel>{language === "th" ? "ยกเลิก" : "Cancel"}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteImage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {language === "th" ? "ลบ" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
