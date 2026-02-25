@@ -44,6 +44,15 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
 const App = () => {
   // Show loading screen only on first load, not on refresh
   const [showLoading, setShowLoading] = useState(() => {
+    // Skip loading screen if returning from OAuth callback (URL contains auth tokens)
+    const hash = window.location.hash;
+    const isOAuthCallback = hash.includes('access_token') || hash.includes('refresh_token') || hash.includes('error_description');
+    if (isOAuthCallback) {
+      console.log('[App] OAuth callback detected - skipping loading screen');
+      sessionStorage.setItem('app-initialized', 'true');
+      return false;
+    }
+
     // Check if this is the first load in this session
     const isFirstLoad = !sessionStorage.getItem('app-initialized');
     if (isFirstLoad) {
