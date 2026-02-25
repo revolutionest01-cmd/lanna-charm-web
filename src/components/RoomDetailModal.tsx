@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useModalState } from "@/contexts/ModalContext";
 import { Portal } from "@/components/ui/portal";
+import toast from "@/lib/toast";
 
 interface RoomImage {
   id: string;
@@ -284,42 +285,122 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
     const files = e.target.files;
     if (!files) return;
 
+    // Check authentication first
+    if (!user) {
+      const authMsg = language === 'th' 
+        ? 'กรุณเข้าสู่ระบบเพื่ออัพโหลดรูป'
+        : 'Please log in to upload images';
+      toast.error(authMsg);
+      return;
+    }
+
+    if (!isAdmin) {
+      const adminMsg = language === 'th'
+        ? 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถอัพโหลดรูปได้'
+        : 'Only admins can upload images';
+      toast.error(adminMsg);
+      return;
+    }
+
     // Calculate total images (existing + uploaded) to respect maxImages limit
     const totalCurrentImages = images.length + uploadedImages.length;
     const filesToUpload = Array.from(files).slice(0, maxImages - totalCurrentImages);
     
     if (filesToUpload.length === 0) {
-      console.warn(`Maximum ${maxImages} images allowed. Current total: ${totalCurrentImages}`);
+      const message = language === 'th' 
+        ? `ถึงจำนวน ${maxImages} รูปสูงสุดแล้ว (มีอยู่ ${totalCurrentImages} รูป)`
+        : `Maximum ${maxImages} images allowed. Current total: ${totalCurrentImages}`;
+      toast.warning(message);
       return;
     }
 
     setIsUploading(true);
+    let successCount = 0;
+    let failureCount = 0;
 
     try {
       for (const file of filesToUpload) {
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${room!.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        try {
+          // Validate file size (max 5MB)
+          const maxFileSize = 5 * 1024 * 1024; // 5MB
+          if (file.size > maxFileSize) {
+            const sizeMsg = language === 'th'
+              ? `ไฟล์ ${file.name} ใหญ่เกินไป (ต้อง < 5MB)`
+              : `File ${file.name} is too large (max 5MB)`;
+            console.warn(sizeMsg);
+            failureCount++;
+            continue;
+          }
 
-        const { data, error } = await supabase.storage
-          .from("rooms")
-          .upload(fileName, file);
+          const fileExt = file.name.split(".").pop()?.toLowerCase();
+          if (!fileExt || !['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+            const extMsg = language === 'th'
+              ? `ไฟล์ ${file.name} ไม่ใช่รูปภาพ`
+              : `File ${file.name} is not an image`;
+            console.warn(extMsg);
+            failureCount++;
+            continue;
+          }
 
-        if (error) {
-          console.error("Upload error:", error);
-          continue;
+          const fileName = `${room!.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+          console.log("Uploading file:", fileName, "User:", user.id);
+
+          const { data, error } = await supabase.storage
+            .from("rooms")
+            .upload(fileName, file);
+
+          if (error) {
+            console.error("Upload error:", error);
+            const errorMsg = error.message || (language === 'th' ? 'ไม่สามารถอัพโหลดรูป' : 'Failed to upload image');
+            console.error(`Failed to upload ${file.name}: ${errorMsg}`);
+            failureCount++;
+            continue;
+          }
+
+          if (!data) {
+            console.error("No data returned from upload");
+            failureCount++;
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from("rooms")
+            .getPublicUrl(fileName);
+
+          if (urlData?.publicUrl) {
+            setUploadedImages((prev) => [...prev, urlData.publicUrl]);
+            successCount++;
+            console.log("Image uploaded successfully:", urlData.publicUrl);
+          } else {
+            console.error("Could not get public URL for:", fileName);
+            failureCount++;
+          }
+        } catch (fileError) {
+          console.error(`Error uploading file ${file.name}:`, fileError);
+          failureCount++;
         }
+      }
 
-        const { data: urlData } = supabase.storage
-          .from("rooms")
-          .getPublicUrl(fileName);
+      // Show result messages
+      if (successCount > 0) {
+        const successMsg = language === 'th'
+          ? `อัพโหลดรูป ${successCount} รูปสำเร็จ`
+          : `Successfully uploaded ${successCount} image(s)`;
+        toast.success(successMsg);
+      }
 
-        if (urlData?.publicUrl) {
-          setUploadedImages((prev) => [...prev, urlData.publicUrl]);
-          console.log("Image uploaded successfully:", urlData.publicUrl);
-        }
+      if (failureCount > 0) {
+        const failMsg = language === 'th'
+          ? `ไม่สามารถอัพโหลด ${failureCount} รูป` 
+          : `Failed to upload ${failureCount} image(s)`;
+        toast.error(failMsg);
       }
     } catch (error) {
       console.error("Error uploading images:", error);
+      const errorMsg = language === 'th'
+        ? 'เกิดข้อผิดพลาดในการอัพโหลด'
+        : 'Error uploading images';
+      toast.error(errorMsg);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

@@ -239,7 +239,7 @@ const Admin = () => {
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <nav className="lg:w-56 lg:min-h-[calc(100vh-120px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[112px] sm:top-[120px] lg:top-[120px] z-30">
+        <nav className="lg:w-56 lg:min-h-[calc(100vh-180px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[140px] sm:top-[148px] lg:top-[140px] z-30">
           {/* Mobile */}
           <div className="lg:hidden">
             <div
@@ -269,7 +269,7 @@ const Admin = () => {
             <style>{`.lg\\:hidden > div::-webkit-scrollbar { display: none; }`}</style>
           </div>
           {/* Desktop */}
-          <ScrollArea className="hidden lg:block h-[calc(100vh-120px)]">
+          <ScrollArea className="hidden lg:block h-[calc(100vh-180px)]">
             <div className="flex flex-col p-2 gap-1.5">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
@@ -295,7 +295,7 @@ const Admin = () => {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 p-4 pt-14 sm:p-6 sm:pt-6 lg:p-8">
+        <main className="flex-1 min-w-0 p-4 pt-48 sm:p-6 sm:pt-20 lg:p-8 lg:pt-6">
           <div className="max-w-6xl mx-auto">
             {renderContent()}
           </div>
