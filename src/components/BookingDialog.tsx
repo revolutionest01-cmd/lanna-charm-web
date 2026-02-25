@@ -461,7 +461,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
           <div className="text-lg sm:text-xl md:text-2xl font-bold font-serif tracking-tight text-foreground mb-1.5 sm:mb-2 leading-tight">
             {language === 'th' ? 'จองห้องพักสำหรับคุณได้ที่นี่' : language === 'zh' ? '在这里为您预订房间' : 'Book Your Room Here'}
           </div>
-          <DialogTitle className="text-xs sm:text-sm font-semibold font-serif tracking-tight text-foreground/70 leading-snug px-1">
+          <DialogTitle className="text-xs sm:text-sm font-semibold font-serif tracking-tight text-foreground leading-snug px-1">
             {language === 'th'
               ? 'กรอกข้อมูลเพื่อจองห้องพักที่ Plern Ping'
               : language === 'zh'

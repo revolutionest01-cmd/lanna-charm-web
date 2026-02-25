@@ -381,7 +381,7 @@ export const ReviewsManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center gap-3">
-        <h3 className="text-base sm:text-lg font-semibold truncate">
+        <h3 className="text-base sm:text-lg font-semibold truncate text-primary">
           {language === "th" ? "จัดการรีวิว" : "Manage Reviews"}
         </h3>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
@@ -524,7 +524,7 @@ export const ReviewsManagement = () => {
                     <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-2">
                       📷
                     </div>
-                    <p className="text-sm text-foreground/70">
+                    <p className="text-sm text-foreground">
                       {language === "th"
                         ? "คลิกหรือลากไฟล์มาวาง"
                         : "Click or drag file here"}

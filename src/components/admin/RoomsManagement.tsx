@@ -427,10 +427,10 @@ export const RoomsManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-base sm:text-lg font-semibold truncate">
+          <h3 className="text-base sm:text-lg font-semibold truncate text-primary">
             {language === "th" ? "จัดการห้องพัก" : "Manage Rooms"}
           </h3>
-          <p className="text-xs sm:text-sm text-foreground/70">
+          <p className="text-xs sm:text-sm text-foreground">
             {language === "th"
               ? "เพิ่ม แก้ไข หรือลบห้องพัก"
               : "Add, edit, or delete rooms"}
@@ -690,7 +690,7 @@ export const RoomsManagement = () => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ImageIcon className="w-16 h-16 text-foreground/30 mb-4" />
-            <p className="text-foreground/70">
+            <p className="text-foreground">
               {language === "th"
                 ? "ยังไม่มีห้องพัก กดปุ่มเพิ่มห้องพักเพื่อเริ่มต้น"
                 : "No rooms yet. Click Add Room to get started"}
@@ -756,7 +756,7 @@ export const RoomsManagement = () => {
 
               {(room.description_th || room.description_en) && (
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-foreground/70 line-clamp-2">
+                  <p className="text-sm text-foreground line-clamp-2">
                     {language === "th"
                       ? room.description_th
                       : room.description_en}

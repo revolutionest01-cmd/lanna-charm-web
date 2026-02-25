@@ -394,10 +394,10 @@ export const EventSpaceManagement = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-base sm:text-lg font-semibold mb-2">
+        <h3 className="text-base sm:text-lg font-semibold mb-2 text-primary">
           {language === "th" ? "จัดการห้องประชุม & งานเลี้ยง" : "Manage Meeting & Event Space"}
         </h3>
-        <p className="text-xs sm:text-sm text-foreground/70">
+        <p className="text-xs sm:text-sm text-foreground">
           {language === "th" ? "อัพโหลดรูปภาพและแก้ไขข้อมูล" : "Upload images and edit information"}
         </p>
       </div>

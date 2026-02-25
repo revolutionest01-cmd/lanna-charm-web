@@ -244,7 +244,7 @@ const Admin = () => {
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[56px] sm:top-[60px] lg:mt-[60px] lg:sticky lg:top-0 z-30">
+        <nav className="lg:w-56 lg:min-h-[calc(100vh-180px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[140px] sm:top-[148px] lg:top-[148px] z-30 lg:pt-[70px]">
           {/* Mobile */}
           <div className="lg:hidden">
             <div
@@ -274,7 +274,7 @@ const Admin = () => {
             <style>{`.lg\\:hidden > div::-webkit-scrollbar { display: none; }`}</style>
           </div>
           {/* Desktop */}
-          <ScrollArea className="hidden lg:block h-[calc(100vh-60px)]">
+          <ScrollArea className="hidden lg:block h-[calc(100vh-180px)]">
             <div className="flex flex-col p-2 gap-1.5">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
@@ -287,7 +287,7 @@ const Admin = () => {
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
                       ${isActive
                         ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        : "text-foreground hover:text-primary hover:bg-accent"
                       }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -300,7 +300,7 @@ const Admin = () => {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 p-4 pt-48 sm:p-6 sm:pt-24 lg:p-8 lg:pt-20">
+        <main className="flex-1 min-w-0 p-4 pt-24 sm:p-6 sm:pt-28 lg:p-8 lg:pt-20">
           <div className="max-w-6xl mx-auto">
             {renderContent()}
           </div>
@@ -320,7 +320,7 @@ interface DashboardContentProps {
 }
 
 const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, language }: DashboardContentProps) => (
-  <div className="space-y-6">
+  <div className="space-y-3">
     <div>
       <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
         <Activity className="w-6 h-6 text-primary" />

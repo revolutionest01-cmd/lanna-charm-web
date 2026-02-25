@@ -833,11 +833,11 @@ export const MenusManagement = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="menus" className="w-full">
-        <TabsList className="grid w-full md:grid-cols-2 grid-cols-1 md:w-auto overflow-x-auto inline-flex md:inline-grid">
-          <TabsTrigger value="menus">
+        <TabsList className="grid w-full md:grid-cols-2 grid-cols-1 md:w-auto inline-flex md:inline-grid bg-card/50 border border-primary/20 rounded-lg p-1 shadow-sm" style={{ scrollbarWidth: 'none' }}>
+          <TabsTrigger value="menus" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md transition-all hover:bg-primary/10">
             {language === "th" ? "จัดการเมนู" : "Manage Menus"}
           </TabsTrigger>
-          <TabsTrigger value="categories">
+          <TabsTrigger value="categories" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md transition-all hover:bg-primary/10">
             {language === "th" ? "หมวดหมู่" : "Categories"}
           </TabsTrigger>
         </TabsList>
@@ -846,10 +846,10 @@ export const MenusManagement = () => {
         <TabsContent value="menus" className="space-y-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold truncate">
+              <h3 className="text-base sm:text-lg font-semibold truncate text-primary">
                 {language === "th" ? "จัดการเมนู" : "Manage Menus"}
               </h3>
-              <p className="text-xs sm:text-sm text-foreground/70">
+              <p className="text-xs sm:text-sm text-foreground">
                 {language === "th"
                   ? "เพิ่ม แก้ไข หรือลบเมนู"
                   : "Add, edit, or delete menus"}
@@ -1042,7 +1042,7 @@ export const MenusManagement = () => {
                           className="cursor-pointer flex flex-col items-center"
                         >
                           <ImageIcon className="w-6 h-6 text-foreground/50 mb-1" />
-                          <p className="text-xs text-foreground/70">
+                          <p className="text-xs text-foreground">
                             {language === "th"
                               ? "คลิกหรือลากไฟล์มาวาง (อัพโหลดได้หลายรูป)"
                               : "Click or drag files here (Multiple)"}
@@ -1051,7 +1051,7 @@ export const MenusManagement = () => {
                       </div>
                       {imagePreviews.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-xs text-foreground/70 mb-2">
+                          <p className="text-xs text-foreground mb-2">
                             {language === "th"
                               ? `แสดง ${imagePreviews.length} รูป (วางเมาส์เพื่อลบ)`
                               : `${imagePreviews.length} image${imagePreviews.length > 1 ? "s" : ""} (hover to delete)`}
@@ -1130,7 +1130,7 @@ export const MenusManagement = () => {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Coffee className="w-16 h-16 text-foreground/30 mb-4" />
-                <p className="text-foreground/70">
+                <p className="text-foreground">
                   {language === "th"
                     ? "ยังไม่มีเมนู กดปุ่มเพิ่มเมนูเพื่อเริ่มต้น"
                     : "No menus yet. Click Add Menu to get started"}
@@ -1162,7 +1162,7 @@ export const MenusManagement = () => {
                         <div className="text-sm font-normal text-primary mt-1">
                           ฿{menu.price.toLocaleString()}
                         </div>
-                        <div className="text-xs text-foreground/70 mt-1">
+                        <div className="text-xs text-foreground mt-1">
                           {getCategoryName(menu.category_id)}
                         </div>
                       </div>
@@ -1186,7 +1186,7 @@ export const MenusManagement = () => {
                   </CardHeader>
                   {(menu.description_th || menu.description_en) && (
                     <CardContent>
-                      <p className="text-sm text-foreground/70 line-clamp-2">
+                      <p className="text-sm text-foreground line-clamp-2">
                         {language === "th" ? menu.description_th : menu.description_en}
                       </p>
                     </CardContent>
@@ -1201,10 +1201,10 @@ export const MenusManagement = () => {
         <TabsContent value="categories" className="space-y-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold truncate">
+              <h3 className="text-base sm:text-lg font-semibold truncate text-primary">
                 {language === "th" ? "จัดการหมวดหมู่" : "Manage Categories"}
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-foreground">
                 {language === "th"
                   ? "เพิ่ม แก้ไข หรือลบหมวดหมู่เมนู"
                   : "Add, edit, or delete menu categories"}
