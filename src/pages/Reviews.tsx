@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import sweetAlert from "@/lib/sweetAlert";
 import { z } from "zod";
 import { format } from "date-fns";
+import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 
 type Review = {
   id: string;
@@ -238,6 +239,14 @@ const Reviews = () => {
   const t = translations[language];
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const { isFeatureEnabled } = useFeatureToggle();
+
+  useEffect(() => {
+    if (!isFeatureEnabled("reviews")) {
+      showFeatureDisabledAlert(language);
+      navigate("/");
+    }
+  }, [isFeatureEnabled, navigate, language]);
   
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [reviewImage, setReviewImage] = useState<File | null>(null);

@@ -27,6 +27,7 @@ import { useRooms } from "@/hooks/useContentData";
 import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
 import { useModalState } from "@/contexts/ModalContext";
+import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 import {
   sanitizeGuests,
   sanitizeName,
@@ -45,6 +46,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const t = translations[language];
   const { setIsModalOpen } = useModalState();
   const { data: rooms = [] } = useRooms();
+  const { isFeatureEnabled } = useFeatureToggle();
   
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
@@ -65,6 +67,10 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   }, [roomId]);
 
   const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && !isFeatureEnabled("booking")) {
+      showFeatureDisabledAlert(language);
+      return;
+    }
     setOpen(newOpen);
     setIsModalOpen(newOpen);
     

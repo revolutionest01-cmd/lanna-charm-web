@@ -3,6 +3,7 @@ import { Presentation, Utensils, Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useEventSpaces } from "@/hooks/useContentData";
 import { EventSkeleton } from "@/components/SkeletonCard";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 interface EventSpace {
   id: string;
@@ -20,6 +21,9 @@ const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: eventSpace, isLoading: loading } = useEventSpaces();
+  const { isFeatureEnabled } = useFeatureToggle();
+
+  if (!isFeatureEnabled("events")) return null;
 
   const handleInquireClick = () => {
     // Scroll to contact section

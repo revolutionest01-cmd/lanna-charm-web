@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Zap, Crown, Shield, User, ToggleRight, Users, Trash2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
+import { clearFeatureToggleCache } from "@/hooks/useFeatureToggle";
 
 interface FeatureToggle {
   id: string;
@@ -90,6 +91,7 @@ export const DevGodMode = () => {
       sweetAlert.error(language === "th" ? "เกิดข้อผิดพลาด" : "Error updating feature");
     } else {
       setFeatures((prev) => prev.map((f) => (f.id === id ? { ...f, is_enabled: !currentValue } : f)));
+      clearFeatureToggleCache();
     }
     setUpdating(null);
   };

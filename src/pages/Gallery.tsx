@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 
 type GalleryImage = {
   id: string;
@@ -18,9 +20,18 @@ type GalleryImage = {
 const Gallery = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const navigate = useNavigate();
+  const { isFeatureEnabled } = useFeatureToggle();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+
+  useEffect(() => {
+    if (!isFeatureEnabled("gallery")) {
+      showFeatureDisabledAlert(language);
+      navigate("/");
+    }
+  }, [isFeatureEnabled, navigate, language]);
 
   const { data: images = [], isLoading } = useQuery({
     queryKey: ["gallery-all"],
