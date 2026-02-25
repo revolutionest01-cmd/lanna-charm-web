@@ -390,8 +390,14 @@ export const LiveChatManagement = () => {
                       {language === 'th' ? 'ปิด' : 'Close'}
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={() => setSelectedConv(null)}>
-                    <X className="h-4 w-4" />
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-7 w-7 lg:hidden border-primary/50 hover:border-primary hover:bg-primary/10 transition-all" 
+                    onClick={() => setSelectedConv(null)}
+                    title={language === 'th' ? 'ปิด' : 'Close'}
+                  >
+                    <X className="h-4 w-4 text-primary" />
                   </Button>
                 </div>
               </div>

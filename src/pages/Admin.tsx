@@ -212,8 +212,13 @@ const Admin = () => {
         <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0">
-                <ArrowLeft className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => navigate("/")} 
+                className="shrink-0 border-2 border-primary/50 hover:border-primary hover:bg-primary/10 transition-all"
+              >
+                <ArrowLeft className="h-4 w-4 text-primary font-bold" />
               </Button>
               {user?.avatar ? (
                 <img src={user.avatar} alt="Admin" className="h-8 w-8 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />

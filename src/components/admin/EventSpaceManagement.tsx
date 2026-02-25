@@ -577,8 +577,14 @@ export const EventSpaceManagement = () => {
                           <IconComponent className="w-4 h-4 text-primary" />
                         </div>
                       </div>
-                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => removeFeature(index)}>
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        size="icon" 
+                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity border-destructive/50 hover:border-destructive"
+                        onClick={() => removeFeature(index)}
+                        title={language === "th" ? "ลบ" : "Delete"}
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
