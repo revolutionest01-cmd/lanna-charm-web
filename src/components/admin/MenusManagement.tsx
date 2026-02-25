@@ -844,12 +844,12 @@ export const MenusManagement = () => {
 
         {/* Menus Tab */}
         <TabsContent value="menus" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold truncate">
                 {language === "th" ? "จัดการเมนู" : "Manage Menus"}
               </h3>
-              <p className="text-sm text-foreground/70">
+              <p className="text-xs sm:text-sm text-foreground/70">
                 {language === "th"
                   ? "เพิ่ม แก้ไข หรือลบเมนู"
                   : "Add, edit, or delete menus"}
@@ -863,9 +863,10 @@ export const MenusManagement = () => {
               }}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setSelectedMenu(null)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {language === "th" ? "เพิ่มเมนู" : "Add Menu"}
+                <Button onClick={() => setSelectedMenu(null)} size="sm" className="shrink-0">
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">{language === "th" ? "เพิ่มเมนู" : "Add Menu"}</span>
+                  <span className="sm:hidden">{language === "th" ? "เพิ่ม" : "Add"}</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-full sm:w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto p-3 sm:p-4 md:p-5">
@@ -1137,7 +1138,7 @@ export const MenusManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {menus.map((menu) => (
                 <Card key={menu.id} className="overflow-hidden">
                   {menu.image_url && (
@@ -1198,12 +1199,12 @@ export const MenusManagement = () => {
 
         {/* Categories Tab */}
         <TabsContent value="categories" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold truncate">
                 {language === "th" ? "จัดการหมวดหมู่" : "Manage Categories"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {language === "th"
                   ? "เพิ่ม แก้ไข หรือลบหมวดหมู่เมนู"
                   : "Add, edit, or delete menu categories"}
@@ -1217,9 +1218,10 @@ export const MenusManagement = () => {
               }}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setSelectedCategory(null)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {language === "th" ? "เพิ่มหมวดหมู่" : "Add Category"}
+                <Button onClick={() => setSelectedCategory(null)} size="sm" className="shrink-0">
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">{language === "th" ? "เพิ่มหมวดหมู่" : "Add Category"}</span>
+                  <span className="sm:hidden">{language === "th" ? "เพิ่ม" : "Add"}</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>

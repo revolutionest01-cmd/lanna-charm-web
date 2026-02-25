@@ -316,15 +316,15 @@ export const WebboardManagement = () => {
   return (
     <div className="space-y-6">
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Topics
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTopics}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalTopics}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.activeTopics} active, {stats.inactiveTopics} inactive
             </p>
@@ -332,13 +332,13 @@ export const WebboardManagement = () => {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Engagement
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalViews}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalViews}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.totalLikes} likes, {stats.totalReplies} replies
             </p>
@@ -346,13 +346,13 @@ export const WebboardManagement = () => {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Avg. Engagement
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold">
               {stats.totalTopics > 0
                 ? ((stats.totalLikes + stats.totalReplies) / stats.totalTopics).toFixed(1)
                 : 0}
@@ -365,26 +365,26 @@ export const WebboardManagement = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white rounded-lg p-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-card rounded-lg p-4 sm:p-6 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div>
-            <label className="text-sm font-semibold text-primary mb-2 block">
+            <label className="text-xs sm:text-sm font-semibold text-primary mb-1.5 sm:mb-2 block">
               Search Topics
             </label>
             <Input
-              placeholder="Search by title or content..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-white text-foreground"
+              className="bg-background text-foreground text-sm"
             />
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-primary mb-2 block">
+            <label className="text-xs sm:text-sm font-semibold text-primary mb-1.5 sm:mb-2 block">
               Category
             </label>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="bg-white text-foreground">
+              <SelectTrigger className="bg-background text-foreground text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -398,11 +398,11 @@ export const WebboardManagement = () => {
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-primary mb-2 block">
+            <label className="text-xs sm:text-sm font-semibold text-primary mb-1.5 sm:mb-2 block">
               Status
             </label>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="bg-white text-foreground">
+              <SelectTrigger className="bg-background text-foreground text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -426,12 +426,76 @@ export const WebboardManagement = () => {
         </div>
       )}
 
-      {/* Topics Table */}
-      <div className="bg-white rounded-lg overflow-hidden">
+      {/* Topics - Mobile: Cards, Desktop: Table */}
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-3">
+        {filteredTopics.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            No topics found
+          </div>
+        ) : (
+          filteredTopics.map((topic) => (
+            <Card key={topic.id} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-foreground line-clamp-1">{topic.title}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                      {topic.content}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={topic.is_active ? "default" : "secondary"}
+                    className="text-[10px] shrink-0"
+                  >
+                    {topic.is_active ? "Active" : "Hidden"}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] ${
+                      topic.category === "general"
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : topic.category === "question"
+                          ? "bg-purple-50 text-purple-700 border-purple-200"
+                          : topic.category === "review"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-orange-50 text-orange-700 border-orange-200"
+                    }`}
+                  >
+                    {topic.category}
+                  </Badge>
+                  <span>👁 {topic.views || 0}</span>
+                  <span>❤ {topic.likes_count || 0}</span>
+                  <span>💬 {topic.replies_count || 0}</span>
+                </div>
+                <div className="flex gap-1.5">
+                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => handleViewDetails(topic)}>
+                    <MessageCircle className="h-3.5 w-3.5 mr-1" /> Detail
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleToggleStatus(topic)}>
+                    {topic.is_active ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleEditTopic(topic)}>
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => { setDeleteTopicId(topic.id); setShowDeleteDialog(true); }}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-card rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
+              <TableRow className="bg-muted/50">
                 <TableHead className="text-primary font-semibold">Title</TableHead>
                 <TableHead className="text-primary font-semibold">Category</TableHead>
                 <TableHead className="text-primary font-semibold text-center">
@@ -460,7 +524,7 @@ export const WebboardManagement = () => {
                 </TableRow>
               ) : (
                 filteredTopics.map((topic) => (
-                  <TableRow key={topic.id} className="hover:bg-gray-50">
+                  <TableRow key={topic.id} className="hover:bg-muted/30">
                     <TableCell>
                       <div className="max-w-xs">
                         <p className="font-medium text-foreground">{topic.title}</p>
@@ -545,7 +609,7 @@ export const WebboardManagement = () => {
                             setDeleteTopicId(topic.id);
                             setShowDeleteDialog(true);
                           }}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

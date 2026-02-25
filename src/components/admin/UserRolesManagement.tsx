@@ -126,95 +126,155 @@ export const UserRolesManagement = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCog className="w-5 h-5 text-primary" />
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-2xl">
+            <UserCog className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             {language === "th" ? "จัดการบทบาทผู้ใช้" : "User Role Management"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             {language === "th"
               ? `ทั้งหมด ${users.length} ผู้ใช้ — Admin: สิทธิ์เต็ม, Staff: แก้ไขเนื้อหา, User: ทั่วไป`
               : `${users.length} users total — Admin: full access, Staff: edit content, User: basic`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{language === "th" ? "ผู้ใช้" : "User"}</TableHead>
-                <TableHead>{language === "th" ? "บทบาท" : "Role"}</TableHead>
-                <TableHead>{language === "th" ? "วันที่เข้าร่วม" : "Joined"}</TableHead>
-                <TableHead className="text-right">{language === "th" ? "จัดการ" : "Actions"}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => {
-                const config = roleConfig[u.role];
-                const RoleIcon = config.icon;
-                const isSelf = u.user_id === currentUser?.id;
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+          {/* Mobile: Card Layout */}
+          <div className="sm:hidden space-y-3">
+            {users.map((u) => {
+              const config = roleConfig[u.role];
+              const RoleIcon = config.icon;
+              const isSelf = u.user_id === currentUser?.id;
 
-                return (
-                  <TableRow key={u.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {u.avatar_url && /^[\p{Emoji}]$/u.test(u.avatar_url) ? (
-                          // Emoji Avatar
-                          <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center text-sm font-semibold">
-                            {u.avatar_url}
-                          </div>
-                        ) : (
-                          // Image or Fallback Avatar
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src={u.avatar_url || undefined} />
-                            <AvatarFallback>{u.display_name.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">
-                            {u.display_name}
-                            {isSelf && (
-                              <span className="text-xs text-foreground/70 ml-1.5">
-                                ({language === "th" ? "คุณ" : "You"})
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={config.badge} className="gap-1">
-                        <RoleIcon className="w-3 h-3" />
+              return (
+                <div key={u.id} className="flex items-center gap-3 p-3 rounded-lg border border-border">
+                  {u.avatar_url && /^[\p{Emoji}]$/u.test(u.avatar_url) ? (
+                    <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center text-sm font-semibold shrink-0">
+                      {u.avatar_url}
+                    </div>
+                  ) : (
+                    <Avatar className="h-9 w-9 shrink-0">
+                      <AvatarImage src={u.avatar_url || undefined} />
+                      <AvatarFallback>{u.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {u.display_name}
+                      {isSelf && <span className="text-xs text-muted-foreground ml-1">({language === "th" ? "คุณ" : "You"})</span>}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant={config.badge} className="gap-0.5 text-[10px] h-5">
+                        <RoleIcon className="w-2.5 h-2.5" />
                         {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-foreground/70">
-                      {new Date(u.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isSelf ? (
-                        <span className="text-xs text-foreground/70">—</span>
-                      ) : (
-                        <Select
-                          value={u.role}
-                          onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
-                          disabled={updating === u.id}
-                        >
-                          <SelectTrigger className="w-28 h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="staff">Staff</SelectItem>
-                            <SelectItem value="user">User</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(u.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    {isSelf ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <Select
+                        value={u.role}
+                        onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
+                        disabled={updating === u.id}
+                      >
+                        <SelectTrigger className="w-24 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                          <SelectItem value="user">User</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{language === "th" ? "ผู้ใช้" : "User"}</TableHead>
+                  <TableHead>{language === "th" ? "บทบาท" : "Role"}</TableHead>
+                  <TableHead>{language === "th" ? "วันที่เข้าร่วม" : "Joined"}</TableHead>
+                  <TableHead className="text-right">{language === "th" ? "จัดการ" : "Actions"}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => {
+                  const config = roleConfig[u.role];
+                  const RoleIcon = config.icon;
+                  const isSelf = u.user_id === currentUser?.id;
+
+                  return (
+                    <TableRow key={u.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {u.avatar_url && /^[\p{Emoji}]$/u.test(u.avatar_url) ? (
+                            <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center text-sm font-semibold">
+                              {u.avatar_url}
+                            </div>
+                          ) : (
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={u.avatar_url || undefined} />
+                              <AvatarFallback>{u.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">
+                              {u.display_name}
+                              {isSelf && (
+                                <span className="text-xs text-foreground/70 ml-1.5">
+                                  ({language === "th" ? "คุณ" : "You"})
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={config.badge} className="gap-1">
+                          <RoleIcon className="w-3 h-3" />
+                          {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-foreground/70">
+                        {new Date(u.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isSelf ? (
+                          <span className="text-xs text-foreground/70">—</span>
+                        ) : (
+                          <Select
+                            value={u.role}
+                            onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
+                            disabled={updating === u.id}
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="staff">Staff</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
