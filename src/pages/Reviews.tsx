@@ -130,6 +130,7 @@ const RepliesSection = ({
     onSuccess: () => {
       setLocalReply("");
       queryClient.invalidateQueries({ queryKey: ["review-replies", reviewId], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["review-reply-counts"] });
       sweetAlert.success(language === "th" ? "ส่งความเห็นสำเร็จ!" : language === "zh" ? "评论已提交！" : "Reply submitted!");
     },
     onError: (error: any) => {
@@ -322,6 +323,23 @@ const Reviews = () => {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
+
+  // Fetch reply counts for all reviews
+  const { data: replyCounts = {} } = useQuery({
+    queryKey: ["review-reply-counts"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("review_replies")
+        .select("review_id");
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data || []).forEach((r: any) => {
+        counts[r.review_id] = (counts[r.review_id] || 0) + 1;
+      });
+      return counts;
+    },
+    staleTime: 30 * 1000,
+  });
 
   // Fetch user's likes
   const { data: userLikes = [] } = useQuery({
@@ -958,6 +976,11 @@ const Reviews = () => {
                             >
                               <MessageCircle className="w-4 h-4" />
                               {language === "th" ? "ความเห็น" : "Comments"}
+                              {(replyCounts[review.id] || 0) > 0 && (
+                                <span className="ml-1 text-xs bg-primary/20 text-primary rounded-full px-1.5 py-0.5 font-bold">
+                                  {replyCounts[review.id]}
+                                </span>
+                              )}
                             </Button>
                           </div>
                         </div>
