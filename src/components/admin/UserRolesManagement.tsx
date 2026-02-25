@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Shield, UserCog, Crown, User, Zap } from "lucide-react";
+import { Loader2, Shield, UserCog, Crown, User, Zap, Trash2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import { useAuth } from "@/hooks/useAuth";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
@@ -106,6 +106,44 @@ export const UserRolesManagement = () => {
     setUpdating(null);
   };
 
+  const handleDeleteUser = async (userId: string, displayName: string) => {
+    if (userId === DEVELOPER_ID) {
+      sweetAlert.error(language === "th" ? "ไม่สามารถลบ Developer ได้" : "Cannot delete Developer");
+      return;
+    }
+    if (userId === currentUser?.id) {
+      sweetAlert.error(language === "th" ? "ไม่สามารถลบตัวเองได้" : "Cannot delete yourself");
+      return;
+    }
+
+    const confirmed = await sweetAlert.modal.confirm(
+      language === "th" ? `ลบผู้ใช้ "${displayName}"?` : `Delete user "${displayName}"?`,
+      language === "th" ? "การลบจะไม่สามารถกู้คืนได้" : "This action cannot be undone"
+    );
+    if (!confirmed) return;
+
+    setUpdating(userId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      sweetAlert.success(language === "th" ? "ลบผู้ใช้สำเร็จ" : "User deleted successfully");
+      fetchUsers();
+    } catch (err: any) {
+      sweetAlert.error(err.message || (language === "th" ? "เกิดข้อผิดพลาด" : "Error deleting user"));
+    }
+    setUpdating(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -161,24 +199,35 @@ export const UserRolesManagement = () => {
                       {config.label}
                     </Badge>
                   </div>
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-1.5">
                     {isDev || isSelf ? (
                       <span className="text-xs text-muted-foreground">—</span>
                     ) : (
-                      <Select
-                        value={u.role}
-                        onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
-                        disabled={updating === u.id}
-                      >
-                        <SelectTrigger className="w-24 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="staff">Staff</SelectItem>
-                          <SelectItem value="user">User</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <>
+                        <Select
+                          value={u.role}
+                          onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
+                          disabled={updating === u.id || updating === u.user_id}
+                        >
+                          <SelectTrigger className="w-24 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="staff">Staff</SelectItem>
+                            <SelectItem value="user">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteUser(u.user_id, u.display_name)}
+                          disabled={updating === u.user_id}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -238,20 +287,31 @@ export const UserRolesManagement = () => {
                         {isDev || isSelf ? (
                           <span className="text-xs text-muted-foreground">—</span>
                         ) : (
-                          <Select
-                            value={u.role}
-                            onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
-                            disabled={updating === u.id}
-                          >
-                            <SelectTrigger className="w-28 h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="staff">Staff</SelectItem>
-                              <SelectItem value="user">User</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Select
+                              value={u.role}
+                              onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
+                              disabled={updating === u.id || updating === u.user_id}
+                            >
+                              <SelectTrigger className="w-28 h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="staff">Staff</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteUser(u.user_id, u.display_name)}
+                              disabled={updating === u.user_id}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
