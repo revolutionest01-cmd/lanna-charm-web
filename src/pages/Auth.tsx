@@ -29,6 +29,10 @@ const Auth = () => {
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [rememberPassword, setRememberPassword] = useState(false);
+  const [isResetPasswordMode, setIsResetPasswordMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [credentialsLoaded, setCredentialsLoaded] = useState(false);
   const STORAGE_KEY = 'plernping_login_data';
 
   // Load saved credentials from localStorage on component mount
@@ -47,15 +51,16 @@ const Auth = () => {
         console.error('Failed to load saved credentials:', error);
         localStorage.removeItem(STORAGE_KEY);
       }
+      setCredentialsLoaded(true);
     };
     loadSavedCredentials();
   }, []);
 
-  // Save credentials whenever loginForm changes and rememberPassword is checked
+  // Save credentials only after initial load is complete
   useEffect(() => {
+    if (!credentialsLoaded) return;
     if (rememberPassword && loginForm.email && loginForm.password) {
       try {
-        console.log('Saving credentials to localStorage');
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           email: loginForm.email,
           password: loginForm.password,
@@ -64,7 +69,27 @@ const Auth = () => {
         console.error('Failed to save credentials:', error);
       }
     }
-  }, [rememberPassword, loginForm.email, loginForm.password]);
+  }, [credentialsLoaded, rememberPassword, loginForm.email, loginForm.password]);
+
+  // Detect password reset flow from URL (after clicking reset link in email)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reset') === 'true') {
+      // Listen for PASSWORD_RECOVERY event from Supabase
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          setIsResetPasswordMode(true);
+        }
+      });
+      // Also check if we already have a session (user clicked link and session was set)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setIsResetPasswordMode(true);
+        }
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -206,6 +231,32 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      if (newPassword.length < 6) {
+        sweetAlert.error(language === 'th' ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' : 'Password must be at least 6 characters');
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        sweetAlert.error(language === 'th' ? 'ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาลองใหม่' : 'Unable to change password. Please try again.');
+      } else {
+        sweetAlert.success(language === 'th' ? 'เปลี่ยนรหัสผ่านสำเร็จแล้ว!' : 'Password changed successfully!');
+        setIsResetPasswordMode(false);
+        setNewPassword("");
+        // Clear reset param from URL
+        window.history.replaceState({}, '', '/auth');
+        setTimeout(() => navigate("/"), 1000);
+      }
+    } catch (error) {
+      sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
@@ -219,6 +270,65 @@ const Auth = () => {
       sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google' : language === 'zh' ? '使用Google登录时出错' : language === 'ja' ? 'Googleでのログイン中にエラーが発生しました' : 'Error signing in with Google');
     }
   };
+
+  // If in reset password mode, show the new password form
+  if (isResetPasswordMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]">
+        <div className="w-full max-w-md my-auto">
+          <div className="text-center mb-6 sm:mb-8 animate-fade-in">
+            <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
+              {language === 'th' ? 'ตั้งรหัสผ่านใหม่' : 'Set New Password'}
+            </h1>
+            <p className="text-muted-foreground">
+              {language === 'th' ? 'กรุณากรอกรหัสผ่านใหม่ของคุณ' : 'Please enter your new password'}
+            </p>
+          </div>
+          <Card className="animate-fade-in border-border/50 shadow-xl">
+            <CardContent className="pt-6">
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">
+                    {language === 'th' ? 'รหัสผ่านใหม่' : 'New Password'}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder={language === 'th' ? 'กรอกรหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)' : 'Enter new password (min 6 characters)'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {language === 'th' ? 'เปลี่ยนรหัสผ่าน' : 'Change Password'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]">
