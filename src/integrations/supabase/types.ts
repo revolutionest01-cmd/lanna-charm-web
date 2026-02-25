@@ -223,6 +223,56 @@ export type Database = {
           },
         ]
       }
+      event_space_features: {
+        Row: {
+          created_at: string
+          description_en: string | null
+          description_th: string | null
+          event_space_id: string
+          icon_name: string
+          id: string
+          is_active: boolean | null
+          sort_order: number | null
+          title_en: string
+          title_th: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          event_space_id: string
+          icon_name?: string
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          title_en: string
+          title_th: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          event_space_id?: string
+          icon_name?: string
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_space_features_event_space_id_fkey"
+            columns: ["event_space_id"]
+            isOneToOne: false
+            referencedRelation: "event_spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_space_images: {
         Row: {
           created_at: string
