@@ -183,7 +183,11 @@ const Admin = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <img src={logo} alt="Logo" className="h-8 hidden sm:block" />
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Admin" className="h-8 w-8 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
+              ) : (
+                <img src={logo} alt="Logo" className="h-8 hidden sm:block" />
+              )}
               <div className="min-w-0">
                 <h1 className="font-bold text-base sm:text-lg text-foreground flex items-center gap-2 truncate">
                   <Shield className="w-4 h-4 text-primary shrink-0" />
