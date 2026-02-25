@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { X, Send, Loader2, MessageCircle, ArrowLeft } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { X, Send, Loader2, MessageCircle, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,45 +19,39 @@ interface PricingChatbotProps {
   onClose: () => void;
 }
 
+// Generate a session ID per browser session
+const getSessionId = () => {
+  let id = sessionStorage.getItem('plernping-chat-session');
+  if (!id) {
+    id = `s_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    sessionStorage.setItem('plernping-chat-session', id);
+  }
+  return id;
+};
+
 const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   const { language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionId = useRef(getSessionId());
 
   const welcomeMessage = language === 'th'
-    ? "สวัสดี! 😊 ฉันคือ Plernping AI ช่วยเหลือคุณ หรือคุณต้องการถามเกี่ยวกับห้องพัก ห้องประชุม เมนู หรือขึ้นอื่น?"
+    ? "สวัสดีค่ะ! 😊 ฉันคือ Plernping AI ช่วยตอบทุกคำถามเกี่ยวกับห้องพัก เมนูอาหาร-เครื่องดื่ม ห้องประชุม ราคา ข้อมูลติดต่อ และอื่นๆ ได้เลยค่ะ"
     : language === 'zh'
-    ? "你好! 😊 我是Plernping AI，可以帮助你了解房间、会议室、菜单或其他服务。"
-    : "Hi! 😊 I'm Plernping AI. Ask me about rooms, meeting spaces, menu, or other services!";
+    ? "你好！😊 我是Plernping AI，可以回答关于房间、菜单、价格、会议室、联系方式等所有问题。"
+    : language === 'ja'
+    ? "こんにちは！😊 Plernping AIです。お部屋、メニュー、料金、会議室、連絡先など何でもお聞きください。"
+    : "Hi! 😊 I'm Plernping AI. Ask me anything about rooms, menus, prices, meeting spaces, contact info, and more!";
 
   const quickQuestions = language === 'th'
-    ? [
-        "ห้องพักราคาเท่าไหร่?",
-        "มีห้องประชุมไหม?",
-        "เมนูอะไรแนะนำ?",
-        "ขนาดห้องเท่าไหร่?",
-        "จัดงานได้ไหม?",
-        "เครื่องดื่มมีอะไร?",
-      ]
+    ? ["ห้องพักราคาเท่าไหร่?", "มีห้องว่างไหม?", "เมนูแนะนำ?", "เบอร์โทรติดต่อ?", "จัดงานได้ไหม?", "เวลาเปิด-ปิด?"]
     : language === 'zh'
-    ? [
-        "房价多少？",
-        "有会议室吗？",
-        "推荐菜单？",
-        "房间大小？",
-        "可以举办活动吗？",
-        "有什么饮品？",
-      ]
-    : [
-        "Room prices?",
-        "Meeting rooms?",
-        "Menu recommendations?",
-        "Room size?",
-        "Can host events?",
-        "Beverages available?",
-      ];
+    ? ["房价多少？", "有空房吗？", "推荐菜单？", "联系电话？", "可以举办活动吗？", "营业时间？"]
+    : language === 'ja'
+    ? ["部屋の料金は？", "空室はありますか？", "おすすめメニューは？", "連絡先は？", "イベントできますか？", "営業時間は？"]
+    : ["Room prices?", "Any rooms available?", "Menu recommendations?", "Contact number?", "Can host events?", "Opening hours?"];
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -76,7 +70,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
     }
   }, [messages]);
 
-  const handleSend = async (text?: string) => {
+  const handleSend = useCallback(async (text?: string) => {
     const messageText = text || input.trim();
     if (!messageText || isLoading) return;
 
@@ -92,8 +86,18 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
     setIsLoading(true);
 
     try {
+      // Build conversation history (exclude welcome message)
+      const history = messages
+        .filter(m => m.id !== '1')
+        .map(m => ({ role: m.role, content: m.content }));
+
       const { data, error } = await supabase.functions.invoke('pricing-chat', {
-        body: { message: messageText, language }
+        body: {
+          message: messageText,
+          language,
+          sessionId: sessionId.current,
+          conversationHistory: history,
+        }
       });
 
       if (error) throw error;
@@ -106,18 +110,30 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error calling chatbot:', error);
-      sweetAlert.error(
-        language === 'th'
-          ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
-          : language === 'zh'
-          ? '发生错误，请重试'
-          : 'An error occurred. Please try again.'
-      );
+    } catch (error: any) {
+      console.error('Chatbot error:', error);
+      const errMsg = language === 'th'
+        ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+        : language === 'zh'
+        ? '发生错误，请重试'
+        : 'An error occurred. Please try again.';
+      sweetAlert.error(errMsg);
     } finally {
       setIsLoading(false);
     }
+  }, [input, isLoading, messages, language]);
+
+  const handleClear = () => {
+    setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: welcomeMessage,
+      timestamp: new Date()
+    }]);
+    // New session
+    const newId = `s_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    sessionStorage.setItem('plernping-chat-session', newId);
+    sessionId.current = newId;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -129,7 +145,6 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
 
   if (!isOpen) return null;
 
-  // Show quick questions after assistant message or on first load
   const showQuickQuestions = (messages.length <= 1 || (messages.length > 1 && messages[messages.length - 1]?.role === 'assistant')) && !isLoading;
 
   return (
@@ -137,68 +152,46 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
       {/* Header */}
       <div className="flex items-center justify-between p-2.5 sm:p-3 border-b border-border bg-gradient-to-r from-[#8B6F47] to-[#c65539] rounded-t-2xl md:rounded-t-lg shrink-0">
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="hover:bg-white/20 text-white h-7 w-7 md:hidden"
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/20 text-white h-7 w-7 md:hidden">
             <ArrowLeft size={18} />
           </Button>
           <MessageCircle className="text-white" size={18} />
-          <h3 className="font-bold text-white text-sm">
-            Plernping AI
-          </h3>
+          <h3 className="font-bold text-white text-sm">Plernping AI</h3>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="hover:bg-white/20 text-white h-7 w-7"
-        >
-          <X size={18} />
-        </Button>
+        <div className="flex items-center gap-1">
+          {messages.length > 1 && (
+            <Button variant="ghost" size="icon" onClick={handleClear} className="hover:bg-white/20 text-white h-7 w-7" title={language === 'th' ? 'ล้างแชท' : 'Clear chat'}>
+              <Trash2 size={14} />
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/20 text-white h-7 w-7">
+            <X size={18} />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
       <ScrollArea className="flex-1 min-h-0 p-3" ref={scrollRef}>
         <div className="space-y-3">
           {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-2.5 ${
-                  msg.role === 'user'
-                    ? 'bg-[#c65539] text-white'
-                    : 'bg-muted text-foreground'
-                }`}
-              >
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-lg p-2.5 ${msg.role === 'user' ? 'bg-[#c65539] text-white' : 'bg-muted text-foreground'}`}>
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 <p className="text-[10px] opacity-70 mt-1">
-                  {msg.timestamp.toLocaleTimeString(language === 'th' ? 'th-TH' : language === 'zh' ? 'zh-CN' : 'en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {msg.timestamp.toLocaleTimeString(language === 'th' ? 'th-TH' : language === 'zh' ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>
           ))}
 
-          {/* Quick Guide Questions */}
           {showQuickQuestions && (
             <div className="pt-2 border-t border-border">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">
-                {language === 'th' ? '💡 คำถามอื่น:' : language === 'zh' ? '💡 你还可以问:' : '💡 Quick Questions:'}
+                {language === 'th' ? '💡 คำถามแนะนำ:' : language === 'zh' ? '💡 推荐问题:' : language === 'ja' ? '💡 おすすめの質問:' : '💡 Quick Questions:'}
               </p>
               <div className="grid grid-cols-2 gap-1.5">
                 {quickQuestions.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSend(q)}
-                    className="text-xs px-2 py-1.5 rounded-lg border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-all text-foreground truncate"
-                  >
+                  <button key={i} onClick={() => handleSend(q)} className="text-xs px-2 py-1.5 rounded-lg border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-all text-foreground truncate">
                     {q}
                   </button>
                 ))}
@@ -224,21 +217,12 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={
-              language === 'th'
-                ? 'พิมพ์คำถาม...'
-                : language === 'zh'
-                ? '输入问题...'
-                : 'Ask a question...'
+              language === 'th' ? 'พิมพ์คำถาม...' : language === 'zh' ? '输入问题...' : language === 'ja' ? '質問を入力...' : 'Ask a question...'
             }
             disabled={isLoading}
             className="flex-1 h-9 text-sm"
           />
-          <Button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
-            size="icon"
-            className="bg-[#c65539] hover:bg-[#8B6F47] h-9 w-9"
-          >
+          <Button onClick={() => handleSend()} disabled={!input.trim() || isLoading} size="icon" className="bg-[#c65539] hover:bg-[#8B6F47] h-9 w-9">
             {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
           </Button>
         </div>

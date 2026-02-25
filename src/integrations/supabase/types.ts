@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_logs: {
+        Row: {
+          ai_reply: string
+          created_at: string
+          id: string
+          intent: string | null
+          ip_hash: string | null
+          language: string | null
+          session_id: string
+          user_id: string | null
+          user_message: string
+        }
+        Insert: {
+          ai_reply: string
+          created_at?: string
+          id?: string
+          intent?: string | null
+          ip_hash?: string | null
+          language?: string | null
+          session_id: string
+          user_id?: string | null
+          user_message: string
+        }
+        Update: {
+          ai_reply?: string
+          created_at?: string
+          id?: string
+          intent?: string | null
+          ip_hash?: string | null
+          language?: string | null
+          session_id?: string
+          user_id?: string | null
+          user_message?: string
+        }
+        Relationships: []
+      }
       event_spaces: {
         Row: {
           created_at: string
