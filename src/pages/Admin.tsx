@@ -24,6 +24,7 @@ import {
   TrendingUp,
   BarChart3,
   Activity,
+  Bot,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -36,6 +37,7 @@ import { ReviewsManagement } from "@/components/admin/ReviewsManagement";
 import { WebboardManagement } from "@/components/admin/WebboardManagement";
 import BusinessInfoManagement from "@/components/admin/BusinessInfoManagement";
 import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
+import { ChatLogsManagement } from "@/components/admin/ChatLogsManagement";
 import {
   ChartContainer,
   ChartTooltip,
@@ -54,6 +56,7 @@ const TABS = [
   { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews" },
   { id: "webboard", icon: MessageSquare, labelTh: "กระทู้", labelEn: "Webboard" },
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
+  { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles" },
 ];
 
@@ -168,6 +171,7 @@ const Admin = () => {
       case "reviews": return <ReviewsManagement />;
       case "webboard": return <WebboardManagement />;
       case "business": return <BusinessInfoManagement />;
+      case "chatlog": return <ChatLogsManagement />;
       case "roles": return <UserRolesManagement />;
       default: return null;
     }
