@@ -27,6 +27,7 @@ import {
   Bot,
   Headphones,
   PieChart as PieChartIcon,
+  Zap,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
@@ -42,6 +43,7 @@ import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 import { ChatLogsManagement } from "@/components/admin/ChatLogsManagement";
 import { LiveChatManagement } from "@/components/admin/LiveChatManagement";
 import { ChatAnalyticsDashboard } from "@/components/admin/ChatAnalyticsDashboard";
+import { DevGodMode } from "@/components/admin/DevGodMode";
 import {
   ChartContainer,
   ChartTooltip,
@@ -50,34 +52,35 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-const TABS = [
-  { id: "dashboard", icon: BarChart3, labelTh: "แดชบอร์ด", labelEn: "Dashboard" },
-  { id: "hero", icon: Image, labelTh: "Hero", labelEn: "Hero" },
-  { id: "events", icon: Calendar, labelTh: "อีเว้นท์", labelEn: "Events" },
-  { id: "rooms", icon: Home, labelTh: "ห้องพัก", labelEn: "Rooms" },
-  { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus" },
-  { id: "gallery", icon: ImageIcon, labelTh: "แกลเลอรี่", labelEn: "Gallery" },
-  { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews" },
-  { id: "webboard", icon: MessageSquare, labelTh: "กระทู้", labelEn: "Webboard" },
-  { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business" },
-  { id: "livechat", icon: Headphones, labelTh: "Live Chat", labelEn: "Live Chat" },
-  { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat" },
-  { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics" },
-  { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles" },
+const BASE_TABS = [
+  { id: "dashboard", icon: BarChart3, labelTh: "แดชบอร์ด", labelEn: "Dashboard", minRole: "staff" },
+  { id: "hero", icon: Image, labelTh: "Hero", labelEn: "Hero", minRole: "admin" },
+  { id: "events", icon: Calendar, labelTh: "อีเว้นท์", labelEn: "Events", minRole: "admin" },
+  { id: "rooms", icon: Home, labelTh: "ห้องพัก", labelEn: "Rooms", minRole: "admin" },
+  { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus", minRole: "staff" },
+  { id: "gallery", icon: ImageIcon, labelTh: "แกลเลอรี่", labelEn: "Gallery", minRole: "staff" },
+  { id: "reviews", icon: MessageSquare, labelTh: "รีวิว", labelEn: "Reviews", minRole: "staff" },
+  { id: "webboard", icon: MessageSquare, labelTh: "กระทู้", labelEn: "Webboard", minRole: "staff" },
+  { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business", minRole: "staff" },
+  { id: "livechat", icon: Headphones, labelTh: "Live Chat", labelEn: "Live Chat", minRole: "staff" },
+  { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat", minRole: "admin" },
+  { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
+  { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
+  { id: "devmode", icon: Zap, labelTh: "Dev God Mode", labelEn: "Dev God Mode", minRole: "developer" },
 ];
 
 const PIE_COLORS = [
-  "hsl(217, 91%, 60%)",  // blue
-  "hsl(38, 92%, 50%)",   // amber
-  "hsl(271, 91%, 65%)",  // purple
-  "hsl(346, 77%, 60%)",  // rose
+  "hsl(217, 91%, 60%)",
+  "hsl(38, 92%, 50%)",
+  "hsl(271, 91%, 65%)",
+  "hsl(346, 77%, 60%)",
 ];
 
 const Admin = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { isAdmin, isChecking } = useAdminStatus();
+  const { isAdmin, isDeveloper, isStaff, userRole, isChecking } = useAdminStatus();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({
     rooms: 0,
@@ -86,9 +89,19 @@ const Admin = () => {
     reviews: 0,
   });
 
+  // Filter tabs based on user role
+  const TABS = useMemo(() => {
+    return BASE_TABS.filter((tab) => {
+      if (tab.minRole === "developer") return isDeveloper;
+      if (tab.minRole === "admin") return isAdmin;
+      if (tab.minRole === "staff") return isStaff;
+      return true;
+    });
+  }, [isDeveloper, isAdmin, isStaff]);
+
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (!isAdmin) return;
+      if (!isStaff) return;
       try {
         const [roomsRes, menusRes, galleryRes, reviewsRes] = await Promise.all([
           supabase.from("rooms").select("id", { count: "exact", head: true }),
@@ -107,19 +120,19 @@ const Admin = () => {
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [isAdmin]);
+  }, [isStaff]);
 
   useEffect(() => {
     if (!isChecking && !isLoading) {
       if (!isAuthenticated) {
         sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
         navigate("/auth");
-      } else if (!isAdmin) {
+      } else if (!isStaff) {
         sweetAlert.error(language === "th" ? "คุณไม่มีสิทธิ์เข้าถึงหน้านี้" : "You do not have permission");
         navigate("/");
       }
     }
-}, [isAuthenticated, isAdmin, isChecking, isLoading, navigate, language]);
+  }, [isAuthenticated, isStaff, isChecking, isLoading, navigate, language]);
 
   useEffect(() => {
     return () => {
@@ -156,7 +169,9 @@ const Admin = () => {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) return null;
+  if (!isAuthenticated || !isStaff) return null;
+
+  const roleLabel = isDeveloper ? "Developer" : isAdmin ? "Admin" : "Staff";
 
   const statsDisplay = [
     { label: language === "th" ? "ห้องพัก" : "Rooms", value: stats.rooms, icon: Home, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -181,6 +196,7 @@ const Admin = () => {
       case "chatlog": return <ChatLogsManagement />;
       case "chatanalytics": return <ChatAnalyticsDashboard />;
       case "roles": return <UserRolesManagement />;
+      case "devmode": return isDeveloper ? <DevGodMode /> : null;
       default: return null;
     }
   };
@@ -202,8 +218,11 @@ const Admin = () => {
               )}
               <div className="min-w-0">
                 <h1 className="font-bold text-base sm:text-lg text-foreground flex items-center gap-2 truncate">
-                  <Shield className="w-4 h-4 text-primary shrink-0" />
+                  {isDeveloper ? <Zap className="w-4 h-4 text-yellow-500 shrink-0" /> : <Shield className="w-4 h-4 text-primary shrink-0" />}
                   {language === "th" ? "แผงควบคุม" : "Admin Panel"}
+                  <Badge variant={isDeveloper ? "outline" : "secondary"} className="text-[10px] ml-1">
+                    {roleLabel}
+                  </Badge>
                 </h1>
                 <p className="text-xs text-muted-foreground truncate">
                   {language === "th" ? "สวัสดี" : "Hi"}, {user?.name}
@@ -215,9 +234,9 @@ const Admin = () => {
       </header>
 
       <div className="flex flex-col lg:flex-row">
-        {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
+        {/* Sidebar */}
         <nav className="lg:w-56 lg:min-h-[calc(100vh-120px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[112px] sm:top-[120px] lg:top-[120px] z-30">
-          {/* Mobile: native horizontal scroll */}
+          {/* Mobile */}
           <div className="lg:hidden">
             <div
               className="flex p-2 gap-1.5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
@@ -233,7 +252,7 @@ const Admin = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start
                       ${isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
+                        ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }`}
                   >
@@ -245,7 +264,7 @@ const Admin = () => {
             </div>
             <style>{`.lg\\:hidden > div::-webkit-scrollbar { display: none; }`}</style>
           </div>
-          {/* Desktop: vertical scroll */}
+          {/* Desktop */}
           <ScrollArea className="hidden lg:block h-[calc(100vh-120px)]">
             <div className="flex flex-col p-2 gap-1.5">
               {TABS.map((tab) => {
@@ -258,7 +277,7 @@ const Admin = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
                       ${isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
+                        ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }`}
                   >
@@ -293,7 +312,6 @@ interface DashboardContentProps {
 
 const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, language }: DashboardContentProps) => (
   <div className="space-y-6">
-    {/* Page Title */}
     <div>
       <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
         <Activity className="w-6 h-6 text-primary" />
@@ -304,7 +322,6 @@ const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, langua
       </p>
     </div>
 
-    {/* Stat Cards */}
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((stat, i) => {
         const Icon = stat.icon;
@@ -325,9 +342,7 @@ const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, langua
       })}
     </div>
 
-    {/* Charts Row */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-      {/* Bar Chart */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base sm:text-lg flex items-center gap-2">
@@ -355,7 +370,6 @@ const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, langua
         </CardContent>
       </Card>
 
-      {/* Pie Chart */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base sm:text-lg flex items-center gap-2">
@@ -387,7 +401,6 @@ const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, langua
               <ChartTooltip content={<ChartTooltipContent />} />
             </PieChart>
           </ChartContainer>
-          {/* Legend */}
           <div className="flex flex-wrap justify-center gap-3 mt-3">
             {barChartData.map((item, i) => (
               <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">

@@ -2,205 +2,134 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
-const ADMIN_CACHE_KEY = 'app-admin-status';
-const ADMIN_CACHE_EXPIRY_KEY = 'app-admin-status-time';
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours cache (cleared on logout)
+const ROLE_CACHE_KEY = 'app-role-status';
+const ROLE_CACHE_EXPIRY_KEY = 'app-role-status-time';
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
-interface AdminCache {
+interface RoleCache {
   userId: string;
-  isAdmin: boolean;
+  role: string;
   timestamp: number;
 }
 
+// Developer user ID - hardcoded for protection
+const DEVELOPER_USER_ID = '1b74b1f1-20bd-4772-9fd8-5dda97ec7488';
+
 /**
- * Hook for checking and caching admin status
- * Loads from localStorage first (for instant UX), then verifies with database
+ * Hook for checking user role (developer, admin, staff, user)
  */
 export const useAdminStatus = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    // Initialize from cache if available (even during auth initialization)
+  const [userRole, setUserRole] = useState<string>(() => {
     try {
-      const cached = localStorage.getItem(ADMIN_CACHE_KEY);
+      const cached = localStorage.getItem(ROLE_CACHE_KEY);
       if (cached) {
-        const data: AdminCache = JSON.parse(cached);
-        console.log('[AdminStatus] Initialized from cache:', data.isAdmin);
-        return data.isAdmin;
+        const data: RoleCache = JSON.parse(cached);
+        return data.role;
       }
-    } catch (error) {
-      console.warn('[AdminStatus] Error initializing from cache:', error);
-    }
-    return false;
+    } catch {}
+    return 'user';
   });
   const [isChecking, setIsChecking] = useState(true);
 
-  // Load cached admin status from localStorage
-  const getCachedAdminStatus = (userId: string): boolean | null => {
+  const isAdmin = userRole === 'admin' || userRole === 'developer';
+  const isDeveloper = userRole === 'developer';
+  const isStaff = userRole === 'staff' || isAdmin;
+
+  const getCachedRole = (userId: string): string | null => {
     try {
-      const cached = localStorage.getItem(ADMIN_CACHE_KEY);
-      const timestamp = localStorage.getItem(ADMIN_CACHE_EXPIRY_KEY);
-      
+      const cached = localStorage.getItem(ROLE_CACHE_KEY);
+      const timestamp = localStorage.getItem(ROLE_CACHE_EXPIRY_KEY);
       if (!cached || !timestamp) return null;
-      
-      const cacheTime = parseInt(timestamp, 10);
-      const now = Date.now();
-      
-      // Check if cache is still valid
-      if (now - cacheTime > CACHE_DURATION) {
-        console.log('[AdminStatus] Cache expired');
-        localStorage.removeItem(ADMIN_CACHE_KEY);
-        localStorage.removeItem(ADMIN_CACHE_EXPIRY_KEY);
+      if (Date.now() - parseInt(timestamp, 10) > CACHE_DURATION) {
+        localStorage.removeItem(ROLE_CACHE_KEY);
+        localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
         return null;
       }
-      
-      const cachedData: AdminCache = JSON.parse(cached);
-      
-      // Verify cache is for the current user
-      if (cachedData.userId !== userId) {
-        console.log('[AdminStatus] Cache is for different user, ignoring');
-        localStorage.removeItem(ADMIN_CACHE_KEY);
-        localStorage.removeItem(ADMIN_CACHE_EXPIRY_KEY);
+      const data: RoleCache = JSON.parse(cached);
+      if (data.userId !== userId) {
+        localStorage.removeItem(ROLE_CACHE_KEY);
+        localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
         return null;
       }
-      
-      console.log('[AdminStatus] Using cached admin status:', cachedData.isAdmin);
-      return cachedData.isAdmin;
-    } catch (error) {
-      console.warn('[AdminStatus] Error reading cache:', error);
+      return data.role;
+    } catch {
       return null;
     }
   };
 
-  // Cache admin status to localStorage
-  const cacheAdminStatus = (userId: string, isAdminValue: boolean) => {
+  const cacheRole = (userId: string, role: string) => {
     try {
-      const data: AdminCache = {
-        userId,
-        isAdmin: isAdminValue,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(data));
-      localStorage.setItem(ADMIN_CACHE_EXPIRY_KEY, Date.now().toString());
-      console.log('[AdminStatus] Cached admin status:', isAdminValue);
-    } catch (error) {
-      console.warn('[AdminStatus] Error caching admin status:', error);
-    }
+      localStorage.setItem(ROLE_CACHE_KEY, JSON.stringify({ userId, role, timestamp: Date.now() }));
+      localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, Date.now().toString());
+    } catch {}
   };
 
-  // Check admin status from database
-  const checkAdminStatusFromDB = async (userId: string): Promise<boolean> => {
+  const checkRoleFromDB = async (userId: string): Promise<string> => {
     try {
-      console.log('[AdminStatus] Checking admin status from database for user:', userId);
-      
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise<boolean>((_, reject) => 
-        setTimeout(() => reject(new Error('Database check timeout')), 5000)
+      const timeoutPromise = new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 5000)
       );
-      
       const queryPromise = supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .eq('role', 'admin')
         .single()
         .then(({ data, error }) => {
-          console.log('[AdminStatus] Query result - data:', data, 'error:', error?.message);
-          const isAdminUser = !!data && data.role === 'admin' && !error;
-          return isAdminUser;
+          if (error || !data) return 'user';
+          return data.role as string;
         });
-        
-      const isAdminUser = await Promise.race([queryPromise, timeoutPromise]);
-      console.log('[AdminStatus] Database check completed:', isAdminUser);
-      
-      // Cache the result
-      cacheAdminStatus(userId, isAdminUser);
-      
-      return isAdminUser;
-    } catch (error) {
-      console.error('[AdminStatus] Error checking admin status:', error);
-      // Try to use cache as fallback
-      const cached = getCachedAdminStatus(userId);
-      if (cached !== null) {
-        console.log('[AdminStatus] Using cached status as fallback:', cached);
-        return cached;
-      }
-      console.log('[AdminStatus] No fallback cache available, returning false');
-      return false;
+      const role = await Promise.race([queryPromise, timeoutPromise]);
+      cacheRole(userId, role);
+      return role;
+    } catch {
+      const cached = getCachedRole(userId);
+      return cached || 'user';
     }
   };
 
   useEffect(() => {
-    const updateAdminStatus = async () => {
-      console.log('[AdminStatus] Effect triggered - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user?.id);
-      
-      // Only process when auth is fully loaded
-      if (isLoading) {
-        console.log('[AdminStatus] Auth still loading, waiting...');
-        return; // Wait for auth to finish loading
-      }
-
+    const update = async () => {
+      if (isLoading) return;
       if (!isAuthenticated || !user) {
-        console.log('[AdminStatus] No authenticated user');
-        setIsAdmin(false);
+        setUserRole('user');
         setIsChecking(false);
-        // Clear cache if user logs out
-        localStorage.removeItem(ADMIN_CACHE_KEY);
-        localStorage.removeItem(ADMIN_CACHE_EXPIRY_KEY);
+        localStorage.removeItem(ROLE_CACHE_KEY);
+        localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
         return;
       }
 
-      console.log('[AdminStatus] Auth loaded, checking admin status for:', user.id);
-      
-      // 1. Try to load from cache first (instant feedback)
-      const cachedStatus = getCachedAdminStatus(user.id);
-      if (cachedStatus !== null) {
-        console.log('[AdminStatus] Using cached admin status:', cachedStatus);
-        setIsAdmin(cachedStatus);
-        
-        // Verify in background and update if changed
-        console.log('[AdminStatus] Verifying cache with database in background...');
-        checkAdminStatusFromDB(user.id).then(dbStatus => {
-          if (dbStatus !== cachedStatus) {
-            console.log('[AdminStatus] Background check differs from cache, updating:', dbStatus);
-            setIsAdmin(dbStatus);
-          }
-        }).catch(error => {
-          console.error('[AdminStatus] Background verification failed:', error);
+      const cached = getCachedRole(user.id);
+      if (cached) {
+        setUserRole(cached);
+        setIsChecking(false);
+        // Background verify
+        checkRoleFromDB(user.id).then(dbRole => {
+          if (dbRole !== cached) setUserRole(dbRole);
         });
-        
-        setIsChecking(false);
         return;
       }
-      
-      // 2. No cache, check database
-      console.log('[AdminStatus] No cached status, checking database...');
-      setIsChecking(true);
-      try {
-        const dbStatus = await checkAdminStatusFromDB(user.id);
-        console.log('[AdminStatus] Admin check complete, result:', dbStatus);
-        setIsAdmin(dbStatus);
-      } catch (error) {
-        console.error('[AdminStatus] Error checking admin:', error);
-        // Keep existing state on error
-      } finally {
-        setIsChecking(false);
-      }
-    };
 
-    updateAdminStatus();
-  }, [user?.id, isAuthenticated, isLoading]); // Only re-run when user ID or auth state changes
+      setIsChecking(true);
+      const role = await checkRoleFromDB(user.id);
+      setUserRole(role);
+      setIsChecking(false);
+    };
+    update();
+  }, [user?.id, isAuthenticated, isLoading]);
 
   return {
     isAdmin,
+    isDeveloper,
+    isStaff,
+    userRole,
     isChecking,
   };
 };
 
-/**
- * Clear admin cache when needed
- */
+export const DEVELOPER_ID = DEVELOPER_USER_ID;
+
 export const clearAdminCache = () => {
-  localStorage.removeItem(ADMIN_CACHE_KEY);
-  localStorage.removeItem(ADMIN_CACHE_EXPIRY_KEY);
-  console.log('[AdminStatus] Admin cache cleared');
+  localStorage.removeItem(ROLE_CACHE_KEY);
+  localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
 };
