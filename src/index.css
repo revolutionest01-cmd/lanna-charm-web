@@ -475,6 +475,16 @@ html {
   .icon-bounce {
     animation: icon-bounce 2s ease-in-out infinite;
   }
+
+  /* Hide scrollbar for webkit browsers (Chrome, Safari, Edge) */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
 }
 
 /* Global smooth transitions for interactive elements */
