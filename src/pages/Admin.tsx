@@ -176,7 +176,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+      <header className="sticky top-[56px] sm:top-[60px] z-40 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -200,10 +200,11 @@ const Admin = () => {
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
-        <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0">
-          <ScrollArea className="lg:h-[calc(100vh-60px)]">
+        <nav className="lg:w-56 lg:min-h-[calc(100vh-120px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[112px] sm:top-[120px] lg:top-[120px] z-30">
+          {/* Mobile: native horizontal scroll */}
+          <div className="lg:hidden">
             <div
-              className="flex lg:flex-col p-2 gap-1.5 overflow-x-auto lg:overflow-x-visible scroll-smooth snap-x snap-mandatory touch-pan-x"
+              className="flex p-2 gap-1.5 overflow-x-auto scroll-smooth snap-x snap-mandatory"
               style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {TABS.map((tab) => {
@@ -214,14 +215,39 @@ const Admin = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start
                       ${isActive
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
-                    <span className="text-xs lg:text-sm">{label}</span>
+                    <span className="text-xs">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <style>{`.lg\\:hidden > div::-webkit-scrollbar { display: none; }`}</style>
+          </div>
+          {/* Desktop: vertical scroll */}
+          <ScrollArea className="hidden lg:block h-[calc(100vh-120px)]">
+            <div className="flex flex-col p-2 gap-1.5">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                const label = language === "th" ? tab.labelTh : tab.labelEn;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
+                      ${isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span>{label}</span>
                   </button>
                 );
               })}
