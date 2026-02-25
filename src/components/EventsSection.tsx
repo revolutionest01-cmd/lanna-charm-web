@@ -1,32 +1,23 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Presentation, Utensils, Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
-import { useEventSpaces } from "@/hooks/useContentData";
+import { useEventSpaces, useEventSpaceImages } from "@/hooks/useContentData";
 import { EventSkeleton } from "@/components/SkeletonCard";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
-
-interface EventSpace {
-  id: string;
-  title_th: string;
-  title_en: string;
-  description_th: string | null;
-  description_en: string | null;
-  image_url: string | null;
-  keywords_th: string | null;
-  keywords_en: string | null;
-  is_active: boolean | null;
-}
+import { cn } from "@/lib/utils";
 
 const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: eventSpace, isLoading: loading } = useEventSpaces();
+  const { data: galleryImages = [] } = useEventSpaceImages(eventSpace?.id);
   const { isFeatureEnabled } = useFeatureToggle();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   if (!isFeatureEnabled("events")) return null;
 
   const handleInquireClick = () => {
-    // Scroll to contact section
     const contactElement = document.getElementById('contact');
     if (contactElement) {
       contactElement.scrollIntoView({ behavior: 'smooth' });
@@ -57,7 +48,17 @@ const EventsSection = () => {
 
   const title = language === "th" ? eventSpace?.title_th : eventSpace?.title_en;
   const description = language === "th" ? eventSpace?.description_th : eventSpace?.description_en;
-  const imageUrl = eventSpace?.image_url;
+  
+  // Combine main image + gallery images
+  const allImages: string[] = [];
+  if (eventSpace?.image_url) allImages.push(eventSpace.image_url);
+  galleryImages.forEach((img) => {
+    if (img.image_url && !allImages.includes(img.image_url)) {
+      allImages.push(img.image_url);
+    }
+  });
+
+  const mainImage = allImages[selectedImageIndex] || eventSpace?.image_url || "/placeholder.svg";
 
   return (
     <section id="events" className="py-16 sm:py-24 bg-gradient-to-b from-background via-background to-card/20 relative overflow-hidden">
@@ -87,18 +88,44 @@ const EventsSection = () => {
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-start mb-16 sm:mb-20">
-          {/* Left - Image */}
-          <div className="animate-fade-in">
+          {/* Left - Image Gallery */}
+          <div className="animate-fade-in space-y-3">
+            {/* Main Image */}
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl blur-2xl group-hover:blur-3xl transition-all duration-500" />
               <img
-                src={imageUrl || "/placeholder.svg"}
+                src={mainImage}
                 alt={title || "Conference Room"}
-                className="relative rounded-2xl sm:rounded-3xl shadow-2xl group-hover:shadow-3xl w-full h-[260px] sm:h-[350px] lg:h-[450px] object-cover transition-all duration-500 group-hover:scale-105"
+                className="relative rounded-2xl sm:rounded-3xl shadow-2xl w-full h-[260px] sm:h-[350px] lg:h-[450px] object-cover transition-all duration-500"
               />
-              {/* Decorative corner */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-primary/10 rounded-full blur-xl" />
+              <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm text-foreground text-xs px-2.5 py-1 rounded-lg border border-border/50">
+                © PlernPing Cafe
+              </div>
             </div>
+
+            {/* Thumbnail Strip */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {allImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={cn(
+                      "flex-shrink-0 w-20 h-16 sm:w-24 sm:h-[72px] rounded-lg overflow-hidden border-2 transition-all duration-300 hover:opacity-100",
+                      selectedImageIndex === index
+                        ? "border-primary ring-2 ring-primary/30 opacity-100"
+                        : "border-border/50 opacity-60 hover:border-primary/50"
+                    )}
+                  >
+                    <img
+                      src={img}
+                      alt={`${title || "Event"} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right - Content & Services */}

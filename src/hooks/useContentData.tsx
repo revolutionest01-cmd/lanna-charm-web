@@ -51,6 +51,25 @@ export const useEventSpaces = () => {
   });
 };
 
+export const useEventSpaceImages = (eventSpaceId?: string) => {
+  return useQuery({
+    queryKey: ["event-space-images", eventSpaceId],
+    queryFn: async () => {
+      if (!eventSpaceId) return [];
+      const { data, error } = await supabase
+        .from("event_space_images")
+        .select("*")
+        .eq("event_space_id", eventSpaceId)
+        .order("sort_order");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!eventSpaceId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
 export const useRooms = () => {
   return useQuery({
     queryKey: ["rooms"],
