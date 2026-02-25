@@ -70,6 +70,26 @@ export const useEventSpaceImages = (eventSpaceId?: string) => {
   });
 };
 
+export const useEventSpaceFeatures = (eventSpaceId?: string) => {
+  return useQuery({
+    queryKey: ["event-space-features", eventSpaceId],
+    queryFn: async () => {
+      if (!eventSpaceId) return [];
+      const { data, error } = await (supabase as any)
+        .from("event_space_features")
+        .select("*")
+        .eq("event_space_id", eventSpaceId)
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!eventSpaceId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
 export const useRooms = () => {
   return useQuery({
     queryKey: ["rooms"],
