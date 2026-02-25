@@ -262,7 +262,7 @@ const Reviews = () => {
         throw new Error(language === "th" ? "ความเห็นต้องมีอย่างน้อย 2 ตัวอักษร" : "Reply must be at least 2 characters");
       }
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("review_replies")
         .insert({
           review_id: reviewId,
@@ -446,7 +446,7 @@ const Reviews = () => {
       queryFn: async () => {
         try {
           // Try joining with profiles table via foreign key
-          const { data, error } = await supabase
+          const { data, error } = await (supabase as any)
             .from("review_replies")
             .select(
               `
@@ -486,7 +486,7 @@ const Reviews = () => {
           console.warn("[ReviewReplies] Join failed, using batch fetch:", joinError);
           
           // Fallback: Batch fetch approach
-          const { data: repliesData, error: repliesError } = await supabase
+          const { data: repliesData, error: repliesError } = await (supabase as any)
             .from("review_replies")
             .select("*")
             .eq("review_id", reviewId)
@@ -509,7 +509,7 @@ const Reviews = () => {
           const { data: profiles, error: profilesError } = await supabase
             .from("profiles")
             .select("id, display_name")
-            .in("id", userIds);
+            .in("id", userIds as string[]);
           
           if (profilesError) {
             console.warn("[ReviewReplies] Profile fetch error:", profilesError);
