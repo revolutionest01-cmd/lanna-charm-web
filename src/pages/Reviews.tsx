@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ type Review = {
   user_id: string | null;
   helpful_count: number;
   user_name?: string;
+  user_avatar?: string | null;
 };
 
 type ReviewReply = {
@@ -37,6 +38,7 @@ type ReviewReply = {
   content: string;
   created_at: string;
   user_name?: string;
+  user_avatar?: string | null;
 };
 
 type ReviewLike = {
@@ -44,20 +46,192 @@ type ReviewLike = {
   user_id: string;
 };
 
-const AVATAR_OPTIONS = [
-  "😊", "😄", "😎", "🤩", "😍", 
-  "🥳", "😇", "🤓", "😌", "😊",
-  "👨", "👩", "👴", "👵", "👦",
-  "👧", "🧔", "👱", "🤵", "💼"
-];
-
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
   review_text_en: z.string().trim().min(10, "Review must be at least 10 characters").max(500, "Review must be less than 500 characters"),
   review_text_th: z.string().trim().min(10, "รีวิวต้องมีอย่างน้อย 10 ตัวอักษร").max(500, "รีวิวต้องมีไม่เกิน 500 ตัวอักษร"),
-  avatar: z.string().default("😊"),
 });
 
+// ---- Extracted RepliesSection component to prevent re-mount on parent re-render ----
+const RepliesSection = ({
+  reviewId,
+  language,
+  isAuthenticated,
+  user,
+  navigate,
+}: {
+  reviewId: string;
+  language: string;
+  isAuthenticated: boolean;
+  user: any;
+  navigate: (path: string) => void;
+}) => {
+  const queryClient = useQueryClient();
+  const [localReply, setLocalReply] = useState("");
+
+  const { data: replies = [], isLoading: repliesLoading } = useQuery({
+    queryKey: ["review-replies", reviewId],
+    queryFn: async () => {
+      try {
+        const { data, error } = await (supabase as any)
+          .from("review_replies")
+          .select("*")
+          .eq("review_id", reviewId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length === 0) return [];
+
+        const userIds = [...new Set(data.map((r: any) => r.user_id).filter(Boolean))];
+        
+        let profileMap = new Map<string, { display_name: string; avatar_url: string | null }>();
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, display_name, avatar_url")
+            .in("id", userIds as string[]);
+          
+          (profiles || []).forEach((p: any) => {
+            profileMap.set(p.id, { display_name: p.display_name, avatar_url: p.avatar_url });
+          });
+        }
+
+        return data.map((reply: any) => ({
+          id: reply.id,
+          review_id: reply.review_id,
+          user_id: reply.user_id,
+          content: reply.content,
+          created_at: reply.created_at,
+          user_name: profileMap.get(reply.user_id)?.display_name,
+          user_avatar: profileMap.get(reply.user_id)?.avatar_url || null,
+        })) as ReviewReply[];
+      } catch (err) {
+        console.error("[ReviewReplies] Error:", err);
+        return [];
+      }
+    },
+    staleTime: 15 * 1000,
+    retry: 1,
+    enabled: !!reviewId,
+  });
+
+  const submitReplyMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!user?.id) throw new Error("Must be logged in");
+      const trimmed = content.trim();
+      if (trimmed.length < 2) throw new Error(language === "th" ? "ความเห็นต้องมีอย่างน้อย 2 ตัวอักษร" : "Reply must be at least 2 characters");
+
+      const { error } = await (supabase as any)
+        .from("review_replies")
+        .insert({ review_id: reviewId, user_id: user.id, content: trimmed });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setLocalReply("");
+      queryClient.invalidateQueries({ queryKey: ["review-replies", reviewId], exact: true });
+      sweetAlert.success(language === "th" ? "ส่งความเห็นสำเร็จ!" : language === "zh" ? "评论已提交！" : "Reply submitted!");
+    },
+    onError: (error: any) => {
+      sweetAlert.error(error.message || "Error");
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!localReply.trim()) {
+      sweetAlert.error(language === "th" ? "กรุณากรอกความเห็น" : "Please enter a reply");
+      return;
+    }
+    submitReplyMutation.mutate(localReply);
+  };
+
+  return (
+    <div className="mt-6 pt-4 border-t border-border/50 space-y-4">
+      <h4 className="font-semibold text-sm">
+        {language === "th" ? "ความเห็น" : language === "zh" ? "评论" : "Comments"} ({replies.length})
+      </h4>
+
+      {repliesLoading ? (
+        <div className="flex justify-center py-4">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : replies.length > 0 ? (
+        <div className="space-y-3 bg-muted/20 rounded-lg p-3">
+          {replies.map((reply) => (
+            <div key={reply.id} className="flex gap-3 text-sm">
+              {/* Reply Avatar */}
+              {reply.user_avatar ? (
+                <img
+                  src={reply.user_avatar}
+                  alt={reply.user_name || "User"}
+                  className="w-8 h-8 rounded-full object-cover border border-border/50 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                  {reply.user_name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="font-semibold text-xs text-primary">
+                  {reply.user_name || "Anonymous"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {format(new Date(reply.created_at), "MMM dd, yyyy HH:mm")}
+                </p>
+                <p className="text-sm mt-1 text-foreground">{reply.content}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground italic">
+          {language === "th" ? "ยังไม่มีความเห็น" : language === "zh" ? "暂无评论" : "No comments yet"}
+        </p>
+      )}
+
+      {isAuthenticated ? (
+        <div className="flex gap-2">
+          <Textarea
+            value={localReply}
+            onChange={(e) => setLocalReply(e.target.value)}
+            placeholder={language === "th" ? "เพิ่มความเห็น..." : language === "zh" ? "添加评论..." : "Add a comment..."}
+            rows={2}
+            maxLength={300}
+            className="border-2 text-sm"
+          />
+          <Button
+            onClick={handleSubmit}
+            disabled={submitReplyMutation.isPending}
+            size="sm"
+            className="gap-2 self-end"
+          >
+            {submitReplyMutation.isPending ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                {language === "th" ? "ส่ง..." : "Sending..."}
+              </>
+            ) : (
+              <>
+                <Send className="w-3 h-3" />
+                {language === "th" ? "ส่ง" : "Send"}
+              </>
+            )}
+          </Button>
+        </div>
+      ) : (
+        <Button
+          onClick={() => navigate("/auth")}
+          variant="outline"
+          size="sm"
+          className="w-full"
+        >
+          {language === "th" ? "เข้าสู่ระบบเพื่อเพิ่มความเห็น" : language === "zh" ? "登录后评论" : "Login to comment"}
+        </Button>
+      )}
+    </div>
+  );
+};
+
+// ---- Main Reviews Component ----
 const Reviews = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -71,12 +245,10 @@ const Reviews = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
-  const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     rating: 5,
     review_text_en: "",
     review_text_th: "",
-    avatar: "😊",
   });
 
   // Manual refresh handler
@@ -95,43 +267,31 @@ const Reviews = () => {
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       
-      if (error) {
-        console.error("Error fetching reviews:", error);
-        throw error;
+      if (error) throw error;
+      
+      // Get unique user IDs to batch fetch profiles
+      const userIds = [...new Set((data || []).map(r => r.user_id).filter(Boolean))];
+      
+      let profileMap = new Map<string, { display_name: string; avatar_url: string | null }>();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url")
+          .in("id", userIds as string[]);
+        
+        (profiles || []).forEach((p: any) => {
+          profileMap.set(p.id, { display_name: p.display_name, avatar_url: p.avatar_url });
+        });
       }
       
-      // Fetch user information for reviews with user_id
-      const reviewsWithUsers = await Promise.all(
-        (data || []).map(async (review) => {
-          let user_name: string | undefined;
-          
-          if (review.user_id) {
-            try {
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("display_name")
-                .eq("id", review.user_id)
-                .single();
-              
-              if (profile) {
-                user_name = profile.display_name;
-              }
-            } catch (err) {
-              console.log("[Reviews] Could not fetch user profile:", err);
-            }
-          }
-          
-          return {
-            ...review,
-            helpful_count: review.helpful_count || 0,
-            user_name,
-          };
-        })
-      );
-      
-      return reviewsWithUsers as Review[];
+      return (data || []).map(review => ({
+        ...review,
+        helpful_count: review.helpful_count || 0,
+        user_name: review.user_id ? profileMap.get(review.user_id)?.display_name : undefined,
+        user_avatar: review.user_id ? profileMap.get(review.user_id)?.avatar_url || null : null,
+      })) as Review[];
     },
-    staleTime: 30 * 1000, // 30 seconds cache
+    staleTime: 30 * 1000,
     retry: 1,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
@@ -142,20 +302,12 @@ const Reviews = () => {
       .channel("reviews:is_active=true")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "reviews",
-        },
-        (payload) => {
-          console.log("[Reviews] Real-time update received:", payload);
-          // Invalidate the reviews query to refetch when any changes occur
+        { event: "*", schema: "public", table: "reviews" },
+        () => {
           queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
         }
       )
-      .subscribe((status) => {
-        console.log("[Reviews] Subscription status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -163,206 +315,76 @@ const Reviews = () => {
   }, [queryClient]);
 
   // Fetch user's likes
-  const { data: userLikes = [], isLoading: userLikesLoading } = useQuery({
+  const { data: userLikes = [] } = useQuery({
     queryKey: ["user-review-likes", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
-      try {
-        const { data, error } = await supabase
-          .from("review_likes")
-          .select("review_id")
-          .eq("user_id", user.id);
-        
-        if (error) {
-          console.error("Error fetching user likes:", error);
-          throw error;
-        }
-        
-        return data?.map(like => like.review_id) || [];
-      } catch (err) {
-        console.error("Error in userLikes query:", err);
-        return [];
-      }
+      const { data, error } = await supabase
+        .from("review_likes")
+        .select("review_id")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data?.map(like => like.review_id) || [];
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
     retry: 1,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const toggleLikeMutation = useMutation({
     mutationFn: async ({ reviewId, isLiked }: { reviewId: string; isLiked: boolean }) => {
-      if (!user?.id) {
-        throw new Error("Must be logged in");
-      }
-
-      try {
-        if (isLiked) {
-          // Unlike
-          const { error } = await supabase
-            .from("review_likes")
-            .delete()
-            .eq("review_id", reviewId)
-            .eq("user_id", user.id);
-          
-          if (error) throw error;
-        } else {
-          // Like
-          const { error } = await supabase
-            .from("review_likes")
-            .insert({
-              review_id: reviewId,
-              user_id: user.id,
-            });
-          
-          if (error) throw error;
-        }
-      } catch (err) {
-        console.error("Error in toggleLikeMutation:", err);
-        throw err;
+      if (!user?.id) throw new Error("Must be logged in");
+      if (isLiked) {
+        const { error } = await supabase.from("review_likes").delete().eq("review_id", reviewId).eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("review_likes").insert({ review_id: reviewId, user_id: user.id });
+        if (error) throw error;
       }
     },
     onSuccess: () => {
-      // Invalidate both the reviews list and user's likes cache
-      // Use exact: false for user-review-likes to match any with that prefix (includes user.id)
       queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["user-review-likes"], exact: false });
     },
     onError: (error: any) => {
-      console.error("Error toggling like:", error);
       if (error.message === "Must be logged in") {
-        sweetAlert.error(
-          language === "th" 
-            ? "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ" 
-            : language === "zh"
-            ? "请登录后点赞"
-            : "Please login to like reviews"
-        );
+        sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ" : "Please login to like reviews");
       } else {
-        sweetAlert.error(
-          language === "th" 
-            ? "เกิดข้อผิดพลาด: " + (error.message || "ไม่ทราบข้อผิดพลาด") 
-            : language === "zh"
-            ? "发生错误: " + (error.message || "未知错误")
-            : "An error occurred: " + (error.message || "Unknown error")
-        );
+        sweetAlert.error(error.message || "An error occurred");
       }
-    },
-  });
-
-  const submitReplyMutation = useMutation({
-    mutationFn: async ({ reviewId, content }: { reviewId: string; content: string }) => {
-      if (!user?.id) {
-        throw new Error("Must be logged in");
-      }
-      
-      const trimmedContent = content.trim();
-      if (trimmedContent.length < 2) {
-        throw new Error(language === "th" ? "ความเห็นต้องมีอย่างน้อย 2 ตัวอักษร" : "Reply must be at least 2 characters");
-      }
-      
-      const { error } = await (supabase as any)
-        .from("review_replies")
-        .insert({
-          review_id: reviewId,
-          user_id: user.id,
-          content: trimmedContent,
-        });
-      
-      if (error) throw error;
-    },
-    onSuccess: (_, variables) => {
-      // Clear the reply input for that review
-      setReplyContent(prev => ({
-        ...prev,
-        [variables.reviewId]: ""
-      }));
-      
-      // Invalidate both the reviews cache and the specific review-replies cache
-      queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["review-replies", variables.reviewId], exact: true });
-      
-      sweetAlert.success(
-        language === "th" 
-          ? "ส่งความเห็นสำเร็จ!" 
-          : language === "zh"
-          ? "评论已提交！"
-          : "Reply submitted!"
-      );
-    },
-    onError: (error: any) => {
-      console.error("Error submitting reply:", error);
-      sweetAlert.error(
-        language === "th" 
-          ? "เกิดข้อผิดพลาด: " + (error.message || "ไม่ทราบข้อผิดพลาด") 
-          : language === "zh"
-          ? "发生错误: " + (error.message || "未知错误")
-          : "An error occurred: " + (error.message || "Unknown error")
-      );
     },
   });
 
   const submitReviewMutation = useMutation({
     mutationFn: async (reviewData: typeof formData) => {
-      // Validate
       const validated = reviewSchema.parse(reviewData);
-      
-      // Get user's registered name from profile with fallback
       const userName = user?.name || user?.email?.split('@')[0] || 'User';
       
       let imageUrl: string | null = null;
-
-      // Upload image if provided
       if (reviewImage) {
         setUploadingImage(true);
         const fileExt = reviewImage.name.split('.').pop();
         const fileName = `${user?.id}_${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('reviews')
-          .upload(fileName, reviewImage, { upsert: true });
-        
-        if (uploadError) {
-          console.error('Image upload error:', uploadError);
-          throw new Error(language === 'th' ? 'อัพโหลดรูปภาพไม่สำเร็จ' : 'Failed to upload image');
-        }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('reviews')
-          .getPublicUrl(fileName);
-        
+        const { error: uploadError } = await supabase.storage.from('reviews').upload(fileName, reviewImage, { upsert: true });
+        if (uploadError) throw new Error(language === 'th' ? 'อัพโหลดรูปภาพไม่สำเร็จ' : 'Failed to upload image');
+        const { data: publicUrlData } = supabase.storage.from('reviews').getPublicUrl(fileName);
         imageUrl = publicUrlData.publicUrl;
       }
 
-      const { error } = await supabase
-        .from("reviews")
-        .insert({
-          customer_name: userName,
-          rating: validated.rating,
-          review_text_en: validated.review_text_en,
-          review_text_th: validated.review_text_th,
-          user_id: user?.id || null,
-          image_url: imageUrl,
-          is_active: false, // Pending admin approval
-        });
-      
+      const { error } = await supabase.from("reviews").insert({
+        customer_name: userName,
+        rating: validated.rating,
+        review_text_en: validated.review_text_en,
+        review_text_th: validated.review_text_th,
+        user_id: user?.id || null,
+        image_url: imageUrl,
+        is_active: false,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      sweetAlert.success(
-        language === "th" 
-          ? "ส่งรีวิวสำเร็จ! รอการอนุมัติจากผู้ดูแล" 
-          : language === "zh"
-          ? "评论已提交！等待管理员审核"
-          : "Review submitted! Pending admin approval"
-      );
-      setFormData({
-        rating: 5,
-        review_text_en: "",
-        review_text_th: "",
-        avatar: "😊",
-      });
+      sweetAlert.success(language === "th" ? "ส่งรีวิวสำเร็จ! รอการอนุมัติจากผู้ดูแล" : "Review submitted! Pending admin approval");
+      setFormData({ rating: 5, review_text_en: "", review_text_th: "" });
       setReviewImage(null);
       setReviewImagePreview(null);
       setUploadingImage(false);
@@ -370,19 +392,10 @@ const Reviews = () => {
     },
     onError: (error: any) => {
       setUploadingImage(false);
-      console.error("Error submitting review:", error);
       if (error instanceof z.ZodError) {
         sweetAlert.error(error.errors[0].message);
       } else {
-        // Show actual error message if available
-        const errorMessage = error?.message || (
-          language === "th" 
-            ? "เกิดข้อผิดพลาดในการส่งรีวิว" 
-            : language === "zh"
-            ? "提交评论失败"
-            : "Failed to submit review"
-        );
-        sweetAlert.error(errorMessage);
+        sweetAlert.error(error?.message || (language === "th" ? "เกิดข้อผิดพลาดในการส่งรีวิว" : "Failed to submit review"));
       }
     },
   });
@@ -390,8 +403,6 @@ const Reviews = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    // Validate file type and size (max 5MB)
     if (!file.type.startsWith('image/')) {
       sweetAlert.error(language === 'th' ? 'กรุณาเลือกไฟล์รูปภาพเท่านั้น' : 'Please select an image file');
       return;
@@ -400,7 +411,6 @@ const Reviews = () => {
       sweetAlert.error(language === 'th' ? 'รูปภาพต้องมีขนาดไม่เกิน 5MB' : 'Image must be less than 5MB');
       return;
     }
-    
     setReviewImage(file);
     const reader = new FileReader();
     reader.onloadend = () => setReviewImagePreview(reader.result as string);
@@ -420,148 +430,28 @@ const Reviews = () => {
   const toggleExpandReview = (reviewId: string) => {
     setExpandedReviews(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(reviewId)) {
-        newSet.delete(reviewId);
-      } else {
-        newSet.add(reviewId);
-      }
+      if (newSet.has(reviewId)) newSet.delete(reviewId);
+      else newSet.add(reviewId);
       return newSet;
     });
   };
 
-  const handleSubmitReply = (reviewId: string) => {
-    const content = replyContent[reviewId]?.trim();
-    if (!content) {
-      sweetAlert.error(language === "th" ? "กรุณากรอกความเห็น" : "Please enter a reply");
-      return;
-    }
-    submitReplyMutation.mutate({ reviewId, content });
-  };
+  const renderStars = (rating: number, interactive: boolean = false, onRate?: (rating: number) => void) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => interactive && onRate && onRate(star)}
+          disabled={!interactive}
+          className={`${interactive ? "cursor-pointer hover:scale-110 transition-transform" : "cursor-default"}`}
+        >
+          <Star className={`w-5 h-5 ${star <= rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />
+        </button>
+      ))}
+    </div>
+  );
 
-  // Hook to fetch replies for a review
-  const useReviewReplies = (reviewId: string) => {
-    return useQuery({
-      queryKey: ["review-replies", reviewId],
-      queryFn: async () => {
-        try {
-          // Try joining with profiles table via foreign key
-          const { data, error } = await (supabase as any)
-            .from("review_replies")
-            .select(
-              `
-                id,
-                review_id,
-                user_id,
-                content,
-                created_at,
-                profiles:user_id (
-                  display_name
-                )
-              `
-            )
-            .eq("review_id", reviewId)
-            .order("created_at", { ascending: true });
-          
-          if (error) {
-            console.error("[ReviewReplies] Join query error:", error);
-            // Fallback to batch fetch if join fails
-            throw error;
-          }
-          
-          if (!data) {
-            return [];
-          }
-          
-          // Map replies with user names from the join
-          return (data || []).map((reply: any) => ({
-            id: reply.id,
-            review_id: reply.review_id,
-            user_id: reply.user_id,
-            content: reply.content,
-            created_at: reply.created_at,
-            user_name: reply.profiles?.[0]?.display_name || reply.profiles?.display_name,
-          })) as ReviewReply[];
-        } catch (joinError) {
-          console.warn("[ReviewReplies] Join failed, using batch fetch:", joinError);
-          
-          // Fallback: Batch fetch approach
-          const { data: repliesData, error: repliesError } = await (supabase as any)
-            .from("review_replies")
-            .select("*")
-            .eq("review_id", reviewId)
-            .order("created_at", { ascending: true });
-          
-          if (repliesError) throw repliesError;
-          if (!repliesData || repliesData.length === 0) return [];
-          
-          // Get unique user IDs
-          const userIds = [...new Set(repliesData.map((r: any) => r.user_id).filter(Boolean))];
-          
-          if (userIds.length === 0) {
-            return repliesData.map((r: any) => ({
-              ...r,
-              user_name: undefined,
-            })) as ReviewReply[];
-          }
-          
-          // Batch fetch all user profiles at once
-          const { data: profiles, error: profilesError } = await supabase
-            .from("profiles")
-            .select("id, display_name")
-            .in("id", userIds as string[]);
-          
-          if (profilesError) {
-            console.warn("[ReviewReplies] Profile fetch error:", profilesError);
-          }
-          
-          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p.display_name]));
-          
-          // Map replies with user names from the batch fetch
-          return (repliesData || []).map((reply: any) => ({
-            id: reply.id,
-            review_id: reply.review_id,
-            user_id: reply.user_id,
-            content: reply.content,
-            created_at: reply.created_at,
-            user_name: profileMap.get(reply.user_id),
-          })) as ReviewReply[];
-        }
-      },
-      staleTime: 15 * 1000,
-      retry: 1,
-      enabled: !!reviewId,
-    });
-  };
-
-  const filteredReviews = filterRating 
-    ? reviews.filter(review => review.rating === filterRating)
-    : reviews;
-
-  const renderStars = (rating: number, interactive: boolean = false, onRate?: (rating: number) => void) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => interactive && onRate && onRate(star)}
-            disabled={!interactive}
-            className={`${interactive ? "cursor-pointer hover:scale-110 transition-transform" : "cursor-default"}`}
-          >
-            <Star
-              className={`w-5 h-5 ${
-                star <= rating
-                  ? "fill-yellow-500 text-yellow-500"
-                  : "text-muted-foreground"
-              }`}
-            />
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  // Calculate stats for header
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : 0;
@@ -574,87 +464,25 @@ const Reviews = () => {
     1: reviews.filter(r => r.rating === 1).length,
   };
 
+  const filteredReviews = filterRating 
+    ? reviews.filter(review => review.rating === filterRating)
+    : reviews;
 
-  // Inline component for rendering replies
-  const RepliesSection = ({ reviewId }: { reviewId: string }) => {
-    const { data: replies = [], isLoading: repliesLoading } = useReviewReplies(reviewId);
-    
+  // Helper to render user avatar
+  const renderUserAvatar = (avatarUrl?: string | null, name?: string, size: "sm" | "md" = "sm") => {
+    const sizeClasses = size === "md" ? "w-10 h-10 text-sm" : "w-8 h-8 text-xs";
+    if (avatarUrl) {
+      return (
+        <img
+          src={avatarUrl}
+          alt={name || "User"}
+          className={`${sizeClasses} rounded-full object-cover border border-border/50 flex-shrink-0`}
+        />
+      );
+    }
     return (
-      <div className="mt-6 pt-4 border-t border-border/50 space-y-4">
-        <h4 className="font-semibold text-sm">
-          {language === "th" ? "ความเห็น" : language === "zh" ? "评论" : "Comments"} ({replies.length})
-        </h4>
-
-        {/* Existing Replies */}
-        {repliesLoading ? (
-          <div className="flex justify-center py-4">
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          </div>
-        ) : replies.length > 0 ? (
-          <div className="space-y-3 bg-muted/20 rounded-lg p-3">
-            {replies.map((reply) => (
-              <div key={reply.id} className="flex gap-3 text-sm">
-                <div className="flex-1">
-                  <p className="font-semibold text-xs text-primary">
-                    {reply.user_name || "Anonymous"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {format(new Date(reply.created_at), "MMM dd, yyyy HH:mm")}
-                  </p>
-                  <p className="text-sm mt-1 text-foreground">{reply.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground italic">
-            {language === "th" ? "ยังไม่มีความเห็น" : language === "zh" ? "暂无评论" : "No comments yet"}
-          </p>
-        )}
-
-        {/* Reply Form */}
-        {isAuthenticated ? (
-          <div className="flex gap-2">
-            <Textarea
-              value={replyContent[reviewId] || ""}
-              onChange={(e) => setReplyContent(prev => ({
-                ...prev,
-                [reviewId]: e.target.value
-              }))}
-              placeholder={language === "th" ? "เพิ่มความเห็น..." : language === "zh" ? "添加评论..." : "Add a comment..."}
-              rows={2}
-              maxLength={300}
-              className="border-2 text-sm"
-            />
-            <Button
-              onClick={() => handleSubmitReply(reviewId)}
-              disabled={submitReplyMutation.isPending}
-              size="sm"
-              className="gap-2 self-end"
-            >
-              {submitReplyMutation.isPending ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  {language === "th" ? "ส่ง..." : "Sending..."}
-                </>
-              ) : (
-                <>
-                  <Send className="w-3 h-3" />
-                  {language === "th" ? "ส่ง" : "Send"}
-                </>
-              )}
-            </Button>
-          </div>
-        ) : (
-          <Button
-            onClick={() => navigate("/auth")}
-            variant="outline"
-            size="sm"
-            className="w-full"
-          >
-            {language === "th" ? "เข้าสู่ระบบเพื่อเพิ่มความเห็น" : language === "zh" ? "登录后评论" : "Login to comment"}
-          </Button>
-        )}
+      <div className={`${sizeClasses} rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary flex-shrink-0`}>
+        {name?.charAt(0)?.toUpperCase() || "U"}
       </div>
     );
   };
@@ -757,7 +585,6 @@ const Reviews = () => {
                     </div>
                   </div>
 
-
                   <div>
                     <Label className="font-semibold mb-3 block">
                       {language === "th" ? "ให้คะแนน" : language === "zh" ? "给予评分" : "Rate Your Experience"}
@@ -777,15 +604,13 @@ const Reviews = () => {
                       id="review_text_th"
                       value={formData.review_text_th}
                       onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
-                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาไทย..." : language === "zh" ? "用泰语撰写您的评价..." : "Write your review in Thai..."}
+                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาไทย..." : "Write your review in Thai..."}
                       rows={4}
                       maxLength={500}
                       required
                       className="border-2"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formData.review_text_th.length}/500
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{formData.review_text_th.length}/500</p>
                   </div>
 
                   <div>
@@ -796,15 +621,13 @@ const Reviews = () => {
                       id="review_text_en"
                       value={formData.review_text_en}
                       onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
-                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาอังกฤษ..." : language === "zh" ? "用英语撰写您的评价..." : "Write your review in English..."}
+                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาอังกฤษ..." : "Write your review in English..."}
                       rows={4}
                       maxLength={500}
                       required
                       className="border-2"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formData.review_text_en.length}/500
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{formData.review_text_en.length}/500</p>
                   </div>
 
                   {/* Image Upload */}
@@ -814,18 +637,8 @@ const Reviews = () => {
                     </Label>
                     {reviewImagePreview ? (
                       <div className="relative inline-block">
-                        <img 
-                          src={reviewImagePreview} 
-                          alt="Preview" 
-                          className="w-32 h-32 object-cover rounded-lg border-2 border-border"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                          onClick={removeImage}
-                        >
+                        <img src={reviewImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg border-2 border-border" />
+                        <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={removeImage}>
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
@@ -833,14 +646,9 @@ const Reviews = () => {
                       <label className="flex items-center gap-3 cursor-pointer border-2 border-dashed border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
                         <ImagePlus className="h-6 w-6 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
-                          {language === "th" ? "คลิกเพื่อเลือกรูปภาพ (สูงสุด 5MB)" : language === "zh" ? "点击选择图片（最大5MB）" : "Click to select image (max 5MB)"}
+                          {language === "th" ? "คลิกเพื่อเลือกรูปภาพ (สูงสุด 5MB)" : "Click to select image (max 5MB)"}
                         </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageChange}
-                        />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                       </label>
                     )}
                   </div>
@@ -877,21 +685,13 @@ const Reviews = () => {
               <CardContent className="pt-8 text-center">
                 <Send className="w-12 h-12 text-orange-400 dark:text-orange-300 mx-auto mb-4 opacity-70" />
                 <p className="text-lg font-semibold text-foreground mb-4">
-                  {language === "th" 
-                    ? "ต้องการแชร์ประสบการณ์ของคุณ?" 
-                    : language === "zh"
-                    ? "想分享您的体验吗？"
-                    : "Want to share your experience?"}
+                  {language === "th" ? "ต้องการแชร์ประสบการณ์ของคุณ?" : "Want to share your experience?"}
                 </p>
                 <p className="text-muted-foreground mb-6">
-                  {language === "th" 
-                    ? "กรุณาเข้าสู่ระบบเพื่อเขียนรีวิว" 
-                    : language === "zh"
-                    ? "请登录后撰写评价"
-                    : "Please login to write a review"}
+                  {language === "th" ? "กรุณาเข้าสู่ระบบเพื่อเขียนรีวิว" : "Please login to write a review"}
                 </p>
                 <Button onClick={() => navigate("/auth")} size="lg" className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold">
-                  {language === "th" ? "เข้าสู่ระบบ" : language === "zh" ? "登录" : "Login Now"}
+                  {language === "th" ? "เข้าสู่ระบบ" : "Login Now"}
                 </Button>
               </CardContent>
             </Card>
@@ -916,18 +716,18 @@ const Reviews = () => {
                     key={review.id}
                     className="relative overflow-hidden border-2 border-amber-200 dark:border-amber-800/70 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-yellow-950/40 shadow-xl hover:shadow-2xl transition-all"
                   >
-                    {/* Popular Badge */}
                     <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-600 to-orange-500 text-white px-4 py-2 rounded-bl-lg font-semibold text-sm shadow-md">
                       #{index + 1}
                     </div>
                     
                     <CardContent className="pt-6">
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-3 mb-4">
+                        {renderUserAvatar(review.user_avatar, review.user_name || review.customer_name, "md")}
                         <div className="flex-1">
                           <h3 className="font-bold text-lg text-foreground">{review.customer_name}</h3>
                           {review.user_name && (
                             <p className="text-xs text-primary/80 font-semibold">
-                              👤 {review.user_name}
+                              {review.user_name}
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
@@ -939,11 +739,7 @@ const Reviews = () => {
                       
                       {review.image_url && (
                         <div className="mb-4 rounded-lg overflow-hidden border border-border">
-                          <img 
-                            src={review.image_url} 
-                            alt={review.customer_name}
-                            className="w-full h-40 object-cover"
-                          />
+                          <img src={review.image_url} alt={review.customer_name} className="w-full h-40 object-cover" />
                         </div>
                       )}
 
@@ -951,13 +747,12 @@ const Reviews = () => {
                         {language === "th" ? review.review_text_th : review.review_text_en}
                       </p>
 
-                      {/* Helpful Count */}
                       <div className="flex items-center justify-between pt-4 border-t border-amber-200 dark:border-amber-800/50">
                         <div className="flex items-center gap-2">
                           <ThumbsUp className="w-4 h-4 fill-amber-500 text-amber-500" />
                           <span className="font-semibold text-amber-600 dark:text-amber-400">{review.helpful_count}</span>
                           <span className="text-xs text-muted-foreground">
-                            {language === "th" ? "คนกดไลค์" : language === "zh" ? "点赞" : "likes"}
+                            {language === "th" ? "คนกดไลค์" : "likes"}
                           </span>
                         </div>
                         <Button
@@ -981,7 +776,7 @@ const Reviews = () => {
           {/* Filter Section */}
           <div className="mb-12 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950/40 dark:via-amber-950/40 dark:to-yellow-950/40 rounded-2xl p-8 border-2 border-amber-100 dark:border-amber-900/50 shadow-lg">
             <h3 className="text-3xl md:text-4xl font-black mb-8 tracking-tight text-foreground">
-              {language === "th" ? "🔍 ค้นหารีวิวตามคะแนน" : language === "zh" ? "🔍 按评分筛选" : "🔍 Filter by Rating"}
+              {language === "th" ? "🔍 ค้นหารีวิวตามคะแนน" : "🔍 Filter by Rating"}
             </h3>
             <Tabs 
               value={filterRating?.toString() || "all"} 
@@ -993,7 +788,7 @@ const Reviews = () => {
                   value="all"
                   className="text-sm md:text-base font-bold py-3 px-4 rounded-lg border-2 border-orange-200 dark:border-orange-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:border-orange-600 hover:border-orange-400 dark:hover:border-orange-500 transition-all"
                 >
-                  {language === "th" ? "ทั้งหมด" : language === "zh" ? "全部" : "All"}
+                  {language === "th" ? "ทั้งหมด" : "All"}
                 </TabsTrigger>
                 {[5, 4, 3, 2, 1].map((rating) => (
                   <TabsTrigger 
@@ -1008,14 +803,13 @@ const Reviews = () => {
               </TabsList>
             </Tabs>
             
-            {/* Rating Distribution Bar */}
             {reviews.length > 0 && (
               <div className="mt-8 space-y-3 bg-white dark:bg-amber-950/20 rounded-xl p-6 border-2 border-orange-100 dark:border-orange-900/50 shadow-md">
                 <p className="text-sm font-semibold text-foreground mb-4">
-                  {language === "th" ? "📊 การกระจายของคะแนน" : language === "zh" ? "📊 评分分布" : "📊 Rating Distribution"}
+                  {language === "th" ? "📊 การกระจายของคะแนน" : "📊 Rating Distribution"}
                 </p>
                 {[5, 4, 3, 2, 1].map((rating) => {
-                  const count = reviewsByRating[rating];
+                  const count = reviewsByRating[rating as keyof typeof reviewsByRating];
                   const percentage = (count / reviews.length) * 100;
                   const colors = {
                     5: 'from-emerald-500 to-teal-500',
@@ -1044,7 +838,7 @@ const Reviews = () => {
                       </div>
                       <div className="text-right w-16 shrink-0">
                         <span className="font-bold text-foreground text-lg">{count}</span>
-                        <p className="text-xs text-muted-foreground">{((percentage)).toFixed(0)}%</p>
+                        <p className="text-xs text-muted-foreground">{percentage.toFixed(0)}%</p>
                       </div>
                     </div>
                   );
@@ -1057,12 +851,8 @@ const Reviews = () => {
           <div className="mb-8">
             <h2 className="text-3xl md:text-4xl font-black mb-6 tracking-tight">
               {language === "th" 
-                ? filterRating 
-                  ? `รีวิว ${filterRating} ดาว` 
-                  : "ทั้งหมด"
-                : filterRating
-                  ? `${filterRating} Star Reviews`
-                  : "All Reviews"}
+                ? filterRating ? `รีวิว ${filterRating} ดาว` : "ทั้งหมด"
+                : filterRating ? `${filterRating} Star Reviews` : "All Reviews"}
             </h2>
             
             {isLoading ? (
@@ -1073,12 +863,8 @@ const Reviews = () => {
               <div className="text-center py-20">
                 <p className="text-muted-foreground text-lg">
                   {language === "th" 
-                    ? filterRating 
-                      ? `ไม่มีรีวิว ${filterRating} ดาว` 
-                      : "ยังไม่มีรีวิว"
-                    : filterRating
-                      ? `No ${filterRating}-star reviews`
-                      : "No reviews yet"}
+                    ? filterRating ? `ไม่มีรีวิว ${filterRating} ดาว` : "ยังไม่มีรีวิว"
+                    : filterRating ? `No ${filterRating}-star reviews` : "No reviews yet"}
                 </p>
               </div>
             ) : (
@@ -1098,20 +884,20 @@ const Reviews = () => {
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <CardContent className="pt-6">
-                        {/* Popular Badge */}
                         {isPopular && (
                           <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-md">
                             <ThumbsUp className="w-3 h-3 fill-current" />
-                            {language === "th" ? "ยอดนิยม" : language === "zh" ? "热门" : "Popular"}
+                            {language === "th" ? "ยอดนิยม" : "Popular"}
                           </div>
                         )}
                         
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                          {renderUserAvatar(review.user_avatar, review.user_name || review.customer_name, "md")}
                           <div className="flex-1">
                             <h3 className="font-semibold text-lg text-foreground">{review.customer_name}</h3>
                             {review.user_name && (
                               <p className="text-xs text-primary/80 font-semibold">
-                                👤 {review.user_name}
+                                {review.user_name}
                               </p>
                             )}
                             <p className="text-sm text-muted-foreground mt-1">
@@ -1120,7 +906,6 @@ const Reviews = () => {
                           </div>
                         </div>
 
-                        {/* Star Rating */}
                         <div className="mb-4 flex items-center gap-2">
                           {renderStars(review.rating)}
                           <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
@@ -1130,11 +915,7 @@ const Reviews = () => {
                         
                         {review.image_url && (
                           <div className="mb-4 rounded-lg overflow-hidden border border-border">
-                            <img 
-                              src={review.image_url} 
-                              alt={review.customer_name}
-                              className="w-full h-40 object-cover hover:scale-105 transition-transform"
-                            />
+                            <img src={review.image_url} alt={review.customer_name} className="w-full h-40 object-cover hover:scale-105 transition-transform" />
                           </div>
                         )}
 
@@ -1142,7 +923,6 @@ const Reviews = () => {
                           {language === "th" ? review.review_text_th : review.review_text_en}
                         </p>
 
-                        {/* Helpful Button with Count */}
                         <div className="flex items-center justify-between pt-4 border-t border-border">
                           <div className="flex items-center gap-2">
                             <ThumbsUp className={`w-4 h-4 ${review.helpful_count > 0 ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground'}`} />
@@ -1159,7 +939,7 @@ const Reviews = () => {
                               className="gap-2"
                             >
                               <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-                              {language === "th" ? "เป็นประโยชน์" : language === "zh" ? "有帮助" : "Helpful"}
+                              {language === "th" ? "เป็นประโยชน์" : "Helpful"}
                             </Button>
                             <Button
                               variant="outline"
@@ -1168,19 +948,27 @@ const Reviews = () => {
                               className="gap-2"
                             >
                               <MessageCircle className="w-4 h-4" />
-                              {language === "th" ? "ความเห็น" : language === "zh" ? "评论" : "Comments"}
+                              {language === "th" ? "ความเห็น" : "Comments"}
                             </Button>
                           </div>
                         </div>
                         
                         {!isAuthenticated && (
                           <p className="text-xs text-muted-foreground mt-3 text-center">
-                            {language === "th" ? "เข้าสู่ระบบเพื่อกดถูกใจ" : language === "zh" ? "登录后可点赞" : "Login to like"}
+                            {language === "th" ? "เข้าสู่ระบบเพื่อกดถูกใจ" : "Login to like"}
                           </p>
                         )}
 
-                        {/* Replies Section */}
-                        {expandedReviews.has(review.id) && <RepliesSection reviewId={review.id} />}
+                        {/* Replies Section - extracted component */}
+                        {expandedReviews.has(review.id) && (
+                          <RepliesSection
+                            reviewId={review.id}
+                            language={language}
+                            isAuthenticated={isAuthenticated}
+                            user={user}
+                            navigate={navigate}
+                          />
+                        )}
                       </CardContent>
                     </Card>
                   );
