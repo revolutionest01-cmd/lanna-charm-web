@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, HelpCircle, MessageCircle, X, ChevronLeft } from "lucide-react";
+import { Phone, HelpCircle, MessageCircle, X, ChevronLeft, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 import PricingChatbot from "./PricingChatbot";
 import QuickInfoPopup from "./QuickInfoPopup";
+import LiveChatWidget from "./LiveChatWidget";
 
 const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = useState(false);
+  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
   const { language } = useLanguage();
 
   // Hide on scroll down, show on scroll up (like TabBar)
@@ -52,6 +54,13 @@ const FloatingChatButton = () => {
       color: 'text-foreground',
       bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
       onClick: () => { setIsChatOpen(true); setIsOpen(false); },
+    },
+    {
+      icon: Headphones,
+      label: 'Live Chat',
+      color: 'text-foreground',
+      bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
+      onClick: () => { setIsLiveChatOpen(true); setIsOpen(false); },
     },
   ];
 
@@ -140,6 +149,7 @@ const FloatingChatButton = () => {
 
       <PricingChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <QuickInfoPopup isOpen={isQuickInfoOpen} onClose={() => setIsQuickInfoOpen(false)} />
+      <LiveChatWidget isOpen={isLiveChatOpen} onClose={() => setIsLiveChatOpen(false)} />
     </>
   );
 };
