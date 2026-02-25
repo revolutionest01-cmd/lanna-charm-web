@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ interface FeaturePanel {
 const FeaturesSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const { data: panels = [], isLoading } = useQuery({
     queryKey: ["feature-panels"],
@@ -49,7 +49,14 @@ const FeaturesSection = () => {
   if (panels.length === 0) return null;
 
   return (
-    <section id="features" className="py-16 sm:py-24 bg-gradient-to-b from-background to-card relative overflow-hidden">
+    <>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      <section id="features" className="py-16 sm:py-24 bg-gradient-to-b from-background to-card relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-20 left-10 w-48 sm:w-72 h-48 sm:h-72 bg-primary/5 rounded-full blur-3xl" />
@@ -84,18 +91,21 @@ const FeaturesSection = () => {
             return (
               <div
                 key={panel.id}
-                onClick={() => setActiveIndex(index)}
+                onMouseEnter={() => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(null)}
                 className={cn(
-                  "relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                  isActive ? "flex-[4]" : "flex-[0.8]"
+                  "relative cursor-pointer overflow-hidden rounded-2xl",
+                  isActive ? "flex-[5]" : "flex-1"
                 )}
+                style={{ transition: "flex 0.4s ease-in-out" }}
               >
                 {/* Background Image */}
                 {panel.image_url ? (
                   <img
                     src={panel.image_url}
                     alt={title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ transition: "transform 0.4s ease-in-out", transform: isActive ? "scale(1.05)" : "scale(1)" }}
                     loading="lazy"
                   />
                 ) : (
@@ -103,30 +113,22 @@ const FeaturesSection = () => {
                 )}
 
                 {/* Overlay */}
-                <div className={cn(
-                  "absolute inset-0 transition-all duration-500",
-                  isActive
-                    ? "bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent"
-                    : "bg-foreground/50"
-                )} />
-
-                {/* Logo (shown on collapsed panels) */}
-                {!isActive && panel.logo_url && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 transition-opacity duration-500">
-                    <img
-                      src={panel.logo_url}
-                      alt=""
-                      className="w-10 h-10 object-contain rounded-lg bg-background/90 p-1.5 shadow-md"
-                    />
-                  </div>
-                )}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    transition: "background 0.4s ease-in-out",
+                    background: isActive
+                      ? "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)"
+                      : "rgba(0,0,0,0.45)",
+                  }}
+                />
 
                 {/* Vertical title on collapsed panels */}
                 {!isActive && (
                   <div className="absolute inset-0 flex items-center justify-center z-10">
                     <span
                       className="text-background font-semibold text-sm tracking-wider whitespace-nowrap"
-                      style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+                      style={{ writingMode: "vertical-lr", transform: "rotate(180deg)", transition: "opacity 0.4s ease-in-out" }}
                     >
                       {title}
                     </span>
@@ -140,14 +142,21 @@ const FeaturesSection = () => {
                       <img
                         src={panel.logo_url}
                         alt=""
-                        className="w-14 h-14 object-contain rounded-xl bg-background/90 p-2 shadow-lg mb-4 animate-fade-in"
+                        className="w-14 h-14 object-contain rounded-xl bg-background/90 p-2 shadow-lg mb-4"
+                        style={{ animation: "fadeInUp 0.4s ease-in-out" }}
                       />
                     )}
-                    <h3 className="text-2xl lg:text-3xl font-bold text-background font-serif mb-2 animate-fade-in">
+                    <h3
+                      className="text-2xl lg:text-3xl font-bold text-background font-serif mb-2"
+                      style={{ animation: "fadeInUp 0.3s ease-in-out" }}
+                    >
                       {title}
                     </h3>
                     {subtitle && (
-                      <p className="text-background/80 text-sm lg:text-base max-w-md animate-fade-in">
+                      <p
+                        className="text-background/80 text-sm lg:text-base max-w-md"
+                        style={{ animation: "fadeInUp 0.4s ease-in-out 0.1s both" }}
+                      >
                         {subtitle}
                       </p>
                     )}
@@ -168,11 +177,9 @@ const FeaturesSection = () => {
             return (
               <div
                 key={panel.id}
-                onClick={() => setActiveIndex(index)}
-                className={cn(
-                  "relative cursor-pointer overflow-hidden rounded-xl transition-all duration-500 ease-out",
-                  isActive ? "h-56" : "h-16"
-                )}
+                onClick={() => setActiveIndex(isActive ? null : index)}
+                className="relative cursor-pointer overflow-hidden rounded-xl"
+                style={{ transition: "height 0.4s ease-in-out", height: isActive ? "14rem" : "4rem" }}
               >
                 {panel.image_url ? (
                   <img
@@ -185,12 +192,15 @@ const FeaturesSection = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
                 )}
 
-                <div className={cn(
-                  "absolute inset-0 transition-all duration-500",
-                  isActive
-                    ? "bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent"
-                    : "bg-foreground/50"
-                )} />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    transition: "background 0.4s ease-in-out",
+                    background: isActive
+                      ? "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)"
+                      : "rgba(0,0,0,0.45)",
+                  }}
+                />
 
                 <div className="absolute inset-0 z-10 flex items-end p-4">
                   <div>
@@ -200,20 +210,27 @@ const FeaturesSection = () => {
                           src={panel.logo_url}
                           alt=""
                           className={cn(
-                            "object-contain rounded-lg bg-background/90 p-1 shadow-md transition-all duration-300",
+                            "object-contain rounded-lg bg-background/90 p-1 shadow-md",
                             isActive ? "w-10 h-10" : "w-8 h-8"
                           )}
+                          style={{ transition: "all 0.4s ease-in-out" }}
                         />
                       )}
-                      <h3 className={cn(
-                        "font-bold text-background font-serif transition-all duration-300",
-                        isActive ? "text-xl" : "text-base"
-                      )}>
+                      <h3
+                        className={cn(
+                          "font-bold text-background font-serif",
+                          isActive ? "text-xl" : "text-base"
+                        )}
+                        style={{ transition: "font-size 0.4s ease-in-out" }}
+                      >
                         {title}
                       </h3>
                     </div>
                     {isActive && subtitle && (
-                      <p className="text-background/80 text-sm mt-2 animate-fade-in">
+                      <p
+                        className="text-background/80 text-sm mt-2"
+                        style={{ animation: "fadeInUp 0.4s ease-in-out" }}
+                      >
                         {subtitle}
                       </p>
                     )}
@@ -223,6 +240,7 @@ const FeaturesSection = () => {
             );
           })}
         </div>
+
 
         {/* Bottom decorative element */}
         <div className="flex justify-center mt-10 sm:mt-16">
@@ -234,6 +252,7 @@ const FeaturesSection = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 
