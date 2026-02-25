@@ -110,6 +110,45 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_conversations: {
+        Row: {
+          created_at: string
+          customer_avatar: string | null
+          customer_id: string
+          customer_name: string
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          status: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_avatar?: string | null
+          customer_id: string
+          customer_name: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_avatar?: string | null
+          customer_id?: string
+          customer_name?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_logs: {
         Row: {
           ai_reply: string
@@ -145,6 +184,44 @@ export type Database = {
           user_message?: string
         }
         Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_spaces: {
         Row: {
