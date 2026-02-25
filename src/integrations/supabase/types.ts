@@ -223,6 +223,38 @@ export type Database = {
           },
         ]
       }
+      event_space_images: {
+        Row: {
+          created_at: string
+          event_space_id: string
+          id: string
+          image_url: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_space_id: string
+          id?: string
+          image_url: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_space_id?: string
+          id?: string
+          image_url?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_space_images_event_space_id_fkey"
+            columns: ["event_space_id"]
+            isOneToOne: false
+            referencedRelation: "event_spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_spaces: {
         Row: {
           created_at: string
