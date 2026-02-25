@@ -10,12 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   ArrowLeft,
   Image,
   Calendar,
@@ -208,34 +202,30 @@ const Admin = () => {
         {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
         <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0">
           <ScrollArea className="lg:h-[calc(100vh-60px)]">
-            <TooltipProvider>
-              <div className="flex lg:flex-col p-2 gap-1 overflow-x-auto lg:overflow-x-visible md:overflow-x-visible smooth-scroll scroll-smooth">
-                {TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <Tooltip key={tab.id}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => setActiveTab(tab.id)}
-                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start md:px-3 md:py-2.5 px-2.5 py-2.5
-                            ${isActive
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                            }`}
-                        >
-                          <Icon className="w-4 h-4 shrink-0" />
-                          <span className="hidden md:inline">{language === "th" ? tab.labelTh : tab.labelEn}</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="md:hidden">
-                        {language === "th" ? tab.labelTh : tab.labelEn}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            </TooltipProvider>
+            <div
+              className="flex lg:flex-col p-2 gap-1.5 overflow-x-auto lg:overflow-x-visible scroll-smooth snap-x snap-mandatory touch-pan-x"
+              style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                const label = language === "th" ? tab.labelTh : tab.labelEn;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start
+                      ${isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="text-xs lg:text-sm">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </ScrollArea>
         </nav>
 
