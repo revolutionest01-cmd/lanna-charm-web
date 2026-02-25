@@ -34,6 +34,7 @@ import {
 import { ImageUploadZone } from "./ImageUploadZone";
 import { RoomStats } from "./RoomStats";
 import { calculateRoomStats } from "./roomManagementUtils";
+import { AmenitiesCheckboxGroup } from "./AmenitiesCheckboxGroup";
 
 const roomFormSchema = z.object({
   name_th: z.string().min(1, "กรุณากรอกชื่อภาษาไทย"),
@@ -575,57 +576,20 @@ export const RoomsManagement = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="amenities_th"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-primary">
-                        {language === "th" ? "สิ่งอำนวยความสะดวก (ไทย)" : "Amenities (Thai)"}
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          disabled={submitting} 
-                          rows={2} 
-                          placeholder="เช่น WiFi, โปรเจคเตอร์, กระดานขาว, เก้าอี้สำหรับทำงาน"
-                          className="bg-white text-foreground" 
-                        />
-                      </FormControl>
-                      <p className="text-xs text-foreground/70 mt-1">
-                        {language === "th" ? "แยกด้วยจุลภาค" : "Separate with commas"}
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="amenities_en"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-primary">
-                        {language === "th"
-                          ? "สิ่งอำนวยความสะดวก (อังกฤษ)"
-                          : "Amenities (English)"}
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          disabled={submitting} 
-                          rows={2} 
-                          placeholder="e.g. WiFi, Projector, Whiteboard, Work chairs"
-                          className="bg-white text-foreground" 
-                        />
-                      </FormControl>
-                      <p className="text-xs text-foreground/70 mt-1">
-                        {language === "th" ? "แยกด้วยจุลภาค" : "Separate with commas"}
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Amenities Checkbox Group */}
+                <div className="space-y-2">
+                  <FormLabel className="text-base text-primary">
+                    {language === "th" ? "สิ่งอำนวยความสะดวก" : "Amenities"}
+                  </FormLabel>
+                  <AmenitiesCheckboxGroup
+                    valueTh={form.watch("amenities_th") || ""}
+                    valueEn={form.watch("amenities_en") || ""}
+                    onChangeTh={(val) => form.setValue("amenities_th", val)}
+                    onChangeEn={(val) => form.setValue("amenities_en", val)}
+                    disabled={submitting}
+                    language={language}
+                  />
+                </div>
 
                 {/* Existing Images */}
                 {selectedRoom && selectedRoom.images && selectedRoom.images.length > 0 && (
