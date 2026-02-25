@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,9 @@ interface FeaturePanel {
 const FeaturesSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data: panels = [], isLoading } = useQuery({
     queryKey: ["feature-panels"],
@@ -35,6 +37,20 @@ const FeaturesSection = () => {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  // Auto-play: cycle panels every 5s when not hovering
+  useEffect(() => {
+    if (isHovering || panels.length === 0) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
+    intervalRef.current = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % panels.length);
+    }, 5000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isHovering, panels.length]);
 
   if (isLoading) {
     return (
@@ -91,8 +107,8 @@ const FeaturesSection = () => {
             return (
               <div
                 key={panel.id}
-                onMouseEnter={() => setActiveIndex(index)}
-                onMouseLeave={() => setActiveIndex(null)}
+                onMouseEnter={() => { setIsHovering(true); setActiveIndex(index); }}
+                onMouseLeave={() => { setIsHovering(false); }}
                 className={cn(
                   "relative cursor-pointer overflow-hidden rounded-2xl",
                   isActive ? "flex-[5]" : "flex-1"
