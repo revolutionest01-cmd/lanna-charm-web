@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 
 const ADMIN_CACHE_KEY = 'app-admin-status';
 const ADMIN_CACHE_EXPIRY_KEY = 'app-admin-status-time';
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes cache
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours cache (cleared on logout)
 
 interface AdminCache {
   userId: string;
@@ -157,9 +157,14 @@ export const useAdminStatus = () => {
         console.log('[AdminStatus] Using cached admin status:', cachedStatus);
         setIsAdmin(cachedStatus);
         
-        // Verify in background
+        // Verify in background and update if changed
         console.log('[AdminStatus] Verifying cache with database in background...');
-        checkAdminStatusFromDB(user.id).catch(error => {
+        checkAdminStatusFromDB(user.id).then(dbStatus => {
+          if (dbStatus !== cachedStatus) {
+            console.log('[AdminStatus] Background check differs from cache, updating:', dbStatus);
+            setIsAdmin(dbStatus);
+          }
+        }).catch(error => {
           console.error('[AdminStatus] Background verification failed:', error);
         });
         
