@@ -356,15 +356,16 @@ export const ReviewsManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">
+      <div className="flex justify-between items-center gap-3">
+        <h3 className="text-base sm:text-lg font-semibold truncate">
           {language === "th" ? "จัดการรีวิว" : "Manage Reviews"}
         </h3>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              {language === "th" ? "เพิ่มรีวิว" : "Add Review"}
+            <Button size="sm" className="shrink-0">
+              <Plus className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">{language === "th" ? "เพิ่มรีวิว" : "Add Review"}</span>
+              <span className="sm:hidden">{language === "th" ? "เพิ่ม" : "Add"}</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -548,18 +549,18 @@ export const ReviewsManagement = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {reviews.map((review) => (
           <Card key={review.id} className={`overflow-hidden transition-all hover:shadow-lg ${review.is_active ? "" : "opacity-50"}`}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               {/* Header with Avatar & Name */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="text-4xl p-2 bg-primary/10 rounded-lg">
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="text-2xl sm:text-4xl p-1.5 sm:p-2 bg-primary/10 rounded-lg shrink-0">
                     {review.avatar || "😊"}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-lg text-foreground">{review.customer_name}</h4>
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-sm sm:text-lg text-foreground truncate">{review.customer_name}</h4>
                     {/* Star Rating Display */}
                     <div className="flex gap-1 mt-1">
                       {[...Array(5)].map((_, i) => (

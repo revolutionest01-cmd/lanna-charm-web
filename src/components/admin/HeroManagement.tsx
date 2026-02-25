@@ -294,10 +294,10 @@ export const HeroManagement = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">
+        <h3 className="text-base sm:text-lg font-semibold mb-2">
           {language === "th" ? "จัดการ Hero Section" : "Manage Hero Section"}
         </h3>
-        <p className="text-sm text-foreground/70">
+        <p className="text-xs sm:text-sm text-foreground/70">
           {language === "th"
             ? "อัพโหลดรูปภาพ (แนะนำ 16:9) และแก้ไขข้อความ"
             : "Upload image (recommended 16:9) and edit text"}

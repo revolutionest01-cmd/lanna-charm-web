@@ -425,12 +425,12 @@ export const RoomsManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-base sm:text-lg font-semibold truncate">
             {language === "th" ? "จัดการห้องพัก" : "Manage Rooms"}
           </h3>
-          <p className="text-sm text-foreground/70">
+          <p className="text-xs sm:text-sm text-foreground/70">
             {language === "th"
               ? "เพิ่ม แก้ไข หรือลบห้องพัก"
               : "Add, edit, or delete rooms"}
@@ -441,9 +441,10 @@ export const RoomsManagement = () => {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedRoom(null)}>
-              <Plus className="mr-2 h-4 w-4" />
-              {language === "th" ? "เพิ่มห้องพัก" : "Add Room"}
+            <Button onClick={() => setSelectedRoom(null)} size="sm" className="shrink-0">
+              <Plus className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">{language === "th" ? "เพิ่มห้องพัก" : "Add Room"}</span>
+              <span className="sm:hidden">{language === "th" ? "เพิ่ม" : "Add"}</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -697,7 +698,7 @@ export const RoomsManagement = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {rooms.map((room) => (
             <Card key={room.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
               {/* Image Container */}

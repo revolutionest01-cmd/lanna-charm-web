@@ -164,10 +164,10 @@ const BusinessInfoManagement = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="text-base sm:text-2xl">
           {language === 'th' ? 'จัดการข้อมูลธุรกิจ' : 'Business Information Management'}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs sm:text-sm">
           {language === 'th' 
             ? 'แก้ไขข้อมูลติดต่อและรายละเอียดธุรกิจที่แสดงในหน้าเว็บไซต์'
             : 'Edit contact information and business details displayed on the website'}
