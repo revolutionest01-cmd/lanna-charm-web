@@ -790,7 +790,7 @@ export type Database = {
       increment_visitor_stats: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "staff" | "user"
+      app_role: "admin" | "staff" | "user" | "developer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -918,7 +918,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "staff", "user"],
+      app_role: ["admin", "staff", "user", "developer"],
     },
   },
 } as const
