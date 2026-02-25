@@ -4,16 +4,18 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/toast";
 import sweetAlert from "@/lib/sweetAlert";
-import { Loader2, Plus, Trash2, Edit, Star } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Star, TrendingUp, BarChart3, Heart } from "lucide-react";
 import { z } from "zod";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 
 const AVATAR_OPTIONS = [
   "😊", "😄", "😎", "🤩", "😍", 
@@ -346,6 +348,28 @@ export const ReviewsManagement = () => {
     }
   };
 
+  const generateMonthlyData = () => {
+    const monthsBack = 6;
+    const data: Array<{ month: string; count: number }> = [];
+    const now = new Date();
+
+    for (let i = monthsBack - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthName = d.toLocaleDateString(language === "th" ? "th-TH" : "en-US", { month: "short" });
+      const currentMonth = d.getFullYear() * 100 + d.getMonth();
+      
+      const count = reviews.filter(r => {
+        const reviewDate = new Date(r.created_at);
+        const reviewMonth = reviewDate.getFullYear() * 100 + reviewDate.getMonth();
+        return reviewMonth === currentMonth;
+      }).length;
+
+      data.push({ month: monthName, count });
+    }
+
+    return data;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -549,6 +573,156 @@ export const ReviewsManagement = () => {
         </Dialog>
       </div>
 
+      {/* Analytics Section */}
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  {language === "th" ? "รีวิวทั้งหมด" : "Total Reviews"}
+                </p>
+                <Heart className="w-4 h-4 text-primary opacity-70" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">{reviews.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {language === "th" ? "จากผู้มาเยือน" : "from visitors"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  {language === "th" ? "คะแนนเฉลี่ย" : "Avg. Rating"}
+                </p>
+                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                {reviews.length > 0 
+                  ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) 
+                  : "0.0"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {language === "th" ? "จาก 5 ดาว" : "out of 5"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  {language === "th" ? "โปรดด้วย 5 ⭐" : "5★ Reviews"}
+                </p>
+                <BarChart3 className="w-4 h-4 text-green-500" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                {reviews.filter(r => r.rating === 5).length}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {reviews.length > 0
+                  ? `${((reviews.filter(r => r.rating === 5).length / reviews.length) * 100).toFixed(0)}%`
+                  : "0%"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  {language === "th" ? "ที่ใช้งาน" : "Active"}
+                </p>
+                <TrendingUp className="w-4 h-4 text-blue-500" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                {reviews.filter(r => r.is_active).length}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {reviews.length > 0 
+                  ? `${((reviews.filter(r => r.is_active).length / reviews.length) * 100).toFixed(0)}%`
+                  : "0%"
+                }
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Rating Distribution Chart */}
+        {reviews.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">
+                {language === "th" ? "การแจกแจงคะแนน" : "Rating Distribution"}
+              </CardTitle>
+              <CardDescription>
+                {language === "th" ? "จำนวนรีวิวตามคะแนนดาว" : "Number of reviews by rating"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={[
+                  { rating: "1★", count: reviews.filter(r => r.rating === 1).length },
+                  { rating: "2★", count: reviews.filter(r => r.rating === 2).length },
+                  { rating: "3★", count: reviews.filter(r => r.rating === 3).length },
+                  { rating: "4★", count: reviews.filter(r => r.rating === 4).length },
+                  { rating: "5★", count: reviews.filter(r => r.rating === 5).length },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="rating" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                    labelStyle={{ color: "hsl(var(--foreground))" }}
+                  />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Review Trend Chart */}
+        {reviews.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">
+                {language === "th" ? "แนวโน้มรีวิว" : "Review Trend"}
+              </CardTitle>
+              <CardDescription>
+                {language === "th" ? "จำนวนรีวิวต่อเดือน" : "Reviews over time"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={generateMonthlyData()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                    labelStyle={{ color: "hsl(var(--foreground))" }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="hsl(var(--primary))" 
+                    dot={{ fill: "hsl(var(--primary))" }}
+                    strokeWidth={2}
+                    name={language === "th" ? "จำนวนรีวิว" : "Reviews"}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Reviews Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {reviews.map((review) => (
           <Card key={review.id} className={`overflow-hidden transition-all hover:shadow-lg ${review.is_active ? "" : "opacity-50"}`}>
@@ -579,28 +753,31 @@ export const ReviewsManagement = () => {
                 {/* Actions */}
                 <div className="flex gap-1">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="icon" 
                     onClick={() => handleEdit(review)}
-                    className="hover:bg-primary/10"
+                    className="border-primary/50 hover:border-primary hover:bg-primary/10 h-8 w-8"
+                    title={language === "th" ? "แก้ไข" : "Edit"}
                   >
                     <Edit className="w-4 h-4 text-primary" />
                   </Button>
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="icon" 
                     onClick={() => toggleActive(review)}
-                    title={review.is_active ? "Hide" : "Show"}
+                    className="border-primary/50 hover:border-primary hover:bg-primary/10 h-8 w-8"
+                    title={review.is_active ? (language === "th" ? "ซ่อน" : "Hide") : (language === "th" ? "แสดง" : "Show")}
                   >
-                    {review.is_active ? "👁️" : "👁️‍🗨️"}
+                    <span className="text-lg">{review.is_active ? "👁️" : "👁️‍🗨️"}</span>
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="destructive"
                     size="icon"
                     onClick={() => handleDelete(review.id)}
-                    className="hover:bg-destructive/10"
+                    className="h-8 w-8"
+                    title={language === "th" ? "ลบ" : "Delete"}
                   >
-                    <Trash2 className="w-4 h-4 text-destructive" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

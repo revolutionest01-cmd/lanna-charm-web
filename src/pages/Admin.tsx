@@ -208,7 +208,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-[56px] sm:top-[60px] z-40 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+      <header className="sticky top-[56px] sm:top-[60px] lg:top-[60px] z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ const Admin = () => {
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <nav className="lg:w-56 lg:min-h-[calc(100vh-180px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[140px] sm:top-[148px] lg:top-[140px] z-30">
+        <nav className="lg:w-56 lg:min-h-[calc(100vh-60px)] lg:border-r border-b lg:border-b-0 border-border bg-card/50 shrink-0 sticky top-[56px] sm:top-[60px] lg:mt-[60px] lg:sticky lg:top-0 z-30">
           {/* Mobile */}
           <div className="lg:hidden">
             <div
@@ -274,7 +274,7 @@ const Admin = () => {
             <style>{`.lg\\:hidden > div::-webkit-scrollbar { display: none; }`}</style>
           </div>
           {/* Desktop */}
-          <ScrollArea className="hidden lg:block h-[calc(100vh-180px)]">
+          <ScrollArea className="hidden lg:block h-[calc(100vh-60px)]">
             <div className="flex flex-col p-2 gap-1.5">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
@@ -300,7 +300,7 @@ const Admin = () => {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 p-4 pt-48 sm:p-6 sm:pt-20 lg:p-8 lg:pt-6">
+        <main className="flex-1 min-w-0 p-4 pt-48 sm:p-6 sm:pt-24 lg:p-8 lg:pt-20">
           <div className="max-w-6xl mx-auto">
             {renderContent()}
           </div>

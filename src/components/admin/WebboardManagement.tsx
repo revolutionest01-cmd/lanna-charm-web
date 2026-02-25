@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useWebboard, ForumTopic, ForumReply } from "@/hooks/useWebboard";
+import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -36,10 +37,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Eye, EyeOff, Trash2, MessageCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AlertCircle, Eye, EyeOff, Trash2, MessageCircle, TrendingUp, BarChart3, MessageSquare, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ForumSetupModal } from "./ForumSetupModal";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 
 export const WebboardManagement = () => {
   const {
@@ -315,54 +317,145 @@ export const WebboardManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      {/* Enhanced Stats Section */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
-          <CardHeader className="pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Total Topics
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl font-bold">{stats.totalTopics}</div>
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                Topics
+              </p>
+              <MessageSquare className="w-4 h-4 text-primary opacity-70" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.totalTopics}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.activeTopics} active, {stats.inactiveTopics} inactive
+              {stats.activeTopics} active
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Total Engagement
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl font-bold">{stats.totalViews}</div>
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                Views
+              </p>
+              <TrendingUp className="w-4 h-4 text-blue-500" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.totalViews}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.totalLikes} likes, {stats.totalReplies} replies
+              total views
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Avg. Engagement
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl font-bold">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                Engagement
+              </p>
+              <Heart className="w-4 h-4 text-red-500" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.totalLikes + stats.totalReplies}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.totalLikes} ❤️ + {stats.totalReplies} 💬
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                Avg. per Topic
+              </p>
+              <BarChart3 className="w-4 h-4 text-green-500" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">
               {stats.totalTopics > 0
                 ? ((stats.totalLikes + stats.totalReplies) / stats.totalTopics).toFixed(1)
                 : 0}
-            </div>
+            </p>
             <p className="text-xs text-muted-foreground mt-1">
-              per topic
+              engagement
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Analytics Charts */}
+      {topics.length > 0 && (
+        <div className="space-y-6">
+          {/* Category Distribution */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">
+                Category Distribution
+              </CardTitle>
+              <CardDescription>
+                Number of topics by category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "General", value: topics.filter(t => t.category === "general").length },
+                      { name: "Question", value: topics.filter(t => t.category === "question").length },
+                      { name: "Review", value: topics.filter(t => t.category === "review").length },
+                      { name: "Shopping", value: topics.filter(t => t.category === "shopping").length },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="hsl(var(--primary))" />
+                    <Cell fill="hsl(217, 91%, 60%)" />
+                    <Cell fill="hsl(271, 91%, 65%)" />
+                    <Cell fill="hsl(346, 77%, 60%)" />
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Engagement Trend */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">
+                Engagement Trend
+              </CardTitle>
+              <CardDescription>
+                Views and interactions over time
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={topics.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).slice(-7).map((t, i) => ({
+                  topic: t.title?.substring(0, 10) + "...",
+                  views: t.views || 0,
+                  engagement: (t.likes_count || 0) + (t.replies_count || 0),
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="topic" tick={{ fontSize: 11 }} angle={-45} height={80} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="views" stroke="hsl(var(--primary))" strokeWidth={2} name="Views" dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="engagement" stroke="hsl(346, 77%, 60%)" strokeWidth={2} name="Likes + Replies" dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters Section */}
       <div className="bg-card rounded-lg p-4 sm:p-6 space-y-4">
