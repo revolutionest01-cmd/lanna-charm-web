@@ -342,7 +342,6 @@ const Reviews = () => {
           rating: validated.rating,
           review_text_en: validated.review_text_en,
           review_text_th: validated.review_text_th,
-          avatar: validated.avatar || "😊",
           user_id: user?.id || null,
           image_url: imageUrl,
           is_active: false, // Pending admin approval
@@ -738,37 +737,26 @@ const Reviews = () => {
                   </h2>
                 </div>
                 <form onSubmit={handleSubmitReview} className="space-y-4">
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                    <p className="text-sm font-semibold text-foreground">
-                      {language === "th" ? "ชื่อของคุณ" : language === "zh" ? "您的姓名" : "Your Name"}
-                    </p>
-                    <p className="text-lg font-bold text-primary mt-1">{user?.name}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {language === "th" ? "ระบบจะใช้ชื่อที่ลงทะเบียนของคุณโดยอัติโนมัติ" : language === "zh" ? "系统将自动使用您的注册名称" : "Your registered name will be used automatically"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label className="font-semibold mb-3 block">
-                      {language === "th" ? "เลือก Avatar" : language === "zh" ? "选择头像" : "Select Avatar"}
-                    </Label>
-                    <div className="grid grid-cols-5 gap-2">
-                      {AVATAR_OPTIONS.map((avatar) => (
-                        <button
-                          key={avatar}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, avatar })}
-                          className={`text-3xl p-2 rounded-lg transition-all border-2 ${
-                            formData.avatar === avatar
-                              ? "border-primary bg-primary/10 scale-110"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          {avatar}
-                        </button>
-                      ))}
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4 flex items-center gap-4">
+                    {user?.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.name} 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-primary/30"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {language === "th" ? "ชื่อของคุณ" : language === "zh" ? "您的姓名" : "Your Name"}
+                      </p>
+                      <p className="text-lg font-bold text-primary">{user?.name}</p>
                     </div>
                   </div>
+
 
                   <div>
                     <Label className="font-semibold mb-3 block">
