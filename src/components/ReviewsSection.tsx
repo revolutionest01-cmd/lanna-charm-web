@@ -7,6 +7,7 @@ import { useReviews } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ReviewSkeleton } from "@/components/SkeletonCard";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 type Review = {
   id: string;
@@ -21,6 +22,8 @@ const ReviewsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: reviews = [], isLoading: loading } = useReviews(9);
+  const { isFeatureEnabled } = useFeatureToggle();
+  if (!isFeatureEnabled("reviews")) return null;
 
   if (loading) {
     return (

@@ -8,6 +8,7 @@ import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { GallerySkeleton } from "@/components/SkeletonCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState, useRef, useEffect } from "react";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 
 type GalleryImage = {
@@ -21,9 +22,12 @@ const GallerySection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: images = [], isLoading: loading } = useGalleryImages(9);
+  const { isFeatureEnabled } = useFeatureToggle();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+
+  if (!isFeatureEnabled("gallery")) return null;
 
   const openLightbox = (index: number) => {
     setSelectedImageIndex(index);

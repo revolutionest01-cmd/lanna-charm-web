@@ -32,10 +32,19 @@ import { createTopicValidation } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoriesWithAll, getCategoryLabel, getCategoryColor, FORUM_CATEGORIES } from "@/lib/forumConfig";
 import TopicCard from "@/components/TopicCard";
+import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 
 const Forum = () => {
   const navigate = useNavigate();
   const { language } = useLanguage() as { language: "th" | "en" | "zh" | "ja" };
+  const { isFeatureEnabled } = useFeatureToggle();
+
+  useEffect(() => {
+    if (!isFeatureEnabled("forum")) {
+      showFeatureDisabledAlert(language);
+      navigate("/");
+    }
+  }, [isFeatureEnabled, navigate, language]);
   const { user, isAuthenticated, logout } = useAuth();
   const {
     topics,
