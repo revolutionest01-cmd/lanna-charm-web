@@ -265,6 +265,48 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_panels: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          sort_order: number | null
+          subtitle_en: string | null
+          subtitle_th: string | null
+          title_en: string
+          title_th: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          sort_order?: number | null
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          sort_order?: number | null
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feature_toggles: {
         Row: {
           created_at: string

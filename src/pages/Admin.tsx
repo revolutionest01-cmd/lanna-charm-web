@@ -28,10 +28,12 @@ import {
   Headphones,
   PieChart as PieChartIcon,
   Zap,
+  Sparkles,
 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
 import { HeroManagement } from "@/components/admin/HeroManagement";
+import { FeaturesManagement } from "@/components/admin/FeaturesManagement";
 import { EventSpaceManagement } from "@/components/admin/EventSpaceManagement";
 import { RoomsManagement } from "@/components/admin/RoomsManagement";
 import { MenusManagement } from "@/components/admin/MenusManagement";
@@ -55,6 +57,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Respon
 const BASE_TABS = [
   { id: "dashboard", icon: BarChart3, labelTh: "แดชบอร์ด", labelEn: "Dashboard", minRole: "staff" },
   { id: "hero", icon: Image, labelTh: "Hero", labelEn: "Hero", minRole: "admin" },
+  { id: "features", icon: Sparkles, labelTh: "Features", labelEn: "Features", minRole: "admin" },
   { id: "events", icon: Calendar, labelTh: "อีเว้นท์", labelEn: "Events", minRole: "admin" },
   { id: "rooms", icon: Home, labelTh: "ห้องพัก", labelEn: "Rooms", minRole: "admin" },
   { id: "menus", icon: Coffee, labelTh: "เมนู", labelEn: "Menus", minRole: "staff" },
@@ -185,6 +188,7 @@ const Admin = () => {
       case "dashboard":
         return <DashboardContent stats={statsDisplay} barChartData={barChartData} totalItems={totalItems} chartConfig={chartConfig} language={language} />;
       case "hero": return <HeroManagement />;
+      case "features": return <FeaturesManagement />;
       case "events": return <EventSpaceManagement />;
       case "rooms": return <RoomsManagement />;
       case "menus": return <MenusManagement />;

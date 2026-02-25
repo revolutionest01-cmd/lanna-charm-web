@@ -164,6 +164,7 @@ export const invalidateContentCache = (): void => {
     globalQueryClient.invalidateQueries({ queryKey: ["reviews"] });
     globalQueryClient.invalidateQueries({ queryKey: ["menu_categories"] });
     globalQueryClient.invalidateQueries({ queryKey: ["business_info"] });
+    globalQueryClient.invalidateQueries({ queryKey: ["feature-panels"] });
     
     // Also refetch to ensure fresh data immediately
     globalQueryClient.refetchQueries({ queryKey: ["hero-content"] });
@@ -191,6 +192,7 @@ export const useRefreshContent = () => {
     queryClient.invalidateQueries({ queryKey: ["reviews"] });
     queryClient.invalidateQueries({ queryKey: ["menu_categories"] });
     queryClient.invalidateQueries({ queryKey: ["business_info"] });
+    queryClient.invalidateQueries({ queryKey: ["feature-panels"] });
   }, [queryClient]);
 };
 
