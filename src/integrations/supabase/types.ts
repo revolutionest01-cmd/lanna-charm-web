@@ -265,6 +265,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_toggles: {
+        Row: {
+          created_at: string
+          description_en: string | null
+          description_th: string | null
+          feature_key: string
+          feature_name_en: string
+          feature_name_th: string
+          id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          feature_key: string
+          feature_name_en: string
+          feature_name_th: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_en?: string | null
+          description_th?: string | null
+          feature_key?: string
+          feature_name_en?: string
+          feature_name_th?: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       forum_likes: {
         Row: {
           created_at: string
