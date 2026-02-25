@@ -406,6 +406,77 @@ html {
   }
 }
 
+/* CTA Button Premium Animations */
+@keyframes button-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(32, 35, 41, 0.3), inset 0 0 20px rgba(32, 35, 41, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(32, 35, 41, 0.5), inset 0 0 30px rgba(32, 35, 41, 0.2);
+  }
+}
+
+@keyframes button-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes button-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes badge-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.05);
+  }
+}
+
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+}
+
+@layer utilities {
+  .btn-premium-glow {
+    animation: button-glow 3s ease-in-out infinite;
+  }
+
+  .btn-pulse {
+    animation: button-pulse 2s ease-in-out infinite;
+  }
+
+  .btn-shimmer {
+    background-size: 200px 100%;
+    animation: button-shimmer 3s linear infinite;
+  }
+
+  .badge-bounce {
+    animation: badge-bounce 2s ease-in-out infinite;
+  }
+
+  .icon-bounce {
+    animation: icon-bounce 2s ease-in-out infinite;
+  }
+}
+
 /* Global smooth transitions for interactive elements */
 @layer components {
   button {

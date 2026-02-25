@@ -80,18 +80,18 @@ const RoomsSection = () => {
   }
 
   return (
-    <section id="rooms" className="py-16 sm:py-20 bg-background">
-      <div className="container mx-auto px-5 sm:px-6">
-        <div className="text-center mb-10 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 font-serif">
+    <section id="rooms" className="py-12 sm:py-16 md:py-20 bg-background">
+      <div className="container mx-auto px-4 sm:px-5 md:px-6">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4 font-serif">
             {t.roomsTitle}
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+          <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
             {t.roomsSubtitle}
           </p>
         </div>
 
-        <div className="w-full px-2 sm:px-4">
+        <div className="w-full px-0 sm:px-2 md:px-4">
           <Carousel
             opts={{
               align: "start",
@@ -104,22 +104,22 @@ const RoomsSection = () => {
             ]}
             className="w-full"
           >
-            <CarouselContent className="-ml-2 sm:-ml-4">
+            <CarouselContent className="-ml-4 sm:-ml-2 md:ml-0">
               {rooms.map((room) => (
-                <CarouselItem key={room.id} className="pl-2 sm:pl-4 basis-[calc(100%-0.5rem)] sm:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={room.id} className="pl-4 sm:pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                   <button
                     onClick={() => handleRoomClick(room)}
                     className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg transition-all"
                   >
-                    <Card className="overflow-hidden border-border hover:shadow-2xl transition-all duration-300 h-full cursor-pointer transform hover:scale-105">
-                      <div className="relative h-48 sm:h-64 overflow-hidden">
+                    <Card className="overflow-hidden border border-border hover:shadow-2xl transition-all duration-300 h-full cursor-pointer transform hover:scale-105">
+                      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 overflow-hidden">
                         <img
                           src={room.images[0]?.image_url || "/placeholder.svg"}
                           alt={language === "th" ? room.name_th : room.name_en}
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                         />
                         {/* Room Status Badge */}
-                        <div className={`absolute top-3 right-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-xs sm:text-sm font-semibold ${
+                        <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-full text-white text-[10px] sm:text-xs md:text-sm font-semibold ${
                           room.is_available === false 
                             ? 'bg-red-500/90 hover:bg-red-600' 
                             : 'bg-green-500/90 hover:bg-green-600'
@@ -130,31 +130,31 @@ const RoomsSection = () => {
                         </div>
                       </div>
                       
-                      <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                        <CardTitle className="text-xl sm:text-2xl font-serif">
+                      <CardHeader className="p-3 sm:p-4 md:p-6 pb-1 sm:pb-2 md:pb-3">
+                        <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl font-serif line-clamp-1">
                           {language === "th" ? room.name_th : room.name_en}
                         </CardTitle>
-                        <div className="flex items-baseline gap-2 mt-1 sm:mt-2">
-                          <span className="text-2xl sm:text-3xl font-bold text-primary">฿{room.price}</span>
-                          <span className="text-muted-foreground text-sm">{t.perNight}</span>
+                        <div className="flex items-baseline gap-1 sm:gap-2 mt-1 sm:mt-2">
+                          <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">฿{room.price}</span>
+                          <span className="text-muted-foreground text-xs sm:text-sm">{t.perNight}</span>
                         </div>
                       </CardHeader>
 
-                      <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                      <CardContent className="p-3 sm:p-4 md:p-6 pt-0 space-y-2 sm:space-y-3">
+                        <p className="text-xs sm:text-sm md:text-base text-muted-foreground line-clamp-2">
                           {language === "th" ? room.description_th : room.description_en}
                         </p>
 
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Wifi size={16} />
+                            <Wifi size={14} className="sm:w-4 sm:h-4" />
                             <span>{language === 'th' ? 'WiFi ฟรี' : language === 'zh' ? '免费WiFi' : 'Free WiFi'}</span>
                           </div>
                         </div>
                       </CardContent>
 
-                      <CardFooter className="p-4 sm:p-6 pt-0">
-                        <div className="w-full text-center text-primary font-semibold">
+                      <CardFooter className="p-3 sm:p-4 md:p-6 pt-0">
+                        <div className="w-full text-center text-primary font-semibold text-xs sm:text-sm">
                           {language === 'th' ? 'คลิกเพื่อดูรายละเอียด' : language === 'zh' ? '点击查看详情' : 'Click to view details'}
                         </div>
                       </CardFooter>

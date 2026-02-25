@@ -364,7 +364,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
         {/* Modal Container - Centered on viewport */}
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               onClose();
@@ -375,16 +375,16 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
           onTouchEnd={handleTouchEnd}
         >
           <div
-            className="relative bg-background rounded-2xl sm:rounded-3xl shadow-2xl w-full sm:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
+            className="relative bg-background rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl w-full max-h-[90vh] sm:max-h-[95vh] md:max-w-4xl lg:max-w-5xl overflow-hidden flex flex-col motion-safe:animate-in motion-safe:slide-in-from-center"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button - Fixed at top */}
           <button
             onClick={onClose}
-            className="absolute top-3 sm:top-4 right-3 sm:right-4 z-50 p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 group"
+            className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 z-50 p-1.5 sm:p-2 md:p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 group"
             aria-label="Close modal"
           >
-            <X size={20} className="sm:w-6 sm:h-6 text-foreground group-hover:rotate-90 transition-transform duration-300" />
+            <X size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-foreground group-hover:rotate-90 transition-transform duration-300" />
           </button>
 
           {/* Scrollable Content */}
@@ -392,7 +392,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
             {/* Hero Image Gallery Section */}
             <div className="relative bg-gradient-to-br from-muted/50 to-muted/20 overflow-hidden group">
               {/* Main Image */}
-              <div className="relative h-[240px] sm:h-[300px] md:h-[380px] lg:h-[450px] overflow-hidden bg-black">
+              <div className="relative h-[180px] sm:h-[240px] md:h-[320px] lg:h-[420px] overflow-hidden bg-black">
                 <img
                   src={currentImage?.image_url || "/placeholder.svg"}
                   alt={roomName}
@@ -404,53 +404,53 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                   <>
                     <button
                       onClick={handlePrevImage}
-                      className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-1.5 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all hover:scale-110"
+                      className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 p-1 sm:p-1.5 md:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all hover:scale-110"
                       aria-label="Previous image"
                     >
-                      <ChevronLeft size={20} className="sm:w-7 sm:h-7" />
+                      <ChevronLeft size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" />
                     </button>
                     <button
                       onClick={handleNextImage}
-                      className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-1.5 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all hover:scale-110"
+                      className="absolute right-1 sm:right-2 md:right-4 top-1/2 -translate-y-1/2 p-1 sm:p-1.5 md:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all hover:scale-110"
                       aria-label="Next image"
                     >
-                      <ChevronRight size={20} className="sm:w-7 sm:h-7" />
+                      <ChevronRight size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" />
                     </button>
 
                     {/* Image Counter */}
-                    <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/50 backdrop-blur-md text-white text-xs sm:text-sm font-semibold">
+                    <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] sm:text-xs lg:text-sm font-semibold">
                       {currentImageIndex + 1} / {totalImages}
                     </div>
                   </>
                 )}
 
                 {/* Like & Share Buttons */}
-                <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2">
+                <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex items-center gap-1 sm:gap-1.5 md:gap-2">
                   <button
                     onClick={toggleLike}
-                    className="p-1.5 sm:p-2.5 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm transition-all hover:scale-110 group/like"
+                    className="p-1 sm:p-1.5 md:p-2.5 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm transition-all hover:scale-110 group/like"
                     aria-label="Toggle like"
                   >
                     <Heart
-                      size={18}
-                      className={cn("sm:w-5 sm:h-5 transition-all", isLiked ? "fill-red-500 text-red-500 scale-110" : "text-foreground")}
+                      size={16}
+                      className={cn("sm:w-4 sm:h-4 md:w-5 md:h-5 transition-all", isLiked ? "fill-red-500 text-red-500 scale-110" : "text-foreground")}
                     />
                   </button>
 
                   <button
                     onClick={handleShare}
-                    className="p-1.5 sm:p-2.5 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm transition-all hover:scale-110"
+                    className="p-1 sm:p-1.5 md:p-2.5 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm transition-all hover:scale-110"
                     aria-label="Share room"
                   >
-                    <Share2 size={18} className="sm:w-5 sm:h-5 text-foreground" />
+                    <Share2 size={16} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Thumbnail Gallery */}
               {totalImages > 1 && (
-                <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-gradient-to-b from-black/20 to-transparent">
-                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                <div className="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-4 bg-gradient-to-b from-black/20 to-transparent">
+                  <div className="flex gap-1 sm:gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-hide">
                     {allImages.map((image, index) => (
                       <button
                         key={`${image.id}-${index}`}
@@ -458,8 +458,8 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                         className={cn(
                           "relative aspect-square rounded-lg flex-shrink-0 overflow-hidden border-2 transition-all hover:scale-105",
                           currentImageIndex === index
-                            ? "border-white shadow-lg w-16 sm:w-20 md:w-24"
-                            : "border-white/30 hover:border-white/60 w-14 sm:w-16 md:w-20"
+                            ? "border-white shadow-lg w-14 sm:w-16 md:w-20 lg:w-24"
+                            : "border-white/30 hover:border-white/60 w-12 sm:w-14 md:w-16 lg:w-20"
                         )}
                       >
                         <img
@@ -475,20 +475,20 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
             </div>
 
             {/* Content Section */}
-            <div className="p-4 sm:p-5 md:p-6 lg:p-8">
+            <div className="p-3 sm:p-4 md:p-5 lg:p-8">
               {/* Mobile Layout - Single Column */}
-              <div className="lg:hidden space-y-5 sm:space-y-6">
+              <div className="lg:hidden space-y-4 sm:space-y-5 md:space-y-6">
                 {/* Header */}
-                <div className="space-y-2 sm:space-y-3">
-                  <h1 className="text-2xl sm:text-3xl font-bold font-serif text-foreground">
+                <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-serif text-foreground">
                     {roomName}
                   </h1>
-                  <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
                     <div>
-                      <div className="text-2xl sm:text-3xl font-bold text-primary">
+                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
                         ฿{room.price}
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">
                         {t.perNight}
                       </p>
                     </div>
@@ -500,11 +500,11 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
                 {/* Description */}
                 {roomDescription && (
-                  <div className="space-y-2">
-                    <h2 className="text-base sm:text-lg font-semibold text-foreground">
+                  <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
+                    <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-foreground">
                       {language === 'th' ? 'เกี่ยวกับห้อง' : language === 'zh' ? '关于房间' : 'About Room'}
                     </h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    <p className="text-[11px] sm:text-xs md:text-sm lg:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {roomDescription}
                     </p>
                   </div>
@@ -515,18 +515,18 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                   const amenities = parseAmenities(language === 'th' ? room.amenities_th : room.amenities_en);
                   if (amenities.length === 0) return null;
                   return (
-                    <div className="space-y-3">
-                      <h2 className="text-base sm:text-lg font-semibold text-foreground">
+                    <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
+                      <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-foreground">
                         {language === 'th' ? 'สิ่งอำนวยความสะดวก' : language === 'zh' ? '便利设施' : 'Amenities'}
                       </h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
                         {amenities.map((amenity, index) => (
-                          <div key={index} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
-                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                              <span className="text-base">{getAmenityIcon(amenity)}</span>
+                          <div key={index} className="flex items-center gap-1.5 sm:gap-2 md:gap-3 p-2 sm:p-2.5 md:p-3 rounded-lg bg-primary/5 border border-primary/20">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm sm:text-base md:text-lg">{getAmenityIcon(amenity)}</span>
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-xs sm:text-sm text-foreground">
+                              <p className="font-semibold text-[10px] sm:text-xs md:text-sm text-foreground">
                                 {amenity}
                               </p>
                             </div>
@@ -611,19 +611,19 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                 )}
 
                 {/* Price Info */}
-                <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-foreground">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-3 sm:p-4 md:p-5 space-y-2 sm:space-y-2.5 md:space-y-3">
+                  <h3 className="text-xs sm:text-sm md:text-base font-semibold text-foreground">
                     {language === 'th' ? 'ราคา' : 'Price'}
                   </h3>
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">
+                    <span className="text-muted-foreground text-xs sm:text-sm">
                       {language === 'th' ? 'ต่อคืน' : 'Per night'}
                     </span>
-                    <span className="font-bold text-lg text-primary">฿{room.price}</span>
+                    <span className="font-bold text-lg sm:text-xl md:text-2xl text-primary">฿{room.price}</span>
                   </div>
                   <div className="h-px bg-primary/20" />
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">
+                    <span className="text-muted-foreground text-xs sm:text-sm">
                       {language === 'th' ? 'สถานะ' : 'Status'}
                     </span>
                     {isAdmin ? (
@@ -631,7 +631,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                         onClick={() => handleToggleAvailability()}
                         disabled={isTogglingAvailability}
                         className={cn(
-                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300',
+                          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold transition-all duration-300',
                           isAvailable
                             ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
                             : 'bg-red-500/20 text-red-600 hover:bg-red-500/30',
@@ -641,7 +641,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       >
                         <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
                         {isTogglingAvailability ? (
-                          <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <span className="inline-block w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         ) : isAvailable ? (
                           language === 'th' ? 'ว่าง' : 'Available'
                         ) : (
@@ -650,7 +650,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       </button>
                     ) : (
                       <span className={cn(
-                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
+                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold',
                         isAvailable ? 'bg-green-500/20 text-green-600' : 'bg-red-500/20 text-red-600'
                       )}>
                         <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
@@ -662,7 +662,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
                 {/* Room Navigation - Horizontal Layout */}
                 {allRooms.length > 1 && (
-                  <div className="flex items-center justify-between gap-3 px-2 py-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <div className="flex items-center justify-between gap-2 px-2 sm:px-3 md:px-4 py-2 sm:py-3 bg-primary/5 rounded-lg border border-primary/20">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -670,21 +670,21 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       }}
                       disabled={!hasPrevRoom}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm",
+                        "flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all font-medium text-xs sm:text-sm",
                         hasPrevRoom
                           ? "hover:bg-primary/20 cursor-pointer text-foreground"
                           : "opacity-40 cursor-not-allowed text-muted-foreground"
                       )}
                       aria-label="Previous room"
                     >
-                      <ChevronLeft size={18} />
+                      <ChevronLeft size={16} className="sm:w-5 sm:h-5" />
                       <span className="hidden sm:inline">
                         {language === 'th' ? 'ห้องก่อนหน้า' : 'Previous'}
                       </span>
                     </button>
 
-                    <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[60px]">
-                      <span className="font-semibold text-sm text-foreground">
+                    <div className="flex-shrink-0 px-2 py-1 rounded-full bg-primary/10 text-center min-w-[50px]">
+                      <span className="font-semibold text-xs sm:text-sm text-foreground">
                         {currentRoomIndex + 1} / {allRooms.length}
                       </span>
                     </div>
@@ -696,7 +696,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       }}
                       disabled={!hasNextRoom}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all font-medium text-sm justify-end",
+                        "flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all font-medium text-xs sm:text-sm justify-end",
                         hasNextRoom
                           ? "hover:bg-primary/20 cursor-pointer text-foreground"
                           : "opacity-40 cursor-not-allowed text-muted-foreground"
@@ -706,23 +706,23 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       <span className="hidden sm:inline">
                         {language === 'th' ? 'ห้องถัดไป' : 'Next'}
                       </span>
-                      <ChevronRight size={18} />
+                      <ChevronRight size={16} className="sm:w-5 sm:h-5" />
                     </button>
                   </div>
                 )}
 
                 {/* Action Buttons - Mobile stacked */}
-                <div className="flex flex-col gap-2 pt-2">
+                <div className="flex flex-col gap-2 md:gap-3 pt-2 md:pt-4">
                   <BookingDialog roomId={room.id}>
                     <Button
-                      className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
+                      className="w-full font-bold h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
                     >
                       {t.bookRoom}
                     </Button>
                   </BookingDialog>
                   <Button
                     onClick={onClose}
-                    className="w-full font-semibold h-11 rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
+                    className="w-full font-semibold h-9 sm:h-10 md:h-11 text-xs sm:text-sm md:text-base rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                   >
                     {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
                   </Button>
