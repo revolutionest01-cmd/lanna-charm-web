@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Wifi, Heart, Share2, Upload, Loader2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Wifi, Heart, Share2, Upload, Loader2, Check, X as XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,9 +24,41 @@ interface Room {
   description_en: string | null;
   price: number;
   is_active: boolean | null;
-  is_available?: boolean; // Room availability status (for bookings)
+  is_available?: boolean;
+  amenities_th?: string | null;
+  amenities_en?: string | null;
+  capacity?: string | null;
   images: RoomImage[];
 }
+
+// Map amenity keywords to emoji icons
+const getAmenityIcon = (amenity: string): string => {
+  const lower = amenity.toLowerCase().trim();
+  if (lower.includes('wifi') || lower.includes('ไวไฟ') || lower.includes('อินเทอร์เน็ต')) return '📶';
+  if (lower.includes('แอร์') || lower.includes('air') || lower.includes('เครื่องปรับอากาศ')) return '❄️';
+  if (lower.includes('เตียง') || lower.includes('bed')) return '🛏️';
+  if (lower.includes('ห้องน้ำ') || lower.includes('bathroom') || lower.includes('shower') || lower.includes('สระน้ำ')) return '🚿';
+  if (lower.includes('ทีวี') || lower.includes('tv') || lower.includes('โทรทัศน์')) return '📺';
+  if (lower.includes('ตู้เย็น') || lower.includes('fridge') || lower.includes('refrigerator')) return '🧊';
+  if (lower.includes('โปรเจคเตอร์') || lower.includes('projector')) return '📽️';
+  if (lower.includes('กระดาน') || lower.includes('whiteboard') || lower.includes('board')) return '📋';
+  if (lower.includes('ที่จอดรถ') || lower.includes('parking') || lower.includes('จอดรถ')) return '🅿️';
+  if (lower.includes('อาหาร') || lower.includes('food') || lower.includes('breakfast') || lower.includes('อาหารเช้า')) return '🍳';
+  if (lower.includes('เก้าอี้') || lower.includes('chair') || lower.includes('โซฟา') || lower.includes('sofa')) return '🪑';
+  if (lower.includes('ผ้าเช็ดตัว') || lower.includes('towel')) return '🛁';
+  if (lower.includes('กุญแจ') || lower.includes('key') || lower.includes('ล็อค') || lower.includes('lock')) return '🔑';
+  if (lower.includes('พัดลม') || lower.includes('fan')) return '🌀';
+  if (lower.includes('น้ำดื่ม') || lower.includes('water') || lower.includes('drinking')) return '💧';
+  if (lower.includes('คาราโอเกะ') || lower.includes('karaoke')) return '🎤';
+  if (lower.includes('ไมค์') || lower.includes('mic')) return '🎙️';
+  if (lower.includes('ลำโพง') || lower.includes('speaker') || lower.includes('เสียง')) return '🔊';
+  return '✨';
+};
+
+const parseAmenities = (amenitiesStr: string | null | undefined): string[] => {
+  if (!amenitiesStr) return [];
+  return amenitiesStr.split(/[,،、]/).map(a => a.trim()).filter(a => a.length > 0);
+};
 
 interface RoomDetailModalProps {
   room: Room | null;
@@ -478,69 +510,32 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                   </div>
                 )}
 
-                {/* Amenities */}
-                <div className="space-y-3">
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                    {language === 'th' ? 'สิ่งอำนวยความสะดวก' : language === 'zh' ? '便利设施' : 'Amenities'}
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <Wifi size={18} className="text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-xs sm:text-sm text-foreground">
-                          {language === 'th' ? 'WiFi ฟรี' : 'Free WiFi'}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          {language === 'th' ? 'ความเร็วสูง' : 'High-speed'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base">🛏️</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-xs sm:text-sm text-foreground">
-                          {language === 'th' ? 'เตียง' : 'Bed'}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          {language === 'th' ? 'ควีน' : 'Queen'}
-                        </p>
+                {/* Amenities - Dynamic from database */}
+                {(() => {
+                  const amenities = parseAmenities(language === 'th' ? room.amenities_th : room.amenities_en);
+                  if (amenities.length === 0) return null;
+                  return (
+                    <div className="space-y-3">
+                      <h2 className="text-base sm:text-lg font-semibold text-foreground">
+                        {language === 'th' ? 'สิ่งอำนวยความสะดวก' : language === 'zh' ? '便利设施' : 'Amenities'}
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {amenities.map((amenity, index) => (
+                          <div key={index} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-base">{getAmenityIcon(amenity)}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-xs sm:text-sm text-foreground">
+                                {amenity}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base">❄️</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-xs sm:text-sm text-foreground">
-                          {language === 'th' ? 'แอร์' : 'A/C'}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          {language === 'th' ? 'เย็นสบาย' : 'Cool'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base">🚿</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-xs sm:text-sm text-foreground">
-                          {language === 'th' ? 'ห้องน้ำ' : 'Bathroom'}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          {language === 'th' ? 'ส่วนตัว' : 'Private'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Upload Section - Mobile Admin */}
                 {isAdmin && (
@@ -771,54 +766,31 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                     </div>
                   )}
 
-                  {/* Amenities */}
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-6 bg-primary rounded-full" />
-                      Amenities
-                    </h2>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary/40 transition-all">
-                        <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Wifi size={20} className="text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">Free WiFi</p>
-                          <p className="text-xs text-muted-foreground">High-speed</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary/40 transition-all">
-                        <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xl">🛏️</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">Comfortable Bed</p>
-                          <p className="text-xs text-muted-foreground">Queen size</p>
+                  {/* Amenities - Dynamic from database */}
+                  {(() => {
+                    const amenities = parseAmenities(language === 'th' ? room.amenities_th : room.amenities_en);
+                    if (amenities.length === 0) return null;
+                    return (
+                      <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                          <div className="w-1 h-6 bg-primary rounded-full" />
+                          {language === 'th' ? 'สิ่งอำนวยความสะดวก' : 'Amenities'}
+                        </h2>
+                        <div className="grid grid-cols-2 gap-3">
+                          {amenities.map((amenity, index) => (
+                            <div key={index} className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary/40 transition-all">
+                              <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <span className="text-xl">{getAmenityIcon(amenity)}</span>
+                              </div>
+                              <div>
+                                <p className="font-semibold text-foreground">{amenity}</p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary/40 transition-all">
-                        <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xl">❄️</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">Air Conditioning</p>
-                          <p className="text-xs text-muted-foreground">Temperature control</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary/40 transition-all">
-                        <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xl">🚿</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">Private Bathroom</p>
-                          <p className="text-xs text-muted-foreground">Hot shower</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* Upload Section - Desktop Admin */}
                   {isAdmin && (
