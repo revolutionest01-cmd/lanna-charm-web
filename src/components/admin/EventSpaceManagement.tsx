@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Save, X, Plus, Image as ImageIcon } from "lucide-react";
+import { Loader2, Save, X, Plus, Image as ImageIcon, Trash2, Upload } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,6 +52,8 @@ export const EventSpaceManagement = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isDeletingImage, setIsDeletingImage] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
   const form = useForm<EventSpaceFormValues>({
     resolver: zodResolver(eventSpaceFormSchema),
@@ -92,6 +94,8 @@ export const EventSpaceManagement = () => {
           keywords_en: data.keywords_en || "",
         });
         setImagePreview(data.image_url || "");
+        // Load gallery images
+        loadGalleryImages(data.id);
       }
     } catch (error) {
       console.error("Error loading event space data:", error);
@@ -102,6 +106,72 @@ export const EventSpaceManagement = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGalleryImages = async (eventSpaceId: string) => {
+    const { data } = await supabase
+      .from("event_space_images")
+      .select("*")
+      .eq("event_space_id", eventSpaceId)
+      .order("sort_order");
+    setGalleryImages(data || []);
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !currentEventSpace?.id) return;
+
+    setUploadingGallery(true);
+    try {
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 5 * 1024 * 1024) continue;
+
+        const fileExt = file.name.split(".").pop();
+        const fileName = `gallery-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("event-spaces")
+          .upload(fileName, file, { cacheControl: "3600", upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from("event-spaces").getPublicUrl(fileName);
+
+        await supabase.from("event_space_images").insert({
+          event_space_id: currentEventSpace.id,
+          image_url: publicUrl,
+          sort_order: galleryImages.length + 1,
+        });
+      }
+
+      toast.success(language === "th" ? "อัพโหลดสำเร็จ" : "Upload successful");
+      loadGalleryImages(currentEventSpace.id);
+      invalidateContentCache();
+      queryClient.invalidateQueries({ queryKey: ["event-space-images"] });
+    } catch (error) {
+      console.error("Gallery upload error:", error);
+      toast.error(language === "th" ? "อัพโหลดล้มเหลว" : "Upload failed");
+    } finally {
+      setUploadingGallery(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDeleteGalleryImage = async (imageId: string, imageUrl: string) => {
+    try {
+      // Extract file name from URL
+      const match = imageUrl.match(/event-spaces\/(.+)$/);
+      if (match) {
+        await supabase.storage.from("event-spaces").remove([match[1]]);
+      }
+      await supabase.from("event_space_images").delete().eq("id", imageId);
+      toast.success(language === "th" ? "ลบรูปสำเร็จ" : "Image deleted");
+      loadGalleryImages(currentEventSpace.id);
+      invalidateContentCache();
+      queryClient.invalidateQueries({ queryKey: ["event-space-images"] });
+    } catch (error) {
+      toast.error(language === "th" ? "ลบรูปล้มเหลว" : "Delete failed");
     }
   };
 
@@ -361,6 +431,61 @@ export const EventSpaceManagement = () => {
                     </Button>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Gallery Images */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <FormLabel>
+                    {language === "th" ? "รูปภาพเพิ่มเติม (Gallery)" : "Gallery Images"}
+                  </FormLabel>
+                  <label className="cursor-pointer">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleGalleryUpload}
+                      disabled={uploadingGallery || !currentEventSpace}
+                    />
+                    <Button type="button" variant="outline" size="sm" disabled={uploadingGallery || !currentEventSpace} asChild>
+                      <span>
+                        {uploadingGallery ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-1" />
+                        )}
+                        {language === "th" ? "เพิ่มรูป" : "Add Images"}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+                {galleryImages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    {language === "th" ? "ยังไม่มีรูปภาพ Gallery — กดเพิ่มรูปเพื่ออัพโหลด" : "No gallery images yet — click Add Images to upload"}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    {galleryImages.map((img) => (
+                      <div key={img.id} className="relative group aspect-video rounded-lg overflow-hidden border border-border">
+                        <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
