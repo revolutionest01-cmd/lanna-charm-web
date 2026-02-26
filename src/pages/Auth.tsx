@@ -163,7 +163,10 @@ const Auth = () => {
         setOtpEmail(registerForm.email);
         setIsOtpMode(true);
       } else {
-        sweetAlert.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : language === 'zh' ? '注册失败' : language === 'ja' ? '登録に失敗しました' : 'Registration failed'));
+        const errorMsg = result.error?.includes('rate limit') 
+          ? (language === 'th' ? 'ส่งอีเมลบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' : 'Too many emails sent. Please wait a moment and try again.')
+          : (result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : 'Registration failed'));
+        sweetAlert.error(errorMsg);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -310,9 +313,12 @@ const Auth = () => {
         email: otpEmail,
       });
       if (error) {
-        sweetAlert.error(error.message);
+        const msg = error.message?.includes('rate limit')
+          ? (language === 'th' ? 'ส่งอีเมลบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' : 'Too many emails sent. Please wait a moment.')
+          : error.message;
+        sweetAlert.error(msg);
       } else {
-        sweetAlert.success(language === 'th' ? 'ส่งรหัส OTP ใหม่แล้ว' : 'New OTP sent');
+        sweetAlert.success(language === 'th' ? 'ส่งอีเมลยืนยันใหม่แล้ว' : 'Verification email resent');
       }
     } catch {
       sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด' : 'An error occurred');
