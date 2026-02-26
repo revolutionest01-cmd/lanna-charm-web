@@ -97,11 +97,6 @@ export const DevGodMode = () => {
   };
 
   const handleRoleChange = async (userRoleId: string, userId: string, newRole: string) => {
-    if (userId === DEVELOPER_ID) {
-      sweetAlert.error(language === "th" ? "ไม่สามารถเปลี่ยน Role ของ Developer ได้" : "Cannot change Developer role");
-      return;
-    }
-
     const confirmed = await sweetAlert.modal.confirm(
       language === "th" ? `เปลี่ยนบทบาทเป็น "${newRole}"?` : `Change role to "${newRole}"?`,
       language === "th" ? "การเปลี่ยนบทบาทจะมีผลทันที" : "This change takes effect immediately"
@@ -257,35 +252,31 @@ export const DevGodMode = () => {
                     </Badge>
                   </div>
                   <div className="shrink-0 flex items-center gap-1.5">
-                    {isDev ? (
-                      <span className="text-xs text-yellow-500 font-medium">Protected</span>
-                    ) : (
-                      <>
-                        <Select
-                          value={u.role}
-                          onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
-                          disabled={updating === u.id || updating === u.user_id}
-                        >
-                          <SelectTrigger className="w-24 h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="developer">Developer</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="staff">Staff</SelectItem>
-                            <SelectItem value="user">User</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteUser(u.user_id, u.display_name)}
-                          disabled={updating === u.user_id}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </>
+                    <Select
+                      value={u.role}
+                      onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
+                      disabled={updating === u.id || updating === u.user_id}
+                    >
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="developer">Developer</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                        <SelectItem value="user">User</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {!isDev && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteUser(u.user_id, u.display_name)}
+                        disabled={updating === u.user_id}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -340,25 +331,23 @@ export const DevGodMode = () => {
                         {new Date(u.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {isDev ? (
-                          <span className="text-xs text-yellow-500 font-medium">🔒 Protected</span>
-                        ) : (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Select
-                              value={u.role}
-                              onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
-                              disabled={updating === u.id || updating === u.user_id}
-                            >
-                              <SelectTrigger className="w-28 h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="developer">Developer</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="staff">Staff</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
-                              </SelectContent>
-                            </Select>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Select
+                            value={u.role}
+                            onValueChange={(val) => handleRoleChange(u.id, u.user_id, val)}
+                            disabled={updating === u.id || updating === u.user_id}
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="developer">Developer</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="staff">Staff</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {!isDev && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -368,8 +357,8 @@ export const DevGodMode = () => {
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
