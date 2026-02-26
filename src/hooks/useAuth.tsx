@@ -126,30 +126,24 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
 // Initialize auth state
 const initializeAuth = () => {
   console.log('[Auth] Starting initialization...');
-  
-  // CRITICAL: Set up onAuthStateChange FIRST before getSession
-  // This ensures we don't miss any auth events
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+  let initialSessionHandled = false;
+
+  const applySessionState = async (newSession: Session | null, eventSource: string) => {
     try {
-      console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
-      
+      console.log('[Auth] applySessionState source:', eventSource, 'session:', !!newSession);
+
       if (newSession?.user) {
-        // Try to restore cached profile first for instant UI
         const cachedUser = getCachedProfile();
         const basicUser = buildUserFromSession(newSession);
         const immediateUser = (cachedUser && cachedUser.id === newSession.user.id) ? cachedUser : basicUser;
-        
-        console.log('[Auth] Session found via listener:', immediateUser.email, 'event:', _event, 'cached:', !!cachedUser);
-        
-        // Set authenticated immediately with cached or basic user
+
         setAuthState({
           user: immediateUser,
           session: newSession,
           isAuthenticated: true,
           isLoading: false,
         });
-        
-        // Enrich with fresh profile data in background and update cache
+
         fetchAndEnrichUser(newSession).then(enrichedUser => {
           setCachedProfile(enrichedUser);
           setAuthState({ user: enrichedUser });
@@ -157,9 +151,7 @@ const initializeAuth = () => {
           console.error('[Auth] Error enriching user:', err);
         });
       } else {
-        console.log('[Auth] No session in listener, event:', _event);
-        // Only clear cache on explicit sign out events
-        if (_event === 'SIGNED_OUT') {
+        if (eventSource === 'SIGNED_OUT') {
           setCachedProfile(null);
         }
         setAuthState({
@@ -170,7 +162,7 @@ const initializeAuth = () => {
         });
       }
     } catch (error) {
-      console.error('[Auth] Error in state change handler:', error);
+      console.error('[Auth] Error applying session state:', error);
       setAuthState({
         user: null,
         session: newSession || null,
@@ -178,11 +170,45 @@ const initializeAuth = () => {
         isLoading: false,
       });
     }
+  };
+  
+  // CRITICAL: Set up onAuthStateChange FIRST before getSession
+  // This ensures we don't miss any auth events
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
+    if (_event === 'INITIAL_SESSION') {
+      initialSessionHandled = true;
+    }
+    await applySessionState(newSession, _event);
   });
 
   // Then call getSession to handle existing session from storage
-  // The onAuthStateChange listener above will fire INITIAL_SESSION automatically
-  // so we don't need to handle getSession result separately
+  // Keep this as a safety fallback in case INITIAL_SESSION is delayed/missed
+  supabase.auth.getSession()
+    .then(async ({ data, error }) => {
+      if (error) {
+        console.error('[Auth] getSession fallback error:', error);
+      }
+
+      if (!initialSessionHandled) {
+        console.log('[Auth] Applying getSession fallback, session:', !!data.session);
+        await applySessionState(data.session, 'GET_SESSION_FALLBACK');
+      }
+    })
+    .catch((error) => {
+      console.error('[Auth] getSession fallback exception:', error);
+      if (authState.isLoading) {
+        setAuthState({ isLoading: false });
+      }
+    });
+
+  // Fail-safe: never keep auth loading forever
+  setTimeout(() => {
+    if (authState.isLoading) {
+      console.warn('[Auth] Initialization timeout, forcing loading=false');
+      setAuthState({ isLoading: false });
+    }
+  }, 3000);
   
   return () => subscription?.unsubscribe();
 };
