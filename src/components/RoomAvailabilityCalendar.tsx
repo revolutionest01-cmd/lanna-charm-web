@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, eachDayOfInterval, startOfMonth, endOfMonth, startOfToday } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, startOfToday, isBefore } from 'date-fns';
 import { th as thLocale, enUS as enUSLocale } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -238,19 +238,25 @@ export const RoomAvailabilityCalendar = ({
             const status = getDayStatus(date);
             const dateKey = format(date, 'yyyy-MM-dd');
             const isToday = format(date, 'yyyy-MM-dd') === format(startOfToday(), 'yyyy-MM-dd');
+            const isPastDate = isBefore(date, startOfToday());
 
             return (
               <div
                 key={dateKey}
                 className={cn(
-                  'aspect-square flex items-center justify-center text-[7px] sm:text-[9px] md:text-xs font-medium rounded-sm sm:rounded-md transition-all cursor-help',
-                  isToday && 'ring-[1.5px] ring-blue-500 sm:ring-2',
-                  status.isAvailable
+                  'aspect-square flex items-center justify-center text-[7px] sm:text-[9px] md:text-xs font-medium rounded-sm sm:rounded-md transition-all',
+                  isPastDate ? 'cursor-default' : 'cursor-help',
+                  isToday && !isPastDate && 'ring-[1.5px] ring-blue-500 sm:ring-2',
+                  isPastDate
+                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    : status.isAvailable
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
                     : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
                 )}
                 title={
-                  status.bookedBy
+                  isPastDate
+                    ? 'Past date'
+                    : status.bookedBy
                     ? `${status.isAvailable ? 'Available' : 'Booked by'}: ${status.bookedBy}${status.notes ? ` - ${status.notes}` : ''}`
                     : status.isAvailable ? 'Available' : 'Booked'
                 }
@@ -274,6 +280,12 @@ export const RoomAvailabilityCalendar = ({
           <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700" />
           <span className="text-slate-600 dark:text-slate-400">
             {language === 'th' ? 'ไม่ว่าง' : 'Not Available'}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600" />
+          <span className="text-slate-600 dark:text-slate-400">
+            {language === 'th' ? 'ผ่านมาแล้ว' : 'Past Date'}
           </span>
         </div>
       </div>

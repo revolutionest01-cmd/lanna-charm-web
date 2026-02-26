@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, startOfToday, isBefore } from 'date-fns';
 import { th as thLocale, enUS as enUSLocale } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Trash2, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -290,67 +290,68 @@ export const AdminAvailabilityEditor = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl w-[95vw] sm:w-auto bg-white dark:bg-white border-2 border-primary/20 shadow-2xl rounded-2xl">
-          <DialogHeader className="bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 sm:-mx-6 -mt-6 px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-primary/20 rounded-t-2xl">
-            <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold text-foreground/90">
-              {language === 'th' ? 'จัดการสถานะของห้อง' : 'Manage Room Status'} <span className="text-primary text-sm sm:text-base md:text-lg">- {roomName}</span>
+        <DialogContent className="max-w-full sm:max-w-md md:max-w-lg w-[95vw] sm:w-auto bg-white dark:bg-white border-2 border-primary/20 shadow-lg rounded-xl">
+          <DialogHeader className="bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 sm:-mx-5 -mt-5 px-3 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b border-primary/15 rounded-t-xl">
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground/90">
+              {language === 'th' ? 'จัดการสถานะของห้อง' : 'Manage Room Status'}
             </DialogTitle>
-            <DialogDescription className="text-foreground/70 font-medium text-xs sm:text-sm md:text-base mt-1 sm:mt-2 line-clamp-2">
+            <p className="text-primary text-xs sm:text-sm font-semibold mt-0.5">{roomName}</p>
+            <DialogDescription className="text-foreground/65 font-medium text-[10px] sm:text-xs mt-1.5 line-clamp-2">
               {language === 'th' 
-                ? '🟢 สีเขียว = ว่าง | 🔴 สีแดง = ไม่ว่าง | คลิกที่วันที่เพื่อแก้ไข'
-                : '🟢 Green = Available | 🔴 Red = Not Available | Click date to edit'}
+                ? '🟢 ว่าง | 🔴 ไม่ว่าง | คลิกเพื่อแก้ไข'
+                : '🟢 Available | 🔴 Not Available | Click to edit'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 sm:space-y-5 px-3 sm:px-6 pb-4 sm:pb-6 max-h-[80vh] overflow-y-auto">
+          <div className="space-y-2 sm:space-y-3 px-3 sm:px-4 pb-3 sm:pb-4 max-h-[70vh] overflow-y-auto">
             {/* Quick actions */}
             <div className="flex gap-1.5 sm:gap-2 flex-wrap">
               <Button
                 size="sm"
                 onClick={() => handleBulkBlock(7)}
                 disabled={isLoading}
-                className="border-2 border-orange-500 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold transition-all shadow-sm hover:shadow-md text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
+                className="border border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold transition-all text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 sm:py-1.5"
               >
-                {language === 'th' ? 'ปิด 7 วน' : 'Block 7 days'}
+                {language === 'th' ? 'ปิด 7 วน' : '7 days'}
               </Button>
               <Button
                 size="sm"
                 onClick={() => handleBulkBlock(14)}
                 disabled={isLoading}
-                className="border-2 border-orange-500 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold transition-all shadow-sm hover:shadow-md text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
+                className="border border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold transition-all text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 sm:py-1.5"
               >
-                {language === 'th' ? 'ปิด 14 วน' : 'Block 14 days'}
+                {language === 'th' ? 'ปิด 14 วน' : '14 days'}
               </Button>
               <Button
                 size="sm"
                 onClick={() => handleBulkBlock(30)}
                 disabled={isLoading}
-                className="border-2 border-orange-500 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold transition-all shadow-sm hover:shadow-md text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
+                className="border border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold transition-all text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 sm:py-1.5"
               >
-                {language === 'th' ? 'ปิด 30 วน' : 'Block 30 days'}
+                {language === 'th' ? 'ปิด 30 วน' : '30 days'}
               </Button>
             </div>
 
             {/* Month navigation */}
-            <div className="flex items-center justify-between bg-primary/5 p-2 sm:p-4 rounded-xl border border-primary/15">
-              <button onClick={handlePrevMonth} className="p-1 sm:p-2 hover:bg-primary/15 rounded-lg transition-all text-foreground/80 hover:text-foreground">
-                <ChevronLeft size={16} className="sm:w-5 sm:h-5" />
+            <div className="flex items-center justify-between bg-primary/5 p-1.5 sm:p-3 rounded-lg border border-primary/10">
+              <button onClick={handlePrevMonth} className="p-0.5 sm:p-1.5 hover:bg-primary/15 rounded-md transition-all text-foreground/70 hover:text-foreground">
+                <ChevronLeft size={14} className="sm:w-[18px] sm:h-[18px]" />
               </button>
-              <h3 className="font-bold text-sm sm:text-base md:text-lg text-foreground/90">
+              <h3 className="font-semibold text-xs sm:text-sm text-foreground/90">
                 {format(month, language === 'th' ? 'MMMM yyyy' : 'MMMM yyyy', {
                   locale: language === 'th' ? thLocale : enUSLocale,
                 })}
               </h3>
-              <button onClick={handleNextMonth} className="p-1 sm:p-2 hover:bg-primary/15 rounded-lg transition-all text-foreground/80 hover:text-foreground">
-                <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+              <button onClick={handleNextMonth} className="p-0.5 sm:p-1.5 hover:bg-primary/15 rounded-md transition-all text-foreground/70 hover:text-foreground">
+                <ChevronRight size={14} className="sm:w-[18px] sm:h-[18px]" />
               </button>
             </div>
 
             {/* Calendar grid */}
             <div>
-              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1 sm:mb-2 px-1 sm:px-2 py-1.5 sm:py-2 bg-primary/5 rounded-lg border border-primary/15">
+              <div className="grid grid-cols-7 gap-0.5 mb-1 px-0.5 sm:px-1 py-1 sm:py-1.5 bg-primary/5 rounded-md border border-primary/10">
                 {weekDays.map((day) => (
-                  <div key={day} className="text-center text-[10px] sm:text-xs font-bold text-foreground/90 py-1 sm:py-2">
+                  <div key={day} className="text-center text-[9px] sm:text-xs font-bold text-foreground/80 py-0.5 sm:py-1">
                     {day}
                   </div>
                 ))}
@@ -361,7 +362,7 @@ export const AdminAvailabilityEditor = ({
                   <div className="animate-spin"><div className="h-5 w-5 sm:h-6 sm:w-6 border-2 border-primary/30 border-t-primary rounded-full" /></div>
                 </div>
               ) : (
-                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 p-1 sm:p-2 bg-white rounded-lg border border-primary/15">
+                <div className="grid grid-cols-7 gap-0.5 p-0.5 sm:p-1.5 bg-white rounded-md border border-primary/10">
                   {Array.from({ length: startingDayOfWeek }, (_, i) => (
                     <div key={`empty-${i}`} className="aspect-square" />
                   ))}
@@ -370,16 +371,20 @@ export const AdminAvailabilityEditor = ({
                     const dateStr = format(date, 'yyyy-MM-dd');
                     const record = availabilityData.get(dateStr);
                     const isAvailable = record?.is_available ?? true;
+                    const isPastDate = isBefore(date, startOfToday());
 
                     return (
                       <button
                         key={dateStr}
-                        onClick={() => handleDateClick(dateStr)}
+                        onClick={() => !isPastDate && handleDateClick(dateStr)}
+                        disabled={isPastDate}
                         className={cn(
-                          'aspect-square flex items-center justify-center text-[10px] sm:text-xs md:text-sm font-bold rounded-md sm:rounded-lg transition-all hover:shadow-md cursor-pointer border-2',
-                          isAvailable
-                            ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-500'
-                            : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-500'
+                          'aspect-square flex items-center justify-center text-[9px] sm:text-xs font-bold rounded-sm sm:rounded-md transition-all border',
+                          isPastDate
+                            ? 'border-slate-300 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                            : 'cursor-pointer hover:shadow-sm ' + (isAvailable
+                            ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
+                            : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100')
                         )}
                       >
                         {format(date, 'd')}
@@ -395,93 +400,94 @@ export const AdminAvailabilityEditor = ({
 
       {/* Edit date modal */}
       <Dialog open={isEditingDate} onOpenChange={setIsEditingDate}>
-        <DialogContent className="max-w-full sm:max-w-lg w-[95vw] sm:w-auto bg-white dark:bg-white border-2 border-primary/20 shadow-2xl rounded-2xl">
-          <DialogHeader className="bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 sm:-mx-6 -mt-6 px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-primary/20 rounded-t-2xl">
-            <DialogTitle className="text-base sm:text-lg md:text-xl font-bold text-foreground/90">
-              {language === 'th' ? 'แก้ไขสถานะของห้องพัก' : 'Edit Room Status'} <span className="text-primary text-xs sm:text-sm md:text-base">- {selectedDate}</span>
+        <DialogContent className="max-w-full sm:max-w-md w-[95vw] sm:w-auto bg-white dark:bg-white border-2 border-primary/20 shadow-lg rounded-xl">
+          <DialogHeader className="bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 sm:-mx-5 -mt-5 px-3 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b border-primary/15 rounded-t-xl">
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground/90">
+              {language === 'th' ? 'แก้ไขสถานะ' : 'Edit Status'}
             </DialogTitle>
+            <p className="text-primary text-xs sm:text-sm font-semibold mt-0.5">{selectedDate}</p>
           </DialogHeader>
 
-          <div className="space-y-3 sm:space-y-5 px-3 sm:px-6 pb-4 sm:pb-6">
-            <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-2 sm:space-y-3 px-3 sm:px-4 pb-3 sm:pb-4">
+            <div className="space-y-1.5 sm:space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs sm:text-sm font-bold text-foreground/90">
-                  {language === 'th' ? 'สถานะของห้อง' : 'Room Status'}
+                  {language === 'th' ? 'สถานะ' : 'Status'}
                 </Label>
-                <span className="text-[10px] sm:text-xs px-2 py-1 rounded bg-primary/10 text-primary font-semibold">
+                <span className="text-[9px] sm:text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold\">
                   {editData.is_available 
-                    ? (language === 'th' ? '🟢 ว่าง' : '🟢 Available')
-                    : (language === 'th' ? '🔴 ไม่ว่าง' : '🔴 Not Available')}
+                    ? (language === 'th' ? '🟢 ว่าง' : '🟢 Free')
+                    : (language === 'th' ? '🔴 ไม่ว่าง' : '🔴 Booked')}
                 </span>
               </div>
-              <div className="flex gap-2 sm:gap-3">
+              <div className="flex gap-2 sm:gap-2.5">
                 <Button
                   onClick={() => setEditData({ ...editData, is_available: true })}
                   className={cn(
-                    'flex-1 border-2 font-semibold text-xs sm:text-sm transition-all px-2 sm:px-4 py-2 sm:py-2.5 duration-200',
+                    'flex-1 border font-semibold text-xs sm:text-sm transition-all px-2 sm:px-3 py-1.5 sm:py-2 duration-200',
                     editData.is_available
-                      ? 'border-green-600 bg-green-600 text-white hover:bg-green-700 hover:border-green-700 shadow-lg scale-105'
-                      : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-400'
+                      ? 'border-green-600 bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                      : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
                   )}
                 >
-                  <span className="mr-1.5">🟢</span>
-                  {language === 'th' ? 'ว่าง' : 'Available'}
+                  <span className="mr-1">🟢</span>
+                  {language === 'th' ? 'ว่าง' : 'Free'}
                 </Button>
                 <Button
                   onClick={() => setEditData({ ...editData, is_available: false })}
                   className={cn(
-                    'flex-1 border-2 font-semibold text-xs sm:text-sm transition-all px-2 sm:px-4 py-2 sm:py-2.5 duration-200',
+                    'flex-1 border font-semibold text-xs sm:text-sm transition-all px-2 sm:px-3 py-1.5 sm:py-2 duration-200',
                     !editData.is_available
-                      ? 'border-red-600 bg-red-600 text-white hover:bg-red-700 hover:border-red-700 shadow-lg scale-105'
-                      : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400'
+                      ? 'border-red-600 bg-red-600 text-white hover:bg-red-700 shadow-sm'
+                      : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
                   )}
                 >
-                  <span className="mr-1.5">🔴</span>
-                  {language === 'th' ? 'ไม่ว่าง' : 'Not Available'}
+                  <span className="mr-1">🔴</span>
+                  {language === 'th' ? 'ไม่ว่าง' : 'Booked'}
                 </Button>
               </div>
             </div>
 
             {!editData.is_available && (
-              <div className="bg-primary/5 p-2 sm:p-4 rounded-lg border border-primary/15 space-y-2 sm:space-y-4">
+              <div className="bg-primary/5 p-2 sm:p-3 rounded-md border border-primary/10 space-y-1.5 sm:space-y-2">
                 <div>
-                  <Label htmlFor="booked_by" className="text-xs sm:text-sm font-bold text-foreground/90">
+                  <Label htmlFor="booked_by" className="text-[10px] sm:text-xs font-semibold text-foreground/80 block">
                     {language === 'th' ? 'จองโดย' : 'Booked By'}
                   </Label>
                   <Input
                     id="booked_by"
-                    placeholder={language === 'th' ? 'เช่น Agoda, Booking.com, John Smith' : 'e.g. Agoda, Booking.com, John Smith'}
+                    placeholder={language === 'th' ? 'Agoda, Booking.com...' : 'Agoda, Booking.com...'}
                     value={editData.booked_by}
                     onChange={(e) => setEditData({ ...editData, booked_by: e.target.value })}
-                    className="mt-1 sm:mt-2 border-2 bg-white text-xs sm:text-sm text-foreground/90 placeholder:font-medium placeholder:text-foreground/50 focus:border-primary"
+                    className="mt-0.5 border text-[10px] sm:text-xs bg-white text-foreground/90 placeholder:text-foreground/40 p-1.5 sm:p-2"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="notes" className="text-xs sm:text-sm font-bold text-foreground/90">
+                  <Label htmlFor="notes" className="text-[10px] sm:text-xs font-semibold text-foreground/80 block">
                     {language === 'th' ? 'หมายเหตุ' : 'Notes'}
                   </Label>
                   <Input
                     id="notes"
-                    placeholder={language === 'th' ? 'เช่น Manual block, สำคัญ' : 'e.g. Manual block, Important'}
+                    placeholder={language === 'th' ? 'Manual block, สำคัญ...' : 'Manual block, Important...'}
                     value={editData.notes}
                     onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                    className="mt-1 sm:mt-2 border-2 bg-white text-xs sm:text-sm text-foreground/90 placeholder:font-medium placeholder:text-foreground/50 focus:border-primary"
+                    className="mt-0.5 border text-[10px] sm:text-xs bg-white text-foreground/90 placeholder:text-foreground/40 p-1.5 sm:p-2"
                   />
                 </div>
               </div>
             )}
 
-            <div className="flex gap-2 pt-2 sm:pt-4">
+            <div className="flex gap-1.5 sm:gap-2 pt-1.5 sm:pt-2.5">
               <Button
                 onClick={handleSaveAvailability}
                 disabled={isLoading}
-                className="flex-1 border-2 border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:border-blue-700 font-semibold shadow-md transition-all text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-sm transition-all text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{language === 'th' ? 'กำลังบันทึก...' : 'Saving...'}</span>
+                  <div className="flex items-center justify-center gap-1">
+                    <div className="h-2.5 w-2.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="text-xs">{language === 'th' ? 'บัน...' : 'Save...'}</span>
                   </div>
                 ) : (
                   language === 'th' ? 'บันทึก' : 'Save'
@@ -490,9 +496,9 @@ export const AdminAvailabilityEditor = ({
               <Button
                 onClick={handleDeleteAvailability}
                 disabled={isLoading}
-                className="border-2 border-red-500 bg-red-50 hover:bg-red-100 text-red-600 font-semibold transition-all p-1.5 sm:p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="border border-red-400 bg-red-50 hover:bg-red-100 text-red-600 font-semibold transition-all p-1.5 sm:p-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                <Trash2 size={13} className="sm:w-3.5 sm:h-3.5" />
               </Button>
             </div>
           </div>
