@@ -207,7 +207,7 @@ serve(async (req) => {
       en: 'Reply in English, polite and friendly',
       zh: '用中文回复，礼貌友好',
       ja: '日本語で丁寧に回答してください',
-    }[sanitizedLanguage] || 'ตอบเป็นภาษาไทย';
+    }[sanitizedLanguage as keyof typeof langInstruction] || 'ตอบเป็นภาษาไทย';
 
     const systemPrompt = `คุณเป็น "Plernping AI" - ผู้ช่วยอัจฉริยะของ Plern Ping Cafe & Resort
 
