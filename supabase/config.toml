@@ -1,13 +1,13 @@
 project_id = "gomjfnkzhxqfmbwmaphz"
 
-[functions.booking]
-verify_jwt = false
-
-[functions.contact]
-verify_jwt = false
-
-[functions.pricing-chat]
-verify_jwt = false
-
-[functions.quick-info]
-verify_jwt = false
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.booking]
+    verify_jwt = false
+  [functions.contact]
+    verify_jwt = false
+  [functions.pricing-chat]
+    verify_jwt = false
+  [functions.quick-info]
+    verify_jwt = false
