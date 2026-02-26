@@ -11,6 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
+import UserActivity from "@/components/UserActivity";
 import { format } from "date-fns";
 
 const Profile = () => {
@@ -309,6 +310,9 @@ const Profile = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Activity History */}
+        {user?.id && <UserActivity userId={user.id} language={language} />}
       </div>
 
       {/* Crop Dialog */}

@@ -417,12 +417,19 @@ const AppSidebar = () => {
           {isAuthenticated && user ? (
             <div className="space-y-2.5">
               {/* User Profile Card - Minimal & Elegant */}
-              <div className={cn(
-                "flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200",
-                "bg-gradient-to-br from-highlight/8 to-highlight/5",
-                "border border-highlight/15 hover:border-highlight/25",
-                "hover:shadow-sm hover:from-highlight/12 hover:to-highlight/8"
-              )}>
+              <button
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                  navigate('/profile');
+                }}
+                className={cn(
+                  "flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 w-full text-left",
+                  "bg-gradient-to-br from-highlight/8 to-highlight/5",
+                  "border border-highlight/15 hover:border-highlight/25",
+                  "hover:shadow-sm hover:from-highlight/12 hover:to-highlight/8",
+                  "cursor-pointer active:scale-95"
+                )}
+              >
                 {/* Avatar - Handle both emoji and URL avatars */}
                 {user.avatar && /^[\p{Emoji}]$/u.test(user.avatar) ? (
                   // Emoji Avatar
@@ -447,7 +454,7 @@ const AppSidebar = () => {
                     }
                   </p>
                 </div>
-              </div>
+              </button>
 
               {/* Admin & Logout - Refined & Minimal */}
               <div className="flex gap-2 mt-2">
