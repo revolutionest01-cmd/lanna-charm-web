@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
+import AvatarCropDialog from "@/components/AvatarCropDialog";
 import { format } from "date-fns";
 
 const Profile = () => {
@@ -23,6 +24,7 @@ const Profile = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Redirect if not authenticated
@@ -53,33 +55,40 @@ const Profile = () => {
     loadProfile();
   }, [user?.id]);
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
+    if (!file) return;
 
-    // Validate file
     if (!file.type.startsWith("image/")) {
       sweetAlert.error(language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      sweetAlert.error(language === "th" ? "ขนาดไฟล์ต้องไม่เกิน 5MB" : "File size must not exceed 5MB");
+    if (file.size > 10 * 1024 * 1024) {
+      sweetAlert.error(language === "th" ? "ขนาดไฟล์ต้องไม่เกิน 10MB" : "File size must not exceed 10MB");
       return;
     }
 
+    const reader = new FileReader();
+    reader.onload = () => setCropImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleCroppedUpload = async (blob: Blob) => {
+    if (!user?.id) return;
+    setCropImageSrc(null);
     setIsUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
+      const filePath = `${user.id}/avatar.webp`;
 
-      // Upload to storage
       const { error: uploadError } = await supabase.storage
-        .from("reviews") // reuse existing public bucket
-        .upload(filePath, file, { upsert: true });
+        .from("reviews")
+        .upload(filePath, blob, { upsert: true, contentType: "image/webp" });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from("reviews")
         .getPublicUrl(filePath);
@@ -87,7 +96,6 @@ const Profile = () => {
       const newAvatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       setAvatarUrl(newAvatarUrl);
 
-      // Update profile in DB
       await supabase
         .from("profiles")
         .update({ avatar_url: newAvatarUrl })
@@ -243,7 +251,7 @@ const Profile = () => {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleAvatarUpload}
+                  onChange={handleFileSelect}
                   className="hidden"
                 />
               </div>
@@ -302,6 +310,17 @@ const Profile = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Crop Dialog */}
+      {cropImageSrc && (
+        <AvatarCropDialog
+          open={!!cropImageSrc}
+          imageSrc={cropImageSrc}
+          onClose={() => setCropImageSrc(null)}
+          onCropComplete={handleCroppedUpload}
+          language={language}
+        />
+      )}
     </div>
   );
 };
