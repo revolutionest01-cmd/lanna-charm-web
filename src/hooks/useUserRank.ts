@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { getRankFromPoints } from "@/lib/pointSystem";
 
 export interface UserRankData {
@@ -7,40 +8,27 @@ export interface UserRankData {
 }
 
 /**
- * Hook to fetch user's points and calculate their rank
- * Note: Currently returns beginner rank (0 points) as user_points table is being set up
+ * Hook to fetch user's reputation_points from profiles and calculate their rank
  */
 export const useUserRank = (userId: string | undefined | null) => {
   return useQuery({
     queryKey: ["user-rank", userId],
     queryFn: async (): Promise<UserRankData> => {
       if (!userId) {
-        return {
-          points: 0,
-          rank: getRankFromPoints(0),
-        };
+        return { points: 0, rank: getRankFromPoints(0) };
       }
 
-      try {
-        // Temporary: all users start at rank 0 (beginner)
-        // TODO: Implement actual point calculation from user activity
-        const points = 0;
-        return {
-          points,
-          rank: getRankFromPoints(points),
-        };
-      } catch (error) {
-        console.warn("[useUserRank] Error:", error);
-        return {
-          points: 0,
-          rank: getRankFromPoints(0),
-        };
-      }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("reputation_points")
+        .eq("id", userId)
+        .single();
+
+      const points = error ? 0 : (data?.reputation_points ?? 0);
+      return { points, rank: getRankFromPoints(points) };
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000,
     retry: 1,
   });
 };
-
-
