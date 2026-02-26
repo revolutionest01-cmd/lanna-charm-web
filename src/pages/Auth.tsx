@@ -205,7 +205,7 @@ const Auth = () => {
           }
         });
       } else {
-        alertShown = true;
+        setIsLoading(false);
         sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : language === 'ja' ? 'メールアドレスまたはパスワードが無効です' : 'Invalid email or password. Please check and try again.'));
       }
     } catch (error) {
