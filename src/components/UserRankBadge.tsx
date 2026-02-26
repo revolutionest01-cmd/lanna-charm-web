@@ -2,6 +2,7 @@ import { useUserRank } from "@/hooks/useUserRank";
 import { useUserPerks } from "@/hooks/useUserPerks";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 
 interface UserRankBadgeProps {
   userId?: string | null;
@@ -9,6 +10,7 @@ interface UserRankBadgeProps {
   showRankName?: boolean;
   size?: "sm" | "md" | "lg";
   className?: string;
+  disableProfileLink?: boolean;
 }
 
 /**
@@ -21,12 +23,36 @@ export const UserRankBadge = ({
   showRankName = false,
   size = "md",
   className = "",
+  disableProfileLink = false,
 }: UserRankBadgeProps) => {
+  const navigate = useNavigate();
   const { data: rankData } = useUserRank(userId);
   const { data: perksData } = useUserPerks(userId);
 
+  const canOpenProfile = !!userId && !disableProfileLink;
+
+  const openProfile = (e: React.MouseEvent | React.KeyboardEvent) => {
+    if (!canOpenProfile) return;
+    e.stopPropagation();
+    navigate(`/members/${userId}`, {
+      state: {
+        memberName: userName,
+      },
+    });
+  };
+
   if (!rankData) {
-    return <span className={className}>{userName}</span>;
+    return (
+      <span
+        className={`${className} ${canOpenProfile ? "cursor-pointer hover:underline" : ""}`}
+        role={canOpenProfile ? "button" : undefined}
+        tabIndex={canOpenProfile ? 0 : -1}
+        onClick={canOpenProfile ? openProfile : undefined}
+        onKeyDown={canOpenProfile ? (e) => (e.key === "Enter" || e.key === " ") && openProfile(e) : undefined}
+      >
+        {userName}
+      </span>
+    );
   }
 
   const { rank } = rankData;
@@ -58,7 +84,12 @@ export const UserRankBadge = ({
                 hasAura
                   ? "bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-600 bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(234,179,8,0.5)]"
                   : ""
-              }`}
+              } ${canOpenProfile ? "cursor-pointer hover:underline decoration-dotted" : ""}`}
+              role={canOpenProfile ? "button" : undefined}
+              tabIndex={canOpenProfile ? 0 : -1}
+              onClick={canOpenProfile ? openProfile : undefined}
+              onKeyDown={canOpenProfile ? (e) => (e.key === "Enter" || e.key === " ") && openProfile(e) : undefined}
+              title={canOpenProfile ? "View member profile" : undefined}
             >
               {userName}
             </span>

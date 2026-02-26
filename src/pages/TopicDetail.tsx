@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Eye,
   Heart,
+  ThumbsUp,
   ArrowLeft,
   Send,
   Clock,
@@ -22,6 +23,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
+  Crown,
+  UserPlus,
   X,
   ZoomIn,
 } from "lucide-react";
@@ -29,6 +32,8 @@ import sweetAlert from "@/lib/sweetAlert";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoryLabel, getCategoryColor } from "@/lib/forumConfig";
 import { ForumTopic } from "@/hooks/useWebboard";
+import { useUserRank } from "@/hooks/useUserRank";
+import { getRankFromPoints } from "@/lib/pointSystem";
 
 interface ForumReply {
   id: string;
@@ -39,11 +44,18 @@ interface ForumReply {
   author_name?: string;
 }
 
+interface UserSignature {
+  signature_text: string | null;
+  signature_image_url: string | null;
+  is_enabled: boolean;
+}
+
 const TopicDetail = () => {
   const navigate = useNavigate();
   const { topicId: id } = useParams();
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
+  const { data: currentUserRank } = useUserRank(user?.id);
 
   // State
   const [topic, setTopic] = useState<ForumTopic | null>(null);
@@ -59,6 +71,11 @@ const TopicDetail = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [imageZoom, setImageZoom] = useState(1);
   const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
+  const [replyLikeCounts, setReplyLikeCounts] = useState<Record<string, number>>({});
+  const [topContributor, setTopContributor] = useState<{ userId: string; name: string; likeCount: number } | null>(null);
+  const [replyUserPoints, setReplyUserPoints] = useState<Record<string, number>>({});
+  const [replySignatures, setReplySignatures] = useState<Record<string, UserSignature>>({});
+  const [endorsedMentees, setEndorsedMentees] = useState<Set<string>>(new Set());
 
   // Load topic and replies
   useEffect(() => {
@@ -113,6 +130,57 @@ const TopicDetail = () => {
       checkIfTopicLiked();
     }
   }, [user, topic?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadEndorsements = async () => {
+      const { data, error } = await (supabase as any)
+        .from("mentor_endorsements")
+        .select("mentee_user_id")
+        .eq("mentor_user_id", user.id)
+        .eq("is_active", true);
+
+      if (error || !data) {
+        setEndorsedMentees(new Set());
+        return;
+      }
+
+      setEndorsedMentees(new Set((data || []).map((row: any) => row.mentee_user_id)));
+    };
+
+    loadEndorsements();
+  }, [user?.id]);
+
+  const recomputeTopContributor = (
+    repliesList: ForumReply[],
+    likeMap: Record<string, number>
+  ) => {
+    const byUser: Record<string, { name: string; likes: number }> = {};
+
+    repliesList.forEach((reply) => {
+      const likes = likeMap[reply.id] || 0;
+      if (!byUser[reply.user_id]) {
+        byUser[reply.user_id] = {
+          name: reply.author_name || "Anonymous",
+          likes,
+        };
+      } else {
+        byUser[reply.user_id].likes += likes;
+      }
+    });
+
+    const ranked = Object.entries(byUser)
+      .map(([userId, info]) => ({ userId, name: info.name, likeCount: info.likes }))
+      .sort((a, b) => b.likeCount - a.likeCount);
+
+    if (!ranked.length || ranked[0].likeCount <= 0) {
+      setTopContributor(null);
+      return;
+    }
+
+    setTopContributor(ranked[0]);
+  };
 
   const loadTopicAndReplies = async () => {
     try {
@@ -182,7 +250,67 @@ const TopicDetail = () => {
             }
           })
         );
-        setReplies(enrichedReplies as ForumReply[]);
+
+        const normalizedReplies = enrichedReplies as ForumReply[];
+        setReplies(normalizedReplies);
+
+        const replyIds = normalizedReplies.map((r) => r.id);
+        const replyUserIds = Array.from(new Set(normalizedReplies.map((r) => r.user_id)));
+
+        if (replyIds.length > 0) {
+          const { data: likesData } = await (supabase as any)
+            .from("forum_reply_likes")
+            .select("reply_id, user_id")
+            .in("reply_id", replyIds);
+
+          const counts: Record<string, number> = {};
+          const likedByCurrentUser = new Set<string>();
+
+          (likesData || []).forEach((row: any) => {
+            counts[row.reply_id] = (counts[row.reply_id] || 0) + 1;
+            if (user?.id && row.user_id === user.id) {
+              likedByCurrentUser.add(row.reply_id);
+            }
+          });
+
+          setReplyLikeCounts(counts);
+          setLikedReplies(likedByCurrentUser);
+          recomputeTopContributor(normalizedReplies, counts);
+        } else {
+          setReplyLikeCounts({});
+          setLikedReplies(new Set());
+          setTopContributor(null);
+        }
+
+        if (replyUserIds.length > 0) {
+          const { data: profileRows } = await supabase
+            .from("profiles")
+            .select("id, reputation_points")
+            .in("id", replyUserIds as any);
+
+          const pointsMap: Record<string, number> = {};
+          (profileRows || []).forEach((row: any) => {
+            pointsMap[row.id] = row.reputation_points || 0;
+          });
+          setReplyUserPoints(pointsMap);
+
+          const { data: signatureRows } = await (supabase as any)
+            .from("user_signature_settings")
+            .select("user_id, signature_text, signature_image_url, is_enabled")
+            .in("user_id", replyUserIds)
+            .eq("is_enabled", true);
+
+          const signatureMap: Record<string, UserSignature> = {};
+          (signatureRows || []).forEach((row: any) => {
+            signatureMap[row.user_id] = {
+              signature_text: row.signature_text,
+              signature_image_url: row.signature_image_url,
+              is_enabled: row.is_enabled,
+            };
+          });
+
+          setReplySignatures(signatureMap);
+        }
       }
     } catch (error) {
       console.error("Error loading topic:", error);
@@ -274,6 +402,110 @@ const TopicDetail = () => {
       }
     } catch (error) {
       sweetAlert.error(language === "th" ? "ไม่สามารถไลค์ได้" : "Failed to like");
+    }
+  };
+
+  const handleToggleReplyLike = async (replyId: string) => {
+    if (!isAuthenticated || !user) {
+      sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
+      navigate("/auth");
+      return;
+    }
+
+    const currentlyLiked = likedReplies.has(replyId);
+
+    try {
+      if (currentlyLiked) {
+        const { error } = await (supabase as any)
+          .from("forum_reply_likes")
+          .delete()
+          .eq("reply_id", replyId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        const nextLiked = new Set(likedReplies);
+        nextLiked.delete(replyId);
+        setLikedReplies(nextLiked);
+
+        const nextCounts = {
+          ...replyLikeCounts,
+          [replyId]: Math.max(0, (replyLikeCounts[replyId] || 0) - 1),
+        };
+        setReplyLikeCounts(nextCounts);
+        recomputeTopContributor(replies, nextCounts);
+      } else {
+        const { error } = await (supabase as any)
+          .from("forum_reply_likes")
+          .insert({ reply_id: replyId, user_id: user.id });
+
+        if (error) throw error;
+
+        const nextLiked = new Set(likedReplies);
+        nextLiked.add(replyId);
+        setLikedReplies(nextLiked);
+
+        const nextCounts = {
+          ...replyLikeCounts,
+          [replyId]: (replyLikeCounts[replyId] || 0) + 1,
+        };
+        setReplyLikeCounts(nextCounts);
+        recomputeTopContributor(replies, nextCounts);
+      }
+    } catch (error: any) {
+      if (error?.code === "42P01" || error?.message?.includes("forum_reply_likes")) {
+        sweetAlert.error(
+          language === "th"
+            ? "ระบบไลก์คอมเมนต์ยังไม่พร้อม (ยังไม่ได้รัน migration)"
+            : "Reply-like system is not ready yet (migration pending)"
+        );
+      } else {
+        sweetAlert.error(language === "th" ? "ไม่สามารถกดถูกใจคอมเมนต์ได้" : "Failed to like reply");
+      }
+    }
+  };
+
+  const handleEndorseMentee = async (menteeUserId: string) => {
+    if (!isAuthenticated || !user) {
+      sweetAlert.error(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please login first");
+      return;
+    }
+
+    try {
+      const { data, error } = await (supabase as any).rpc("endorse_newcomer", {
+        p_mentee_user_id: menteeUserId,
+      });
+
+      if (error) throw error;
+
+      switch (data?.status) {
+        case "success": {
+          setEndorsedMentees((prev) => new Set([...prev, menteeUserId]));
+          sweetAlert.success(language === "th" ? "รับรองศิษย์สำเร็จ" : "Mentee endorsed successfully");
+          break;
+        }
+        case "mentor_rank_too_low":
+          sweetAlert.warning(language === "th" ? "ต้องมียศอาจารย์ขึ้นไปจึงรับรองได้" : "Instructor rank or higher required");
+          break;
+        case "mentee_not_newcomer":
+          sweetAlert.warning(language === "th" ? "ผู้ใช้นี้ไม่ใช่ผู้เล่นใหม่แล้ว" : "This user is no longer a newcomer");
+          break;
+        case "already_endorsed":
+          sweetAlert.warning(language === "th" ? "ผู้ใช้นี้มีอาจารย์แล้ว" : "This user is already endorsed");
+          break;
+        default:
+          sweetAlert.error(language === "th" ? "ไม่สามารถรับรองได้" : "Unable to endorse");
+      }
+    } catch (error: any) {
+      if (error?.code === "42P01" || error?.message?.includes("mentor_endorsements")) {
+        sweetAlert.error(
+          language === "th"
+            ? "ระบบศิษย์-อาจารย์ยังไม่พร้อม (ยังไม่ได้รัน migration)"
+            : "Mentorship system is not ready yet (migration pending)"
+        );
+      } else {
+        sweetAlert.error(language === "th" ? "เกิดข้อผิดพลาดในการรับรองศิษย์" : "Failed to endorse mentee");
+      }
     }
   };
 
@@ -400,13 +632,13 @@ const TopicDetail = () => {
 
   if (!topic) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:to-slate-900">
-        <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-blue-100/20 dark:border-blue-900/20">
+      <div className="min-h-screen bg-gradient-to-br from-sky-100 via-cyan-50 to-violet-100 dark:from-slate-950 dark:to-slate-900">
+        <header className="sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-sky-200/40 dark:border-slate-700/60">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <Button
               variant="ghost"
               onClick={() => navigate("/forum")}
-              className="hover:bg-blue-100 dark:hover:bg-blue-900/20"
+              className="hover:bg-sky-100 dark:hover:bg-sky-900/20"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               {language === "th" ? "กลับไปเว็บบอร์ด" : "Back to Forum"}
@@ -415,7 +647,7 @@ const TopicDetail = () => {
         </header>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-2xl shadow-sm bg-gradient-to-br from-red-50/50 to-orange-50/50 dark:from-red-900/20 dark:to-orange-900/20">
+          <Card className="border-orange-200/70 dark:border-orange-800/60 rounded-2xl shadow-sm bg-gradient-to-br from-orange-50 to-rose-50 dark:from-orange-900/20 dark:to-rose-900/20">
             <CardContent className="p-8 text-center">
               <AlertCircle className="h-16 w-16 text-red-500 dark:text-red-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -428,7 +660,7 @@ const TopicDetail = () => {
               </p>
               <Button
                 onClick={() => navigate("/forum")}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
               >
                 {language === "th" ? "กลับไปหน้าเว็บบอร์ด" : "Back to Forum"}
               </Button>
@@ -448,14 +680,14 @@ const TopicDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-cyan-50 to-violet-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-blue-100/20 dark:border-blue-900/20 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-sky-200/40 dark:border-slate-700/60 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Button
             variant="ghost"
             onClick={() => navigate("/forum")}
-            className="hover:bg-blue-100 dark:hover:bg-blue-900/20"
+            className="hover:bg-sky-100 dark:hover:bg-sky-900/20"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             {language === "th" ? "กลับไปเว็บบอร์ด" : "Back to Forum"}
@@ -466,7 +698,7 @@ const TopicDetail = () => {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Topic Card */}
-        <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-2xl shadow-sm overflow-hidden mb-8">
+        <Card className="border-sky-200/60 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden mb-8 bg-white/95 dark:bg-slate-900/85">
           <CardContent className="p-6 sm:p-8">
             {/* Category Badge */}
             <div className="mb-4">
@@ -484,10 +716,10 @@ const TopicDetail = () => {
             </h1>
 
             {/* Author & Meta Info */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 border-b border-blue-100/50 dark:border-blue-800/50">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 border-b border-sky-200/50 dark:border-slate-700/70">
               <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10 border-2 border-blue-200 dark:border-blue-800">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
+                <Avatar className="w-10 h-10 border-2 border-sky-200 dark:border-slate-700">
+                  <AvatarFallback className="bg-gradient-to-br from-sky-500 via-cyan-500 to-violet-500 text-white font-semibold">
                     {topic.author_name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
@@ -506,8 +738,8 @@ const TopicDetail = () => {
 
               <div className="flex items-center gap-4 ml-auto">
                 {/* Views */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100/50 dark:border-blue-800/50">
-                  <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sky-50/70 dark:bg-sky-900/20 border border-sky-200/60 dark:border-sky-800/50">
+                  <Eye className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {topic.views || 0}
                   </span>
@@ -516,7 +748,7 @@ const TopicDetail = () => {
                 {/* Likes */}
                 <button
                   onClick={handleToggleLike}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50/50 dark:bg-red-900/20 border border-red-100/50 dark:border-red-800/50 hover:bg-red-100/50 dark:hover:bg-red-900/40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50/70 dark:bg-orange-900/20 border border-orange-200/60 dark:border-orange-800/50 hover:bg-orange-100/70 dark:hover:bg-orange-900/40 transition-colors"
                 >
                   <Heart
                     className="w-4 h-4"
@@ -531,9 +763,9 @@ const TopicDetail = () => {
                 {/* Share */}
                 <button
                   onClick={handleShareTopic}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50/50 dark:bg-green-900/20 border border-green-100/50 dark:border-green-800/50 hover:bg-green-100/50 dark:hover:bg-green-900/40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/50 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 transition-colors"
                 >
-                  <Share2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 </button>
               </div>
             </div>
@@ -541,7 +773,7 @@ const TopicDetail = () => {
             {/* Image */}
             {topic.image_url && (
               <div 
-                className="my-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 shadow-sm hover:shadow-lg transition-shadow cursor-pointer group relative"
+                className="my-8 rounded-xl overflow-hidden bg-gradient-to-br from-sky-100 via-cyan-100 to-violet-100 dark:from-sky-900/30 dark:via-cyan-900/20 dark:to-violet-900/30 shadow-sm hover:shadow-lg transition-shadow cursor-pointer group relative"
                 onClick={() => {
                   console.log('[TopicDetail] Image clicked:', topic.image_url);
                   setSelectedImage(topic.image_url || null);
@@ -571,7 +803,7 @@ const TopicDetail = () => {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="mt-8 pt-6 border-t border-blue-100/50 dark:border-blue-800/50">
+            <div className="mt-8 pt-6 border-t border-sky-200/50 dark:border-slate-700/70">
               <div className="flex items-center justify-between gap-2 sm:gap-4">
                 {/* Previous Topic Button */}
                 <Button
@@ -632,7 +864,7 @@ const TopicDetail = () => {
         {/* Replies Section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
-            <MessageCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <MessageCircle className="w-6 h-6 text-violet-600 dark:text-violet-400" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {language === "th" ? "ความคิดเห็น" : "Replies"}
             </h2>
@@ -641,8 +873,29 @@ const TopicDetail = () => {
             </span>
           </div>
 
+          {topContributor && (
+            <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20">
+              <CardContent className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-amber-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                      {language === "th" ? "Top Contributor of this Thread" : "Top Contributor of this Thread"}
+                    </p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
+                      {topContributor.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-full border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-700 bg-white/70">
+                  <ThumbsUp className="inline w-3 h-3 mr-1" />{topContributor.likeCount}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {replies.length === 0 ? (
-            <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-xl shadow-sm">
+            <Card className="border-sky-200/60 dark:border-slate-700 rounded-xl shadow-sm bg-white/95 dark:bg-slate-900/85">
               <CardContent className="p-8 text-center">
                 <MessageCircle className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">
@@ -655,12 +908,12 @@ const TopicDetail = () => {
               {replies.map((reply) => (
                 <Card
                   key={reply.id}
-                  className="border-blue-100/50 dark:border-blue-800/50 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                  className="border-sky-200/60 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white/95 dark:bg-slate-900/85"
                 >
                   <CardContent className="p-5 sm:p-6">
                     <div className="flex gap-4">
-                      <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-blue-200 dark:border-blue-800">
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-blue-500 text-white text-sm font-semibold">
+                      <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-sky-200 dark:border-slate-700">
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 via-cyan-500 to-violet-500 text-white text-sm font-semibold">
                           {reply.author_name?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
@@ -677,10 +930,56 @@ const TopicDetail = () => {
                               { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }
                             )}
                           </span>
+
+                          <button
+                            onClick={() => handleToggleReplyLike(reply.id)}
+                            className="ml-auto flex items-center gap-1 rounded-full border border-sky-200 px-2 py-1 text-xs text-sky-700 hover:bg-sky-50"
+                          >
+                            <ThumbsUp
+                              className="w-3.5 h-3.5"
+                              fill={likedReplies.has(reply.id) ? "currentColor" : "none"}
+                            />
+                            {replyLikeCounts[reply.id] || 0}
+                          </button>
+
+                          {isAuthenticated && user?.id !== reply.user_id && (currentUserRank?.rank?.id || 0) >= 4 && (replyUserPoints[reply.user_id] || 0) <= 100 && !endorsedMentees.has(reply.user_id) && (
+                            <button
+                              onClick={() => handleEndorseMentee(reply.user_id)}
+                              className="flex items-center gap-1 rounded-full border border-emerald-200 px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-50"
+                            >
+                              <UserPlus className="w-3.5 h-3.5" />
+                              {language === "th" ? "รับรองศิษย์" : "Endorse"}
+                            </button>
+                          )}
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-wrap">
                           {reply.content}
                         </p>
+
+                        {(() => {
+                          const signature = replySignatures[reply.user_id];
+                          const points = replyUserPoints[reply.user_id] || 0;
+                          const rank = getRankFromPoints(points);
+                          const canShowSignature = rank.id >= 6 && signature?.is_enabled && (!!signature.signature_text || !!signature.signature_image_url);
+
+                          if (!canShowSignature) return null;
+
+                          return (
+                            <div className="mt-3 rounded-lg border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-2">
+                              {signature.signature_text && (
+                                <p className="text-xs italic font-medium text-amber-800 mb-1">“{signature.signature_text}”</p>
+                              )}
+                              {signature.signature_image_url && (
+                                <img
+                                  src={signature.signature_image_url}
+                                  alt="signature"
+                                  className="max-h-20 rounded border border-amber-300"
+                                  loading="lazy"
+                                />
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>
@@ -691,7 +990,7 @@ const TopicDetail = () => {
         </div>
 
         {/* Reply Form */}
-        <Card className="border-blue-100/50 dark:border-blue-800/50 rounded-2xl shadow-sm overflow-hidden">
+        <Card className="border-violet-200/60 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden bg-white/95 dark:bg-slate-900/85">
           <CardContent className="p-6 sm:p-8">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               {language === "th" ? "แสดงความคิดเห็น" : "Leave a Reply"}
@@ -707,7 +1006,7 @@ const TopicDetail = () => {
                     onChange={(e) => setReplyContent(e.target.value)}
                     placeholder={language === "th" ? "เขียนความคิดเห็น..." : "Write your reply..."}
                     rows={4}
-                    className="resize-none rounded-lg bg-white text-gray-900 border-blue-200 dark:border-blue-800 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    className="resize-none rounded-lg bg-white text-gray-900 border-sky-200 dark:border-slate-700 focus:ring-sky-500 dark:focus:ring-sky-400"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -723,7 +1022,7 @@ const TopicDetail = () => {
                     className={`px-6 py-2.5 rounded-lg font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
                       isSubmitting || !replyContent.trim()
                         ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg active:scale-95 cursor-pointer shadow-md'
+                        : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white hover:shadow-lg active:scale-95 cursor-pointer shadow-md'
                     }`}
                   >
                     {isSubmitting ? (
@@ -750,7 +1049,7 @@ const TopicDetail = () => {
                 </p>
                 <Button
                   onClick={() => navigate("/auth")}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg"
+                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 rounded-lg"
                 >
                   {language === "th" ? "เข้าสู่ระบบ" : "Login"}
                 </Button>

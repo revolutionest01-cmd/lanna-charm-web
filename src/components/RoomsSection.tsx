@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wifi } from "lucide-react";
@@ -42,13 +42,18 @@ const RoomsSection = () => {
   const { data: rooms = [], isLoading: loading } = useRooms();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const closeCooldownUntilRef = useRef(0);
 
   const handleRoomClick = (room: Room) => {
+    if (Date.now() < closeCooldownUntilRef.current) {
+      return;
+    }
     setSelectedRoom(room);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    closeCooldownUntilRef.current = Date.now() + 350;
     setIsModalOpen(false);
     setSelectedRoom(null);
   };
@@ -81,7 +86,7 @@ const RoomsSection = () => {
 
   return (
     <section id="rooms" className="py-12 sm:py-16 md:py-20 bg-background overflow-hidden">
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 overflow-x-hidden">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6">
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4 font-serif px-2">
             {t.roomsTitle}
@@ -91,7 +96,7 @@ const RoomsSection = () => {
           </p>
         </div>
 
-        <div className="w-full overflow-x-hidden px-0">
+        <div className="w-full px-0">
           <Carousel
             opts={{
               align: "start",
@@ -163,9 +168,9 @@ const RoomsSection = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            {/* Navigation buttons - Show only on tablet/desktop, hide on mobile */}
-            <CarouselPrevious className="left-0 -translate-x-1/2 hidden md:flex" />
-            <CarouselNext className="right-0 translate-x-1/2 hidden md:flex" />
+            {/* Navigation buttons - Visible on all devices and kept inside viewport */}
+            <CarouselPrevious className="left-1 sm:left-2 md:left-3 top-auto bottom-3 sm:bottom-4 translate-y-0 z-20 flex h-8 w-8 sm:h-10 sm:w-10" />
+            <CarouselNext className="right-1 sm:right-2 md:right-3 top-auto bottom-3 sm:bottom-4 translate-y-0 z-20 flex h-8 w-8 sm:h-10 sm:w-10" />
           </Carousel>
         </div>
       </div>

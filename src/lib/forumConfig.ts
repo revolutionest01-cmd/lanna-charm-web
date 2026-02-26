@@ -27,9 +27,9 @@ export const FORUM_CATEGORIES: ForumCategory[] = [
     value: "general",
     label: { th: "ทั่วไป", en: "General" },
     color: {
-      bg: "bg-blue-50 dark:bg-blue-950/30",
-      text: "text-blue-700 dark:text-blue-300",
-      border: "border-blue-200 dark:border-blue-800",
+      bg: "bg-sky-50 dark:bg-sky-950/30",
+      text: "text-sky-700 dark:text-sky-300",
+      border: "border-sky-200 dark:border-sky-800",
     },
     icon: "💬",
     description: {
@@ -41,9 +41,9 @@ export const FORUM_CATEGORIES: ForumCategory[] = [
     value: "question",
     label: { th: "คำถาม", en: "Question" },
     color: {
-      bg: "bg-emerald-50 dark:bg-emerald-950/30",
-      text: "text-emerald-700 dark:text-emerald-300",
-      border: "border-emerald-200 dark:border-emerald-800",
+      bg: "bg-violet-50 dark:bg-violet-950/30",
+      text: "text-violet-700 dark:text-violet-300",
+      border: "border-violet-200 dark:border-violet-800",
     },
     icon: "❓",
     description: {
@@ -55,9 +55,9 @@ export const FORUM_CATEGORIES: ForumCategory[] = [
     value: "review",
     label: { th: "รีวิว", en: "Review" },
     color: {
-      bg: "bg-rose-50 dark:bg-rose-950/30",
-      text: "text-rose-700 dark:text-rose-300",
-      border: "border-rose-200 dark:border-rose-800",
+      bg: "bg-orange-50 dark:bg-orange-950/30",
+      text: "text-orange-700 dark:text-orange-300",
+      border: "border-orange-200 dark:border-orange-800",
     },
     icon: "⭐",
     description: {
@@ -69,9 +69,9 @@ export const FORUM_CATEGORIES: ForumCategory[] = [
     value: "shopping",
     label: { th: "ของแนะนำ", en: "Shoppable" },
     color: {
-      bg: "bg-amber-50 dark:bg-amber-950/30",
-      text: "text-amber-700 dark:text-amber-300",
-      border: "border-amber-200 dark:border-amber-800",
+      bg: "bg-emerald-50 dark:bg-emerald-950/30",
+      text: "text-emerald-700 dark:text-emerald-300",
+      border: "border-emerald-200 dark:border-emerald-800",
     },
     icon: "🛍️",
     description: {

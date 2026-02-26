@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { 
   Home, Info, Calendar, Bed, Coffee, Image, Star, Mail, 
   MessageCircle, LogIn, LogOut, Shield, User, X, Sparkles, Menu, Trash2, Heart, Map, ChevronRight, Compass, Users
@@ -39,6 +39,8 @@ const AppSidebar = () => {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<string>('hero');
   const [isBookingHovered, setIsBookingHovered] = useState(false);
+  const [isMenuAtBottom, setIsMenuAtBottom] = useState(false);
+  const sidebarContentRef = useRef<HTMLDivElement>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('theme-mode');
     if (saved) return saved === 'dark';
@@ -139,6 +141,39 @@ const AppSidebar = () => {
     return location.pathname === href;
   };
 
+  const scrollMenuToBottom = () => {
+    const scrollViewport = sidebarContentRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (!scrollViewport) return;
+
+    const threshold = 12;
+    const atBottom = scrollViewport.scrollTop + scrollViewport.clientHeight >= scrollViewport.scrollHeight - threshold;
+
+    setIsMenuAtBottom(!atBottom);
+
+    scrollViewport.scrollTo({
+      top: atBottom ? 0 : scrollViewport.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
+
+  useEffect(() => {
+    const scrollViewport = sidebarContentRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (!scrollViewport) return;
+
+    const threshold = 12;
+    const updateBottomState = () => {
+      const atBottom = scrollViewport.scrollTop + scrollViewport.clientHeight >= scrollViewport.scrollHeight - threshold;
+      setIsMenuAtBottom(atBottom);
+    };
+
+    updateBottomState();
+    scrollViewport.addEventListener('scroll', updateBottomState, { passive: true });
+
+    return () => {
+      scrollViewport.removeEventListener('scroll', updateBottomState);
+    };
+  }, [isMobile]);
+
   return (
     <Sidebar
       role="navigation"
@@ -185,7 +220,7 @@ const AppSidebar = () => {
         </div>
 
         {/* Navigation */}
-        <SidebarContent className="px-3 py-4">
+        <SidebarContent ref={sidebarContentRef} className="px-3 py-4">
           <ScrollArea className="flex-1">
             <div className="mb-3 px-2">
               <p className={cn("text-sm font-semibold italic text-center", themeStyles.muted)}>
@@ -410,6 +445,24 @@ const AppSidebar = () => {
               </div>
             )}
           </ScrollArea>
+
+          {isMobile && (
+            <button
+              type="button"
+              onClick={scrollMenuToBottom}
+              className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-full border border-primary/20 bg-background/10 px-3 py-1.5 text-[10px] text-white backdrop-blur-sm transition-colors hover:bg-background/15 active:scale-[0.99]"
+              aria-label={isMenuAtBottom
+                ? (language === 'th' ? 'กดเพื่อเลื่อนไปบนสุด' : language === 'zh' ? '点击返回顶部菜单' : 'Scroll back to top menu')
+                : (language === 'th' ? 'กดเพื่อเลื่อนดูเมนูที่เหลือ' : language === 'zh' ? '点击滚动查看其余菜单' : 'Scroll to remaining menu items')}
+            >
+              <ChevronRight className={cn("h-3 w-3 text-background/50 transition-transform", isMenuAtBottom ? "-rotate-90" : "rotate-90")} />
+              <span>
+                {isMenuAtBottom
+                  ? (language === 'th' ? 'กดเพื่อเลื่อนไปเมนูบนสุด' : language === 'zh' ? '点击返回顶部菜单' : 'Tap to go to top menu')
+                  : (language === 'th' ? 'กดเพื่อสไลด์ดูเมนูที่เหลือ' : language === 'zh' ? '点击滑动查看更多菜单' : 'Slide to view more menu')}
+              </span>
+            </button>
+          )}
         </SidebarContent>
 
         {/* Footer */}

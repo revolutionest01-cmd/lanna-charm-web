@@ -78,6 +78,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
   const { setIsModalOpen } = useModalState();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -89,6 +90,14 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 5;
   const minSwipeDistance = 50;
+
+  const handleRequestClose = (event?: React.SyntheticEvent) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    onClose();
+  };
 
   // Get current room index
   const currentRoomIndex = room ? allRooms.findIndex(r => r.id === room.id) : -1;
@@ -159,6 +168,39 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [isOpen, currentRoomIndex, allRooms, onRoomChange]);
+
+  useEffect(() => {
+    const loadRoomLikeStatus = async () => {
+      if (!isOpen || !room || !user) {
+        setIsLiked(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("room_likes")
+          .select("id")
+          .eq("room_id", room.id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          if (error.code !== "PGRST116") {
+            console.error("[RoomModal] Failed to load room like status:", error);
+          }
+          setIsLiked(false);
+          return;
+        }
+
+        setIsLiked(!!data);
+      } catch (error) {
+        console.error("[RoomModal] Error loading room like status:", error);
+        setIsLiked(false);
+      }
+    };
+
+    loadRoomLikeStatus();
+  }, [isOpen, room?.id, user?.id]);
 
   // Check admin status
   useEffect(() => {
@@ -412,20 +454,21 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const roomName = language === "th" ? room!.name_th : room!.name_en;
     const shareText = `${roomName} - ฿${room!.price} ${language === 'th' ? 'ต่อคืน' : language === 'zh' ? '每晚' : 'per night'}`;
-    const shareUrl = window.location.href;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#rooms`;
 
-    // Web Share API fallback to social media links
-    if (navigator.share) {
-      navigator.share({
-        title: roomName,
-        text: shareText,
-        url: shareUrl,
-      }).catch((err) => console.log("Share cancelled:", err));
-    } else {
-      // Fallback: Show social media share options
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: roomName,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      }
+
       const encodedText = encodeURIComponent(shareText);
       const encodedUrl = encodeURIComponent(shareUrl);
 
@@ -436,14 +479,83 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
         line: `https://line.me/R/msg/text/${encodedText}%20${encodedUrl}`,
       };
 
-      // Open a simple share menu (you can enhance this with a dropdown)
-      const platform = window.innerWidth < 640 ? "whatsapp" : "facebook";
-      window.open(shareLinks[platform as keyof typeof shareLinks], "_blank");
+      const platform = window.innerWidth < 640 ? "line" : "facebook";
+      const shareWindow = window.open(shareLinks[platform as keyof typeof shareLinks], "_blank", "noopener,noreferrer");
+
+      if (!shareWindow && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast.success(language === "th" ? "คัดลอกลิงก์แชร์แล้ว" : "Share link copied");
+      }
+    } catch (error) {
+      const isAbortError = error instanceof DOMException && error.name === "AbortError";
+      if (isAbortError) {
+        return;
+      }
+
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+          toast.success(language === "th" ? "คัดลอกลิงก์แชร์แล้ว" : "Share link copied");
+          return;
+        }
+      } catch (clipboardError) {
+        console.error("[RoomModal] Clipboard fallback failed:", clipboardError);
+      }
+
+      console.error("[RoomModal] Share failed:", error);
+      toast.error(language === "th" ? "ไม่สามารถแชร์ได้ในขณะนี้" : "Unable to share right now");
     }
   };
 
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
+  const toggleLike = async () => {
+    if (!room) return;
+
+    if (!user) {
+      toast.warning(language === "th" ? "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ" : "Please sign in to like this room");
+      return;
+    }
+
+    if (isLikeLoading) {
+      return;
+    }
+
+    setIsLikeLoading(true);
+
+    try {
+      if (isLiked) {
+        const { error } = await supabase
+          .from("room_likes")
+          .delete()
+          .eq("room_id", room.id)
+          .eq("user_id", user.id);
+
+        if (error) {
+          throw error;
+        }
+
+        setIsLiked(false);
+      } else {
+        const { error } = await supabase
+          .from("room_likes")
+          .insert({ room_id: room.id, user_id: user.id });
+
+        if (error) {
+          throw error;
+        }
+
+        setIsLiked(true);
+      }
+    } catch (error: any) {
+      console.error("[RoomModal] Failed to toggle room like:", error);
+
+      if (error?.code === "42P01") {
+        toast.error(language === "th" ? "ระบบถูกใจยังไม่พร้อม กรุณารัน migration ล่าสุด" : "Like system is not ready. Please run latest migration.");
+      } else {
+        toast.error(language === "th" ? "ไม่สามารถบันทึกการกดถูกใจได้" : "Could not save your like");
+      }
+    } finally {
+      setIsLikeLoading(false);
+    }
   };
 
   const roomName = language === "th" ? room!.name_th : room!.name_en;
@@ -460,7 +572,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
         {/* Backdrop */}
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
-          onClick={onClose}
+          onClick={handleRequestClose}
         />
 
         {/* Modal Container - Centered on viewport */}
@@ -468,7 +580,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
           className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              onClose();
+              handleRequestClose(e);
             }
           }}
           onTouchStart={handleTouchStart}
@@ -481,7 +593,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
         >
           {/* Close Button - Fixed at top */}
           <button
-            onClick={onClose}
+            onClick={handleRequestClose}
             className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 z-50 p-1.5 sm:p-2 md:p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 group"
             aria-label="Close modal"
           >
@@ -529,21 +641,30 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                 <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex items-center gap-1 sm:gap-1.5 md:gap-2">
                   <button
                     onClick={toggleLike}
-                    className="p-1 sm:p-1.5 md:p-2.5 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm transition-all hover:scale-110 group/like"
+                    disabled={isLikeLoading}
+                    className={cn(
+                      "p-1 sm:p-1.5 md:p-2.5 rounded-full border backdrop-blur-sm transition-all hover:scale-110 disabled:opacity-60 disabled:cursor-not-allowed",
+                      isLiked
+                        ? "bg-red-600/90 border-red-200 text-white shadow-lg"
+                        : "bg-black/55 border-white/90 text-white shadow-md hover:bg-black/70"
+                    )}
                     aria-label="Toggle like"
                   >
                     <Heart
                       size={16}
-                      className={cn("sm:w-4 sm:h-4 md:w-5 md:h-5 transition-all", isLiked ? "fill-red-500 text-red-500 scale-110" : "text-foreground")}
+                      className={cn(
+                        "sm:w-4 sm:h-4 md:w-5 md:h-5 transition-all",
+                        isLiked ? "fill-white text-white scale-110" : "text-white"
+                      )}
                     />
                   </button>
 
                   <button
                     onClick={handleShare}
-                    className="p-1 sm:p-1.5 md:p-2.5 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm transition-all hover:scale-110"
+                    className="p-1 sm:p-1.5 md:p-2.5 rounded-full border border-white/90 bg-blue-600/85 hover:bg-blue-600 text-white backdrop-blur-sm transition-all hover:scale-110 shadow-md"
                     aria-label="Share room"
                   >
-                    <Share2 size={16} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                    <Share2 size={16} className="sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
                   </button>
                 </div>
               </div>
@@ -798,7 +919,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                     </Button>
                   </BookingDialog>
                   <Button
-                    onClick={onClose}
+                    onClick={handleRequestClose}
                     className="w-full font-semibold h-9 sm:h-10 md:h-11 text-xs sm:text-sm md:text-base rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                   >
                     {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}
@@ -1030,7 +1151,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                         </Button>
                       </BookingDialog>
                       <Button
-                        onClick={onClose}
+                        onClick={handleRequestClose}
                         className="w-full font-semibold h-11 rounded-lg transition-all bg-foreground text-background hover:bg-foreground/90"
                       >
                         {language === 'th' ? 'ปิด' : language === 'zh' ? '关闭' : 'Close'}

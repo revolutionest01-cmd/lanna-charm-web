@@ -82,7 +82,7 @@ interface EngagementData {
     reviews: number;
   }>;
   activityByWeek: Array<{
-    week: string;
+    day: string;
     topics: number;
     replies: number;
     reviews: number;
@@ -101,7 +101,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ranking");
-  const [trendViewMode, setTrendViewMode] = useState<"weekly" | "monthly">("monthly");
+  const [trendViewMode, setTrendViewMode] = useState<"weekly" | "monthly">("weekly");
   const [data, setData] = useState<EngagementData | null>(null);
 
   useEffect(() => {
@@ -114,13 +114,13 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
           .select("id, title, category, views, created_at, is_active")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(20),
+          .limit(300),
         supabase
           .from("forum_replies")
           .select("id, content, created_at, topic_id, forum_topics(title, id)")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(20),
+          .limit(300),
         supabase
           .from("reviews")
           .select(
@@ -128,7 +128,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
           )
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(20),
+          .limit(300),
         supabase
           .from("profiles")
           .select("reputation_points")
@@ -165,7 +165,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
           ? reviewsData.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewsData.length
           : 0;
 
-      // Group activity by month
+      // Group activity by month and by latest 7 days
       const allActivities = [
         ...topicsData.map((t) => ({
           date: new Date(t.created_at),
@@ -181,15 +181,19 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
         })),
       ];
 
+      const toDateKey = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
       const monthMap: Record<
         string,
         { topics: number; replies: number; reviews: number }
       > = {};
       allActivities.forEach(({ date, type }) => {
-        const key = date.toLocaleDateString(language === "th" ? "th-TH" : "en-US", {
-          year: "numeric",
-          month: "2-digit",
-        });
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         if (!monthMap[key]) {
           monthMap[key] = { topics: 0, replies: 0, reviews: 0 };
         }
@@ -197,47 +201,45 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
       });
 
       const activityByMonth = Object.entries(monthMap)
-        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-        .slice(-12)
-        .map(([month, data]) => ({
-          month: new Date(month).toLocaleDateString(
-            language === "th" ? "th-TH" : "en-US",
-            {
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(-6)
+        .map(([monthKey, monthData]) => {
+          const [year, month] = monthKey.split("-").map(Number);
+          const monthDate = new Date(year, month - 1, 1);
+          return {
+            month: monthDate.toLocaleDateString(language === "th" ? "th-TH" : "en-US", {
               month: "short",
-            }
-          ),
-          ...data,
-        }));
+            }),
+            ...monthData,
+          };
+        });
 
-      // Group activity by week (last 12 weeks)
-      const weekMap: Record<
-        string,
-        { topics: number; replies: number; reviews: number }
-      > = {};
-      
+      const weekMap: Record<string, { topics: number; replies: number; reviews: number }> = {};
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (let offset = 6; offset >= 0; offset -= 1) {
+        const day = new Date(today);
+        day.setDate(today.getDate() - offset);
+        weekMap[toDateKey(day)] = { topics: 0, replies: 0, reviews: 0 };
+      }
+
       allActivities.forEach(({ date, type }) => {
-        const monday = new Date(date);
-        monday.setDate(date.getDate() - date.getDay() + 1);
-        const key = monday.toISOString().split("T")[0];
-        if (!weekMap[key]) {
-          weekMap[key] = { topics: 0, replies: 0, reviews: 0 };
-        }
+        const key = toDateKey(date);
+        if (!weekMap[key]) return;
         weekMap[key][type as "topics" | "replies" | "reviews"]++;
       });
 
-      const activityByWeek = Object.entries(weekMap)
-        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-        .slice(-12)
-        .map(([weekStart, data]) => {
-          const startDate = new Date(weekStart);
-          const endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 6);
-          const weekLabel = `${language === "th" ? "สัปดาห์" : "W"}${Math.ceil((parseInt(weekStart.split("-")[2]) + startDate.getDay()) / 7)}`;
-          return {
-            week: weekLabel,
-            ...data,
-          };
-        });
+      const activityByWeek = Object.entries(weekMap).map(([dayKey, dayData]) => {
+        const [year, month, day] = dayKey.split("-").map(Number);
+        const date = new Date(year, month - 1, day);
+        return {
+          day: date.toLocaleDateString(language === "th" ? "th-TH" : "en-US", {
+            weekday: "short",
+          }),
+          ...dayData,
+        };
+      });
 
       const total = topicsData.length + repliesData.length + reviewsData.length;
       const contributionData = [
@@ -317,6 +319,19 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
   }
 
   const totalActivities = topics.length + replies.length + reviews.length;
+  const trendData = trendViewMode === "weekly" ? data.activityByWeek : data.activityByMonth;
+  const periodLabelKey = trendViewMode === "weekly" ? "day" : "month";
+  const averageUnitLabel = trendViewMode === "weekly"
+    ? (language === "th" ? "วันละ" : "/day")
+    : (language === "th" ? "เดือนละ" : "/month");
+
+  const peakPeriod = trendData.length
+    ? trendData.reduce((peak, current) => {
+        const peakTotal = peak.topics + peak.replies + peak.reviews;
+        const currentTotal = current.topics + current.replies + current.reviews;
+        return currentTotal > peakTotal ? current : peak;
+      }, trendData[0])
+    : null;
 
   return (
     <div className="space-y-6">
@@ -363,7 +378,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
         {/* Activity Trend Tab */}
         <TabsContent value="activity" className="mt-0 space-y-4">
           {/* Summary Stats */}
-          {data.activityByMonth.length > 0 && (
+          {trendData.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 overflow-hidden">
                 <CardContent className="p-4">
@@ -376,7 +391,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
                         {data.totalTopics}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        💬 {Math.round(data.totalTopics / data.activityByMonth.length)} {language === "th" ? "เดือนละ" : "/month"}
+                        💬 {Math.round(data.totalTopics / trendData.length)} {averageUnitLabel}
                       </p>
                     </div>
                     <div className="text-4xl">💭</div>
@@ -395,7 +410,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
                         {data.totalReplies}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        ✓ {Math.round(data.totalReplies / data.activityByMonth.length)} {language === "th" ? "เดือนละ" : "/month"}
+                        ✓ {Math.round(data.totalReplies / trendData.length)} {averageUnitLabel}
                       </p>
                     </div>
                     <div className="text-4xl">💬</div>
@@ -414,7 +429,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
                         {data.totalReviews}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        ⭐ {Math.round(data.totalReviews / data.activityByMonth.length)} {language === "th" ? "เดือนละ" : "/month"}
+                        ⭐ {Math.round(data.totalReviews / trendData.length)} {averageUnitLabel}
                       </p>
                     </div>
                     <div className="text-4xl">⭐</div>
@@ -433,46 +448,44 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
                   <TrendingUp className="h-5 w-5 text-indigo-600" />
                   {language === "th"
                     ? trendViewMode === "weekly"
-                      ? "แนวโน้มกิจกรรม (12 สัปดาห์ย้อนหลัง)"
-                      : "แนวโน้มกิจกรรม (12 เดือนย้อนหลัง)"
+                      ? "แนวโน้มกิจกรรม (7 วันล่าสุด)"
+                      : "แนวโน้มกิจกรรม (ย้อนหลังสูงสุด 6 เดือน)"
                     : trendViewMode === "weekly"
-                      ? "Activity Trend (Last 12 Weeks)"
-                      : "Activity Trend (Last 12 Months)"}
+                      ? "Activity Trend (Last 7 Days)"
+                      : "Activity Trend (Last 6 Months Max)"}
                 </CardTitle>
                 <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                   <button
-                    onClick={() =>
-                      setTrendViewMode("weekly")
-                    }
+                    type="button"
+                    onClick={() => setTrendViewMode("weekly")}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
                       trendViewMode === "weekly"
                         ? "bg-blue-500 text-white"
                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
-                    {language === "th" ? "สัปดาห์" : "Weekly"}
+                    {language === "th" ? "7 วัน" : "7 Days"}
                   </button>
                   <button
-                    onClick={() =>
-                      setTrendViewMode("monthly")
-                    }
+                    type="button"
+                    onClick={() => setTrendViewMode("monthly")}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
                       trendViewMode === "monthly"
                         ? "bg-blue-500 text-white"
                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
-                    {language === "th" ? "เดือน" : "Monthly"}
+                    {language === "th" ? "รายเดือน" : "Monthly"}
                   </button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              {data.activityByMonth.length > 0 ? (
+              {trendData.length > 0 ? (
                 <div className="space-y-4">
                   <ResponsiveContainer width="100%" height={350}>
                     <LineChart
-                      data={trendViewMode === "weekly" ? data.activityByWeek : data.activityByMonth}
+                      data={trendData}
                       margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
                     >
                       <defs>
@@ -496,7 +509,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
                         opacity={0.3}
                       />
                       <XAxis
-                        dataKey={trendViewMode === "weekly" ? "week" : "month"}
+                        dataKey={periodLabelKey}
                         stroke="var(--muted-foreground)"
                         style={{ fontSize: "0.875rem", fontWeight: "500" }}
                       />
@@ -565,18 +578,20 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
                     </div>
                     <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-                        {language === "th" ? "เดือนเฉลี่ย" : "Avg/Month"}
+                        {trendViewMode === "weekly"
+                          ? (language === "th" ? "ค่าเฉลี่ย/วัน" : "Avg/Day")
+                          : (language === "th" ? "ค่าเฉลี่ย/เดือน" : "Avg/Month")}
                       </p>
                       <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                        {Math.round(totalActivities / data.activityByMonth.length)}
+                        {Math.round(totalActivities / trendData.length)}
                       </p>
                     </div>
                     <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-                        {language === "th" ? "ก่อนหน้าสุด" : "Peak Period"}
+                        {language === "th" ? "ช่วงพีค" : "Peak Period"}
                       </p>
                       <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                        {data.activityByMonth[data.activityByMonth.length - 1]?.month || "N/A"}
+                        {(peakPeriod?.[periodLabelKey as "day" | "month"] as string) || "N/A"}
                       </p>
                     </div>
                   </div>
