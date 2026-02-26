@@ -33,7 +33,8 @@ const PerkEquipPanel = ({ userId, language }: PerkEquipPanelProps) => {
   const unlockedPerkKeys = getUnlockedPerks(rankData.rank.id);
   const activePerks = perksData.active_perks || [];
 
-  const allPerkEntries = Object.entries(RANK_PERKS);
+  const HIDDEN_PERKS = ["increased-storage", "name-change", "unlock-vip-board"];
+  const allPerkEntries = Object.entries(RANK_PERKS).filter(([key]) => !HIDDEN_PERKS.includes(key));
 
   const handleTogglePerk = async (perkKey: string) => {
     const isActive = activePerks.includes(perkKey);
