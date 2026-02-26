@@ -719,43 +719,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                     </span>
                     <span className="font-bold text-lg sm:text-xl md:text-2xl text-primary">฿{room.price}</span>
                   </div>
-                  <div className="h-px bg-primary/20" />
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-xs sm:text-sm">
-                      {language === 'th' ? 'สถานะ' : 'Status'}
-                    </span>
-                    {isAdmin ? (
-                      <button
-                        onClick={() => handleToggleAvailability()}
-                        disabled={isTogglingAvailability}
-                        className={cn(
-                          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold transition-all duration-300',
-                          isAvailable
-                            ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
-                            : 'bg-red-500/20 text-red-600 hover:bg-red-500/30',
-                          'disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-95'
-                        )}
-                        title={language === 'th' ? 'กดเพื่อสลับสถานะ' : 'Click to toggle status'}
-                      >
-                        <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
-                        {isTogglingAvailability ? (
-                          <span className="inline-block w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : isAvailable ? (
-                          language === 'th' ? 'ว่าง' : 'Available'
-                        ) : (
-                          language === 'th' ? 'ไม่ว่าง' : 'Not Available'
-                        )}
-                      </button>
-                    ) : (
-                      <span className={cn(
-                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold',
-                        isAvailable ? 'bg-green-500/20 text-green-600' : 'bg-red-500/20 text-red-600'
-                      )}>
-                        <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600')} />
-                        {isAvailable ? (language === 'th' ? 'ว่าง' : 'Available') : (language === 'th' ? 'ไม่ว่าง' : 'Not Available')}
-                      </span>
-                    )}
-                  </div>
+
                 </div>
 
                 {/* Room Availability Calendar - Mobile & Tablet */}
@@ -992,63 +956,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                           <span className="text-muted-foreground">Per night:</span>
                           <span className="font-bold text-primary">฿{room.price}</span>
                         </div>
-                        <div className="h-px bg-primary/20" />
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground font-medium">
-                            {language === 'th' ? 'สถานะ' : 'Status'}
-                          </span>
-                          {isAdmin ? (
-                            <button
-                              onClick={() => {
-                                console.log('[RoomModal] Status button clicked! isAdmin:', isAdmin, 'room:', room?.id, 'isAvailable:', isAvailable);
-                                handleToggleAvailability();
-                              }}
-                              disabled={isTogglingAvailability}
-                              className={cn(
-                                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300',
-                                isAvailable
-                                  ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
-                                  : 'bg-red-500/20 text-red-600 hover:bg-red-500/30',
-                                'disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-95'
-                              )}
-                              title={language === 'th' ? 'กดเพื่อสลับสถานะ' : 'Click to toggle status'}
-                            >
-                              <span
-                                className={cn(
-                                  'w-2 h-2 rounded-full',
-                                  isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600'
-                                )}
-                              />
-                              {isTogglingAvailability ? (
-                                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              ) : isAvailable ? (
-                                language === 'th' ? 'ว่าง' : 'Available'
-                              ) : (
-                                language === 'th' ? 'ไม่ว่าง' : 'Not Available'
-                              )}
-                            </button>
-                          ) : (
-                            <span
-                              className={cn(
-                                'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold',
-                                isAvailable
-                                  ? 'bg-green-500/20 text-green-600'
-                                  : 'bg-red-500/20 text-red-600'
-                              )}
-                            >
-                              <span
-                                className={cn(
-                                  'w-2 h-2 rounded-full',
-                                  isAvailable ? 'bg-green-600 animate-pulse' : 'bg-red-600'
-                                )}
-                              />
-                              {isAvailable
-                                ? language === 'th' ? 'ว่าง' : 'Available'
-                                : language === 'th' ? 'ไม่ว่าง' : 'Not Available'
-                              }
-                            </span>
-                          )}
-                        </div>
+
                       </div>
                     </div>
 
