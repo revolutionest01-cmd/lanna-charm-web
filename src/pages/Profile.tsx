@@ -11,7 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2, Sparkles, Globe } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
-import UserActivity from "@/components/UserActivity";
+
 import PerkEquipPanel from "@/components/PerkEquipPanel";
 import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
@@ -361,10 +361,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Activity History */}
-        <div className="mt-8">
-          {user?.id && <UserActivity userId={user.id} language={language} />}
-        </div>
       </div>
 
       {/* Crop Dialog */}
