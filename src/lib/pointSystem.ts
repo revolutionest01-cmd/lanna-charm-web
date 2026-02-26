@@ -308,7 +308,12 @@ export const hasPermission = (rankId: number, permissionKey: string): boolean =>
  * ฟังก์ชันได้รับสิทธิพิเศษทั้งหมด
  */
 export const getUnlockedPerks = (rankId: number): string[] => {
-  const rank = getRankById(rankId);
-  if (!rank.unlock) return [];
-  return rank.unlock.split(",");
+  const allPerks = new Set<string>();
+  // Cumulative: collect perks from all ranks up to current
+  RANK_TIERS.forEach((tier) => {
+    if (tier.id <= rankId && tier.unlock) {
+      tier.unlock.split(",").forEach((key) => allPerks.add(key));
+    }
+  });
+  return Array.from(allPerks);
 };
