@@ -9,10 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Zap, Crown, Shield, User, ToggleRight, Users, Trash2 } from "lucide-react";
+import { Loader2, Zap, Crown, Shield, User, ToggleRight, Users, Trash2, Trophy, Minus, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import sweetAlert from "@/lib/sweetAlert";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
 import { clearFeatureToggleCache } from "@/hooks/useFeatureToggle";
+import { RANK_TIERS, getRankFromPoints } from "@/lib/pointSystem";
 
 interface FeatureToggle {
   id: string;
@@ -45,6 +47,8 @@ export const DevGodMode = () => {
   const { user: currentUser } = useAuth();
   const [features, setFeatures] = useState<FeatureToggle[]>([]);
   const [users, setUsers] = useState<UserRole[]>([]);
+  const [userProfiles, setUserProfiles] = useState<Map<string, { reputation_points: number }>>(new Map());
+  const [pointInputs, setPointInputs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -61,9 +65,10 @@ export const DevGodMode = () => {
       const userIds = rolesRes.data.map((u) => u.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url")
+        .select("id, display_name, avatar_url, reputation_points")
         .in("id", userIds);
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+      setUserProfiles(new Map(profiles?.map((p) => [p.id, { reputation_points: p.reputation_points ?? 0 }]) || []));
       setUsers(
         rolesRes.data.map((ur) => {
           const profile = profileMap.get(ur.user_id);
@@ -79,6 +84,36 @@ export const DevGodMode = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const handlePointsChange = async (userId: string, newPoints: number) => {
+    setUpdating(`pts-${userId}`);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ reputation_points: newPoints })
+      .eq("id", userId);
+
+    if (error) {
+      sweetAlert.error(language === "th" ? "เกิดข้อผิดพลาด" : "Error updating points");
+    } else {
+      setUserProfiles((prev) => {
+        const next = new Map(prev);
+        next.set(userId, { reputation_points: newPoints });
+        return next;
+      });
+      setPointInputs((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      const rank = getRankFromPoints(newPoints);
+      sweetAlert.success(
+        language === "th"
+          ? `อัปเดตเป็น ${newPoints} คะแนน (${rank.icon} ${rank.name})`
+          : `Updated to ${newPoints} points (${rank.icon} ${rank.nameEn})`
+      );
+    }
+    setUpdating(null);
+  };
 
   const handleToggleFeature = async (id: string, currentValue: boolean) => {
     setUpdating(id);
@@ -365,6 +400,101 @@ export const DevGodMode = () => {
                 })}
               </TableBody>
             </Table>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Rank / Points Management */}
+      <Card>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Trophy className="w-5 h-5 text-primary" />
+            {language === "th" ? "จัดการคะแนน & ยศผู้ใช้" : "User Points & Rank Management"}
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            {language === "th"
+              ? "ปรับ reputation_points ของผู้ใช้เพื่อเปลี่ยนยศที่แสดงทั่วเว็บไซต์"
+              : "Adjust user reputation points to change their displayed rank site-wide"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+          <div className="space-y-3">
+            {users.map((u) => {
+              const profile = userProfiles.get(u.user_id);
+              const pts = profile?.reputation_points ?? 0;
+              const rank = getRankFromPoints(pts);
+              const isDev = u.user_id === DEVELOPER_ID;
+
+              return (
+                <div key={`rank-${u.id}`} className="flex items-center gap-3 p-3 rounded-lg border border-border">
+                  <div className="text-2xl">{rank.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {u.display_name}
+                      {isDev && <span className="text-xs text-yellow-500 ml-1">⚡</span>}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {rank.name} ({rank.nameEn}) — {pts} {language === "th" ? "คะแนน" : "pts"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={updating === `pts-${u.user_id}`}
+                      onClick={() => handlePointsChange(u.user_id, Math.max(0, pts - 50))}
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min={0}
+                      className="w-20 h-8 text-xs text-center"
+                      value={pointInputs[u.user_id] ?? pts}
+                      onChange={(e) => setPointInputs(prev => ({ ...prev, [u.user_id]: Number(e.target.value) }))}
+                      onBlur={() => {
+                        const val = pointInputs[u.user_id];
+                        if (val !== undefined && val !== pts) handlePointsChange(u.user_id, Math.max(0, val));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const val = pointInputs[u.user_id];
+                          if (val !== undefined && val !== pts) handlePointsChange(u.user_id, Math.max(0, val));
+                        }
+                      }}
+                      disabled={updating === `pts-${u.user_id}`}
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={updating === `pts-${u.user_id}`}
+                      onClick={() => handlePointsChange(u.user_id, pts + 50)}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Rank Tier Reference */}
+          <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
+            <p className="text-xs font-medium text-muted-foreground mb-2">
+              {language === "th" ? "ตารางยศอ้างอิง" : "Rank Tier Reference"}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {RANK_TIERS.map((tier) => (
+                <div key={tier.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>{tier.icon}</span>
+                  <span className="font-medium">{tier.name}</span>
+                  <span className="opacity-70">
+                    {tier.minPoints}-{tier.maxPoints === Infinity ? "∞" : tier.maxPoints}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
