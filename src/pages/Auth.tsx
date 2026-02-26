@@ -159,10 +159,9 @@ const Auth = () => {
       const result = await register(registerForm.name, registerForm.email, registerForm.password);
 
       if (result.success) {
-        // Show OTP verification screen
+        // Show email confirmation screen
         setOtpEmail(registerForm.email);
         setIsOtpMode(true);
-        sweetAlert.success(language === 'th' ? 'ส่งรหัส OTP ไปที่อีเมลแล้ว กรุณาตรวจสอบอีเมลของคุณ' : 'OTP sent to your email. Please check your inbox.');
       } else {
         sweetAlert.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : language === 'zh' ? '注册失败' : language === 'ja' ? '登録に失敗しました' : 'Registration failed'));
       }
@@ -330,48 +329,37 @@ const Auth = () => {
           <div className="text-center mb-6 sm:mb-8 animate-fade-in">
             <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
-              {language === 'th' ? 'ยืนยันตัวตน' : 'Verify Your Email'}
+              {language === 'th' ? 'ตรวจสอบอีเมลของคุณ' : 'Check Your Email'}
             </h1>
-            <p className="text-muted-foreground">
-              {language === 'th' 
-                ? `กรุณากรอกรหัส OTP 6 หลักที่ส่งไปยัง ${otpEmail}` 
-                : `Enter the 6-digit code sent to ${otpEmail}`}
-            </p>
           </div>
           <Card className="animate-fade-in border-border/50 shadow-xl">
-            <CardContent className="pt-6">
-              <form onSubmit={handleVerifyOtp} className="space-y-6">
-                <div className="flex justify-center">
-                  <InputOTP maxLength={6} value={otpValue} onChange={(value) => setOtpValue(value)}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading || otpValue.length !== 6}>
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-muted-foreground">
+                {language === 'th'
+                  ? `เราได้ส่งลิงค์ยืนยันตัวตนไปที่`
+                  : `We sent a verification link to`}
+              </p>
+              <p className="font-medium text-foreground">{otpEmail}</p>
+              <p className="text-sm text-muted-foreground">
+                {language === 'th'
+                  ? 'กรุณาเปิดอีเมลและกดลิงค์ยืนยันเพื่อเปิดใช้งานบัญชีของคุณ'
+                  : 'Please open the email and click the verification link to activate your account.'}
+              </p>
+              <div className="pt-2 space-y-2">
+                <Button type="button" variant="outline" className="w-full" onClick={handleResendOtp} disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {language === 'th' ? 'ยืนยัน OTP' : 'Verify OTP'}
+                  {language === 'th' ? 'ส่งอีเมลยืนยันอีกครั้ง' : 'Resend Verification Email'}
                 </Button>
-                <div className="text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'th' ? 'ไม่ได้รับรหัส?' : "Didn't receive the code?"}
-                  </p>
-                  <Button type="button" variant="link" size="sm" onClick={handleResendOtp} disabled={isLoading}>
-                    {language === 'th' ? 'ส่งรหัสใหม่' : 'Resend Code'}
-                  </Button>
-                  <div>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => { setIsOtpMode(false); setOtpValue(""); }}>
-                      <ArrowLeft className="mr-1 h-3 w-3" />
-                      {language === 'th' ? 'กลับ' : 'Back'}
-                    </Button>
-                  </div>
-                </div>
-              </form>
+                <Button type="button" variant="ghost" size="sm" onClick={() => { setIsOtpMode(false); setOtpValue(""); }}>
+                  <ArrowLeft className="mr-1 h-3 w-3" />
+                  {language === 'th' ? 'กลับไปหน้าเข้าสู่ระบบ' : 'Back to Login'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
