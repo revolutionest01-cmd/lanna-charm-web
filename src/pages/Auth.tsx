@@ -94,7 +94,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      navigate("/profile");
     }
   }, [isAuthenticated, navigate]);
 
@@ -119,7 +119,7 @@ const Auth = () => {
         sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : language === 'ja' ? 'ログイン成功' : 'Login successful');
         // Show quick success feedback then navigate
         setTimeout(() => {
-          navigate("/");
+          navigate("/profile");
         }, 500);
       } else {
         sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : language === 'ja' ? 'メールアドレスまたはパスワードが無効です' : 'Invalid email or password. Please check and try again.'));
@@ -158,7 +158,7 @@ const Auth = () => {
         sweetAlert.success(language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : language === 'ja' ? 'ようこそ' : 'Welcome');
         // Navigate immediately
         setTimeout(() => {
-          navigate("/");
+          navigate("/profile");
         }, 500);
       } else {
         sweetAlert.error(result.error || (language === 'th' ? 'สมัครสมาชิกไม่สำเร็จ' : language === 'zh' ? '注册失败' : language === 'ja' ? '登録に失敗しました' : 'Registration failed'));
@@ -248,7 +248,7 @@ const Auth = () => {
         setNewPassword("");
         // Clear reset param from URL
         window.history.replaceState({}, '', '/auth');
-        setTimeout(() => navigate("/"), 1000);
+        setTimeout(() => navigate("/profile"), 1000);
       }
     } catch (error) {
       sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : 'An error occurred. Please try again.');
