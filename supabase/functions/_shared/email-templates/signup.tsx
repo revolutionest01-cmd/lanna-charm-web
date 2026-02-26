@@ -4,6 +4,7 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -26,11 +27,10 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   confirmationUrl,
-  token,
 }: SignupEmailProps) => (
   <Html lang="th" dir="ltr">
     <Head />
-    <Preview>รหัสยืนยันตัวตนสำหรับ {siteName}</Preview>
+    <Preview>ยืนยันอีเมลสำหรับ {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>ยืนยันอีเมลของคุณ</Heading>
@@ -42,16 +42,15 @@ export const SignupEmail = ({
           !
         </Text>
         <Text style={text}>
-          กรุณาใช้รหัส OTP 6 หลักด้านล่างเพื่อยืนยันอีเมลของคุณ (
+          กรุณายืนยันอีเมลของคุณ (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ):
+          ) โดยกดปุ่มด้านล่าง:
         </Text>
-        <Text style={codeStyle}>{token || '------'}</Text>
-        <Text style={expireText}>
-          รหัสนี้จะหมดอายุภายในไม่กี่นาที
-        </Text>
+        <Button style={button} href={confirmationUrl}>
+          ยืนยันอีเมล
+        </Button>
         <Text style={footer}>
           หากคุณไม่ได้สมัครสมาชิก สามารถเพิกเฉยอีเมลนี้ได้
         </Text>
@@ -74,25 +73,15 @@ const text = {
   fontSize: '14px',
   color: 'hsl(20, 10%, 40%)',
   lineHeight: '1.5',
-  margin: '0 0 20px',
+  margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '32px',
-  fontWeight: 'bold' as const,
-  color: 'hsl(20, 15%, 15%)',
-  textAlign: 'center' as const,
-  letterSpacing: '8px',
-  margin: '10px 0 20px',
-  padding: '16px 0',
-  backgroundColor: 'hsl(30, 18%, 91%)',
+const button = {
+  backgroundColor: 'hsl(20, 15%, 15%)',
+  color: 'hsl(30, 20%, 96%)',
+  fontSize: '14px',
   borderRadius: '8px',
-}
-const expireText = {
-  fontSize: '13px',
-  color: 'hsl(20, 10%, 40%)',
-  textAlign: 'center' as const,
-  margin: '0 0 25px',
+  padding: '12px 20px',
+  textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
