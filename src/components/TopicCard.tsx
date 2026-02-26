@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCategoryLabel, getCategoryColor } from "@/lib/forumConfig";
 import { ForumTopic } from "@/hooks/useWebboard";
+import { UserRankBadge } from "@/components/UserRankBadge";
 
 interface TopicCardProps {
   topic: ForumTopic;
@@ -71,7 +72,7 @@ const TopicCard = ({
 
           {/* Author & Stats */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-            {/* Author */}
+            {/* Author with Rank Badge */}
             {topic.author_name && (
               <div className="flex items-center gap-2">
                 <Avatar className="w-6 h-6">
@@ -79,9 +80,12 @@ const TopicCard = ({
                     {topic.author_name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  {topic.author_name}
-                </span>
+                <UserRankBadge
+                  userId={topic.user_id}
+                  userName={topic.author_name}
+                  size="sm"
+                  className="text-gray-700 dark:text-gray-300"
+                />
               </div>
             )}
 

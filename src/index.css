@@ -476,6 +476,23 @@ html {
     animation: icon-bounce 2s ease-in-out infinite;
   }
 
+  /* Animation delays */
+  .animation-delay-0 {
+    animation-delay: 0s;
+  }
+
+  .animation-delay-1000 {
+    animation-delay: 1s;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-3000 {
+    animation-delay: 3s;
+  }
+
   /* Hide scrollbar for webkit browsers (Chrome, Safari, Edge) */
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */

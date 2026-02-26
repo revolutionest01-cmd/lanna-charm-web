@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  role?: 'user' | 'developer' | 'admin';
 }
 
 interface AuthState {
@@ -41,7 +42,24 @@ const buildUserFromSession = (session: Session): User => {
     name: metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User',
     email: session.user.email || '',
     avatar: metadata.avatar_url || metadata.picture,
+    role: metadata.role || 'user',
   };
+};
+
+/**
+ * กำหนด rank โดยอัตโนมัติตามบทบาท
+ * - Admin: ปรมาจารย์ (rank 5, 5000 points)
+ * - Developer: มารแสวงพ่าย (rank 6, 10000 points)
+ */
+const getPointsFromRole = (role?: string): number => {
+  switch (role) {
+    case 'admin':
+      return 5000; // ปรมาจารย์
+    case 'developer':
+      return 10000; // มารแสวงพ่าย
+    default:
+      return 0; // ไก่
+  }
 };
 
 const fetchAndEnrichUser = async (session: Session): Promise<User> => {
@@ -50,6 +68,8 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
     const metadata = session.user?.user_metadata || {};
     const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
     const avatarUrl = metadata.avatar_url || metadata.picture;
+    const role = metadata.role || 'user';
+    const userPoints = getPointsFromRole(role);
 
     await supabase
       .from('profiles')
@@ -57,6 +77,8 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
         id: session.user.id,
         display_name: displayName,
         avatar_url: avatarUrl,
+        role: role,
+        reputation_points: userPoints,
       })
       .select()
       .single();
@@ -71,6 +93,7 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
       ...baseUser,
       name: profile?.display_name || displayName,
       avatar: profile?.avatar_url || avatarUrl,
+      role: role,
     };
   } catch (error) {
     console.error('Error fetching user profile:', error);
@@ -159,6 +182,20 @@ export const useAuth = () => {
         return { success: false, error: error.message };
       }
 
+      // Wait for onAuthStateChange to fire and update auth state
+      // This prevents race condition where UI errors before auth state syncs
+      let attempts = 0;
+      while (attempts < 20) {
+        if (authState.isAuthenticated && authState.user) {
+          console.log('[Auth] Session confirmed after login');
+          return { success: true };
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      // Login succeeded, return true even if state wasn't updated yet
+      console.log('[Auth] Login succeeded, returning success');
       return { success: true };
     } catch (error) {
       return { success: false, error: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };

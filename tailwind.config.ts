@@ -128,6 +128,14 @@ export default {
 					transform: 'translateY(-8px)',
 					opacity: '1'
 				}
+			},
+			'float': {
+				'0%, 100%': {
+					transform: 'translateY(0px)'
+				},
+				'50%': {
+					transform: 'translateY(-20px)'
+				}
 			}
 		},
 		animation: {
@@ -137,7 +145,8 @@ export default {
 			'scale-in': 'scale-in 0.4s ease-out',
 			'shimmer': 'shimmer 2s infinite',
 			'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
-			'bounce-up': 'bounce-up 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+			'bounce-up': 'bounce-up 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+			'float': 'float 6s ease-in-out infinite'
 		},
 		fontFamily: {
 			sans: [

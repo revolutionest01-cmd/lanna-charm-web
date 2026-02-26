@@ -115,18 +115,21 @@ const UserActivity = ({ userId, language }: UserActivityProps) => {
   const totalActivities = topics.length + replies.length + reviews.length;
 
   return (
-    <Card className="border-border/50 shadow-xl animate-fade-in">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-serif flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
+    <Card className="border-0 shadow-lg bg-white dark:bg-slate-900 overflow-hidden">
+      {/* Blue Header */}
+      <div className="h-12 bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400"></div>
+      
+      <CardHeader className="pb-3 -mt-8 relative z-10 bg-white dark:bg-slate-900">
+        <CardTitle className="text-lg font-serif flex items-center gap-2 text-slate-800 dark:text-white">
+          <Calendar className="h-5 w-5 text-blue-600" />
           {language === "th" ? "ประวัติกิจกรรม" : "Activity History"}
-          <Badge variant="secondary" className="ml-auto text-xs">
+          <Badge className="ml-auto text-xs bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
             {totalActivities} {language === "th" ? "รายการ" : "items"}
           </Badge>
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="bg-white dark:bg-slate-900">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full grid grid-cols-3 mb-4">
             <TabsTrigger value="topics" className="gap-1.5 text-xs sm:text-sm">

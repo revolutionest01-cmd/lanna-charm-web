@@ -172,7 +172,7 @@ export const translations = {
     // Hero
     location: "Bangkok Don Mueang, Thailand",
     heroTitle: "Plern Ping Cafe",
-    heroSubtitle: "Experience the perfect blend of traditional Lanna charm and modern comfort",
+    heroSubtitle: "Experience the perfect blend of traditional Plernping charm and modern comfort",
     exploreMenu: "Explore Menu",
     viewRooms: "View Rooms",
     

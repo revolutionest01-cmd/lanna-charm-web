@@ -1,0 +1,558 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  MessageCircle,
+  Reply,
+  Star,
+  Flame,
+  TrendingUp,
+  Award,
+  Zap,
+  Crown,
+  Loader2,
+} from "lucide-react";
+
+interface UserEngagementStatsProps {
+  userId: string;
+  language: string;
+}
+
+interface EngagementData {
+  totalTopics: number;
+  totalReplies: number;
+  totalReviews: number;
+  totalHelpful: number;
+  totalViews: number;
+  averageRating: number;
+  activityByMonth: Array<{
+    month: string;
+    topics: number;
+    replies: number;
+    reviews: number;
+  }>;
+  contributionData: Array<{
+    name: string;
+    value: number;
+    percentage: number;
+  }>;
+}
+
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
+
+const LEVEL_THRESHOLDS = [
+  { level: "Bronze", minPoints: 0, icon: "🥉", color: "#CD7F32" },
+  { level: "Silver", minPoints: 100, icon: "🥈", color: "#C0C0C0" },
+  { level: "Gold", minPoints: 250, icon: "🥇", color: "#FFD700" },
+  { level: "Platinum", minPoints: 500, icon: "💎", color: "#E5E4E2" },
+  { level: "Diamond", minPoints: 1000, icon: "✨", color: "#00BFFF" },
+];
+
+const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => {
+  const [data, setData] = useState<EngagementData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userLevel, setUserLevel] = useState("Bronze");
+  const [userPoints, setUserPoints] = useState(0);
+
+  useEffect(() => {
+    const fetchEngagementData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch topics
+        const { data: topicsData } = await supabase
+          .from("forum_topics")
+          .select("id, views, created_at")
+          .eq("user_id", userId);
+
+        // Fetch replies
+        const { data: repliesData } = await supabase
+          .from("forum_replies")
+          .select("id, created_at")
+          .eq("user_id", userId);
+
+        // Fetch reviews
+        const { data: reviewsData } = await supabase
+          .from("reviews")
+          .select("id, rating, created_at, helpful_count")
+          .eq("user_id", userId);
+
+        const topics = topicsData || [];
+        const replies = repliesData || [];
+        const reviews = reviewsData || [];
+
+        const totalTopics = topics.length;
+        const totalReplies = replies.length;
+        const totalReviews = reviews.length;
+        const totalViews = topics.reduce((sum, t) => sum + (t.views || 0), 0);
+        const totalHelpful = reviews.reduce((sum, r) => sum + (r.helpful_count || 0), 0);
+        const averageRating =
+          totalReviews > 0
+            ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / totalReviews
+            : 0;
+
+        // Calculate points for user level
+        const points =
+          totalTopics * 10 + totalReplies * 5 + totalReviews * 15 + totalHelpful * 2;
+        setUserPoints(points);
+
+        // Determine user level
+        const level = LEVEL_THRESHOLDS.reverse().find((l) => points >= l.minPoints);
+        setUserLevel(level?.level || "Bronze");
+
+        // Group activity by month
+        const allActivities = [
+          ...topics.map((t) => ({
+            date: new Date(t.created_at),
+            type: "topics",
+          })),
+          ...replies.map((r) => ({
+            date: new Date(r.created_at),
+            type: "replies",
+          })),
+          ...reviews.map((r) => ({
+            date: new Date(r.created_at),
+            type: "reviews",
+          })),
+        ];
+
+        const monthMap: Record<
+          string,
+          { topics: number; replies: number; reviews: number }
+        > = {};
+        allActivities.forEach(({ date, type }) => {
+          const key = date.toLocaleDateString(language === "th" ? "th-TH" : "en-US", {
+            year: "numeric",
+            month: "2-digit",
+          });
+          if (!monthMap[key]) {
+            monthMap[key] = { topics: 0, replies: 0, reviews: 0 };
+          }
+          monthMap[key][type as "topics" | "replies" | "reviews"]++;
+        });
+
+        const activityByMonth = Object.entries(monthMap)
+          .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+          .slice(-12)
+          .map(([month, data]) => ({
+            month: new Date(month).toLocaleDateString(
+              language === "th" ? "th-TH" : "en-US",
+              {
+                month: "short",
+              }
+            ),
+            ...data,
+          }));
+
+        const total = totalTopics + totalReplies + totalReviews;
+        const contributionData = [
+          {
+            name: language === "th" ? "กระทู้" : "Topics",
+            value: totalTopics,
+            percentage: total > 0 ? Math.round((totalTopics / total) * 100) : 0,
+          },
+          {
+            name: language === "th" ? "ตอบกลับ" : "Replies",
+            value: totalReplies,
+            percentage: total > 0 ? Math.round((totalReplies / total) * 100) : 0,
+          },
+          {
+            name: language === "th" ? "รีวิว" : "Reviews",
+            value: totalReviews,
+            percentage: total > 0 ? Math.round((totalReviews / total) * 100) : 0,
+          },
+        ].filter((item) => item.value > 0);
+
+        setData({
+          totalTopics,
+          totalReplies,
+          totalReviews,
+          totalHelpful,
+          totalViews,
+          averageRating,
+          activityByMonth,
+          contributionData,
+        });
+      } catch (error) {
+        console.error("Error fetching engagement data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchEngagementData();
+    }
+  }, [userId, language]);
+
+  if (isLoading || !data) {
+    return (
+      <Card className="border-border/50 shadow-xl">
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentLevel = LEVEL_THRESHOLDS.find((l) => userLevel === l.level);
+  const nextLevel = LEVEL_THRESHOLDS.find(
+    (l) => LEVEL_THRESHOLDS.indexOf(l) === LEVEL_THRESHOLDS.indexOf(currentLevel || { level: "Bronze" }) + 1
+  );
+  const progressToNextLevel = nextLevel
+    ? Math.min(100, Math.round(((userPoints - currentLevel!.minPoints) / (nextLevel.minPoints - currentLevel!.minPoints)) * 100))
+    : 100;
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* User Level Card */}
+      <Card className="border-border/50 shadow-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className="text-3xl p-3 rounded-full"
+                style={{ backgroundColor: currentLevel?.color + "20" }}
+              >
+                {currentLevel?.icon}
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-serif">
+                  {userLevel} {language === "th" ? "สมาชิก" : "Member"}
+                </CardTitle>
+                <CardDescription>
+                  {userPoints} {language === "th" ? "คะแนน" : "Points"}
+                </CardDescription>
+              </div>
+            </div>
+            <Crown className="h-8 w-8 text-primary/40" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs font-medium">
+              <span>{language === "th" ? "ระดับสมาชิก" : "Level Progress"}</span>
+              <span>{progressToNextLevel}%</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-500"
+                style={{ width: `${progressToNextLevel}%` }}
+              />
+            </div>
+          </div>
+          {nextLevel && (
+            <p className="text-xs text-muted-foreground">
+              {nextLevel.minPoints - userPoints} {language === "th" ? "คะแนนไปยัง" : "points to"} {nextLevel.icon} {nextLevel.level}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {[
+          {
+            icon: MessageCircle,
+            label: language === "th" ? "กระทู้" : "Topics",
+            value: data.totalTopics,
+            color: "from-blue-500/20 to-blue-500/10",
+          },
+          {
+            icon: Reply,
+            label: language === "th" ? "ตอบกลับ" : "Replies",
+            value: data.totalReplies,
+            color: "from-green-500/20 to-green-500/10",
+          },
+          {
+            icon: Star,
+            label: language === "th" ? "รีวิว" : "Reviews",
+            value: data.totalReviews,
+            color: "from-amber-500/20 to-amber-500/10",
+          },
+          {
+            icon: Zap,
+            label: language === "th" ? "ผู้ช่วย" : "Helpful",
+            value: data.totalHelpful,
+            color: "from-pink-500/20 to-pink-500/10",
+          },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={stat.label}
+              className={`border-border/50 shadow-md bg-gradient-to-br ${stat.color} group hover:shadow-lg transition-all duration-300`}
+            >
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {stat.label}
+                  </p>
+                  <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                </div>
+                <Icon className="h-8 w-8 text-muted-foreground/30 group-hover:text-primary transition-colors duration-300" />
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Charts Section */}
+      <Tabs defaultValue="timeline" className="w-full">
+        <TabsList className="w-full grid grid-cols-3 mb-4">
+          <TabsTrigger value="timeline" className="gap-1.5 text-xs sm:text-sm">
+            <TrendingUp className="h-3.5 w-3.5" />
+            {language === "th" ? "แนวโน้ม" : "Trend"}
+          </TabsTrigger>
+          <TabsTrigger value="contribution" className="gap-1.5 text-xs sm:text-sm">
+            <Flame className="h-3.5 w-3.5" />
+            {language === "th" ? "แบ่งปัน" : "Share"}
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="gap-1.5 text-xs sm:text-sm">
+            <Award className="h-3.5 w-3.5" />
+            {language === "th" ? "สถิติ" : "Stats"}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Activity Timeline */}
+        <TabsContent value="timeline" className="mt-0">
+          <Card className="border-border/50 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-lg">
+                {language === "th" ? "แนวโน้มกิจกรรม" : "Activity Trend"}
+              </CardTitle>
+              <CardDescription>
+                {language === "th"
+                  ? "ประวัติการมีปฎิสัมพันธ์รายเดือน"
+                  : "Monthly engagement history"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              {data.activityByMonth.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={data.activityByMonth}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
+                      dataKey="month"
+                      stroke="var(--muted-foreground)"
+                      style={{ fontSize: "0.75rem" }}
+                    />
+                    <YAxis
+                      stroke="var(--muted-foreground)"
+                      style={{ fontSize: "0.75rem" }}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "0.5rem",
+                      }}
+                      labelStyle={{ color: "var(--foreground)" }}
+                    />
+                    <Legend
+                      wrapperStyle={{ paddingTop: "1rem", fontSize: "0.75rem" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="topics"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={{ fill: "#3b82f6", r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name={language === "th" ? "กระทู้" : "Topics"}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="replies"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ fill: "#10b981", r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name={language === "th" ? "ตอบกลับ" : "Replies"}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="reviews"
+                      stroke="#f59e0b"
+                      strokeWidth={2}
+                      dot={{ fill: "#f59e0b", r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name={language === "th" ? "รีวิว" : "Reviews"}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  {language === "th"
+                    ? "ยังไม่มีข้อมูลกิจกรรม"
+                    : "No activity data available"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Contribution Breakdown */}
+        <TabsContent value="contribution" className="mt-0">
+          <Card className="border-border/50 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-lg">
+                {language === "th" ? "แบ่งแบ่งการมีส่วนร่วม" : "Contribution Breakdown"}
+              </CardTitle>
+              <CardDescription>
+                {language === "th" ? "การกระจายของการมีส่วนร่วม" : "Distribution of contributions"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              {data.contributionData.length > 0 ? (
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={data.contributionData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percentage }) => `${percentage}%`}
+                        outerRadius={60}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {data.contributionData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "var(--card)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "0.5rem",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 flex-shrink-0">
+                    {data.contributionData.map((item, i) => (
+                      <div key={item.name} className="flex items-center gap-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                        />
+                        <span className="text-sm">
+                          {item.name}: {item.value} ({item.percentage}%)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  {language === "th"
+                    ? "ยังไม่มีข้อมูลการมีส่วนร่วม"
+                    : "No contribution data available"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Detailed Stats */}
+        <TabsContent value="stats" className="mt-0">
+          <Card className="border-border/50 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-lg">
+                {language === "th" ? "สถิติโดยละเอียด" : "Detailed Statistics"}
+              </CardTitle>
+              <CardDescription>
+                {language === "th"
+                  ? "รายละเอียดการมีปฎิสัมพันธ์อื่น ๆ"
+                  : "Additional engagement metrics"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium mb-1">
+                          {language === "th" ? "มุมมองรวม" : "Total Views"}
+                        </p>
+                        <p className="text-2xl font-bold">{data.totalViews}</p>
+                      </div>
+                      <TrendingUp className="h-5 w-5 text-primary/40" />
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium mb-1">
+                          {language === "th" ? "คะแนนรีวิวเฉลี่ย" : "Avg Rating"}
+                        </p>
+                        <div className="flex items-baseline gap-1">
+                          <p className="text-2xl font-bold">{data.averageRating.toFixed(1)}</p>
+                          <span className="text-xs text-muted-foreground">/5</span>
+                        </div>
+                      </div>
+                      <Star className="h-5 w-5 text-yellow-500/40" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {language === "th" ? "อัตราส่วนกิจกรรม" : "Activity Ratio"}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {((data.totalReplies / (data.totalTopics + 1)) * 100).toFixed(0)}%
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {language === "th" ? "ประสิทธิผล" : "Engagement Score"}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {(
+                        ((data.totalReplies + data.totalReviews) / (data.totalTopics + 1)) *
+                        10
+                      ).toFixed(1)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {language === "th" ? "อิทธิพลของรีวิว" : "Review Impact"}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {data.totalReviews > 0 ? (data.totalHelpful / data.totalReviews).toFixed(1) : 0}{" "}
+                      / {language === "th" ? "รีวิว" : "review"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default UserEngagementStats;

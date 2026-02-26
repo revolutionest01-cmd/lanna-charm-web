@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,7 @@ const Auth = () => {
   const [isOtpMode, setIsOtpMode] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpEmail, setOtpEmail] = useState("");
+  const loginAlertShownRef = useRef(false);
   const STORAGE_KEY = 'plernping_login_data';
 
   // Load saved credentials from localStorage on component mount
@@ -95,16 +96,60 @@ const Auth = () => {
     }
   }, []);
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (but not if we're showing a login alert)
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/profile");
+    if (isAuthenticated && !loginAlertShownRef.current) {
+      // Check if this is from OAuth redirect by looking at URL params
+      const isOAuthCallback = window.location.hash.includes('access_token') || window.location.search.includes('code');
+      
+      if (isOAuthCallback) {
+        // Show welcome message for OAuth flows
+        const messages = {
+          th: {
+            title: 'สวัสดีค่ะ',
+            welcome: 'Plernping Cafe ยินดีต้อนรับ',
+          },
+          zh: {
+            title: '欢迎',
+            welcome: 'Plernping Cafe 欢迎您',
+          },
+          ja: {
+            title: 'ようこそ',
+            welcome: 'Plernping Cafe へようこそ',
+          },
+          en: {
+            title: 'Welcome',
+            welcome: 'to Plernping Cafe',
+          }
+        };
+
+        const msg = messages[language as keyof typeof messages] || messages.en;
+        
+        sweetAlert.fire({
+          title: msg.title,
+          html: `<div style="font-size: 1.1rem; line-height: 1.6;">
+            <p style="color: #666; margin-bottom: 0.5rem;">${msg.welcome}</p>
+            <p style="color: #999; font-size: 0.9rem;">เข้าสู่ระบบสำเร็จ / Login successful</p>
+          </div>`,
+          icon: 'success',
+          confirmButtonText: language === 'th' ? 'ดำเนิน' : language === 'zh' ? '继续' : language === 'ja' ? '続行' : 'Continue',
+          confirmButtonColor: '#d97706',
+          allowOutsideClick: false,
+          didClose: () => {
+            navigate("/profile");
+          }
+        });
+      } else {
+        // Auto-redirect if already authenticated and not from form submission
+        navigate("/profile");
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, language]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    let alertShown = false;
 
     try {
       // Validate input
@@ -119,25 +164,64 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
-        // Credentials will be automatically saved by the useEffect hook
-        sweetAlert.success(language === 'th' ? 'เข้าสู่ระบบสำเร็จ' : language === 'zh' ? '登录成功' : language === 'ja' ? 'ログイン成功' : 'Login successful');
-        // Show quick success feedback then navigate
-        setTimeout(() => {
-          navigate("/profile");
-        }, 500);
+        alertShown = true;
+        loginAlertShownRef.current = true;
+        setIsLoading(false);
+        
+        const messages = {
+          th: {
+            title: 'สวัสดีค่ะ',
+            welcome: 'Plernping Cafe ยินดีต้อนรับ',
+          },
+          zh: {
+            title: '欢迎',
+            welcome: 'Plernping Cafe 欢迎您',
+          },
+          ja: {
+            title: 'ようこそ',
+            welcome: 'Plernping Cafe へようこそ',
+          },
+          en: {
+            title: 'Welcome',
+            welcome: 'to Plernping Cafe',
+          }
+        };
+
+        const msg = messages[language as keyof typeof messages] || messages.en;
+        
+        sweetAlert.fire({
+          title: msg.title,
+          html: `<div style="font-size: 1.1rem; line-height: 1.6;">
+            <p style="color: #666; margin-bottom: 0.5rem;">${msg.welcome}</p>
+            <p style="color: #999; font-size: 0.9rem;">เข้าสู่ระบบสำเร็จ / Login successful</p>
+          </div>`,
+          icon: 'success',
+          confirmButtonText: language === 'th' ? 'ดำเนิน' : language === 'zh' ? '继续' : language === 'ja' ? '続行' : 'Continue',
+          confirmButtonColor: '#d97706',
+          allowOutsideClick: false,
+          didClose: () => {
+            loginAlertShownRef.current = false;
+            navigate("/profile");
+          }
+        });
       } else {
+        alertShown = true;
         sweetAlert.error(result.error || (language === 'th' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' : language === 'zh' ? '电子邮件或密码无效。请检查并重试' : language === 'ja' ? 'メールアドレスまたはパスワードが無効です' : 'Invalid email or password. Please check and try again.'));
       }
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        const firstError = error.errors[0];
-        sweetAlert.error(firstError.message);
-      } else {
-        sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : language === 'ja' ? 'エラーが発生しました。もう一度お試しください' : 'An error occurred. Please try again.');
+      if (!alertShown) {
+        if (error instanceof z.ZodError) {
+          const firstError = error.errors[0];
+          sweetAlert.error(firstError.message);
+        } else {
+          console.error('[Login] Error:', error);
+          sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' : language === 'zh' ? '发生错误，请重试' : language === 'ja' ? 'エラーが発生しました。もう一度お試しください' : 'An error occurred. Please try again.');
+        }
       }
     } finally {
-      // Always reset loading state
-      setIsLoading(false);
+      if (!alertShown) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -292,8 +376,41 @@ const Auth = () => {
       if (error) {
         sweetAlert.error(error.message || (language === 'th' ? 'รหัส OTP ไม่ถูกต้อง' : 'Invalid OTP code'));
       } else {
-        sweetAlert.success(language === 'th' ? 'ยืนยันตัวตนสำเร็จ! ยินดีต้อนรับ' : 'Verification successful! Welcome');
-        setTimeout(() => navigate("/profile"), 500);
+        const messages = {
+          th: {
+            title: 'สวัสดีค่ะ',
+            welcome: 'Plernping Cafe ยินดีต้อนรับ',
+          },
+          zh: {
+            title: '欢迎',
+            welcome: 'Plernping Cafe 欢迎您',
+          },
+          ja: {
+            title: 'ようこそ',
+            welcome: 'Plernping Cafe へようこそ',
+          },
+          en: {
+            title: 'Welcome',
+            welcome: 'to Plernping Cafe',
+          }
+        };
+
+        const msg = messages[language as keyof typeof messages] || messages.en;
+        
+        sweetAlert.fire({
+          title: msg.title,
+          html: `<div style="font-size: 1.1rem; line-height: 1.6;">
+            <p style="color: #666; margin-bottom: 0.5rem;">${msg.welcome}</p>
+            <p style="color: #999; font-size: 0.9rem;">ยืนยันตัวตนสำเร็จ / Verification successful</p>
+          </div>`,
+          icon: 'success',
+          confirmButtonText: language === 'th' ? 'ดำเนิน' : language === 'zh' ? '继续' : language === 'ja' ? '続行' : 'Continue',
+          confirmButtonColor: '#d97706',
+          allowOutsideClick: false,
+          didClose: () => {
+            navigate("/profile");
+          }
+        });
       }
     } catch (error) {
       sweetAlert.error(language === 'th' ? 'เกิดข้อผิดพลาด กรุณาลองใหม่' : 'An error occurred. Please try again.');

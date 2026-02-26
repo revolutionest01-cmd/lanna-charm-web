@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2, Sparkles, Globe } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
 import UserActivity from "@/components/UserActivity";
+import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
 
 const Profile = () => {
@@ -171,7 +172,20 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/");
+    
+    sweetAlert.fire({
+      title: language === "th" ? "ออกจากระบบสำเร็จ" : "Logged Out",
+      html: `<div style="font-size: 1.1rem; line-height: 1.6;">
+        <p style="color: #666;">${language === "th" ? "คุณได้ออกจากระบบเรียบร้อย แล้วพบกันใหม่นะคะ" : "You have successfully logged out. See you again!"}</p>
+      </div>`,
+      icon: 'success',
+      confirmButtonText: language === "th" ? "กลับหน้าแรก" : "Back to Home",
+      confirmButtonColor: '#d97706',
+      allowOutsideClick: false,
+      didClose: () => {
+        navigate("/");
+      }
+    });
   };
 
   const getInitials = (name: string) => {
@@ -194,125 +208,141 @@ const Profile = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 p-4 pt-12 sm:pt-[3.5rem]">
-      <div className="w-full max-w-lg mx-auto">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 p-4 pt-12 sm:pt-[3.5rem]">
+      <div className="w-full max-w-6xl mx-auto">
         {/* Back button */}
         <Button
           onClick={() => navigate("/")}
-          className="mb-4 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
+          className="mb-6 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 active:scale-95 shadow-md"
         >
           <ArrowLeft className="h-4 w-4" />
           {language === "th" ? "กลับหน้าแรก" : "Back to Home"}
         </Button>
 
-        {/* Profile Card */}
-        <Card className="animate-fade-in border-border/50 shadow-xl">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-xl sm:text-2xl font-serif">
-              {language === "th" ? "โปรไฟล์ของฉัน" : "My Profile"}
-            </CardTitle>
-            <CardDescription>
-              {language === "th"
-                ? "จัดการข้อมูลส่วนตัวของคุณ"
-                : "Manage your personal information"}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative group">
-                <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-border shadow-lg">
-                  <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                  <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                    {getInitials(displayName || "U")}
-                  </AvatarFallback>
-                </Avatar>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 shadow-md hover:bg-primary/90 transition-all duration-200 active:scale-95 disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                </button>
-                {avatarUrl && (
-                  <button
-                    onClick={handleDeleteAvatar}
-                    disabled={isUploading}
-                    className="absolute bottom-0 left-0 bg-destructive text-destructive-foreground rounded-full p-2 shadow-md hover:bg-destructive/90 transition-all duration-200 active:scale-95 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
+        {/* Main Profile Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Profile Card - Left Side */}
+          <div className="lg:col-span-1">
+            <Card className="border-0 shadow-lg overflow-hidden bg-white dark:bg-slate-900">
+              {/* Blue Header */}
+              <div className="h-24 bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400 relative overflow-hidden flex items-center justify-center">
+                <Sparkles className="h-8 w-8 text-white/60 absolute top-2 right-4 animate-pulse" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                {language === "th"
-                  ? "คลิกไอคอนกล้องเพื่อเปลี่ยนรูป หรือไอคอนถังขยะเพื่อลบ"
-                  : "Click camera to change or trash to delete"}
-              </p>
-            </div>
 
-            {/* Display Name */}
-            <div className="space-y-2">
-              <Label htmlFor="displayName" className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                {language === "th" ? "ชื่อที่แสดง" : "Display Name"}
-              </Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder={language === "th" ? "กรอกชื่อที่แสดง" : "Enter display name"}
-              />
-            </div>
+              <div className="px-4 pt-1 pb-4 text-center -mt-12 relative z-10">
+                {/* Avatar Section */}
+                <div className="flex flex-col items-center gap-4 mb-4">
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-300 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
+                    <Avatar className="h-28 w-28 relative border-4 border-white shadow-xl">
+                      <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                      <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
+                        {getInitials(displayName || "U")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2.5 shadow-lg hover:bg-blue-700 transition-all duration-200 active:scale-95 disabled:opacity-50"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
+                    </button>
+                    {avatarUrl && (
+                      <button
+                        onClick={handleDeleteAvatar}
+                        disabled={isUploading}
+                        className="absolute bottom-0 left-0 bg-red-600 text-white rounded-full p-2.5 shadow-lg hover:bg-red-700 transition-all duration-200 active:scale-95 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
+                  {displayName || "User"}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                  {language === "th" ? "จัดการโปรไฟล์ของคุณ" : "Manage your profile"}
+                </p>
 
-            {/* Email (read-only) */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                {language === "th" ? "อีเมล" : "Email"}
-              </Label>
-              <Input value={user?.email || ""} disabled className="bg-muted/50" />
-            </div>
+                {/* Display Name */}
+                <div className="space-y-2 mb-4 border-t border-slate-200 dark:border-slate-700 pt-4">
+                  <Label htmlFor="displayName" className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <User className="h-4 w-4 text-blue-600" />
+                    {language === "th" ? "ชื่อที่แสดง" : "Display Name"}
+                  </Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder={language === "th" ? "กรอกชื่อที่แสดง" : "Enter display name"}
+                    className="border-slate-300 focus-visible:ring-blue-500 dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+                  />
+                </div>
 
-            {/* Save Button */}
-            <Button
-              onClick={handleSaveProfile}
-              disabled={isSaving || !displayName.trim()}
-              className="w-full"
-            >
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {language === "th" ? "บันทึกโปรไฟล์" : "Save Profile"}
-            </Button>
+                {/* Email (read-only) */}
+                <div className="space-y-2 mb-4">
+                  <Label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Mail className="h-4 w-4 text-blue-600" />
+                    {language === "th" ? "อีเมล" : "Email"}
+                  </Label>
+                  <Input value={user?.email || ""} disabled className="bg-slate-100 dark:bg-slate-800 text-xs border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400" />
+                </div>
 
-            {/* Divider */}
-            <div className="border-t border-border" />
+                {/* Save Button */}
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving || !displayName.trim()}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md mb-2"
+                >
+                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {language === "th" ? "บันทึกโปรไฟล์" : "Save Profile"}
+                </Button>
 
-            {/* Logout */}
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <LogOut className="h-4 w-4" />
-              {language === "th" ? "ออกจากระบบ" : "Log Out"}
-            </Button>
-          </CardContent>
-        </Card>
+                {/* Logout */}
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="w-full gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 border-slate-300 dark:border-slate-600 mb-3"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {language === "th" ? "ออกจากระบบ" : "Log Out"}
+                </Button>
+
+                {/* Go to Website Button */}
+                <Button
+                  onClick={() => navigate("/")}
+                  className="w-full gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-md dark:bg-slate-950 dark:hover:bg-slate-900"
+                >
+                  <Globe className="h-4 w-4" />
+                  {language === "th" ? "เข้าสู่เว็บไซด์" : "Go to Website"}
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* Stats Section - Right Side */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* User Engagement Stats */}
+            {user?.id && <UserEngagementStats userId={user.id} language={language} />}
+          </div>
+        </div>
 
         {/* Activity History */}
-        {user?.id && <UserActivity userId={user.id} language={language} />}
+        <div className="mt-8">
+          {user?.id && <UserActivity userId={user.id} language={language} />}
+        </div>
       </div>
 
       {/* Crop Dialog */}

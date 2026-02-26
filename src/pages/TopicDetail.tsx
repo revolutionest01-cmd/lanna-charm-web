@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserRankBadge } from "@/components/UserRankBadge";
 import {
   MessageCircle,
   Eye,
@@ -490,11 +491,13 @@ const TopicDetail = () => {
                     {topic.author_name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    {topic.author_name || "Anonymous"}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <div className="flex-1">
+                  <UserRankBadge
+                    userId={topic.user_id}
+                    userName={topic.author_name || "Anonymous"}
+                    size="md"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
                     <Clock className="w-3 h-3" />
                     {formattedDate}
                   </p>
@@ -662,10 +665,12 @@ const TopicDetail = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {reply.author_name}
-                          </p>
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <UserRankBadge
+                            userId={reply.user_id}
+                            userName={reply.author_name || "Anonymous"}
+                            size="sm"
+                          />
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(reply.created_at).toLocaleDateString(
                               language === "th" ? "th-TH" : "en-US",

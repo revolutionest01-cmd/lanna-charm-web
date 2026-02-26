@@ -171,6 +171,11 @@ export const sweetAlert = {
   close: () => {
     Swal.close();
   },
+
+  // Direct Swal.fire wrapper for custom alerts
+  fire: (options: any) => {
+    return Swal.fire(options);
+  },
 };
 
 export default sweetAlert;

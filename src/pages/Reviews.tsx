@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
+import { UserRankBadge } from "@/components/UserRankBadge";
 import { Loader2, Star, Send, ThumbsUp, ImagePlus, X, RefreshCw, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -173,10 +174,13 @@ const RepliesSection = ({
                 </div>
               )}
               <div className="flex-1">
-                <p className="font-semibold text-xs text-primary">
-                  {reply.user_name || "Anonymous"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <UserRankBadge
+                  userId={reply.user_id}
+                  userName={reply.user_name || "Anonymous"}
+                  size="sm"
+                  className="text-xs"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
                   {format(new Date(reply.created_at), "MMM dd, yyyy HH:mm")}
                 </p>
                 <p className="text-sm mt-1 text-foreground">{reply.content}</p>
@@ -751,11 +755,19 @@ const Reviews = () => {
                       <div className="flex items-start gap-3 mb-4">
                         {renderUserAvatar(review.user_avatar, review.user_name || review.customer_name, "md")}
                         <div className="flex-1">
-                          <h3 className="font-bold text-lg text-foreground">{review.customer_name}</h3>
-                          {review.user_name && (
-                            <p className="text-xs text-primary/80 font-semibold">
-                              {review.user_name}
-                            </p>
+                          {review.user_id && review.user_name ? (
+                            <>
+                              <div className="mb-1">
+                                <UserRankBadge
+                                  userId={review.user_id}
+                                  userName={review.user_name}
+                                  size="sm"
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground">{review.customer_name}</p>
+                            </>
+                          ) : (
+                            <h3 className="font-bold text-lg text-foreground">{review.customer_name}</h3>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
                             {format(new Date(review.created_at), "MMM dd, yyyy")}
@@ -921,11 +933,18 @@ const Reviews = () => {
                         <div className="flex items-start gap-3 mb-4">
                           {renderUserAvatar(review.user_avatar, review.user_name || review.customer_name, "md")}
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg text-foreground">{review.customer_name}</h3>
-                            {review.user_name && (
-                              <p className="text-xs text-primary/80 font-semibold">
-                                {review.user_name}
-                              </p>
+                            {review.user_id && review.user_name ? (
+                              <>
+                                <UserRankBadge
+                                  userId={review.user_id}
+                                  userName={review.user_name}
+                                  size="sm"
+                                  className="block mb-1"
+                                />
+                                <p className="text-xs text-muted-foreground">{review.customer_name}</p>
+                              </>
+                            ) : (
+                              <h3 className="font-semibold text-lg text-foreground">{review.customer_name}</h3>
                             )}
                             <p className="text-sm text-muted-foreground mt-1">
                               {format(new Date(review.created_at), "MMM dd, yyyy")}
