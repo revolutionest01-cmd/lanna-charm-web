@@ -14,12 +14,14 @@ import AvatarCropDialog from "@/components/AvatarCropDialog";
 import UserActivity from "@/components/UserActivity";
 import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
+import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const t = translations[language];
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
 
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -34,7 +36,11 @@ const Profile = () => {
     if (!authLoading && !isAuthenticated) {
       navigate("/auth");
     }
-  }, [isAuthenticated, authLoading, navigate]);
+    if (!authLoading && isAuthenticated && !featureLoading && !isFeatureEnabled("user_profile")) {
+      showFeatureDisabledAlert(language);
+      navigate("/");
+    }
+  }, [isAuthenticated, authLoading, navigate, featureLoading]);
 
   // Load profile data
   useEffect(() => {

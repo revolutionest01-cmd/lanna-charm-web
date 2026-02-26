@@ -202,12 +202,13 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
-    const langInstruction = {
+    const langMap: Record<string, string> = {
       th: 'ตอบเป็นภาษาไทยสุภาพและเป็นมิตร',
       en: 'Reply in English, polite and friendly',
       zh: '用中文回复，礼貌友好',
       ja: '日本語で丁寧に回答してください',
-    }[sanitizedLanguage as keyof typeof langInstruction] || 'ตอบเป็นภาษาไทย';
+    };
+    const langInstruction: string = langMap[sanitizedLanguage] || 'ตอบเป็นภาษาไทย';
 
     const systemPrompt = `คุณเป็น "Plernping AI" - ผู้ช่วยอัจฉริยะของ Plern Ping Cafe & Resort
 

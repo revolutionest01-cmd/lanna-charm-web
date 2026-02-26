@@ -101,10 +101,6 @@ export const DevGodMode = () => {
       sweetAlert.error(language === "th" ? "ไม่สามารถเปลี่ยน Role ของ Developer ได้" : "Cannot change Developer role");
       return;
     }
-    if (newRole === "developer") {
-      sweetAlert.error(language === "th" ? "ไม่สามารถตั้ง Developer ให้คนอื่นได้" : "Cannot assign Developer role");
-      return;
-    }
 
     const confirmed = await sweetAlert.modal.confirm(
       language === "th" ? `เปลี่ยนบทบาทเป็น "${newRole}"?` : `Change role to "${newRole}"?`,
@@ -274,6 +270,7 @@ export const DevGodMode = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="developer">Developer</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="staff">Staff</SelectItem>
                             <SelectItem value="user">User</SelectItem>
@@ -356,6 +353,7 @@ export const DevGodMode = () => {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="developer">Developer</SelectItem>
                                 <SelectItem value="admin">Admin</SelectItem>
                                 <SelectItem value="staff">Staff</SelectItem>
                                 <SelectItem value="user">User</SelectItem>
