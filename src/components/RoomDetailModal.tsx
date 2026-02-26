@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import BookingDialog from "./BookingDialog";
+import { RoomAvailabilityCalendar } from "./RoomAvailabilityCalendar";
+import { AdminAvailabilityEditor } from "./AdminAvailabilityEditor";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useModalState } from "@/contexts/ModalContext";
@@ -81,6 +83,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [isTogglingAvailability, setIsTogglingAvailability] = useState(false);
+  const [isAdminEditorOpen, setIsAdminEditorOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -170,7 +173,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .eq('role', 'admin')
+          .in('role', ['admin', 'developer'])
           .maybeSingle();
         const isAdminUser = !!data && !error;
         setIsAdmin(isAdminUser);
@@ -608,26 +611,23 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                   </div>
                 )}
 
-                {/* Amenities - Dynamic from database */}
+                {/* Amenities - Dynamic from database - Icon Only */}
                 {(() => {
                   const amenities = parseAmenities(language === 'th' ? room.amenities_th : room.amenities_en);
                   if (amenities.length === 0) return null;
                   return (
-                    <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
-                      <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-foreground">
+                    <div className="space-y-2">
+                      <h2 className="text-xs sm:text-sm font-semibold text-foreground">
                         {language === 'th' ? 'สิ่งอำนวยความสะดวก' : language === 'zh' ? '便利设施' : 'Amenities'}
                       </h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
+                      <div className="flex flex-wrap gap-2">
                         {amenities.map((amenity, index) => (
-                          <div key={index} className="flex items-center gap-1.5 sm:gap-2 md:gap-3 p-2 sm:p-2.5 md:p-3 rounded-lg bg-primary/5 border border-primary/20">
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                              <span className="text-sm sm:text-base md:text-lg">{getAmenityIcon(amenity)}</span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-[10px] sm:text-xs md:text-sm text-foreground">
-                                {amenity}
-                              </p>
-                            </div>
+                          <div
+                            key={index}
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0 cursor-help hover:bg-primary/20 hover:border-primary/50 transition-all"
+                            title={amenity}
+                          >
+                            <span className="text-base sm:text-lg">{getAmenityIcon(amenity)}</span>
                           </div>
                         ))}
                       </div>
@@ -758,6 +758,21 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                   </div>
                 </div>
 
+                {/* Room Availability Calendar - Mobile & Tablet */}
+                <div className="lg:hidden">
+                  <RoomAvailabilityCalendar roomId={room.id} />
+                </div>
+
+                {/* Admin Availability Editor Button - Mobile */}
+                {isAdmin && (
+                  <Button
+                    onClick={() => setIsAdminEditorOpen(true)}
+                    className="lg:hidden w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  >
+                    {language === 'th' ? 'จัดการสถานะของห้อง' : 'Manage Room Status'}
+                  </Button>
+                )}
+
                 {/* Room Navigation - Horizontal Layout */}
                 {allRooms.length > 1 && (
                   <div className="flex items-center justify-between gap-2 px-2 sm:px-3 md:px-4 py-2 sm:py-3 bg-primary/5 rounded-lg border border-primary/20">
@@ -864,25 +879,24 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                     </div>
                   )}
 
-                  {/* Amenities - Dynamic from database */}
+                  {/* Amenities - Dynamic from database - Icon Only */}
                   {(() => {
                     const amenities = parseAmenities(language === 'th' ? room.amenities_th : room.amenities_en);
                     if (amenities.length === 0) return null;
                     return (
                       <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                          <div className="w-1 h-6 bg-primary rounded-full" />
+                        <h2 className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-2">
+                          <div className="w-1 h-5 md:h-6 bg-primary rounded-full" />
                           {language === 'th' ? 'สิ่งอำนวยความสะดวก' : 'Amenities'}
                         </h2>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-wrap gap-3">
                           {amenities.map((amenity, index) => (
-                            <div key={index} className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary/40 transition-all">
-                              <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                                <span className="text-xl">{getAmenityIcon(amenity)}</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-foreground">{amenity}</p>
-                              </div>
+                            <div
+                              key={index}
+                              className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0 cursor-help hover:bg-primary/20 hover:border-primary/50 transition-all group"
+                              title={amenity}
+                            >
+                              <span className="text-2xl group-hover:scale-110 transition-transform">{getAmenityIcon(amenity)}</span>
                             </div>
                           ))}
                         </div>
@@ -1038,6 +1052,19 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                       </div>
                     </div>
 
+                    {/* Room Availability Calendar */}
+                    <RoomAvailabilityCalendar roomId={room.id} />
+
+                    {/* Admin Availability Editor Button */}
+                    {isAdmin && (
+                      <Button
+                        onClick={() => setIsAdminEditorOpen(true)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                      >
+                        {language === 'th' ? 'จัดการสถานะของห้อง' : 'Manage Room Status'}
+                      </Button>
+                    )}
+
                     {/* Room Navigation - Horizontal Layout */}
                     {allRooms.length > 1 && (
                       <div className="flex items-center justify-between gap-3 px-3 py-3 bg-primary/5 rounded-lg border border-primary/20">
@@ -1116,6 +1143,16 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
         </div>
         </div>
       </>
+
+      {/* Admin Availability Editor Modal */}
+      {room && (
+        <AdminAvailabilityEditor
+          roomId={room.id}
+          roomName={language === 'th' ? room.name_th : room.name_en}
+          isOpen={isAdminEditorOpen}
+          onClose={() => setIsAdminEditorOpen(false)}
+        />
+      )}
     </Portal>
   );
 };

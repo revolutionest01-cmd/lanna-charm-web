@@ -8,11 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2, Sparkles, Globe } from "lucide-react";
+import { Camera, Loader2, LogOut, User, Mail, Trash2, Sparkles, Globe } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
 
-import PerkEquipPanel from "@/components/PerkEquipPanel";
 import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
 import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
@@ -217,17 +216,8 @@ const Profile = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 p-4 pt-12 sm:pt-[3.5rem]">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 p-4 pt-20 sm:pt-28">
       <div className="w-full max-w-6xl mx-auto">
-        {/* Back button */}
-        <Button
-          onClick={() => navigate("/")}
-          className="mb-6 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 active:scale-95 shadow-md"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {language === "th" ? "กลับหน้าแรก" : "Back to Home"}
-        </Button>
-
         {/* Main Profile Section */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Profile Card - Left Side */}
@@ -355,9 +345,6 @@ const Profile = () => {
           <div className="lg:col-span-3 space-y-6">
             {/* User Engagement Stats */}
             {user?.id && <UserEngagementStats userId={user.id} language={language} />}
-
-            {/* Perk Equipment Panel */}
-            {user?.id && <PerkEquipPanel userId={user.id} language={language} />}
           </div>
         </div>
 

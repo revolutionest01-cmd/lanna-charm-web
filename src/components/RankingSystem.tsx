@@ -127,7 +127,10 @@ const RankingSystem = ({ points, language }: RankingSystemProps) => {
                       )}
                       {!isCurrentOrPassed && <Lock className="h-4 w-4 text-slate-400" />}
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      {language === "th" ? rank.description : rank.descriptionEn}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
                       {rank.minPoints} - {rank.maxPoints === Infinity ? "∞" : rank.maxPoints}{" "}
                       {language === "th" ? "คะแนน" : "points"}
                     </p>

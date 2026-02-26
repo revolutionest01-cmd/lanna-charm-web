@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { UserRankBadge } from "@/components/UserRankBadge";
-import { Loader2, Star, Send, ThumbsUp, ImagePlus, X, RefreshCw, MessageCircle } from "lucide-react";
+import { Loader2, Star, Send, ThumbsUp, ImagePlus, X, RefreshCw, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -242,7 +242,7 @@ const Reviews = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const t = translations[language];
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const { isFeatureEnabled } = useFeatureToggle();
 
@@ -252,6 +252,25 @@ const Reviews = () => {
       navigate("/");
     }
   }, [isFeatureEnabled, navigate, language]);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !authLoading) {
+      sweetAlert.fire({
+        title: language === "th" ? "ต้องเข้าสู่ระบบ" : "Login Required",
+        html: `<div style="font-size: 1rem; line-height: 1.6;">
+          <p style="color: #666;">${language === "th" ? "โปรดเข้าสู่ระบบหรือสมัครสมาชิกเพื่อดูและแชร์รีวิว" : "Please login or sign up to view and share reviews"}</p>
+        </div>`,
+        icon: 'warning',
+        confirmButtonText: language === "th" ? "เข้าสู่ระบบ" : "Login",
+        confirmButtonColor: '#3b82f6',
+        allowOutsideClick: false,
+        didClose: () => {
+          navigate("/auth");
+        }
+      });
+    }
+  }, [isAuthenticated, authLoading, language, navigate]);
   
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [reviewImage, setReviewImage] = useState<File | null>(null);
@@ -270,6 +289,36 @@ const Reviews = () => {
     setIsRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: ["reviews-all"], exact: true });
     setIsRefreshing(false);
+  };
+
+  // Share handler
+  const handleShareReview = (review: Review) => {
+    const reviewText = language === "th" ? review.review_text_th : review.review_text_en;
+    const shareText = `${review.customer_name} (⭐ ${review.rating}/5): ${reviewText}`;
+    const shareUrl = `${window.location.origin}/reviews#review-${review.id}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: `Review - ${review.customer_name}`,
+        text: shareText,
+        url: shareUrl,
+      }).catch((err) => console.log("Share cancelled:", err));
+    } else {
+      // Fallback: Show social media share options
+      const encodedText = encodeURIComponent(shareText);
+      const encodedUrl = encodeURIComponent(shareUrl);
+
+      const shareLinks = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+        twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+        whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+        line: `https://line.me/R/msg/text/${encodedText}%20${encodedUrl}`,
+      };
+
+      const platform = window.innerWidth < 640 ? "whatsapp" : "facebook";
+      window.open(shareLinks[platform as keyof typeof shareLinks], "_blank");
+      sweetAlert.success(language === "th" ? "แชร์รีวิวสำเร็จ" : "Review shared successfully");
+    }
   };
 
   const { data: reviews = [], isLoading, error: reviewsError } = useQuery({
@@ -744,6 +793,7 @@ const Reviews = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {topReviews.map((review, index) => (
                   <Card 
+                    id={`review-${review.id}`}
                     key={review.id}
                     className="relative overflow-hidden border-2 border-amber-200 dark:border-amber-800/70 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-yellow-950/40 shadow-xl hover:shadow-2xl transition-all"
                   >
@@ -794,16 +844,27 @@ const Reviews = () => {
                             {language === "th" ? "คนกดไลค์" : "likes"}
                           </span>
                         </div>
-                        <Button
-                          variant={userLikes.includes(review.id) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked: userLikes.includes(review.id) })}
-                          disabled={toggleLikeMutation.isPending || !isAuthenticated}
-                          className="gap-1"
-                        >
-                          <ThumbsUp className={`w-3 h-3 ${userLikes.includes(review.id) ? "fill-current" : ""}`} />
-                          {language === "th" ? "ไลค์" : "Like"}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant={userLikes.includes(review.id) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked: userLikes.includes(review.id) })}
+                            disabled={toggleLikeMutation.isPending || !isAuthenticated}
+                            className="gap-1"
+                          >
+                            <ThumbsUp className={`w-3 h-3 ${userLikes.includes(review.id) ? "fill-current" : ""}`} />
+                            {language === "th" ? "ไลค์" : "Like"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleShareReview(review)}
+                            className="gap-1"
+                          >
+                            <Share2 className="w-3 h-3" />
+                            {language === "th" ? "แชร์" : "Share"}
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -914,6 +975,7 @@ const Reviews = () => {
                   
                   return (
                     <Card 
+                      id={`review-${review.id}`}
                       key={review.id}
                       className={`animate-scale-in hover:shadow-lg transition-all ${
                         isPopular 
@@ -986,6 +1048,15 @@ const Reviews = () => {
                             >
                               <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
                               {language === "th" ? "เป็นประโยชน์" : "Helpful"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleShareReview(review)}
+                              className="gap-2"
+                            >
+                              <Share2 className="w-4 h-4" />
+                              {language === "th" ? "แชร์" : "Share"}
                             </Button>
                             <Button
                               variant="outline"

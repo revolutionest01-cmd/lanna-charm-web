@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { th, enUS } from "date-fns/locale";
 import RankingSystem from "@/components/RankingSystem";
 import PointSystemVisualization from "@/components/PointSystemVisualization";
+import PerkEquipPanel from "@/components/PerkEquipPanel";
 import {
   LineChart,
   Line,
@@ -80,6 +81,12 @@ interface EngagementData {
     replies: number;
     reviews: number;
   }>;
+  activityByWeek: Array<{
+    week: string;
+    topics: number;
+    replies: number;
+    reviews: number;
+  }>;
   contributionData: Array<{
     name: string;
     value: number;
@@ -94,6 +101,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ranking");
+  const [trendViewMode, setTrendViewMode] = useState<"weekly" | "monthly">("monthly");
   const [data, setData] = useState<EngagementData | null>(null);
 
   useEffect(() => {
@@ -201,6 +209,36 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
           ...data,
         }));
 
+      // Group activity by week (last 12 weeks)
+      const weekMap: Record<
+        string,
+        { topics: number; replies: number; reviews: number }
+      > = {};
+      
+      allActivities.forEach(({ date, type }) => {
+        const monday = new Date(date);
+        monday.setDate(date.getDate() - date.getDay() + 1);
+        const key = monday.toISOString().split("T")[0];
+        if (!weekMap[key]) {
+          weekMap[key] = { topics: 0, replies: 0, reviews: 0 };
+        }
+        weekMap[key][type as "topics" | "replies" | "reviews"]++;
+      });
+
+      const activityByWeek = Object.entries(weekMap)
+        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+        .slice(-12)
+        .map(([weekStart, data]) => {
+          const startDate = new Date(weekStart);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + 6);
+          const weekLabel = `${language === "th" ? "สัปดาห์" : "W"}${Math.ceil((parseInt(weekStart.split("-")[2]) + startDate.getDay()) / 7)}`;
+          return {
+            week: weekLabel,
+            ...data,
+          };
+        });
+
       const total = topicsData.length + repliesData.length + reviewsData.length;
       const contributionData = [
         {
@@ -229,6 +267,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
         averageRating,
         totalPoints,
         activityByMonth,
+        activityByWeek,
         contributionData,
       });
 
@@ -311,8 +350,9 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
         </TabsList>
 
         {/* Ranking Tab */}
-        <TabsContent value="ranking" className="mt-0">
+        <TabsContent value="ranking" className="mt-0 space-y-6">
           <RankingSystem points={data.totalPoints} language={language} />
+          <PerkEquipPanel userId={userId} language={language} />
         </TabsContent>
 
         {/* Points System Tab */}
@@ -321,72 +361,235 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
         </TabsContent>
 
         {/* Activity Trend Tab */}
-        <TabsContent value="activity" className="mt-0">
+        <TabsContent value="activity" className="mt-0 space-y-4">
+          {/* Summary Stats */}
+          {data.activityByMonth.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                        {language === "th" ? "กระทู้" : "Topics"}
+                      </p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {data.totalTopics}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        💬 {Math.round(data.totalTopics / data.activityByMonth.length)} {language === "th" ? "เดือนละ" : "/month"}
+                      </p>
+                    </div>
+                    <div className="text-4xl">💭</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                        {language === "th" ? "ตอบกลับ" : "Replies"}
+                      </p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {data.totalReplies}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        ✓ {Math.round(data.totalReplies / data.activityByMonth.length)} {language === "th" ? "เดือนละ" : "/month"}
+                      </p>
+                    </div>
+                    <div className="text-4xl">💬</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                        {language === "th" ? "รีวิว" : "Reviews"}
+                      </p>
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        {data.totalReviews}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        ⭐ {Math.round(data.totalReviews / data.activityByMonth.length)} {language === "th" ? "เดือนละ" : "/month"}
+                      </p>
+                    </div>
+                    <div className="text-4xl">⭐</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Main Chart */}
           <Card className="border-0 shadow-lg bg-white dark:bg-slate-900 overflow-hidden">
-            <div className="h-16 bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400"></div>
+            <div className="h-16 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
             <CardHeader className="pb-3 -mt-12 relative z-10 bg-white dark:bg-slate-900">
-              <CardTitle className="text-lg text-slate-800 dark:text-white">
-                {language === "th" ? "แนวโน้มกิจกรรม" : "Activity Trend"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              {data.activityByMonth.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={data.activityByMonth}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      dataKey="month"
-                      stroke="var(--muted-foreground)"
-                      style={{ fontSize: "0.75rem" }}
-                    />
-                    <YAxis
-                      stroke="var(--muted-foreground)"
-                      style={{ fontSize: "0.75rem" }}
-                    />
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "0.5rem",
-                      }}
-                      labelStyle={{ color: "var(--foreground)" }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
-                    <Line
-                      type="monotone"
-                      dataKey="topics"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={{ fill: "#3b82f6", r: 4 }}
-                      activeDot={{ r: 6 }}
-                      name={language === "th" ? "กระทู้" : "Topics"}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="replies"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ fill: "#10b981", r: 4 }}
-                      activeDot={{ r: 6 }}
-                      name={language === "th" ? "ตอบกลับ" : "Replies"}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="reviews"
-                      stroke="#f59e0b"
-                      strokeWidth={2}
-                      dot={{ fill: "#f59e0b", r: 4 }}
-                      activeDot={{ r: 6 }}
-                      name={language === "th" ? "รีวิว" : "Reviews"}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2 text-slate-800 dark:text-white">
+                  <TrendingUp className="h-5 w-5 text-indigo-600" />
                   {language === "th"
-                    ? "ยังไม่มีข้อมูลกิจกรรม"
-                    : "No activity data available"}
-                </p>
+                    ? trendViewMode === "weekly"
+                      ? "แนวโน้มกิจกรรม (12 สัปดาห์ย้อนหลัง)"
+                      : "แนวโน้มกิจกรรม (12 เดือนย้อนหลัง)"
+                    : trendViewMode === "weekly"
+                      ? "Activity Trend (Last 12 Weeks)"
+                      : "Activity Trend (Last 12 Months)"}
+                </CardTitle>
+                <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <button
+                    onClick={() =>
+                      setTrendViewMode("weekly")
+                    }
+                    className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                      trendViewMode === "weekly"
+                        ? "bg-blue-500 text-white"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {language === "th" ? "สัปดาห์" : "Weekly"}
+                  </button>
+                  <button
+                    onClick={() =>
+                      setTrendViewMode("monthly")
+                    }
+                    className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                      trendViewMode === "monthly"
+                        ? "bg-blue-500 text-white"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {language === "th" ? "เดือน" : "Monthly"}
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {data.activityByMonth.length > 0 ? (
+                <div className="space-y-4">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <LineChart
+                      data={trendViewMode === "weekly" ? data.activityByWeek : data.activityByMonth}
+                      margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorTopics" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorReplies" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorReviews" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="4 4"
+                        stroke="var(--border)"
+                        vertical={false}
+                        opacity={0.3}
+                      />
+                      <XAxis
+                        dataKey={trendViewMode === "weekly" ? "week" : "month"}
+                        stroke="var(--muted-foreground)"
+                        style={{ fontSize: "0.875rem", fontWeight: "500" }}
+                      />
+                      <YAxis
+                        stroke="var(--muted-foreground)"
+                        style={{ fontSize: "0.875rem" }}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(15, 23, 42, 0.95)",
+                          border: "2px solid rgba(100, 116, 139, 0.5)",
+                          borderRadius: "0.75rem",
+                          padding: "0.75rem",
+                        }}
+                        labelStyle={{ color: "#fff", fontWeight: "bold" }}
+                        formatter={(value: number) => [value, ""]}
+                        cursor={{ stroke: "var(--border)", strokeWidth: 2 }}
+                      />
+                      <Legend
+                        wrapperStyle={{ fontSize: "0.875rem", paddingTop: "1rem" }}
+                        verticalAlign="top"
+                        height={36}
+                      />
+                      <Line
+                        type="natural"
+                        dataKey="topics"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{ fill: "#3b82f6", r: 5, strokeWidth: 2, stroke: "#fff" }}
+                        activeDot={{ r: 7, strokeWidth: 2 }}
+                        name={language === "th" ? "📝 กระทู้" : "📝 Topics"}
+                        isAnimationActive={true}
+                      />
+                      <Line
+                        type="natural"
+                        dataKey="replies"
+                        stroke="#10b981"
+                        strokeWidth={3}
+                        dot={{ fill: "#10b981", r: 5, strokeWidth: 2, stroke: "#fff" }}
+                        activeDot={{ r: 7, strokeWidth: 2 }}
+                        name={language === "th" ? "💬 ตอบกลับ" : "💬 Replies"}
+                        isAnimationActive={true}
+                      />
+                      <Line
+                        type="natural"
+                        dataKey="reviews"
+                        stroke="#f59e0b"
+                        strokeWidth={3}
+                        dot={{ fill: "#f59e0b", r: 5, strokeWidth: 2, stroke: "#fff" }}
+                        activeDot={{ r: 7, strokeWidth: 2 }}
+                        name={language === "th" ? "⭐ รีวิว" : "⭐ Reviews"}
+                        isAnimationActive={true}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+
+                  {/* Insights */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        {language === "th" ? "กิจกรรมทั้งหมด" : "Total Activity"}
+                      </p>
+                      <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                        {totalActivities}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        {language === "th" ? "เดือนเฉลี่ย" : "Avg/Month"}
+                      </p>
+                      <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                        {Math.round(totalActivities / data.activityByMonth.length)}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        {language === "th" ? "ก่อนหน้าสุด" : "Peak Period"}
+                      </p>
+                      <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                        {data.activityByMonth[data.activityByMonth.length - 1]?.month || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <TrendingUp className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-3" />
+                  <p className="text-muted-foreground">
+                    {language === "th"
+                      ? "ยังไม่มีข้อมูลกิจกรรม เริ่มมีส่วนร่วมในชุมชนเพื่อดูแนวโน้มของคุณ"
+                      : "No activity data yet. Start participating to see your trends!"}
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
