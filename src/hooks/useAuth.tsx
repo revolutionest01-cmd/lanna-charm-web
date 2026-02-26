@@ -17,6 +17,28 @@ interface AuthState {
   isLoading: boolean;
 }
 
+const PROFILE_CACHE_KEY = 'app-cached-user-profile';
+
+const getCachedProfile = (): User | null => {
+  try {
+    const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch {}
+  return null;
+};
+
+const setCachedProfile = (user: User | null) => {
+  try {
+    if (user) {
+      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(PROFILE_CACHE_KEY);
+    }
+  } catch {}
+};
+
 let authState: AuthState = {
   user: null,
   session: null,
@@ -112,25 +134,34 @@ const initializeAuth = () => {
       console.log('[Auth] onAuthStateChange fired, event:', _event, 'session:', !!newSession);
       
       if (newSession?.user) {
+        // Try to restore cached profile first for instant UI
+        const cachedUser = getCachedProfile();
         const basicUser = buildUserFromSession(newSession);
-        console.log('[Auth] Session found via listener:', basicUser.email, 'event:', _event);
+        const immediateUser = (cachedUser && cachedUser.id === newSession.user.id) ? cachedUser : basicUser;
         
-        // Set authenticated immediately with basic user
+        console.log('[Auth] Session found via listener:', immediateUser.email, 'event:', _event, 'cached:', !!cachedUser);
+        
+        // Set authenticated immediately with cached or basic user
         setAuthState({
-          user: basicUser,
+          user: immediateUser,
           session: newSession,
           isAuthenticated: true,
           isLoading: false,
         });
         
-        // Enrich with profile data in background (don't block UI)
+        // Enrich with fresh profile data in background and update cache
         fetchAndEnrichUser(newSession).then(enrichedUser => {
+          setCachedProfile(enrichedUser);
           setAuthState({ user: enrichedUser });
         }).catch(err => {
           console.error('[Auth] Error enriching user:', err);
         });
       } else {
         console.log('[Auth] No session in listener, event:', _event);
+        // Only clear cache on explicit sign out events
+        if (_event === 'SIGNED_OUT') {
+          setCachedProfile(null);
+        }
         setAuthState({
           user: null,
           session: null,
@@ -230,8 +261,11 @@ export const useAuth = () => {
   const logout = async () => {
     console.log('[Auth] Logging out...');
     
-    // Preserve language preference and admin cache
+    // Preserve language preference
     const language = localStorage.getItem('language-storage');
+    
+    // Clear cached profile immediately
+    setCachedProfile(null);
     
     // Sign out from Supabase FIRST (this will clear auth tokens)
     try {
@@ -263,7 +297,7 @@ export const useAuth = () => {
       localStorage.setItem('language-storage', language);
     }
     
-    // Clear sessionStorage (it's not persisted anyway)
+    // Clear sessionStorage
     sessionStorage.clear();
     
     console.log('[Auth] Logout complete');
