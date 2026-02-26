@@ -682,24 +682,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_perks: string[]
+          avatar_frame: string | null
           avatar_url: string | null
           created_at: string
+          custom_title: string | null
           display_name: string
           id: string
           reputation_points: number
           updated_at: string
         }
         Insert: {
+          active_perks?: string[]
+          avatar_frame?: string | null
           avatar_url?: string | null
           created_at?: string
+          custom_title?: string | null
           display_name: string
           id: string
           reputation_points?: number
           updated_at?: string
         }
         Update: {
+          active_perks?: string[]
+          avatar_frame?: string | null
           avatar_url?: string | null
           created_at?: string
+          custom_title?: string | null
           display_name?: string
           id?: string
           reputation_points?: number

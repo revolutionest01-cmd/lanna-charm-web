@@ -12,9 +12,11 @@ import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2, Sparkles, Globe
 import sweetAlert from "@/lib/sweetAlert";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
 import UserActivity from "@/components/UserActivity";
+import PerkEquipPanel from "@/components/PerkEquipPanel";
 import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
 import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
+import { useUserPerks, AVATAR_FRAMES } from "@/hooks/useUserPerks";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ const Profile = () => {
   const t = translations[language];
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+  const { data: perksData } = useUserPerks(user?.id);
 
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -240,7 +243,7 @@ const Profile = () => {
                 <div className="flex flex-col items-center gap-4 mb-4">
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-300 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
-                    <Avatar className="h-28 w-28 relative border-4 border-white shadow-xl">
+                    <Avatar className={`h-28 w-28 relative border-4 border-white shadow-xl ${perksData?.avatar_frame && perksData.active_perks?.includes("custom-avatar-frame") ? AVATAR_FRAMES[perksData.avatar_frame]?.className || "" : ""}`}>
                       <AvatarImage src={avatarUrl || undefined} alt={displayName} />
                       <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
                         {getInitials(displayName || "U")}
@@ -275,9 +278,19 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
+                <h2 className={`text-2xl font-bold mb-1 ${
+                  perksData?.active_perks?.includes("aura-effect")
+                    ? "bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]"
+                    : "text-slate-800 dark:text-white"
+                }`}>
+                  {perksData?.active_perks?.includes("premium-badge") && "⭐ "}
                   {displayName || "User"}
                 </h2>
+                {perksData?.active_perks?.includes("custom-title") && perksData.custom_title && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                    「{perksData.custom_title}」
+                  </p>
+                )}
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                   {language === "th" ? "จัดการโปรไฟล์ของคุณ" : "Manage your profile"}
                 </p>
@@ -342,6 +355,9 @@ const Profile = () => {
           <div className="lg:col-span-3 space-y-6">
             {/* User Engagement Stats */}
             {user?.id && <UserEngagementStats userId={user.id} language={language} />}
+
+            {/* Perk Equipment Panel */}
+            {user?.id && <PerkEquipPanel userId={user.id} language={language} />}
           </div>
         </div>
 
