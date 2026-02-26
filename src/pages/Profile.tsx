@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Calendar } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, LogOut, User, Mail, Trash2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import { format } from "date-fns";
 
@@ -97,6 +97,43 @@ const Profile = () => {
     } catch (error: unknown) {
       console.error("Avatar upload error:", error);
       sweetAlert.error(language === "th" ? "ไม่สามารถอัพโหลดรูปได้" : "Failed to upload image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!user?.id || !avatarUrl) return;
+
+    const confirmed = await sweetAlert.modal.confirm(
+      language === "th" ? "ต้องการลบรูปโปรไฟล์?" : "Delete profile picture?",
+      language === "th" ? "รูปโปรไฟล์จะถูกลบออก" : "Your profile picture will be removed"
+    );
+    if (!confirmed) return;
+
+    setIsUploading(true);
+    try {
+      // List and delete all files in user's folder
+      const { data: files } = await supabase.storage
+        .from("reviews")
+        .list(user.id);
+
+      if (files && files.length > 0) {
+        const filePaths = files.map(f => `${user.id}/${f.name}`);
+        await supabase.storage.from("reviews").remove(filePaths);
+      }
+
+      // Clear avatar in DB
+      await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", user.id);
+
+      setAvatarUrl(null);
+      sweetAlert.success(language === "th" ? "ลบรูปโปรไฟล์สำเร็จ" : "Profile picture deleted");
+    } catch (error) {
+      console.error("Delete avatar error:", error);
+      sweetAlert.error(language === "th" ? "ไม่สามารถลบรูปได้" : "Failed to delete image");
     } finally {
       setIsUploading(false);
     }
@@ -193,6 +230,15 @@ const Profile = () => {
                     <Camera className="h-4 w-4" />
                   )}
                 </button>
+                {avatarUrl && (
+                  <button
+                    onClick={handleDeleteAvatar}
+                    disabled={isUploading}
+                    className="absolute bottom-0 left-0 bg-destructive text-destructive-foreground rounded-full p-2 shadow-md hover:bg-destructive/90 transition-all duration-200 active:scale-95 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -203,8 +249,8 @@ const Profile = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 {language === "th"
-                  ? "คลิกไอคอนกล้องเพื่อเปลี่ยนรูปโปรไฟล์"
-                  : "Click camera icon to change profile picture"}
+                  ? "คลิกไอคอนกล้องเพื่อเปลี่ยนรูป หรือไอคอนถังขยะเพื่อลบ"
+                  : "Click camera to change or trash to delete"}
               </p>
             </div>
 
