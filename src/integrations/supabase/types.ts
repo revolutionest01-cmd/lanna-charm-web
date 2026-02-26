@@ -819,6 +819,50 @@ export type Database = {
         }
         Relationships: []
       }
+      room_availability: {
+        Row: {
+          availability_date: string
+          booked_by: string | null
+          created_at: string
+          id: string
+          is_available: boolean
+          notes: string | null
+          room_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          availability_date: string
+          booked_by?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          room_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          availability_date?: string
+          booked_by?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          room_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_availability_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_images: {
         Row: {
           created_at: string
