@@ -58,30 +58,24 @@ const HeroSection = () => {
           alt="Plern Ping Cafe outdoor seating area with natural ambiance"
           className="w-full h-full object-cover"
           style={{
-            filter: 'contrast(1.1) saturate(1.0) brightness(0.85)',
+            filter: 'contrast(1.1) saturate(1.0)',
           }}
         />
-        <div 
-          className="absolute inset-0" 
-          style={{
-            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)',
-          }}
-        />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-5 sm:px-6 text-center animate-fade-in pt-20 sm:pt-0">
         <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
-          <MapPin className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" size={20} />
-          <p className="text-sm sm:text-lg text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{t.location}</p>
+          <MapPin className="text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.95)]" size={20} />
+          <p className="text-sm sm:text-lg text-white font-medium drop-shadow-[0_3px_10px_rgba(0,0,0,0.95)]">{t.location}</p>
         </div>
         
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 font-serif drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 font-serif drop-shadow-[0_6px_16px_rgba(0,0,0,0.98)] leading-tight">
           {heroTitle}
         </h1>
         
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-4 sm:mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] px-2">
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-4 sm:mb-8 max-w-2xl mx-auto drop-shadow-[0_4px_12px_rgba(0,0,0,0.95)] px-2">
           {heroSubtitle}
         </p>
 
@@ -89,7 +83,7 @@ const HeroSection = () => {
           <Button 
             variant="highlight" 
             size="lg" 
-            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.exploreMenu}
@@ -98,7 +92,7 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold bg-white/10 hover:bg-white/20 text-white border-white/30 hover:text-white rounded-xl transition-all duration-300 hover:scale-105"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold bg-white/10 hover:bg-white/20 text-white border-white/30 hover:text-white rounded-xl transition-all duration-300 hover:scale-105 drop-shadow-[0_4px_12px_rgba(0,0,0,0.65)]"
             onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.viewRooms}
