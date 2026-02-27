@@ -685,48 +685,33 @@ export type Database = {
           active_perks: string[]
           avatar_frame: string | null
           avatar_url: string | null
-          bio_short: string | null
           created_at: string
           custom_title: string | null
           display_name: string
           id: string
-          profile_theme: string
           reputation_points: number
-          social_facebook: string | null
-          social_instagram: string | null
-          social_tiktok: string | null
           updated_at: string
         }
         Insert: {
           active_perks?: string[]
           avatar_frame?: string | null
           avatar_url?: string | null
-          bio_short?: string | null
           created_at?: string
           custom_title?: string | null
           display_name: string
           id: string
-          profile_theme?: string
           reputation_points?: number
-          social_facebook?: string | null
-          social_instagram?: string | null
-          social_tiktok?: string | null
           updated_at?: string
         }
         Update: {
           active_perks?: string[]
           avatar_frame?: string | null
           avatar_url?: string | null
-          bio_short?: string | null
           created_at?: string
           custom_title?: string | null
           display_name?: string
           id?: string
-          profile_theme?: string
           reputation_points?: number
-          social_facebook?: string | null
-          social_instagram?: string | null
-          social_tiktok?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -903,35 +888,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "room_images_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      room_likes: {
-        Row: {
-          created_at: string
-          id: string
-          room_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          room_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          room_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "room_likes_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
