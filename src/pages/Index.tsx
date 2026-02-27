@@ -19,7 +19,7 @@ const Index = () => {
       {/* Parallax gradient orbs */}
       <ParallaxBackground />
       
-      <FallingLeaves />
+      {/* Temporarily hidden */}
       <main className="relative z-10">
         <HeroSection />
         

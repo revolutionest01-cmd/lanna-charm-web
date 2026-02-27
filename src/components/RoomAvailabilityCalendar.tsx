@@ -29,6 +29,7 @@ export const RoomAvailabilityCalendar = ({
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData>({});
   const [isLoading, setIsLoading] = useState(true);
   const [displayMonth, setDisplayMonth] = useState(month);
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
 
   // Fetch availability data for the current month
   useEffect(() => {
@@ -149,6 +150,9 @@ export const RoomAvailabilityCalendar = ({
     return availability;
   };
 
+  const selectedDate = selectedDateKey ? new Date(`${selectedDateKey}T00:00:00`) : null;
+  const selectedStatus = selectedDate ? getDayStatus(selectedDate) : null;
+
   // Get today's status
   const today = startOfToday();
   const todayKey = format(today, 'yyyy-MM-dd');
@@ -239,14 +243,18 @@ export const RoomAvailabilityCalendar = ({
             const dateKey = format(date, 'yyyy-MM-dd');
             const isToday = format(date, 'yyyy-MM-dd') === format(startOfToday(), 'yyyy-MM-dd');
             const isPastDate = isBefore(date, startOfToday());
+            const isSelected = selectedDateKey === dateKey;
 
             return (
-              <div
+              <button
+                type="button"
                 key={dateKey}
+                onClick={() => setSelectedDateKey(dateKey)}
                 className={cn(
-                  'aspect-square flex items-center justify-center text-[7px] sm:text-[9px] md:text-xs font-medium rounded-sm sm:rounded-md transition-all',
-                  isPastDate ? 'cursor-default' : 'cursor-help',
+                  'aspect-square flex items-center justify-center text-[7px] sm:text-[9px] md:text-xs font-medium rounded-sm sm:rounded-md transition-all border border-transparent',
+                  'cursor-pointer',
                   isToday && !isPastDate && 'ring-[1.5px] ring-blue-500 sm:ring-2',
+                  isSelected && 'border-slate-500 dark:border-slate-300',
                   isPastDate
                     ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                     : status.isAvailable
@@ -262,9 +270,56 @@ export const RoomAvailabilityCalendar = ({
                 }
               >
                 {format(date, 'd')}
-              </div>
+              </button>
             );
           })}
+        </div>
+      )}
+
+      {selectedDate && selectedStatus && (
+        <div className="mt-2 sm:mt-3 md:mt-4 mx-1 p-2 sm:p-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800/70">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {language === 'th' ? 'รายละเอียดวันที่' : 'Date Details'}: {format(selectedDate, language === 'th' ? 'd MMMM yyyy' : 'MMM d, yyyy', {
+                locale: language === 'th' ? thLocale : enUSLocale,
+              })}
+            </p>
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full border shadow-sm',
+                selectedStatus.isAvailable
+                  ? 'text-green-700 dark:text-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-green-300 dark:border-green-700'
+                  : 'text-red-700 dark:text-red-200 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/35 dark:to-rose-900/35 border-red-300 dark:border-red-700'
+              )}
+            >
+              <span className={cn(
+                'inline-block h-1.5 w-1.5 rounded-full',
+                selectedStatus.isAvailable ? 'bg-green-500' : 'bg-red-500'
+              )} />
+              {selectedStatus.isAvailable
+                ? (language === 'th' ? 'ว่าง' : 'Available')
+                : (language === 'th' ? 'ไม่ว่าง' : 'Not Available')}
+            </span>
+          </div>
+
+          {!selectedStatus.isAvailable && (
+            <div className="space-y-1 text-[9px] sm:text-[11px] md:text-xs text-slate-600 dark:text-slate-300">
+              <p>
+                {language === 'th' ? 'ผู้จอง/สาเหตุ' : 'Booked by/Reason'}: {selectedStatus.bookedBy || (language === 'th' ? 'ไม่ระบุ' : 'Not specified')}
+              </p>
+              <p>
+                {language === 'th' ? 'หมายเหตุ' : 'Note'}: {selectedStatus.notes || (language === 'th' ? 'ไม่มีรายละเอียดเพิ่มเติม' : 'No additional details')}
+              </p>
+            </div>
+          )}
+
+          {selectedStatus.isAvailable && (
+            <p className="text-[9px] sm:text-[11px] md:text-xs text-slate-600 dark:text-slate-300">
+              {language === 'th'
+                ? 'วันนี้ห้องว่าง สามารถจองได้'
+                : 'Room is available for booking on this date'}
+            </p>
+          )}
         </div>
       )}
 

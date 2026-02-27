@@ -35,6 +35,24 @@ interface UserRole {
   avatar_url: string | null;
 }
 
+const REQUIRED_FEATURE_TOGGLES: Array<{
+  feature_key: string;
+  feature_name_th: string;
+  feature_name_en: string;
+  description_th: string;
+  description_en: string;
+  is_enabled: boolean;
+}> = [
+  {
+    feature_key: "falling_leaves",
+    feature_name_th: "เอฟเฟกต์ใบไม้หน้าแรก",
+    feature_name_en: "Homepage Falling Leaves",
+    description_th: "เอฟเฟกต์ใบไม้ร่วงในหน้าแรกของเว็บไซต์",
+    description_en: "Falling leaves visual effect on the homepage",
+    is_enabled: true,
+  },
+];
+
 const roleConfig = {
   developer: { icon: Zap, color: "text-yellow-500", badge: "outline" as const, label: "Developer" },
   admin: { icon: Crown, color: "text-red-500", badge: "destructive" as const, label: "Admin" },
@@ -54,6 +72,15 @@ export const DevGodMode = () => {
 
   const fetchData = async () => {
     setLoading(true);
+
+    await Promise.all(
+      REQUIRED_FEATURE_TOGGLES.map((feature) =>
+        supabase
+          .from("feature_toggles")
+          .upsert(feature, { onConflict: "feature_key" })
+      )
+    );
+
     const [featuresRes, rolesRes] = await Promise.all([
       supabase.from("feature_toggles").select("*").order("feature_key"),
       supabase.from("user_roles").select("id, user_id, role, created_at").order("created_at"),
