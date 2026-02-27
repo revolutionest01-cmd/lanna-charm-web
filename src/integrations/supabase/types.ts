@@ -685,33 +685,48 @@ export type Database = {
           active_perks: string[]
           avatar_frame: string | null
           avatar_url: string | null
+          bio_short: string | null
           created_at: string
           custom_title: string | null
           display_name: string
           id: string
+          profile_theme: string | null
           reputation_points: number
+          social_facebook: string | null
+          social_instagram: string | null
+          social_tiktok: string | null
           updated_at: string
         }
         Insert: {
           active_perks?: string[]
           avatar_frame?: string | null
           avatar_url?: string | null
+          bio_short?: string | null
           created_at?: string
           custom_title?: string | null
           display_name: string
           id: string
+          profile_theme?: string | null
           reputation_points?: number
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_tiktok?: string | null
           updated_at?: string
         }
         Update: {
           active_perks?: string[]
           avatar_frame?: string | null
           avatar_url?: string | null
+          bio_short?: string | null
           created_at?: string
           custom_title?: string | null
           display_name?: string
           id?: string
+          profile_theme?: string | null
           reputation_points?: number
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_tiktok?: string | null
           updated_at?: string
         }
         Relationships: []

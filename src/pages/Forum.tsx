@@ -32,6 +32,7 @@ import { createTopicValidation } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoriesWithAll, getCategoryLabel, getCategoryColor, FORUM_CATEGORIES } from "@/lib/forumConfig";
 import TopicCard from "@/components/TopicCard";
+import { OnlineUsersPanel } from "@/components/OnlineUsersPanel";
 import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 
 const Forum = () => {
@@ -489,6 +490,8 @@ const Forum = () => {
           {/* Sidebar - Popular Topics */}
           <div className="lg:col-span-1">
             <div className="sticky top-[calc(3rem+5rem)] space-y-4">
+              {/* Online Users */}
+              <OnlineUsersPanel />
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-6 h-6 text-primary dark:text-primary/80" />
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
