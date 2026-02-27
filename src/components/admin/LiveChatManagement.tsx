@@ -17,6 +17,9 @@ interface Conversation {
   customer_id: string;
   customer_name: string;
   customer_avatar: string | null;
+  assigned_admin_id: string | null;
+  assigned_admin_name: string | null;
+  auto_reply_sent_at: string | null;
   status: string;
   last_message: string | null;
   last_message_at: string;
@@ -33,6 +36,74 @@ interface Message {
   is_read: boolean;
   created_at: string;
 }
+
+const dedupeConversationsByCustomer = (list: Conversation[]) => {
+  const map = new Map<string, Conversation>();
+
+  list.forEach((conversation) => {
+    const key = conversation.customer_id || conversation.id;
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, conversation);
+      return;
+    }
+
+    const existingTime = existing.last_message_at ? new Date(existing.last_message_at).getTime() : 0;
+    const candidateTime = conversation.last_message_at ? new Date(conversation.last_message_at).getTime() : 0;
+
+    if (candidateTime > existingTime) {
+      map.set(key, conversation);
+    }
+  });
+
+  return Array.from(map.values()).sort((a, b) => {
+    const at = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+    const bt = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+    return bt - at;
+  });
+};
+
+const getDayKey = (dateTime: string) => {
+  const date = new Date(dateTime);
+  if (Number.isNaN(date.getTime())) return 'unknown';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getDayKeyFromDate = (date: Date) => {
+  if (Number.isNaN(date.getTime())) return 'unknown';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getDateSeparatorLabel = (dateTime: string, language: 'th' | 'en') => {
+  const target = new Date(dateTime);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const targetKey = getDayKeyFromDate(target);
+  const todayKey = getDayKeyFromDate(today);
+  const yesterdayKey = getDayKeyFromDate(yesterday);
+
+  if (targetKey === todayKey) {
+    return language === 'th' ? 'วันนี้' : 'Today';
+  }
+
+  if (targetKey === yesterdayKey) {
+    return language === 'th' ? 'เมื่อวาน' : 'Yesterday';
+  }
+
+  return target.toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
 
 // Notification sound (simple beep using Web Audio API)
 const playNotificationSound = () => {
@@ -77,8 +148,22 @@ export const LiveChatManagement = () => {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [selectedCustomerConversationIds, setSelectedCustomerConversationIds] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevConvCountRef = useRef(0);
+  const quickAnswers = language === 'th'
+    ? [
+        'สวัสดีค่ะ มีอะไรให้ช่วยได้บ้างคะ',
+        'ขอบคุณสำหรับข้อความครับ กำลังตรวจสอบให้ทันที',
+        'รบกวนแจ้งวันที่เข้าพักและจำนวนท่านได้ไหมครับ',
+        'ขณะนี้ดำเนินการให้แล้ว หากเสร็จจะแจ้งทันทีครับ',
+      ]
+    : [
+        'Hello! How can I assist you today?',
+        'Thanks for your message. I am checking this now.',
+        'Could you share your check-in date and number of guests?',
+        'I am processing this for you and will update shortly.',
+      ];
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -89,12 +174,44 @@ export const LiveChatManagement = () => {
       .order('last_message_at', { ascending: false });
 
     if (data) {
-      setConversations(data as Conversation[]);
+      setConversations(dedupeConversationsByCustomer(data as Conversation[]));
     }
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
+
+  // Track staff presence for customer widget
+  useEffect(() => {
+    if (!user) return;
+
+    const role = user.role || 'user';
+    const isStaffRole = role === 'admin' || role === 'staff' || role === 'developer';
+    if (!isStaffRole) return;
+
+    const channel = supabase.channel('live-chat-staff-presence', {
+      config: {
+        presence: {
+          key: user.id,
+        },
+      },
+    });
+
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track({
+          user_id: user.id,
+          user_name: user.name,
+          user_role: role,
+          online_at: new Date().toISOString(),
+        });
+      }
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, user?.name, user?.role]);
 
   // Realtime: new conversations and updates
   useEffect(() => {
@@ -108,16 +225,19 @@ export const LiveChatManagement = () => {
         if (payload.eventType === 'INSERT') {
           const newConv = payload.new as Conversation;
           setConversations(prev => {
-            if (prev.some(c => c.id === newConv.id)) return prev;
-            return [newConv, ...prev];
+            const next = prev.some(c => c.id === newConv.id)
+              ? prev
+              : [newConv, ...prev];
+            return dedupeConversationsByCustomer(next);
           });
           // Play sound for new conversation
           if (soundEnabled) playNotificationSound();
         } else if (payload.eventType === 'UPDATE') {
           const updated = payload.new as Conversation;
           setConversations(prev =>
-            prev.map(c => c.id === updated.id ? updated : c)
-              .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+            dedupeConversationsByCustomer(
+              prev.map(c => c.id === updated.id ? updated : c)
+            )
           );
           // Play sound if unread increased (customer sent message)
           if (updated.unread_count > 0 && soundEnabled) {
@@ -135,10 +255,31 @@ export const LiveChatManagement = () => {
     if (!selectedConv) { setMessages([]); return; }
 
     const fetchMessages = async () => {
+      const selectedConversation = conversations.find((conversation) => conversation.id === selectedConv);
+      if (!selectedConversation) {
+        setMessages([]);
+        setSelectedCustomerConversationIds([]);
+        return;
+      }
+
+      const { data: customerConversations } = await supabase
+        .from('chat_conversations')
+        .select('id')
+        .eq('customer_id', selectedConversation.customer_id)
+        .order('last_message_at', { ascending: false });
+
+      const conversationIds = (customerConversations || []).map((conversation) => conversation.id);
+      setSelectedCustomerConversationIds(conversationIds);
+
+      if (conversationIds.length === 0) {
+        setMessages([]);
+        return;
+      }
+
       const { data } = await supabase
         .from('chat_messages')
         .select('*')
-        .eq('conversation_id', selectedConv)
+        .in('conversation_id', conversationIds)
         .order('created_at', { ascending: true });
 
       if (data) setMessages(data as Message[]);
@@ -147,18 +288,44 @@ export const LiveChatManagement = () => {
       await supabase
         .from('chat_messages')
         .update({ is_read: true })
-        .eq('conversation_id', selectedConv)
+        .in('conversation_id', conversationIds)
         .eq('sender_role', 'customer')
         .eq('is_read', false);
 
       await supabase
         .from('chat_conversations')
         .update({ unread_count: 0 })
-        .eq('id', selectedConv);
+        .in('id', conversationIds);
     };
 
     fetchMessages();
-  }, [selectedConv]);
+  }, [selectedConv, conversations]);
+
+  useEffect(() => {
+    if (!selectedConv || !user) return;
+    const conv = conversations.find(c => c.id === selectedConv);
+    if (!conv || conv.status !== 'open' || conv.assigned_admin_id) return;
+
+    const assignConversation = async () => {
+      const { error } = await supabase
+        .from('chat_conversations')
+        .update({
+          assigned_admin_id: user.id,
+          assigned_admin_name: user.name,
+        })
+        .eq('id', selectedConv);
+
+      if (!error) {
+        setConversations(prev => prev.map(c =>
+          c.id === selectedConv
+            ? { ...c, assigned_admin_id: user.id, assigned_admin_name: user.name }
+            : c
+        ));
+      }
+    };
+
+    assignConversation();
+  }, [selectedConv, user?.id, user?.name, conversations]);
 
   // Realtime messages for selected conversation
   useEffect(() => {
@@ -170,9 +337,13 @@ export const LiveChatManagement = () => {
         event: 'INSERT',
         schema: 'public',
         table: 'chat_messages',
-        filter: `conversation_id=eq.${selectedConv}`,
       }, async (payload) => {
         const newMsg = payload.new as Message;
+
+        if (!selectedCustomerConversationIds.includes(newMsg.conversation_id)) {
+          return;
+        }
+
         setMessages(prev => {
           if (prev.some(m => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
@@ -181,14 +352,16 @@ export const LiveChatManagement = () => {
         // Auto mark as read
         if (newMsg.sender_role === 'customer') {
           await supabase.from('chat_messages').update({ is_read: true }).eq('id', newMsg.id);
-          await supabase.from('chat_conversations').update({ unread_count: 0 }).eq('id', selectedConv);
+          if (selectedCustomerConversationIds.length > 0) {
+            await supabase.from('chat_conversations').update({ unread_count: 0 }).in('id', selectedCustomerConversationIds);
+          }
           if (soundEnabled) playNotificationSound();
         }
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [selectedConv, soundEnabled]);
+  }, [selectedConv, soundEnabled, selectedCustomerConversationIds]);
 
   // Auto scroll
   useEffect(() => {
@@ -197,10 +370,8 @@ export const LiveChatManagement = () => {
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || sending || !selectedConv || !user) return;
-    const content = input.trim();
-    setInput("");
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || sending || !selectedConv || !user) return;
     setSending(true);
 
     try {
@@ -218,14 +389,28 @@ export const LiveChatManagement = () => {
         last_message: content,
         last_message_at: new Date().toISOString(),
         unread_count: 0,
+        assigned_admin_id: user.id,
+        assigned_admin_name: user.name,
       }).eq('id', selectedConv);
 
     } catch (err) {
       console.error('Send error:', err);
-      setInput(content);
     } finally {
       setSending(false);
     }
+  };
+
+  const handleSend = async () => {
+    const content = input.trim();
+    if (!content || sending) return;
+    setInput("");
+    await sendMessage(content);
+  };
+
+  const handleQuickAnswer = async (answer: string) => {
+    if (sending) return;
+    setInput("");
+    await sendMessage(answer);
   };
 
   const handleCloseConversation = async (convId: string) => {
@@ -239,17 +424,19 @@ export const LiveChatManagement = () => {
   const closedConversations = conversations.filter(c => c.status === 'closed');
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white/95 px-4 py-3 shadow-sm">
         <div>
-          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-            <Headphones className="w-5 h-5 text-primary" />
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
+              <Headphones className="w-4 h-4 text-primary" />
+            </span>
             {language === 'th' ? 'Live Chat' : 'Live Chat'}
             {totalUnread > 0 && (
               <Badge variant="destructive" className="text-xs animate-pulse">{totalUnread}</Badge>
             )}
           </h2>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             {language === 'th' ? 'ตอบกลับลูกค้าแบบเรียลไทม์' : 'Reply to customers in real-time'}
           </p>
         </div>
@@ -258,12 +445,12 @@ export const LiveChatManagement = () => {
             variant="ghost"
             size="icon"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="h-8 w-8"
+            className="h-8 w-8 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-400"
             title={soundEnabled ? 'Mute' : 'Unmute'}
           >
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </Button>
-          <Button variant="outline" size="sm" onClick={fetchConversations} disabled={loading} className="gap-1.5">
+          <Button variant="outline" size="sm" onClick={fetchConversations} disabled={loading} className="gap-1.5 border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-400 shadow-sm">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
@@ -271,9 +458,9 @@ export const LiveChatManagement = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-[500px]">
         {/* Conversation List */}
-        <div className="lg:col-span-1 border border-border rounded-lg overflow-hidden">
-          <div className="p-3 border-b border-border bg-muted/50">
-            <p className="text-sm font-medium">
+        <div className="lg:col-span-1 border border-slate-200/80 bg-white/95 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-3 border-b border-slate-200 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+            <p className="text-sm font-semibold text-slate-800">
               {language === 'th' ? `สนทนา (${openConversations.length})` : `Conversations (${openConversations.length})`}
             </p>
           </div>
@@ -283,7 +470,7 @@ export const LiveChatManagement = () => {
                 <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
               </div>
             ) : conversations.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
+              <div className="text-center py-8 text-slate-600 text-sm">
                 {language === 'th' ? 'ยังไม่มีการสนทนา' : 'No conversations yet'}
               </div>
             ) : (
@@ -293,8 +480,8 @@ export const LiveChatManagement = () => {
                   <button
                     key={conv.id}
                     onClick={() => setSelectedConv(conv.id)}
-                    className={`w-full text-left p-3 border-b border-border hover:bg-accent/50 transition-colors ${
-                      selectedConv === conv.id ? 'bg-accent' : ''
+                    className={`w-full text-left p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+                      selectedConv === conv.id ? 'bg-primary/10 ring-1 ring-inset ring-primary/25' : ''
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
@@ -305,15 +492,20 @@ export const LiveChatManagement = () => {
                           <User className="h-3.5 w-3.5 text-primary" />
                         </div>
                       )}
-                      <span className="text-sm font-medium truncate flex-1">{conv.customer_name}</span>
+                      <span className="text-sm font-medium text-slate-800 truncate flex-1">{conv.customer_name}</span>
                       {conv.unread_count > 0 && (
                         <Badge variant="destructive" className="text-[10px] px-1.5 h-4 animate-pulse">
                           {conv.unread_count}
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5 flex items-center gap-1">
+                    <p className="text-xs text-slate-700 truncate">{conv.last_message}</p>
+                    {conv.assigned_admin_name && (
+                      <p className="text-[10px] text-primary/90 truncate mt-0.5">
+                        {language === 'th' ? `ดูแลโดย: ${conv.assigned_admin_name}` : `Assigned: ${conv.assigned_admin_name}`}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" />
                       {new Date(conv.last_message_at).toLocaleTimeString(language === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -323,8 +515,8 @@ export const LiveChatManagement = () => {
                 {/* Closed conversations */}
                 {closedConversations.length > 0 && (
                   <>
-                    <div className="p-2 bg-muted/30 border-b border-border">
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                    <div className="p-2 bg-slate-100/80 border-b border-slate-200">
+                      <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-wider">
                         {language === 'th' ? 'ปิดแล้ว' : 'Closed'}
                       </p>
                     </div>
@@ -332,17 +524,17 @@ export const LiveChatManagement = () => {
                       <button
                         key={conv.id}
                         onClick={() => setSelectedConv(conv.id)}
-                        className={`w-full text-left p-3 border-b border-border hover:bg-accent/50 transition-colors opacity-60 ${
-                          selectedConv === conv.id ? 'bg-accent opacity-100' : ''
+                        className={`w-full text-left p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors opacity-90 ${
+                          selectedConv === conv.id ? 'bg-primary/10 opacity-100 ring-1 ring-inset ring-primary/25' : ''
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1">
                           <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
                             <User className="h-3 w-3 text-muted-foreground" />
                           </div>
-                          <span className="text-xs truncate flex-1">{conv.customer_name}</span>
+                          <span className="text-xs text-slate-700 truncate flex-1">{conv.customer_name}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
+                        <p className="text-xs text-slate-600 truncate">{conv.last_message}</p>
                       </button>
                     ))}
                   </>
@@ -353,11 +545,11 @@ export const LiveChatManagement = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="lg:col-span-2 border border-border rounded-lg overflow-hidden flex flex-col">
+        <div className="lg:col-span-2 border border-slate-200/80 bg-white/95 rounded-xl overflow-hidden shadow-sm flex flex-col">
           {selectedConv ? (
             <>
               {/* Chat header */}
-              <div className="p-3 border-b border-border bg-muted/50 flex items-center justify-between">
+              <div className="p-3 border-b border-slate-200 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {(() => {
                     const conv = conversations.find(c => c.id === selectedConv);
@@ -371,12 +563,17 @@ export const LiveChatManagement = () => {
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-medium">{conv.customer_name}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-sm font-semibold text-slate-800">{conv.customer_name}</p>
+                          <p className="text-[10px] text-slate-600">
                             {conv.status === 'open'
                               ? (language === 'th' ? '🟢 กำลังสนทนา' : '🟢 Active')
                               : (language === 'th' ? '🔴 ปิดแล้ว' : '🔴 Closed')
                             }
+                          </p>
+                          <p className="text-[10px] text-primary/90">
+                            {language === 'th'
+                              ? `ผู้ดูแล: ${conv.assigned_admin_name || 'รอรับเคส'}`
+                              : `Handler: ${conv.assigned_admin_name || 'Unassigned'}`}
                           </p>
                         </div>
                       </>
@@ -385,7 +582,7 @@ export const LiveChatManagement = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   {conversations.find(c => c.id === selectedConv)?.status === 'open' && (
-                    <Button variant="outline" size="sm" onClick={() => handleCloseConversation(selectedConv)} className="text-xs h-7 gap-1">
+                    <Button variant="outline" size="sm" onClick={() => handleCloseConversation(selectedConv)} className="text-xs h-7 gap-1 border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-400 shadow-sm">
                       <X className="h-3 w-3" />
                       {language === 'th' ? 'ปิด' : 'Close'}
                     </Button>
@@ -393,43 +590,74 @@ export const LiveChatManagement = () => {
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-7 w-7 lg:hidden border-primary/50 hover:border-primary hover:bg-primary/10 transition-all" 
+                    className="h-7 w-7 lg:hidden border-slate-300 bg-white text-slate-700 hover:border-primary hover:bg-primary/10 transition-all shadow-sm" 
                     onClick={() => setSelectedConv(null)}
                     title={language === 'th' ? 'ปิด' : 'Close'}
                   >
-                    <X className="h-4 w-4 text-primary" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
               {/* Messages */}
-              <ScrollArea className="flex-1 p-3" ref={scrollRef}>
+              <ScrollArea className="flex-1 p-3 bg-gradient-to-b from-slate-50/60 to-white" ref={scrollRef}>
                 <div className="space-y-3">
-                  {messages.map(msg => (
-                    <div key={msg.id} className={`flex ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] rounded-lg p-2.5 ${
-                        msg.sender_role === 'admin'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground'
-                      }`}>
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <p className="text-[10px] opacity-70">
-                            {new Date(msg.created_at).toLocaleTimeString(language === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                          {msg.sender_role === 'admin' && msg.is_read && (
-                            <CheckCheck className="h-3 w-3 opacity-70" />
-                          )}
+                  {messages.map((msg, index) => {
+                    const currentDayKey = getDayKey(msg.created_at);
+                    const previousDayKey = index > 0 ? getDayKey(messages[index - 1].created_at) : null;
+                    const showDateSeparator = index === 0 || currentDayKey !== previousDayKey;
+
+                    return (
+                      <div key={msg.id}>
+                        {showDateSeparator && (
+                          <div className="flex items-center justify-center my-2">
+                            <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-600">
+                              {getDateSeparatorLabel(msg.created_at, language)}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className={`flex ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[80%] rounded-xl p-2.5 shadow-sm ${
+                            msg.sender_role === 'admin'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-white border border-slate-200 text-slate-800'
+                          }`}>
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <p className="text-[10px] opacity-80">
+                                {new Date(msg.created_at).toLocaleTimeString(language === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              {msg.sender_role === 'admin' && msg.is_read && (
+                                <CheckCheck className="h-3 w-3 opacity-80" />
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
 
               {/* Input */}
               {conversations.find(c => c.id === selectedConv)?.status === 'open' && (
-                <div className="p-3 border-t border-border">
+                <div className="p-3 border-t border-slate-200 bg-white">
+                  <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar">
+                    {quickAnswers.map((answer) => (
+                      <Button
+                        key={answer}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={sending}
+                        onClick={() => handleQuickAnswer(answer)}
+                        className="h-7 px-2.5 text-[11px] whitespace-nowrap border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:border-primary/60"
+                      >
+                        {answer}
+                      </Button>
+                    ))}
+                  </div>
                   <div className="flex gap-2">
                     <Input
                       value={input}
@@ -437,9 +665,9 @@ export const LiveChatManagement = () => {
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                       placeholder={language === 'th' ? 'พิมพ์ข้อความตอบกลับ...' : 'Type a reply...'}
                       disabled={sending}
-                      className="flex-1 h-9 text-sm"
+                      className="flex-1 h-9 text-sm border-slate-300 bg-white focus-visible:ring-primary placeholder:text-slate-500"
                     />
-                    <Button onClick={handleSend} disabled={!input.trim() || sending} size="icon" className="h-9 w-9">
+                    <Button onClick={handleSend} disabled={!input.trim() || sending} size="icon" className="h-9 w-9 border border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
                       {sending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
                     </Button>
                   </div>
@@ -447,10 +675,10 @@ export const LiveChatManagement = () => {
               )}
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            <div className="flex-1 flex items-center justify-center text-slate-600 bg-gradient-to-b from-slate-50/60 to-white">
               <div className="text-center">
-                <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/20 mb-3" />
-                <p className="text-sm">
+                <MessageSquare className="mx-auto h-12 w-12 text-slate-400 mb-3" />
+                <p className="text-sm font-medium">
                   {language === 'th' ? 'เลือกบทสนทนาเพื่อเริ่มตอบกลับ' : 'Select a conversation to start replying'}
                 </p>
               </div>

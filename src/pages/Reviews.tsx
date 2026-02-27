@@ -50,8 +50,7 @@ type ReviewLike = {
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
-  review_text_en: z.string().trim().min(10, "Review must be at least 10 characters").max(500, "Review must be less than 500 characters"),
-  review_text_th: z.string().trim().min(10, "รีวิวต้องมีอย่างน้อย 10 ตัวอักษร").max(500, "รีวิวต้องมีไม่เกิน 500 ตัวอักษร"),
+  review_text: z.string().trim().min(10, "รีวิวต้องมีอย่างน้อย 10 ตัวอักษร").max(500, "รีวิวต้องมีไม่เกิน 500 ตัวอักษร"),
 });
 
 // ---- Extracted RepliesSection component to prevent re-mount on parent re-render ----
@@ -280,8 +279,7 @@ const Reviews = () => {
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     rating: 5,
-    review_text_en: "",
-    review_text_th: "",
+    review_text: "",
   });
 
   // Manual refresh handler
@@ -454,8 +452,8 @@ const Reviews = () => {
       const { error } = await supabase.from("reviews").insert({
         customer_name: userName,
         rating: validated.rating,
-        review_text_en: validated.review_text_en,
-        review_text_th: validated.review_text_th,
+        review_text_en: validated.review_text,
+        review_text_th: validated.review_text,
         user_id: user?.id || null,
         image_url: imageUrl,
         is_active: false,
@@ -464,7 +462,7 @@ const Reviews = () => {
     },
     onSuccess: () => {
       sweetAlert.success(language === "th" ? "ส่งรีวิวสำเร็จ! รอการอนุมัติจากผู้ดูแล" : "Review submitted! Pending admin approval");
-      setFormData({ rating: 5, review_text_en: "", review_text_th: "" });
+      setFormData({ rating: 5, review_text: "" });
       setReviewImage(null);
       setReviewImagePreview(null);
       setUploadingImage(false);
@@ -677,37 +675,20 @@ const Reviews = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="review_text_th" className="font-semibold">
-                      {language === "th" ? "รีวิว (ภาษาไทย)" : language === "zh" ? "评价（泰语）" : "Review (Thai)"}
+                    <Label htmlFor="review_text" className="font-semibold">
+                      {language === "th" ? "เขียนรีวิวที่คุณรู้สึกได้ที่นี่" : language === "zh" ? "在这里写下你的感受" : "Write your review here"}
                     </Label>
                     <Textarea
-                      id="review_text_th"
-                      value={formData.review_text_th}
-                      onChange={(e) => setFormData({ ...formData, review_text_th: e.target.value })}
-                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาไทย..." : "Write your review in Thai..."}
-                      rows={4}
+                      id="review_text"
+                      value={formData.review_text}
+                      onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
+                      placeholder={language === "th" ? "เขียนรีวิวที่คุณรู้สึกได้ที่นี่..." : language === "zh" ? "在这里写下你的感受..." : "Write your review here..."}
+                      rows={5}
                       maxLength={500}
                       required
                       className="border-2"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">{formData.review_text_th.length}/500</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="review_text_en" className="font-semibold">
-                      {language === "th" ? "รีวิว (ภาษาอังกฤษ)" : language === "zh" ? "评价（英语）" : "Review (English)"}
-                    </Label>
-                    <Textarea
-                      id="review_text_en"
-                      value={formData.review_text_en}
-                      onChange={(e) => setFormData({ ...formData, review_text_en: e.target.value })}
-                      placeholder={language === "th" ? "เขียนรีวิวของคุณเป็นภาษาอังกฤษ..." : "Write your review in English..."}
-                      rows={4}
-                      maxLength={500}
-                      required
-                      className="border-2"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">{formData.review_text_en.length}/500</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formData.review_text.length}/500</p>
                   </div>
 
                   {/* Image Upload */}
