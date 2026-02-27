@@ -615,7 +615,7 @@ export const ReviewsManagement = () => {
             <CardContent className="p-4 sm:p-5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-                  {language === "th" ? "โปรดด้วย 5 ⭐" : "5★ Reviews"}
+                  {language === "th" ? "สมาชิกที่รีวิวให้ 5 ดาว" : "5★ Reviews"}
                 </p>
                 <BarChart3 className="w-4 h-4 text-green-500" />
               </div>
