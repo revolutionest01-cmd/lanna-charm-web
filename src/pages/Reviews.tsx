@@ -675,7 +675,7 @@ const Reviews = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="review_text" className="font-semibold">
+                    <Label htmlFor="review_text" className="font-semibold hidden">
                       {language === "th" ? "เขียนรีวิวที่คุณรู้สึกได้ที่นี่" : language === "zh" ? "在这里写下你的感受" : "Write your review here"}
                     </Label>
                     <Textarea
