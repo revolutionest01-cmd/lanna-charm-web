@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Zap, Crown, Shield, User, ToggleRight, Users, Trash2, Trophy, Minus, Plus } from "lucide-react";
+import { Loader2, Zap, Crown, User, ToggleRight, Users, Trash2, Trophy, Minus, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import sweetAlert from "@/lib/sweetAlert";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
@@ -56,7 +56,6 @@ const REQUIRED_FEATURE_TOGGLES: Array<{
 const roleConfig = {
   developer: { icon: Zap, color: "text-yellow-500", badge: "outline" as const, label: "Developer" },
   admin: { icon: Crown, color: "text-red-500", badge: "destructive" as const, label: "Admin" },
-  staff: { icon: Shield, color: "text-blue-500", badge: "default" as const, label: "Staff" },
   user: { icon: User, color: "text-foreground/70", badge: "secondary" as const, label: "User" },
 };
 
@@ -279,8 +278,8 @@ export const DevGodMode = () => {
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             {language === "th"
-              ? `${users.length} ผู้ใช้ — Developer ลบไม่ได้ / Admin จัดการ Staff+User / Staff แก้ไขเนื้อหา`
-              : `${users.length} users — Developer is protected / Admin manages Staff+User / Staff edits content`}
+              ? `${users.length} ผู้ใช้ — Developer ลบไม่ได้ / Admin จัดการบทบาทผู้ใช้`
+              : `${users.length} users — Developer is protected / Admin manages user roles`}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
@@ -325,7 +324,6 @@ export const DevGodMode = () => {
                       <SelectContent>
                         <SelectItem value="developer">Developer</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
                         <SelectItem value="user">User</SelectItem>
                       </SelectContent>
                     </Select>
@@ -405,7 +403,6 @@ export const DevGodMode = () => {
                             <SelectContent>
                               <SelectItem value="developer">Developer</SelectItem>
                               <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="staff">Staff</SelectItem>
                               <SelectItem value="user">User</SelectItem>
                             </SelectContent>
                           </Select>

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Shield, UserCog, Crown, User, Zap, Trash2 } from "lucide-react";
+import { Loader2, UserCog, Crown, User, Zap, Trash2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import { useAuth } from "@/hooks/useAuth";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
@@ -24,7 +24,6 @@ interface UserRole {
 const roleConfig = {
   developer: { icon: Zap, color: "text-yellow-500", badge: "outline" as const, label: "Developer" },
   admin: { icon: Crown, color: "text-red-500", badge: "destructive" as const, label: "Admin" },
-  staff: { icon: Shield, color: "text-blue-500", badge: "default" as const, label: "Staff" },
   user: { icon: User, color: "text-foreground/70", badge: "secondary" as const, label: "User" },
 };
 
@@ -166,8 +165,8 @@ export const UserRolesManagement = () => {
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             {language === "th"
-              ? `ทั้งหมด ${visibleUsers.length} ผู้ใช้ — Admin: เพิ่ม/ลบ Staff, Staff: แก้ไขเนื้อหา`
-              : `${visibleUsers.length} users — Admin: manage staff, Staff: edit content`}
+              ? `ทั้งหมด ${visibleUsers.length} ผู้ใช้ — จัดการบทบาทผู้ใช้ในระบบ`
+              : `${visibleUsers.length} users — manage user roles`}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
@@ -217,7 +216,6 @@ export const UserRolesManagement = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="staff">Staff</SelectItem>
                             <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
@@ -301,7 +299,6 @@ export const UserRolesManagement = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="staff">Staff</SelectItem>
                                 <SelectItem value="user">User</SelectItem>
                               </SelectContent>
                             </Select>
