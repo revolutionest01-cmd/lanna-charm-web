@@ -37,6 +37,8 @@ interface Message {
   created_at: string;
 }
 
+const ADMIN_LIVECHAT_REFRESH_MS = 15000;
+
 const dedupeConversationsByCustomer = (list: Conversation[]) => {
   const map = new Map<string, Conversation>();
 
@@ -166,8 +168,8 @@ export const LiveChatManagement = () => {
       ];
 
   // Fetch conversations
-  const fetchConversations = useCallback(async () => {
-    setLoading(true);
+  const fetchConversations = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const { data } = await supabase
       .from('chat_conversations')
       .select('*')
@@ -176,7 +178,7 @@ export const LiveChatManagement = () => {
     if (data) {
       setConversations(dedupeConversationsByCustomer(data as Conversation[]));
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   }, []);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
@@ -250,56 +252,78 @@ export const LiveChatManagement = () => {
     return () => { supabase.removeChannel(channel); };
   }, [soundEnabled]);
 
+  const refreshSelectedConversationMessages = useCallback(async () => {
+    if (!selectedConv) {
+      setMessages([]);
+      setSelectedCustomerConversationIds([]);
+      return;
+    }
+
+    const selectedConversation = conversations.find((conversation) => conversation.id === selectedConv);
+    if (!selectedConversation) {
+      setMessages([]);
+      setSelectedCustomerConversationIds([]);
+      return;
+    }
+
+    const { data: customerConversations } = await supabase
+      .from('chat_conversations')
+      .select('id')
+      .eq('customer_id', selectedConversation.customer_id)
+      .order('last_message_at', { ascending: false });
+
+    const conversationIds = (customerConversations || []).map((conversation) => conversation.id);
+    setSelectedCustomerConversationIds(conversationIds);
+
+    if (conversationIds.length === 0) {
+      setMessages([]);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .in('conversation_id', conversationIds)
+      .order('created_at', { ascending: true });
+
+    if (data) setMessages(data as Message[]);
+
+    await supabase
+      .from('chat_messages')
+      .update({ is_read: true })
+      .in('conversation_id', conversationIds)
+      .eq('sender_role', 'customer')
+      .eq('is_read', false);
+
+    await supabase
+      .from('chat_conversations')
+      .update({ unread_count: 0 })
+      .in('id', conversationIds);
+  }, [selectedConv, conversations]);
+
   // Fetch messages for selected conversation
   useEffect(() => {
-    if (!selectedConv) { setMessages([]); return; }
+    refreshSelectedConversationMessages();
+  }, [refreshSelectedConversationMessages]);
 
-    const fetchMessages = async () => {
-      const selectedConversation = conversations.find((conversation) => conversation.id === selectedConv);
-      if (!selectedConversation) {
-        setMessages([]);
-        setSelectedCustomerConversationIds([]);
-        return;
-      }
-
-      const { data: customerConversations } = await supabase
-        .from('chat_conversations')
-        .select('id')
-        .eq('customer_id', selectedConversation.customer_id)
-        .order('last_message_at', { ascending: false });
-
-      const conversationIds = (customerConversations || []).map((conversation) => conversation.id);
-      setSelectedCustomerConversationIds(conversationIds);
-
-      if (conversationIds.length === 0) {
-        setMessages([]);
-        return;
-      }
-
-      const { data } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .in('conversation_id', conversationIds)
-        .order('created_at', { ascending: true });
-
-      if (data) setMessages(data as Message[]);
-
-      // Mark customer messages as read & reset unread count
-      await supabase
-        .from('chat_messages')
-        .update({ is_read: true })
-        .in('conversation_id', conversationIds)
-        .eq('sender_role', 'customer')
-        .eq('is_read', false);
-
-      await supabase
-        .from('chat_conversations')
-        .update({ unread_count: 0 })
-        .in('id', conversationIds);
+  // Polling fallback for missed realtime events
+  useEffect(() => {
+    const refreshNow = () => {
+      if (document.hidden) return;
+      fetchConversations(true);
+      refreshSelectedConversationMessages();
     };
 
-    fetchMessages();
-  }, [selectedConv, conversations]);
+    const interval = window.setInterval(refreshNow, ADMIN_LIVECHAT_REFRESH_MS);
+    window.addEventListener('focus', refreshNow);
+    document.addEventListener('visibilitychange', refreshNow);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshNow);
+      document.removeEventListener('visibilitychange', refreshNow);
+    };
+  }, [fetchConversations, refreshSelectedConversationMessages]);
 
   useEffect(() => {
     if (!selectedConv || !user) return;
