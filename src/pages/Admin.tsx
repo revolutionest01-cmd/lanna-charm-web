@@ -186,7 +186,15 @@ const Admin = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardContent stats={statsDisplay} barChartData={barChartData} totalItems={totalItems} chartConfig={chartConfig} language={language} />;
+        return (
+          <DashboardContent
+            stats={statsDisplay}
+            barChartData={barChartData}
+            totalItems={totalItems}
+            chartConfig={chartConfig}
+            language={language}
+          />
+        );
       case "hero": return <HeroManagement />;
       case "features": return <FeaturesManagement />;
       case "events": return <EventSpaceManagement />;
@@ -319,7 +327,13 @@ interface DashboardContentProps {
   language: string;
 }
 
-const DashboardContent = ({ stats, barChartData, totalItems, chartConfig, language }: DashboardContentProps) => (
+const DashboardContent = ({
+  stats,
+  barChartData,
+  totalItems,
+  chartConfig,
+  language,
+}: DashboardContentProps) => (
   <div className="space-y-3">
     <div>
       <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">

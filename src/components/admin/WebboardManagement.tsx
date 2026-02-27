@@ -564,16 +564,16 @@ export const WebboardManagement = () => {
                   <span>💬 {topic.replies_count || 0}</span>
                 </div>
                 <div className="flex gap-1.5">
-                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => handleViewDetails(topic)}>
+                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs text-foreground border-2 border-border" onClick={() => handleViewDetails(topic)}>
                     <MessageCircle className="h-3.5 w-3.5 mr-1" /> Detail
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleToggleStatus(topic)}>
+                  <Button variant="outline" size="sm" className="h-8 text-xs text-foreground border-2 border-border" onClick={() => handleToggleStatus(topic)}>
                     {topic.is_active ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleEditTopic(topic)}>
+                  <Button variant="outline" size="sm" className="h-8 text-xs text-foreground border-2 border-border" onClick={() => handleEditTopic(topic)}>
                     Edit
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => { setDeleteTopicId(topic.id); setShowDeleteDialog(true); }}>
+                  <Button variant="outline" size="sm" className="h-8 text-xs text-destructive border-2 border-destructive/50 hover:bg-destructive/10" onClick={() => { setDeleteTopicId(topic.id); setShowDeleteDialog(true); }}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -666,7 +666,7 @@ export const WebboardManagement = () => {
                           size="sm"
                           onClick={() => handleViewDetails(topic)}
                           title="View details and replies"
-                          className="text-foreground hover:bg-accent"
+                          className="text-foreground border-2 border-border hover:bg-accent"
                         >
                           <MessageCircle className="h-4 w-4" />
                         </Button>
@@ -679,7 +679,7 @@ export const WebboardManagement = () => {
                               ? "Hide topic"
                               : "Show topic"
                           }
-                          className="text-foreground hover:bg-accent"
+                          className="text-foreground border-2 border-border hover:bg-accent"
                         >
                           {topic.is_active ? (
                             <Eye className="h-4 w-4" />
@@ -691,18 +691,18 @@ export const WebboardManagement = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditTopic(topic)}
-                          className="text-foreground hover:bg-accent"
+                          className="text-foreground border-2 border-border hover:bg-accent"
                         >
                           Edit
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             setDeleteTopicId(topic.id);
                             setShowDeleteDialog(true);
                           }}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="text-destructive border-2 border-destructive/50 hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -907,6 +907,7 @@ export const WebboardManagement = () => {
                 <Button
                   variant="outline"
                   onClick={() => setShowEditModal(false)}
+                  className="text-foreground border-2 border-border"
                 >
                   Cancel
                 </Button>
@@ -930,10 +931,12 @@ export const WebboardManagement = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="text-foreground border-2 border-border bg-background hover:bg-accent">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteTopic}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-red-600 text-white border-2 border-red-700 hover:bg-red-700"
             >
               Delete
             </AlertDialogAction>

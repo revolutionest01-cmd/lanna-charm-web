@@ -12,6 +12,7 @@ import DataLoadError from "./components/DataLoadError";
 import { useGAPageTracking } from "./lib/googleAnalytics";
 import { setGlobalQueryClient } from "./hooks/useContentData";
 import { ModalProvider } from "./contexts/ModalContext";
+import { useWebsiteTheme } from "./hooks/useWebsiteTheme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,8 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
 };
 
 const App = () => {
+  useWebsiteTheme();
+
   // Show loading screen only on first load, not on refresh
   const [showLoading, setShowLoading] = useState(() => {
     // Check if this is the first load in this session

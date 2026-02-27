@@ -15,6 +15,16 @@ import sweetAlert from "@/lib/sweetAlert";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
 import { clearFeatureToggleCache } from "@/hooks/useFeatureToggle";
 import { RANK_TIERS, getRankFromPoints } from "@/lib/pointSystem";
+import {
+  applySiteThemeClass,
+  getSiteThemeFeatureKey,
+  resolveSiteThemeFromRows,
+  setLocalSiteTheme,
+  SITE_THEME_FEATURE_KEYS,
+  SITE_THEME_OPTIONS,
+  SITE_THEME_SELECT_OPTIONS,
+  type SiteThemeId,
+} from "@/lib/siteTheme";
 
 interface FeatureToggle {
   id: string;
@@ -51,6 +61,46 @@ const REQUIRED_FEATURE_TOGGLES: Array<{
     description_en: "Falling leaves visual effect on the homepage",
     is_enabled: true,
   },
+  {
+    feature_key: "site_theme_ocean",
+    feature_name_th: "ธีมเว็บไซต์: Ocean Blue",
+    feature_name_en: "Website Theme: Ocean Blue",
+    description_th: "ธีมหลักสีฟ้า Ocean สำหรับทั้งเว็บไซต์",
+    description_en: "Ocean Blue global website theme",
+    is_enabled: true,
+  },
+  {
+    feature_key: "site_theme_sunset",
+    feature_name_th: "ธีมเว็บไซต์: Sunset Gold",
+    feature_name_en: "Website Theme: Sunset Gold",
+    description_th: "ธีมสีทองส้ม Sunset สำหรับทั้งเว็บไซต์",
+    description_en: "Sunset Gold global website theme",
+    is_enabled: false,
+  },
+  {
+    feature_key: "site_theme_forest",
+    feature_name_th: "ธีมเว็บไซต์: Forest Mint",
+    feature_name_en: "Website Theme: Forest Mint",
+    description_th: "ธีมสีเขียว Forest สำหรับทั้งเว็บไซต์",
+    description_en: "Forest Mint global website theme",
+    is_enabled: false,
+  },
+  {
+    feature_key: "site_theme_royal",
+    feature_name_th: "ธีมเว็บไซต์: Royal Purple",
+    feature_name_en: "Website Theme: Royal Purple",
+    description_th: "ธีมสีม่วง Royal สำหรับทั้งเว็บไซต์",
+    description_en: "Royal Purple global website theme",
+    is_enabled: false,
+  },
+  {
+    feature_key: "site_theme_mono",
+    feature_name_th: "ธีมเว็บไซต์: Mono Graphite",
+    feature_name_en: "Website Theme: Mono Graphite",
+    description_th: "ธีมโมโนโทน Mono สำหรับทั้งเว็บไซต์",
+    description_en: "Mono Graphite global website theme",
+    is_enabled: false,
+  },
 ];
 
 const roleConfig = {
@@ -68,6 +118,8 @@ export const DevGodMode = () => {
   const [pointInputs, setPointInputs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [activeSiteTheme, setActiveSiteTheme] = useState<SiteThemeId>("original");
+  const nonThemeFeatures = features.filter((feature) => !SITE_THEME_FEATURE_KEYS.includes(feature.feature_key));
 
   const fetchData = async () => {
     setLoading(true);
@@ -110,6 +162,17 @@ export const DevGodMode = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    const themeRows = features
+      .filter((feature) => SITE_THEME_FEATURE_KEYS.includes(feature.feature_key))
+      .map((feature) => ({
+        feature_key: feature.feature_key,
+        is_enabled: feature.is_enabled,
+      }));
+
+    setActiveSiteTheme(resolveSiteThemeFromRows(themeRows));
+  }, [features]);
 
   const handlePointsChange = async (userId: string, newPoints: number) => {
     setUpdating(`pts-${userId}`);
@@ -154,6 +217,52 @@ export const DevGodMode = () => {
       setFeatures((prev) => prev.map((f) => (f.id === id ? { ...f, is_enabled: !currentValue } : f)));
       clearFeatureToggleCache();
     }
+    setUpdating(null);
+  };
+
+  const handleWebsiteThemeChange = async (themeId: SiteThemeId) => {
+    if (updating === "site-theme" || themeId === activeSiteTheme) return;
+
+    setActiveSiteTheme(themeId);
+    applySiteThemeClass(themeId);
+    setLocalSiteTheme(themeId);
+    setUpdating("site-theme");
+
+    const updates = await Promise.all(
+      SITE_THEME_OPTIONS.map((theme) =>
+        supabase
+          .from("feature_toggles")
+          .update({ is_enabled: theme.id === themeId })
+          .eq("feature_key", getSiteThemeFeatureKey(theme.id))
+      )
+    );
+
+    const hasError = updates.some((result) => result.error);
+
+    if (hasError) {
+      sweetAlert.warning(
+        language === "th"
+          ? "เปลี่ยนธีมเฉพาะเครื่องนี้ได้แล้ว แต่ยังอัปเดตทั้งระบบไม่ได้ (รอ DB migration/Policy)"
+          : "Theme applied locally, but global update failed (DB migration/policy pending)."
+      );
+      setUpdating(null);
+      return;
+    }
+
+    const selectedFeatureKey = themeId === "original" ? null : getSiteThemeFeatureKey(themeId);
+
+    setFeatures((prev) =>
+      prev.map((feature) => {
+        if (!SITE_THEME_FEATURE_KEYS.includes(feature.feature_key)) return feature;
+        return {
+          ...feature,
+          is_enabled: selectedFeatureKey === feature.feature_key,
+        };
+      })
+    );
+
+    clearFeatureToggleCache();
+    sweetAlert.success(language === "th" ? "อัปเดตธีมเว็บไซต์สำเร็จ" : "Website theme updated");
     setUpdating(null);
   };
 
@@ -234,6 +343,42 @@ export const DevGodMode = () => {
       <Card>
         <CardHeader className="p-4 sm:p-6">
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Zap className="w-5 h-5 text-yellow-500" />
+            {language === "th" ? "ธีมเว็บไซต์ (ทดสอบโดย Dev)" : "Website Theme (Dev Testing)"}
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            {language === "th"
+              ? "ย้ายมาจากหน้า Dashboard เพื่อป้องกัน Admin กดเล่นระหว่างรอ DB พร้อมใช้งาน"
+              : "Moved from Dashboard to prevent Admin testing before DB is fully ready"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+            {SITE_THEME_SELECT_OPTIONS.map((theme) => {
+              const isActive = activeSiteTheme === theme.id;
+              return (
+                <Button
+                  key={theme.id}
+                  type="button"
+                  variant={isActive ? "default" : "outline"}
+                  disabled={updating === "site-theme"}
+                  onClick={() => handleWebsiteThemeChange(theme.id)}
+                  className="h-auto py-2.5 px-3 flex flex-col items-start gap-2"
+                >
+                  <span className={`w-full h-2.5 rounded-full bg-gradient-to-r ${theme.preview}`} />
+                  <span className="text-xs font-semibold leading-none">
+                    {language === "th" ? theme.labelTh : theme.labelEn}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <ToggleRight className="w-5 h-5 text-primary" />
             {language === "th" ? "เปิด/ปิด ฟีเจอร์" : "Feature Toggles"}
           </CardTitle>
@@ -243,7 +388,7 @@ export const DevGodMode = () => {
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           <div className="space-y-3">
-            {features.map((f) => (
+            {nonThemeFeatures.map((f) => (
               <div key={f.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">
