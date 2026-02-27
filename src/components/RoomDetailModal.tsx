@@ -845,7 +845,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
                 {/* Room Availability Calendar - Mobile & Tablet */}
                 <div className="lg:hidden">
-                  <RoomAvailabilityCalendar roomId={room.id} />
+                  <RoomAvailabilityCalendar roomId={room.id} userRole={user?.role} />
                 </div>
 
                 {/* Admin Availability Editor Button - Mobile */}
@@ -1082,7 +1082,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                     </div>
 
                     {/* Room Availability Calendar */}
-                    <RoomAvailabilityCalendar roomId={room.id} />
+                    <RoomAvailabilityCalendar roomId={room.id} userRole={user?.role} />
 
                     {/* Admin Availability Editor Button */}
                     {isAdmin && (

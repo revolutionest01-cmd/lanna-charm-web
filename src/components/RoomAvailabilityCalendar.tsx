@@ -10,6 +10,7 @@ interface RoomAvailabilityCalendarProps {
   roomId: string;
   month?: Date;
   onMonthChange?: (date: Date) => void;
+  userRole?: 'user' | 'developer' | 'admin';
 }
 
 interface AvailabilityData {
@@ -24,6 +25,7 @@ export const RoomAvailabilityCalendar = ({
   roomId,
   month = startOfToday(),
   onMonthChange,
+  userRole = 'user',
 }: RoomAvailabilityCalendarProps) => {
   const { language } = useLanguage();
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData>({});
@@ -337,23 +339,19 @@ export const RoomAvailabilityCalendar = ({
             {language === 'th' ? 'ไม่ว่าง' : 'Not Available'}
           </span>
         </div>
-        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600" />
-          <span className="text-slate-600 dark:text-slate-400">
-            {language === 'th' ? 'ผ่านมาแล้ว' : 'Past Date'}
-          </span>
-        </div>
       </div>
 
-      {/* Info message */}
-      <div className="mt-1 sm:mt-2 md:mt-3 flex items-start gap-1 sm:gap-1.5 md:gap-2 p-1.5 sm:p-2 md:p-2.5 rounded-sm sm:rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mx-1">
-        <AlertCircle size={10} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5 sm:mt-1 md:mt-1" />
-        <p className="text-[8px] sm:text-[9px] md:text-xs text-blue-700 dark:text-blue-300">
-          {language === 'th' 
-            ? 'เฉพาะ Admin เท่านั้นที่สามารถแก้ไขข้อมูลได้'
-            : 'Only admins can update room availability dates'}
-        </p>
-      </div>
+      {/* Info message - only show for admin and developer */}
+      {(userRole === 'admin' || userRole === 'developer') && (
+        <div className="mt-1 sm:mt-2 md:mt-3 flex items-start gap-1 sm:gap-1.5 md:gap-2 p-1.5 sm:p-2 md:p-2.5 rounded-sm sm:rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mx-1">
+          <AlertCircle size={10} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5 sm:mt-1 md:mt-1" />
+          <p className="text-[8px] sm:text-[9px] md:text-xs text-blue-700 dark:text-blue-300">
+            {language === 'th' 
+              ? 'เฉพาะ Admin เท่านั้นที่สามารถแก้ไขข้อมูลได้'
+              : 'Only admins can update room availability dates'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
