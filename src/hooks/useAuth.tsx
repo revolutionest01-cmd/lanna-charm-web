@@ -68,21 +68,7 @@ const buildUserFromSession = (session: Session): User => {
   };
 };
 
-/**
- * กำหนด rank โดยอัตโนมัติตามบทบาท
- * - Admin: ปรมาจารย์ (rank 5, 5000 points)
- * - Developer: มารแสวงพ่าย (rank 6, 10000 points)
- */
-const getPointsFromRole = (role?: string): number => {
-  switch (role) {
-    case 'admin':
-      return 5000; // ปรมาจารย์
-    case 'developer':
-      return 10000; // มารแสวงพ่าย
-    default:
-      return 0; // ไก่
-  }
-};
+// Role is fetched from user_roles table in fetchAndEnrichUser
 
 const fetchAndEnrichUser = async (session: Session): Promise<User> => {
   const baseUser = buildUserFromSession(session);
@@ -90,32 +76,29 @@ const fetchAndEnrichUser = async (session: Session): Promise<User> => {
     const metadata = session.user?.user_metadata || {};
     const displayName = metadata.full_name || metadata.name || session.user.email?.split('@')[0] || 'User';
     const avatarUrl = metadata.avatar_url || metadata.picture;
-    const role = metadata.role || 'user';
-    const userPoints = getPointsFromRole(role);
 
-    await supabase
-      .from('profiles')
-      .upsert({
-        id: session.user.id,
-        display_name: displayName,
-        avatar_url: avatarUrl,
-        role: role,
-        reputation_points: userPoints,
-      })
-      .select()
-      .single();
+    // Fetch profile and role in parallel
+    const [profileResult, roleResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('display_name, avatar_url')
+        .eq('id', session.user.id)
+        .maybeSingle(),
+      supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .maybeSingle(),
+    ]);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('display_name, avatar_url')
-      .eq('id', session.user.id)
-      .maybeSingle();
+    const profile = profileResult.data;
+    const userRole = (roleResult.data?.role as User['role']) || 'user';
 
     return {
       ...baseUser,
       name: profile?.display_name || displayName,
       avatar: profile?.avatar_url || avatarUrl,
-      role: role,
+      role: userRole,
     };
   } catch (error) {
     console.error('Error fetching user profile:', error);

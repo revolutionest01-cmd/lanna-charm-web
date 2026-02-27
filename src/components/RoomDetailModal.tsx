@@ -177,7 +177,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
       }
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("room_likes")
           .select("id")
           .eq("room_id", room.id)
@@ -523,7 +523,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
     try {
       if (isLiked) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("room_likes")
           .delete()
           .eq("room_id", room.id)
@@ -535,7 +535,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
 
         setIsLiked(false);
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("room_likes")
           .insert({ room_id: room.id, user_id: user.id });
 
