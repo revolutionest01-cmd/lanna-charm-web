@@ -34,7 +34,7 @@ export const OnlineUsersPanel = () => {
               <div
                 key={u.id}
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer transition-colors"
-                onClick={() => navigate(`/member/${u.id}`)}
+                onClick={() => navigate(`/members/${u.id}`)}
               >
                 <div className="relative">
                   <Avatar className="h-7 w-7">
