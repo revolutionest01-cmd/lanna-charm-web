@@ -112,9 +112,6 @@ export type Database = {
       }
       chat_conversations: {
         Row: {
-          assigned_admin_id: string | null
-          assigned_admin_name: string | null
-          auto_reply_sent_at: string | null
           created_at: string
           customer_avatar: string | null
           customer_id: string
@@ -127,9 +124,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          assigned_admin_id?: string | null
-          assigned_admin_name?: string | null
-          auto_reply_sent_at?: string | null
           created_at?: string
           customer_avatar?: string | null
           customer_id: string
@@ -142,9 +136,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          assigned_admin_id?: string | null
-          assigned_admin_name?: string | null
-          auto_reply_sent_at?: string | null
           created_at?: string
           customer_avatar?: string | null
           customer_id?: string
@@ -1020,13 +1011,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_live_chat_auto_reply: {
-        Args: {
-          _conversation_id: string
-          _language?: string
-        }
-        Returns: boolean
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

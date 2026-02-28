@@ -176,7 +176,7 @@ export const LiveChatManagement = () => {
       .order('last_message_at', { ascending: false });
 
     if (data) {
-      setConversations(dedupeConversationsByCustomer(data as Conversation[]));
+      setConversations(dedupeConversationsByCustomer(data as any as Conversation[]));
     }
     if (!silent) setLoading(false);
   }, []);
@@ -188,7 +188,7 @@ export const LiveChatManagement = () => {
     if (!user) return;
 
     const role = user.role || 'user';
-    const isStaffRole = role === 'admin' || role === 'staff' || role === 'developer';
+    const isStaffRole = role === 'admin' || (role as string) === 'staff' || role === 'developer';
     if (!isStaffRole) return;
 
     const channel = supabase.channel('live-chat-staff-presence', {
@@ -336,7 +336,7 @@ export const LiveChatManagement = () => {
         .update({
           assigned_admin_id: user.id,
           assigned_admin_name: user.name,
-        })
+        } as any)
         .eq('id', selectedConv);
 
       if (!error) {
@@ -474,7 +474,7 @@ export const LiveChatManagement = () => {
           >
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </Button>
-          <Button variant="outline" size="sm" onClick={fetchConversations} disabled={loading} className="gap-1.5 border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-400 shadow-sm">
+          <Button variant="outline" size="sm" onClick={() => fetchConversations()} disabled={loading} className="gap-1.5 border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-400 shadow-sm">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
@@ -636,7 +636,7 @@ export const LiveChatManagement = () => {
                         {showDateSeparator && (
                           <div className="flex items-center justify-center my-2">
                             <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-600">
-                              {getDateSeparatorLabel(msg.created_at, language)}
+                              {getDateSeparatorLabel(msg.created_at, language as 'en' | 'th')}
                             </span>
                           </div>
                         )}

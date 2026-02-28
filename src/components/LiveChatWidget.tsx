@@ -126,11 +126,11 @@ const LiveChatWidget = ({ isOpen, onClose }: LiveChatWidgetProps) => {
       try {
         const { data } = await supabase
           .from('chat_conversations')
-          .select('id, status, last_message, last_message_at, assigned_admin_name')
+          .select('id, status, last_message, last_message_at, assigned_admin_name' as any)
           .eq('customer_id', user.id)
           .order('last_message_at', { ascending: false });
 
-        const list = (data || []) as ChatConversation[];
+        const list = (data || []) as any as ChatConversation[];
 
         const staleOpenIds = list
           .filter((c) => c.status === 'open' && isConversationExpired(c.last_message_at))
@@ -278,9 +278,9 @@ const LiveChatWidget = ({ isOpen, onClose }: LiveChatWidgetProps) => {
         schema: 'public',
         table: 'chat_messages',
       }, (payload) => {
-        const newMsg = payload.new as Message;
+        const newMsg = payload.new as Message & { conversation_id?: string };
 
-        if (!userConversationIds.includes(newMsg.conversation_id)) {
+        if (newMsg.conversation_id && !userConversationIds.includes(newMsg.conversation_id)) {
           return;
         }
 
@@ -370,16 +370,16 @@ const LiveChatWidget = ({ isOpen, onClose }: LiveChatWidgetProps) => {
       if (!convId) {
         const { data: latestExisting } = await supabase
           .from('chat_conversations')
-          .select('id, assigned_admin_name')
+          .select('id, assigned_admin_name' as any)
           .eq('customer_id', user.id)
           .order('last_message_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        if (latestExisting?.id) {
-          convId = latestExisting.id;
-          setConversationId(latestExisting.id);
-          setConversationMeta({ id: latestExisting.id, assigned_admin_name: latestExisting.assigned_admin_name || null });
+        if ((latestExisting as any)?.id) {
+          convId = (latestExisting as any).id;
+          setConversationId((latestExisting as any).id);
+          setConversationMeta({ id: (latestExisting as any).id, assigned_admin_name: (latestExisting as any).assigned_admin_name || null });
         }
       }
 
@@ -448,7 +448,7 @@ const LiveChatWidget = ({ isOpen, onClose }: LiveChatWidgetProps) => {
               conversation.id === convId
                 ? {
                     ...conversation,
-                    status: 'open',
+                    status: 'open' as const,
                     last_message: content,
                     last_message_at: new Date().toISOString(),
                   }
@@ -456,11 +456,11 @@ const LiveChatWidget = ({ isOpen, onClose }: LiveChatWidgetProps) => {
             )
           : [{
               id: convId as string,
-              status: 'open',
+              status: 'open' as const,
               last_message: content,
               last_message_at: new Date().toISOString(),
               assigned_admin_name: null,
-            }, ...prev];
+            } as ChatConversation, ...prev];
 
         const sorted = sortConversationsByLatest(updated);
         setUserConversationIds(sorted.map((conversation) => conversation.id));
@@ -468,7 +468,7 @@ const LiveChatWidget = ({ isOpen, onClose }: LiveChatWidgetProps) => {
       });
 
       if (onlineStaff.length === 0) {
-        await supabase.rpc('create_live_chat_auto_reply', {
+        await (supabase.rpc as any)('create_live_chat_auto_reply', {
           _conversation_id: convId,
           _language: language,
         });
