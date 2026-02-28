@@ -193,7 +193,7 @@ const Profile = () => {
   const [isOnline, setIsOnline] = useState<boolean>(typeof window !== "undefined" ? window.navigator.onLine : true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTheme = PROFILE_THEME_OPTIONS.find((theme) => theme.id === profileTheme) || PROFILE_THEME_OPTIONS[0];
-  const canUseSignature = (rankData?.rank?.id || 0) >= 6;
+  const canUseSignature = (rankData?.rank?.id || 0) >= 2;
   const currentRankId = rankData?.rank?.id || 1;
   const unlockedThemes = getUnlockedProfileThemes(currentRankId);
   const unlockedPerkKeys = getUnlockedPerks(currentRankId);
@@ -1202,16 +1202,16 @@ const Profile = () => {
                 </CardTitle>
                 <CardDescription>
                   {language === "th"
-                    ? "ปลดล็อกเมื่อยศระดับ มารแสวงพ่าย ขึ้นไป"
-                    : "Unlocked for Legendary Sage rank and above."}
+                    ? "ปลดล็อกเมื่อยศระดับ ไก่ยอดฝีมือ ขึ้นไป"
+                    : "Unlocked for Skilled Chick rank and above."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {!canUseSignature ? (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-700">
                     {language === "th"
-                      ? "ยังไม่ถึงระดับที่ปลดล็อก Signature (ต้องยศไก่มารแสวงพ่าย)"
-                      : "Signature is locked. Requires Legendary Sage rank."}
+                      ? "ยังไม่ถึงระดับที่ปลดล็อก Signature (ต้องยศไก่ยอดฝีมือ)"
+                      : "Signature is locked. Requires Skilled Chick rank."}
                   </div>
                 ) : (
                   <>
