@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRankBadge } from "@/components/UserRankBadge";
+import { UserStatusAvatar } from "@/components/UserStatusAvatar";
 import { getCategoryLabel } from "@/lib/forumConfig";
-import { getRankFromPoints, getUnlockedPerks, RANK_PERKS } from "@/lib/pointSystem";
+import { getRankById, getRankFromPoints, getUnlockedPerks, normalizeRankPath, RANK_PERKS } from "@/lib/pointSystem";
 import { ArrowLeft, Loader2, CalendarDays, MessageCircle, Reply, Star, Heart, Link2, Eye, Trophy, Clock3, Activity } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, BarChart, Bar, Legend } from "recharts";
 
@@ -17,12 +18,15 @@ type MemberProfileData = {
   display_name: string;
   avatar_url: string | null;
   custom_title: string | null;
+  status_message?: string | null;
   active_perks: string[];
   bio_short: string | null;
   social_facebook: string | null;
   social_instagram: string | null;
   social_tiktok: string | null;
   reputation_points?: number;
+  rank_path?: string;
+  rank_display_tier_id?: number | null;
   profile_theme?: string;
   created_at: string;
 };
@@ -63,12 +67,15 @@ const normalizeProfile = (row: any): MemberProfileData => ({
   display_name: row?.display_name || "",
   avatar_url: row?.avatar_url || null,
   custom_title: row?.custom_title || null,
+  status_message: row?.status_message || null,
   active_perks: Array.isArray(row?.active_perks) ? row.active_perks : [],
   bio_short: row?.bio_short || null,
   social_facebook: row?.social_facebook || null,
   social_instagram: row?.social_instagram || null,
   social_tiktok: row?.social_tiktok || null,
   reputation_points: typeof row?.reputation_points === "number" ? row.reputation_points : 0,
+  rank_path: normalizeRankPath(row?.rank_path),
+  rank_display_tier_id: typeof row?.rank_display_tier_id === "number" ? row.rank_display_tier_id : null,
   profile_theme: row?.profile_theme || null,
   created_at: row?.created_at || new Date().toISOString(),
 });
@@ -134,12 +141,15 @@ const MemberProfile = () => {
           display_name: fallbackMemberName || (!uuidRegex.test(normalizedUserId) ? normalizedUserId : (language === "th" ? "สมาชิก" : "Member")),
           avatar_url: null,
           custom_title: null,
+          status_message: null,
           active_perks: [],
           bio_short: null,
           social_facebook: null,
           social_instagram: null,
           social_tiktok: null,
           reputation_points: 0,
+          rank_path: "chicken",
+          rank_display_tier_id: null,
           profile_theme: null,
           created_at: new Date().toISOString(),
         });
@@ -388,7 +398,16 @@ const MemberProfile = () => {
     }));
   }, [allReviews]);
 
-  const currentRank = useMemo(() => getRankFromPoints(profile?.reputation_points || 0), [profile?.reputation_points]);
+  const currentRank = useMemo(() => {
+    const points = profile?.reputation_points || 0;
+    const rankPath = normalizeRankPath(profile?.rank_path);
+    const highestRank = getRankFromPoints(points, rankPath);
+    const selectedTierId = Number(profile?.rank_display_tier_id);
+    const effectiveTierId = Number.isFinite(selectedTierId) && selectedTierId >= 1
+      ? Math.min(Math.floor(selectedTierId), highestRank.id)
+      : highestRank.id;
+    return getRankById(effectiveTierId, rankPath);
+  }, [profile?.reputation_points, profile?.rank_path, profile?.rank_display_tier_id]);
 
   const unlockedHonorMedals = useMemo(() => {
     const perkKeys = getUnlockedPerks(currentRank.id);
@@ -445,12 +464,15 @@ const MemberProfile = () => {
           <div className="h-2 bg-gradient-to-r from-sky-400 via-violet-400 to-fuchsia-400" />
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col lg:flex-row lg:items-center gap-5">
-              <Avatar className="h-20 w-20 border-4 border-white shadow-md">
-                <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
-                <AvatarFallback className="bg-gradient-to-br from-sky-500 to-violet-500 text-white text-2xl font-semibold">
-                  {(profile.display_name || "U").slice(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserStatusAvatar
+                userId={profile.id}
+                userName={profile.display_name || "User"}
+                avatarUrl={profile.avatar_url || undefined}
+                statusMessage={profile.status_message || undefined}
+                size="lg"
+                avatarClassName="h-20 w-20 border-4 border-white shadow-md"
+                fallbackClassName="bg-gradient-to-br from-sky-500 to-violet-500 text-white text-2xl font-semibold"
+              />
 
               <div className="flex-1 min-w-0">
                 <UserRankBadge userId={profile.id} userName={profile.display_name || "User"} size="lg" disableProfileLink />

@@ -337,26 +337,38 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
     <div className="space-y-6">
       {/* Ranking System & Point System */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full grid grid-cols-4 bg-slate-200 dark:bg-slate-700 mb-4">
-          <TabsTrigger value="ranking" className="gap-1 text-xs sm:text-sm data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+        <TabsList className="w-full h-auto p-0 bg-transparent rounded-none justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-300/80 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger
+            value="ranking"
+            className="gap-1 text-xs sm:text-sm rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-3.5 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+          >
             <Award className="h-4 w-4" />
             <span className="hidden sm:inline">
               {language === "th" ? "ยศ" : "Rank"}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="points" className="gap-1 text-xs sm:text-sm data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+          <TabsTrigger
+            value="points"
+            className="gap-1 text-xs sm:text-sm rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-3.5 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+          >
             <Zap className="h-4 w-4" />
             <span className="hidden sm:inline">
               {language === "th" ? "คะแนน" : "Points"}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-1 text-xs sm:text-sm data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+          <TabsTrigger
+            value="activity"
+            className="gap-1 text-xs sm:text-sm rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-3.5 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+          >
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">
               {language === "th" ? "แนวโน้ม" : "Trend"}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="gap-1 text-xs sm:text-sm data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+          <TabsTrigger
+            value="history"
+            className="gap-1 text-xs sm:text-sm rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-3.5 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+          >
             <Calendar className="h-4 w-4" />
             <span className="hidden sm:inline">
               {language === "th" ? "ประวัติ" : "History"}
@@ -364,9 +376,11 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
           </TabsTrigger>
         </TabsList>
 
+        <div className="rounded-b-xl rounded-tr-xl border border-slate-300 border-t-0 bg-white p-4 sm:p-5 shadow-md">
+
         {/* Ranking Tab */}
         <TabsContent value="ranking" className="mt-0 space-y-6">
-          <RankingSystem points={data.totalPoints} language={language} />
+          <RankingSystem points={data.totalPoints} language={language} userId={userId} />
           <PerkEquipPanel userId={userId} language={language} />
         </TabsContent>
 
@@ -783,6 +797,7 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
             </CardContent>
           </Card>
         </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

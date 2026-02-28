@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera, Loader2, LogOut, User, Mail, Trash2, Sparkles, Globe, Gift, Save, CalendarDays, Trophy, Heart, Link2 } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
+import { UserStatusAvatar } from "@/components/UserStatusAvatar";
 
 import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
@@ -118,6 +120,7 @@ const getStoredProfileExtras = (userId: string) => {
     const raw = localStorage.getItem(getProfileExtraStorageKey(userId));
     if (!raw) {
       return {
+        statusMessage: "",
         bioShort: "",
         socialFacebook: "",
         socialInstagram: "",
@@ -126,6 +129,7 @@ const getStoredProfileExtras = (userId: string) => {
     }
     const parsed = JSON.parse(raw);
     return {
+      statusMessage: typeof parsed.statusMessage === "string" ? parsed.statusMessage : "",
       bioShort: typeof parsed.bioShort === "string" ? parsed.bioShort : "",
       socialFacebook: typeof parsed.socialFacebook === "string" ? parsed.socialFacebook : "",
       socialInstagram: typeof parsed.socialInstagram === "string" ? parsed.socialInstagram : "",
@@ -133,6 +137,7 @@ const getStoredProfileExtras = (userId: string) => {
     };
   } catch {
     return {
+      statusMessage: "",
       bioShort: "",
       socialFacebook: "",
       socialInstagram: "",
@@ -144,6 +149,7 @@ const getStoredProfileExtras = (userId: string) => {
 const setStoredProfileExtras = (
   userId: string,
   extras: {
+    statusMessage: string;
     bioShort: string;
     socialFacebook: string;
     socialInstagram: string;
@@ -151,6 +157,21 @@ const setStoredProfileExtras = (
   }
 ) => {
   localStorage.setItem(getProfileExtraStorageKey(userId), JSON.stringify(extras));
+};
+
+const isMissingStatusMessageColumnError = (error: any) => {
+  if (!error) return false;
+  const code = String(error.code || "");
+  const message = String(error.message || "").toLowerCase();
+  const details = String(error.details || "").toLowerCase();
+  const hint = String(error.hint || "").toLowerCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    message.includes("status_message") ||
+    details.includes("status_message") ||
+    hint.includes("status_message")
+  );
 };
 
 const getUnlockedProfileThemes = (rankId: number): ProfileTheme[] => {
@@ -185,6 +206,7 @@ const Profile = () => {
   const [signatureEnabled, setSignatureEnabled] = useState(true);
   const [isSavingSignature, setIsSavingSignature] = useState(false);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState("");
   const [bioShort, setBioShort] = useState("");
   const [socialFacebook, setSocialFacebook] = useState("");
   const [socialInstagram, setSocialInstagram] = useState("");
@@ -214,6 +236,7 @@ const Profile = () => {
     : "-";
 
   const profileExtrasPayload = {
+    statusMessage: statusMessage.trim(),
     bioShort: bioShort.trim(),
     socialFacebook: socialFacebook.trim(),
     socialInstagram: socialInstagram.trim(),
@@ -237,13 +260,13 @@ const Profile = () => {
     const loadProfile = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, profile_theme, created_at, bio_short, social_facebook, social_instagram, social_tiktok")
+        .select("display_name, avatar_url, profile_theme, created_at, status_message, bio_short, social_facebook, social_instagram, social_tiktok")
         .eq("id", user.id)
         .maybeSingle();
 
       if (error) {
         // Backward compatibility: DB may not have profile_theme column yet
-        if (error.code === "42703") {
+        if (isMissingStatusMessageColumnError(error) || error.code === "42703") {
           const { data: legacyData } = await supabase
             .from("profiles")
             .select("display_name, avatar_url, created_at")
@@ -262,6 +285,7 @@ const Profile = () => {
             setProfileCreatedAt(null);
           }
 
+          setStatusMessage(storedExtras.statusMessage);
           setBioShort(storedExtras.bioShort);
           setSocialFacebook(storedExtras.socialFacebook);
           setSocialInstagram(storedExtras.socialInstagram);
@@ -280,6 +304,7 @@ const Profile = () => {
         setDisplayName(profileRow.display_name || "");
         setAvatarUrl(profileRow.avatar_url || null);
         setProfileCreatedAt(profileRow.created_at || null);
+        setStatusMessage(profileRow.status_message || "");
         setBioShort(profileRow.bio_short || "");
         setSocialFacebook(profileRow.social_facebook || "");
         setSocialInstagram(profileRow.social_instagram || "");
@@ -290,6 +315,7 @@ const Profile = () => {
         setProfileTheme(resolvedTheme);
         setStoredProfileTheme(user.id, resolvedTheme);
         setStoredProfileExtras(user.id, {
+          statusMessage: profileRow.status_message || "",
           bioShort: profileRow.bio_short || "",
           socialFacebook: profileRow.social_facebook || "",
           socialInstagram: profileRow.social_instagram || "",
@@ -301,6 +327,7 @@ const Profile = () => {
         setAvatarUrl(user.avatar || null);
         setProfileTheme(getStoredProfileTheme(user.id));
         setProfileCreatedAt(null);
+        setStatusMessage(storedExtras.statusMessage);
         setBioShort(storedExtras.bioShort);
         setSocialFacebook(storedExtras.socialFacebook);
         setSocialInstagram(storedExtras.socialInstagram);
@@ -755,6 +782,7 @@ const Profile = () => {
           id: user.id,
           display_name: displayName.trim(),
           avatar_url: avatarUrl || null,
+          status_message: profileExtrasPayload.statusMessage || null,
           bio_short: profileExtrasPayload.bioShort || null,
           social_facebook: profileExtrasPayload.socialFacebook || null,
           social_instagram: profileExtrasPayload.socialInstagram || null,
@@ -765,7 +793,7 @@ const Profile = () => {
         .single();
 
       if (error) {
-        if (error.code === "42703") {
+        if (isMissingStatusMessageColumnError(error) || error.code === "42703") {
           const { error: legacyError } = await supabase
             .from("profiles")
             .upsert({
@@ -856,12 +884,15 @@ const Profile = () => {
                 <div className="flex flex-col items-center gap-4 mb-4">
                   <div className="relative group">
                     <div className={cn("absolute inset-0 bg-gradient-to-br rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300", activeTheme.preview)} />
-                    <Avatar className={`h-28 w-28 relative border-4 border-white shadow-xl ${perksData?.avatar_frame && perksData.active_perks?.includes("custom-avatar-frame") ? AVATAR_FRAMES[perksData.avatar_frame]?.className || "" : ""}`}>
-                      <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                      <AvatarFallback className={cn("text-3xl font-bold bg-gradient-to-br text-white", activeTheme.preview)}>
-                        {getInitials(displayName || "U")}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserStatusAvatar
+                      userId={user?.id}
+                      userName={displayName || "User"}
+                      avatarUrl={avatarUrl || undefined}
+                      statusMessage={statusMessage}
+                      size="xl"
+                      avatarClassName={`relative border-4 border-white shadow-xl ${perksData?.avatar_frame && perksData.active_perks?.includes("custom-avatar-frame") ? AVATAR_FRAMES[perksData.avatar_frame]?.className || "" : ""}`}
+                      fallbackClassName={cn("text-3xl font-bold bg-gradient-to-br text-white", activeTheme.preview)}
+                    />
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
@@ -980,6 +1011,19 @@ const Profile = () => {
 
                 <div className="space-y-2 mb-4 border-t border-slate-200 dark:border-slate-700 pt-4">
                   <Label className="text-sm font-medium text-slate-700">
+                    {language === "th" ? "ความรู้สึกตอนนี้ (กล่องคำพูด)" : "Current Mood (speech bubble)"}
+                  </Label>
+                  <Input
+                    value={statusMessage}
+                    onChange={(e) => setStatusMessage(e.target.value)}
+                    maxLength={80}
+                    placeholder={language === "th" ? "เช่น วันนี้อารมณ์ดีมาก ☕" : "e.g. Feeling great today ☕"}
+                    className="border-slate-300 focus-visible:ring-primary bg-white"
+                  />
+                </div>
+
+                <div className="space-y-2 mb-4 border-t border-slate-200 dark:border-slate-700 pt-4">
+                  <Label className="text-sm font-medium text-slate-700">
                     {language === "th" ? "Bio สั้นๆ" : "Short Bio"}
                   </Label>
                   <Input
@@ -1050,207 +1094,194 @@ const Profile = () => {
 
           {/* Stats Section - Right Side */}
           <div className="lg:col-span-3 space-y-6">
-            <Card className={cn("shadow-md border", activeTheme.cardBg, activeTheme.cardBorder)}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-800">
-                  <User className={cn("h-5 w-5", activeTheme.accentIcon)} />
+            <Tabs defaultValue="identity" className="w-full">
+              <TabsList
+                className={cn(
+                  "w-full h-auto p-0 bg-transparent rounded-none justify-start gap-1 overflow-x-auto",
+                  "overflow-y-hidden border-b border-slate-300/80 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                )}
+              >
+                <TabsTrigger
+                  value="identity"
+                  className="rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+                >
                   {language === "th" ? "Identity" : "Identity"}
-                </CardTitle>
-                <CardDescription>
-                  {language === "th" ? "ข้อมูลแนะนำตัวและช่องทางติดต่อ" : "Your profile intro and social channels"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-700">
-                <div>
-                  <span className="font-semibold">{language === "th" ? "Bio: " : "Bio: "}</span>
-                  {bioShort || (language === "th" ? "ยังไม่ได้เพิ่ม" : "Not set")}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  {[
-                    { label: "Facebook", value: socialFacebook },
-                    { label: "Instagram", value: socialInstagram },
-                    { label: "TikTok", value: socialTiktok },
-                  ].map((link) => (
-                    <div key={link.label} className="rounded-lg border border-slate-200 bg-white p-2.5">
-                      <p className="text-xs text-slate-500 mb-1">{link.label}</p>
-                      {link.value ? (
-                        <a
-                          href={link.value}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
-                        >
-                          <Link2 className="h-3.5 w-3.5" />
-                          {language === "th" ? "เปิดลิงก์" : "Open link"}
-                        </a>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="achievement"
+                  className="rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+                >
+                  {language === "th" ? "Achievement" : "Achievement"}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="privilege"
+                  className="rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+                >
+                  {language === "th" ? "Privilege" : "Privilege"}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="gacha"
+                  className="rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+                >
+                  {language === "th" ? "Lucky Box" : "Lucky Box"}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="signature"
+                  className="rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+                >
+                  {language === "th" ? "Signature" : "Signature"}
+                </TabsTrigger>
+              </TabsList>
+
+              <div className={cn("rounded-b-xl rounded-tr-xl border border-slate-300 border-t-0 bg-white p-5 shadow-md", activeTheme.cardBg, activeTheme.cardBorder)}>
+                <TabsContent value="identity" className="mt-0 space-y-3 text-sm text-slate-700">
+                  <div>
+                    <span className="font-semibold">{language === "th" ? "ความรู้สึก: " : "Mood: "}</span>
+                    {statusMessage || (language === "th" ? "ยังไม่ได้เพิ่ม" : "Not set")}
+                  </div>
+                  <div>
+                    <span className="font-semibold">{language === "th" ? "Bio: " : "Bio: "}</span>
+                    {bioShort || (language === "th" ? "ยังไม่ได้เพิ่ม" : "Not set")}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {[
+                      { label: "Facebook", value: socialFacebook },
+                      { label: "Instagram", value: socialInstagram },
+                      { label: "TikTok", value: socialTiktok },
+                    ].map((link) => (
+                      <div key={link.label} className="rounded-lg border border-slate-200 bg-white p-2.5">
+                        <p className="text-xs text-slate-500 mb-1">{link.label}</p>
+                        {link.value ? (
+                          <a
+                            href={link.value}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                            {language === "th" ? "เปิดลิงก์" : "Open link"}
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400">{language === "th" ? "ยังไม่ได้เพิ่ม" : "Not set"}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="achievement" className="mt-0 space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">
+                      {language === "th" ? "Badge Showcase" : "Badge Showcase"}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {showcasePerks.length > 0 ? (
+                        showcasePerks.map(({ key, perk }) => (
+                          <Badge key={key} variant="outline" className="bg-white border-slate-300 text-slate-700">
+                            {perk.icon} {language === "th" ? perk.name : perk.nameEn}
+                          </Badge>
+                        ))
                       ) : (
-                        <span className="text-xs text-slate-400">{language === "th" ? "ยังไม่ได้เพิ่ม" : "Not set"}</span>
+                        <span className="text-sm text-slate-500">
+                          {language === "th" ? "ยังไม่มี Badge ที่ปลดล็อก" : "No unlocked badges yet"}
+                        </span>
                       )}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={cn("shadow-md border", activeTheme.cardBg, activeTheme.cardBorder)}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-800">
-                  <Trophy className={cn("h-5 w-5", activeTheme.accentIcon)} />
-                  {language === "th" ? "Achievement" : "Achievement"}
-                </CardTitle>
-                <CardDescription>
-                  {language === "th" ? "Badge เด่น 3 อัน และยอด Like ที่ได้รับ" : "Top 3 badges and total likes received"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-700 mb-2">
-                    {language === "th" ? "Badge Showcase" : "Badge Showcase"}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {showcasePerks.length > 0 ? (
-                      showcasePerks.map(({ key, perk }) => (
-                        <Badge key={key} variant="outline" className="bg-white border-slate-300 text-slate-700">
-                          {perk.icon} {language === "th" ? perk.name : perk.nameEn}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-sm text-slate-500">
-                        {language === "th" ? "ยังไม่มี Badge ที่ปลดล็อก" : "No unlocked badges yet"}
-                      </span>
-                    )}
                   </div>
-                </div>
 
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 inline-flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-rose-600" />
-                  <span className="text-sm font-semibold text-rose-700">
-                    {language === "th" ? "Like ที่ได้รับรวม: " : "Total Likes Received: "}
-                    {likesReceived.toLocaleString()}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={cn("shadow-md border", activeTheme.cardBg, activeTheme.cardBorder)}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-800">
-                  <Sparkles className={cn("h-5 w-5", activeTheme.accentIcon)} />
-                  {language === "th" ? "Privilege" : "Privilege"}
-                </CardTitle>
-                <CardDescription>
-                  {language === "th" ? "ธีมโปรไฟล์ที่ปลดล็อกแล้ว" : "Unlocked profile themes"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {unlockedThemes.map((themeId) => {
-                    const theme = PROFILE_THEME_OPTIONS.find((item) => item.id === themeId);
-                    if (!theme) return null;
-
-                    return (
-                      <Badge key={theme.id} variant="outline" className="bg-white border-slate-300 text-slate-700">
-                        <span className={cn("inline-block h-2.5 w-2.5 rounded-full bg-gradient-to-r mr-1.5", theme.preview)} />
-                        {language === "th" ? theme.labelTh : theme.labelEn}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={cn("shadow-md border", activeTheme.cardBg, activeTheme.cardBorder)}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-800">
-                  <Gift className={cn("h-5 w-5", activeTheme.accentIcon)} />
-                  {language === "th" ? "กล่องสุ่มรายวัน (Daily Gacha)" : "Daily Gacha / Mystery Box"}
-                </CardTitle>
-                <CardDescription>
-                  {language === "th"
-                    ? "เปิดได้วันละ 1 ครั้ง หลังมีกิจกรรมอย่างน้อย 1 อย่าง (Like / Comment)"
-                    : "Open once daily after at least one activity (like/comment)."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={handleOpenDailyGacha}
-                  disabled={isGachaOpening}
-                  className={cn("text-white", activeTheme.primaryButton)}
-                >
-                  {isGachaOpening && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {hasClaimedToday
-                    ? (language === "th" ? "วันนี้เปิดแล้ว" : "Opened today")
-                    : (language === "th" ? "เปิดกล่องสุ่ม" : "Open Mystery Box")}
-                </Button>
-
-                {gachaResult && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-slate-700">
-                    <span className="font-semibold">
-                      {language === "th" ? "ของรางวัลล่าสุด: " : "Latest reward: "}
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 inline-flex items-center gap-2">
+                    <Heart className="h-4 w-4 text-rose-600" />
+                    <span className="text-sm font-semibold text-rose-700">
+                      {language === "th" ? "Like ที่ได้รับรวม: " : "Total Likes Received: "}
+                      {likesReceived.toLocaleString()}
                     </span>
-                    {formatGachaReward(gachaResult.rewardType, gachaResult.rewardValue, gachaResult.rewardMeta)}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </TabsContent>
 
-            <Card className={cn("shadow-md border", activeTheme.cardBg, activeTheme.cardBorder)}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-800">
-                  <Sparkles className={cn("h-5 w-5", activeTheme.accentIcon)} />
-                  {language === "th" ? "Signature ยศ" : "Rank Signature"}
-                </CardTitle>
-                <CardDescription>
-                  {language === "th"
-                    ? "ปลดล็อกเมื่อยศระดับ ไก่ยอดฝีมือ ขึ้นไป"
-                    : "Unlocked for Skilled Chick rank and above."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {!canUseSignature ? (
-                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-700">
-                    {language === "th"
-                      ? "ยังไม่ถึงระดับที่ปลดล็อก Signature (ต้องยศไก่ยอดฝีมือ)"
-                      : "Signature is locked. Requires Skilled Chick rank."}
+                <TabsContent value="privilege" className="mt-0">
+                  <div className="flex flex-wrap gap-2">
+                    {unlockedThemes.map((themeId) => {
+                      const theme = PROFILE_THEME_OPTIONS.find((item) => item.id === themeId);
+                      if (!theme) return null;
+
+                      return (
+                        <Badge key={theme.id} variant="outline" className="bg-white border-slate-300 text-slate-700">
+                          <span className={cn("inline-block h-2.5 w-2.5 rounded-full bg-gradient-to-r mr-1.5", theme.preview)} />
+                          {language === "th" ? theme.labelTh : theme.labelEn}
+                        </Badge>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label>{language === "th" ? "คำคม/ข้อความปิดท้าย" : "Signature text"}</Label>
-                      <Input
-                        value={signatureText}
-                        onChange={(e) => setSignatureText(e.target.value)}
-                        placeholder={language === "th" ? "เช่น ฝึกทุกวัน ชนะทุกวัน" : "e.g. Learn daily, win daily"}
-                      />
+                </TabsContent>
+
+                <TabsContent value="gacha" className="mt-0 space-y-3">
+                  <Button
+                    onClick={handleOpenDailyGacha}
+                    disabled={isGachaOpening}
+                    className={cn("text-white", activeTheme.primaryButton)}
+                  >
+                    {isGachaOpening && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {hasClaimedToday
+                      ? (language === "th" ? "วันนี้เปิดแล้ว" : "Opened today")
+                      : (language === "th" ? "เปิดกล่องสุ่ม" : "Open Mystery Box")}
+                  </Button>
+
+                  {gachaResult && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-slate-700">
+                      <span className="font-semibold">
+                        {language === "th" ? "ของรางวัลล่าสุด: " : "Latest reward: "}
+                      </span>
+                      {formatGachaReward(gachaResult.rewardType, gachaResult.rewardValue, gachaResult.rewardMeta)}
                     </div>
-                    <div className="space-y-2">
-                      <Label>{language === "th" ? "ลิงก์รูปภาพ Signature (ไม่บังคับ)" : "Signature image URL (optional)"}</Label>
-                      <Input
-                        value={signatureImageUrl}
-                        onChange={(e) => setSignatureImageUrl(e.target.value)}
-                        placeholder="https://..."
-                      />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="signature" className="mt-0 space-y-3">
+                  {!canUseSignature ? (
+                    <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-700">
+                      {language === "th"
+                        ? "ยังไม่ถึงระดับที่ปลดล็อก Signature (ต้องยศไก่ยอดฝีมือ)"
+                        : "Signature is locked. Requires Skilled Chick rank."}
                     </div>
-                    <label className="flex items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={signatureEnabled}
-                        onChange={(e) => setSignatureEnabled(e.target.checked)}
-                      />
-                      {language === "th" ? "เปิดใช้งาน Signature" : "Enable signature"}
-                    </label>
-                    <Button
-                      onClick={handleSaveSignature}
-                      disabled={isSavingSignature}
-                      className={cn("text-white", activeTheme.primaryButton)}
-                    >
-                      {isSavingSignature ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      {language === "th" ? "บันทึก Signature" : "Save Signature"}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label>{language === "th" ? "คำคม/ข้อความปิดท้าย" : "Signature text"}</Label>
+                        <Input
+                          value={signatureText}
+                          onChange={(e) => setSignatureText(e.target.value)}
+                          placeholder={language === "th" ? "เช่น ฝึกทุกวัน ชนะทุกวัน" : "e.g. Learn daily, win daily"}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{language === "th" ? "ลิงก์รูปภาพ Signature (ไม่บังคับ)" : "Signature image URL (optional)"}</Label>
+                        <Input
+                          value={signatureImageUrl}
+                          onChange={(e) => setSignatureImageUrl(e.target.value)}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={signatureEnabled}
+                          onChange={(e) => setSignatureEnabled(e.target.checked)}
+                        />
+                        {language === "th" ? "เปิดใช้งาน Signature" : "Enable signature"}
+                      </label>
+                      <Button
+                        onClick={handleSaveSignature}
+                        disabled={isSavingSignature}
+                        className={cn("text-white", activeTheme.primaryButton)}
+                      >
+                        {isSavingSignature ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        {language === "th" ? "บันทึก Signature" : "Save Signature"}
+                      </Button>
+                    </>
+                  )}
+                </TabsContent>
+              </div>
+            </Tabs>
 
             {/* User Engagement Stats */}
             {user?.id && <UserEngagementStats userId={user.id} language={language} />}

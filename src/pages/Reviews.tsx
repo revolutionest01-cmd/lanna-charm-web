@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import { UserRankBadge } from "@/components/UserRankBadge";
+import { UserStatusAvatar } from "@/components/UserStatusAvatar";
 import { Loader2, Star, Send, ThumbsUp, ImagePlus, X, RefreshCw, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -161,17 +162,15 @@ const RepliesSection = ({
           {replies.map((reply) => (
             <div key={reply.id} className="flex gap-3 text-sm">
               {/* Reply Avatar */}
-              {reply.user_avatar ? (
-                <img
-                  src={reply.user_avatar}
-                  alt={reply.user_name || "User"}
-                  className="w-8 h-8 rounded-full object-cover border border-border/50 flex-shrink-0"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
-                  {reply.user_name?.charAt(0)?.toUpperCase() || "U"}
-                </div>
-              )}
+              <UserStatusAvatar
+                userId={reply.user_id}
+                userName={reply.user_name || "User"}
+                avatarUrl={reply.user_avatar}
+                size="sm"
+                className="flex-shrink-0"
+                avatarClassName="border border-border/50"
+                fallbackClassName="text-xs font-bold"
+              />
               <div className="flex-1">
                 <UserRankBadge
                   userId={reply.user_id}
@@ -547,21 +546,22 @@ const Reviews = () => {
     : reviews;
 
   // Helper to render user avatar
-  const renderUserAvatar = (avatarUrl?: string | null, name?: string, size: "sm" | "md" = "sm") => {
-    const sizeClasses = size === "md" ? "w-10 h-10 text-sm" : "w-8 h-8 text-xs";
-    if (avatarUrl) {
-      return (
-        <img
-          src={avatarUrl}
-          alt={name || "User"}
-          className={`${sizeClasses} rounded-full object-cover border border-border/50 flex-shrink-0`}
-        />
-      );
-    }
+  const renderUserAvatar = (
+    userId?: string | null,
+    avatarUrl?: string | null,
+    name?: string,
+    size: "sm" | "md" = "sm"
+  ) => {
     return (
-      <div className={`${sizeClasses} rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary flex-shrink-0`}>
-        {name?.charAt(0)?.toUpperCase() || "U"}
-      </div>
+      <UserStatusAvatar
+        userId={userId}
+        userName={name || "User"}
+        avatarUrl={avatarUrl}
+        size={size}
+        className="flex-shrink-0"
+        avatarClassName="border border-border/50"
+        fallbackClassName={size === "md" ? "text-sm font-bold" : "text-xs font-bold"}
+      />
     );
   };
 
@@ -784,7 +784,7 @@ const Reviews = () => {
                     
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-3 mb-4">
-                        {renderUserAvatar(review.user_avatar, review.user_name || review.customer_name, "md")}
+                        {renderUserAvatar(review.user_id, review.user_avatar, review.user_name || review.customer_name, "md")}
                         <div className="flex-1">
                           {review.user_id && review.user_name ? (
                             <>
@@ -974,7 +974,7 @@ const Reviews = () => {
                         )}
                         
                         <div className="flex items-start gap-3 mb-4">
-                          {renderUserAvatar(review.user_avatar, review.user_name || review.customer_name, "md")}
+                          {renderUserAvatar(review.user_id, review.user_avatar, review.user_name || review.customer_name, "md")}
                           <div className="flex-1">
                             {review.user_id && review.user_name ? (
                               <>

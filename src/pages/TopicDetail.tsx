@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserRankBadge } from "@/components/UserRankBadge";
+import { UserStatusAvatar } from "@/components/UserStatusAvatar";
 import {
   MessageCircle,
   Eye,
@@ -718,11 +719,13 @@ const TopicDetail = () => {
             {/* Author & Meta Info */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 border-b border-sky-200/50 dark:border-slate-700/70">
               <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10 border-2 border-sky-200 dark:border-slate-700">
-                  <AvatarFallback className="bg-gradient-to-br from-sky-500 via-cyan-500 to-violet-500 text-white font-semibold">
-                    {topic.author_name?.charAt(0).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
+                <UserStatusAvatar
+                  userId={topic.user_id}
+                  userName={topic.author_name || "Anonymous"}
+                  size="md"
+                  avatarClassName="border-2 border-sky-200 dark:border-slate-700"
+                  fallbackClassName="bg-gradient-to-br from-sky-500 via-cyan-500 to-violet-500 text-white font-semibold"
+                />
                 <div className="flex-1">
                   <UserRankBadge
                     userId={topic.user_id}
@@ -912,11 +915,14 @@ const TopicDetail = () => {
                 >
                   <CardContent className="p-5 sm:p-6">
                     <div className="flex gap-4">
-                      <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-sky-200 dark:border-slate-700">
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 via-cyan-500 to-violet-500 text-white text-sm font-semibold">
-                          {reply.author_name?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserStatusAvatar
+                        userId={reply.user_id}
+                        userName={reply.author_name || "Anonymous"}
+                        size="md"
+                        className="flex-shrink-0"
+                        avatarClassName="border-2 border-sky-200 dark:border-slate-700"
+                        fallbackClassName="bg-gradient-to-br from-emerald-500 via-cyan-500 to-violet-500 text-white text-sm font-semibold"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <UserRankBadge
