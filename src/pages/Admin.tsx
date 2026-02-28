@@ -45,6 +45,7 @@ import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 import { ChatLogsManagement } from "@/components/admin/ChatLogsManagement";
 import { LiveChatManagement } from "@/components/admin/LiveChatManagement";
 import { ChatAnalyticsDashboard } from "@/components/admin/ChatAnalyticsDashboard";
+import { WebsiteThemeManagement } from "@/components/admin/WebsiteThemeManagement";
 import { DevGodMode } from "@/components/admin/DevGodMode";
 import {
   ChartContainer,
@@ -66,6 +67,7 @@ const BASE_TABS = [
   { id: "webboard", icon: MessageSquare, labelTh: "กระทู้", labelEn: "Webboard", minRole: "staff" },
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business", minRole: "staff" },
   { id: "livechat", icon: Headphones, labelTh: "Live Chat", labelEn: "Live Chat", minRole: "staff" },
+  { id: "theme", icon: Sparkles, labelTh: "ธีมเว็บไซต์", labelEn: "Website Theme", minRole: "admin" },
   { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat", minRole: "admin" },
   { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
@@ -205,6 +207,7 @@ const Admin = () => {
       case "webboard": return <WebboardManagement />;
       case "business": return <BusinessInfoManagement />;
       case "livechat": return <LiveChatManagement />;
+      case "theme": return <WebsiteThemeManagement />;
       case "chatlog": return <ChatLogsManagement />;
       case "chatanalytics": return <ChatAnalyticsDashboard />;
       case "roles": return <UserRolesManagement />;

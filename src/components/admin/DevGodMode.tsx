@@ -124,13 +124,20 @@ export const DevGodMode = () => {
   const fetchData = async () => {
     setLoading(true);
 
-    await Promise.all(
-      REQUIRED_FEATURE_TOGGLES.map((feature) =>
-        supabase
-          .from("feature_toggles")
-          .upsert(feature, { onConflict: "feature_key" })
-      )
-    );
+    const requiredKeys = REQUIRED_FEATURE_TOGGLES.map((feature) => feature.feature_key);
+    const { data: existingRows } = await supabase
+      .from("feature_toggles")
+      .select("feature_key")
+      .in("feature_key", requiredKeys);
+
+    const existingKeys = new Set((existingRows || []).map((row) => row.feature_key));
+    const missingRows = REQUIRED_FEATURE_TOGGLES.filter((feature) => !existingKeys.has(feature.feature_key));
+
+    if (missingRows.length > 0) {
+      await supabase
+        .from("feature_toggles")
+        .upsert(missingRows, { onConflict: "feature_key" });
+    }
 
     const [featuresRes, rolesRes] = await Promise.all([
       supabase.from("feature_toggles").select("*").order("feature_key"),

@@ -47,6 +47,9 @@ export const applySiteThemeClass = (themeId: SiteThemeId) => {
     root.classList.add(`site-theme-${themeId}`);
   }
   root.setAttribute("data-site-theme", themeId);
+  if (themeId === "original") {
+    root.removeAttribute("data-site-theme");
+  }
 };
 
 export const getLocalSiteTheme = (): SiteThemeId => {

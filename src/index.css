@@ -179,7 +179,7 @@ All colors MUST be HSL.
     --nav-gradient: linear-gradient(135deg, hsl(var(--nav-gradient-start)) 0%, hsl(var(--nav-gradient-mid)) 50%, hsl(var(--nav-gradient-end)) 100%);
   }
 
-  .site-theme-ocean {
+  :root[data-site-theme="ocean"] {
     --background: 205 68% 96%;
     --foreground: 217 46% 18%;
     --card: 0 0% 100%;
@@ -202,7 +202,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 198 57% 45%;
   }
 
-  .site-theme-sunset {
+  :root[data-site-theme="sunset"] {
     --background: 34 100% 95%;
     --foreground: 17 52% 20%;
     --card: 0 0% 100%;
@@ -225,7 +225,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 6 58% 48%;
   }
 
-  .site-theme-forest {
+  :root[data-site-theme="forest"] {
     --background: 151 43% 94%;
     --foreground: 160 34% 18%;
     --card: 0 0% 100%;
@@ -248,7 +248,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 170 35% 42%;
   }
 
-  .site-theme-royal {
+  :root[data-site-theme="royal"] {
     --background: 258 66% 96%;
     --foreground: 260 45% 20%;
     --card: 0 0% 100%;
@@ -271,7 +271,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 230 48% 44%;
   }
 
-  .site-theme-mono {
+  :root[data-site-theme="mono"] {
     --background: 210 20% 94%;
     --foreground: 220 16% 16%;
     --card: 0 0% 100%;
@@ -295,8 +295,7 @@ All colors MUST be HSL.
   }
 
   /* ── Dark-mode overrides for site themes ── */
-  .dark.site-theme-ocean,
-  .site-theme-ocean.dark {
+  :root.dark[data-site-theme="ocean"] {
     --background: 215 42% 12%;
     --foreground: 205 60% 94%;
     --card: 215 38% 16%;
@@ -319,8 +318,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 200 45% 28%;
   }
 
-  .dark.site-theme-sunset,
-  .site-theme-sunset.dark {
+  :root.dark[data-site-theme="sunset"] {
     --background: 17 35% 12%;
     --foreground: 34 80% 94%;
     --card: 17 30% 16%;
@@ -343,8 +341,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 6 45% 34%;
   }
 
-  .dark.site-theme-forest,
-  .site-theme-forest.dark {
+  :root.dark[data-site-theme="forest"] {
     --background: 155 30% 10%;
     --foreground: 150 40% 92%;
     --card: 155 28% 14%;
@@ -367,8 +364,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 170 28% 30%;
   }
 
-  .dark.site-theme-royal,
-  .site-theme-royal.dark {
+  :root.dark[data-site-theme="royal"] {
     --background: 260 35% 12%;
     --foreground: 258 55% 94%;
     --card: 260 32% 16%;
@@ -391,8 +387,7 @@ All colors MUST be HSL.
     --nav-gradient-end: 230 38% 32%;
   }
 
-  .dark.site-theme-mono,
-  .site-theme-mono.dark {
+  :root.dark[data-site-theme="mono"] {
     --background: 220 14% 11%;
     --foreground: 210 18% 92%;
     --card: 220 12% 15%;
@@ -463,7 +458,7 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-foreground text-background;
+    @apply bg-background text-foreground;
     font-family: var(--font-sans);
   }
 }
