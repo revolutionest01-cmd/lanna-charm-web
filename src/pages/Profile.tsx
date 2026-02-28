@@ -476,11 +476,11 @@ const Profile = () => {
           return;
         }
 
-        if (data?.status === "not_eligible") {
+        if (data?.status === "not_eligible" || data?.status === "quest_incomplete") {
           sweetAlert.warning(
             language === "th"
-              ? "ต้องมีกิจกรรมอย่างน้อย 1 อย่างก่อน (เช่น Like หรือ Comment)"
-              : "Do at least one activity first (like/comment)"
+              ? "ต้องมีกิจกรรมอย่างน้อย 1 อย่างก่อน (โพสต์กระทู้, ตอบกระทู้, หรือเขียนรีวิว)"
+              : "Complete at least one quest first (post a topic, reply, or write a review)"
           );
           return;
         }
