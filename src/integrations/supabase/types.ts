@@ -223,6 +223,44 @@ export type Database = {
           },
         ]
       }
+      daily_gacha_claims: {
+        Row: {
+          claim_date: string
+          created_at: string
+          id: string
+          reward_meta: Json | null
+          reward_type: string
+          reward_value: number
+          user_id: string
+        }
+        Insert: {
+          claim_date?: string
+          created_at?: string
+          id?: string
+          reward_meta?: Json | null
+          reward_type: string
+          reward_value?: number
+          user_id: string
+        }
+        Update: {
+          claim_date?: string
+          created_at?: string
+          id?: string
+          reward_meta?: Json | null
+          reward_type?: string
+          reward_value?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_gacha_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_space_features: {
         Row: {
           created_at: string
@@ -1011,6 +1049,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_daily_gacha: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
