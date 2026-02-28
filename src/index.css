@@ -293,6 +293,127 @@ All colors MUST be HSL.
     --nav-gradient-mid: 220 12% 31%;
     --nav-gradient-end: 218 8% 40%;
   }
+
+  /* ── Dark-mode overrides for site themes ── */
+  .dark.site-theme-ocean,
+  .site-theme-ocean.dark {
+    --background: 215 42% 12%;
+    --foreground: 205 60% 94%;
+    --card: 215 38% 16%;
+    --card-foreground: 205 60% 94%;
+    --primary: 206 88% 52%;
+    --primary-foreground: 215 40% 10%;
+    --secondary: 210 30% 22%;
+    --secondary-foreground: 205 60% 94%;
+    --muted: 210 30% 20%;
+    --muted-foreground: 205 30% 65%;
+    --accent: 200 35% 24%;
+    --accent-foreground: 205 60% 94%;
+    --border: 210 25% 25%;
+    --input: 210 25% 25%;
+    --ring: 206 88% 52%;
+    --highlight: 195 90% 50%;
+    --highlight-foreground: 215 40% 10%;
+    --nav-gradient-start: 210 55% 18%;
+    --nav-gradient-mid: 205 50% 22%;
+    --nav-gradient-end: 200 45% 28%;
+  }
+
+  .dark.site-theme-sunset,
+  .site-theme-sunset.dark {
+    --background: 17 35% 12%;
+    --foreground: 34 80% 94%;
+    --card: 17 30% 16%;
+    --card-foreground: 34 80% 94%;
+    --primary: 24 90% 50%;
+    --primary-foreground: 17 40% 8%;
+    --secondary: 20 28% 22%;
+    --secondary-foreground: 34 80% 94%;
+    --muted: 20 25% 20%;
+    --muted-foreground: 25 25% 60%;
+    --accent: 15 30% 24%;
+    --accent-foreground: 34 80% 94%;
+    --border: 20 22% 25%;
+    --input: 20 22% 25%;
+    --ring: 24 90% 50%;
+    --highlight: 37 90% 52%;
+    --highlight-foreground: 17 40% 8%;
+    --nav-gradient-start: 24 50% 20%;
+    --nav-gradient-mid: 17 48% 26%;
+    --nav-gradient-end: 6 45% 34%;
+  }
+
+  .dark.site-theme-forest,
+  .site-theme-forest.dark {
+    --background: 155 30% 10%;
+    --foreground: 150 40% 92%;
+    --card: 155 28% 14%;
+    --card-foreground: 150 40% 92%;
+    --primary: 158 62% 40%;
+    --primary-foreground: 155 35% 8%;
+    --secondary: 155 22% 20%;
+    --secondary-foreground: 150 40% 92%;
+    --muted: 155 20% 18%;
+    --muted-foreground: 155 18% 58%;
+    --accent: 165 25% 22%;
+    --accent-foreground: 150 40% 92%;
+    --border: 155 18% 22%;
+    --input: 155 18% 22%;
+    --ring: 158 62% 40%;
+    --highlight: 162 70% 38%;
+    --highlight-foreground: 155 35% 8%;
+    --nav-gradient-start: 162 38% 18%;
+    --nav-gradient-mid: 155 36% 22%;
+    --nav-gradient-end: 170 28% 30%;
+  }
+
+  .dark.site-theme-royal,
+  .site-theme-royal.dark {
+    --background: 260 35% 12%;
+    --foreground: 258 55% 94%;
+    --card: 260 32% 16%;
+    --card-foreground: 258 55% 94%;
+    --primary: 262 78% 58%;
+    --primary-foreground: 260 40% 8%;
+    --secondary: 262 25% 22%;
+    --secondary-foreground: 258 55% 94%;
+    --muted: 262 22% 20%;
+    --muted-foreground: 262 18% 58%;
+    --accent: 240 30% 24%;
+    --accent-foreground: 258 55% 94%;
+    --border: 262 20% 25%;
+    --input: 262 20% 25%;
+    --ring: 262 78% 58%;
+    --highlight: 275 80% 62%;
+    --highlight-foreground: 260 40% 8%;
+    --nav-gradient-start: 262 42% 20%;
+    --nav-gradient-mid: 270 38% 25%;
+    --nav-gradient-end: 230 38% 32%;
+  }
+
+  .dark.site-theme-mono,
+  .site-theme-mono.dark {
+    --background: 220 14% 11%;
+    --foreground: 210 18% 92%;
+    --card: 220 12% 15%;
+    --card-foreground: 210 18% 92%;
+    --primary: 220 10% 72%;
+    --primary-foreground: 220 14% 10%;
+    --secondary: 220 10% 20%;
+    --secondary-foreground: 210 18% 92%;
+    --muted: 220 8% 18%;
+    --muted-foreground: 220 8% 55%;
+    --accent: 220 8% 22%;
+    --accent-foreground: 210 18% 92%;
+    --border: 220 8% 22%;
+    --input: 220 8% 22%;
+    --ring: 220 10% 72%;
+    --highlight: 220 10% 50%;
+    --highlight-foreground: 220 14% 10%;
+    --nav-gradient-start: 220 12% 16%;
+    --nav-gradient-mid: 220 10% 20%;
+    --nav-gradient-end: 218 6% 28%;
+  }
 }
 
 @layer base {
