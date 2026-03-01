@@ -260,66 +260,41 @@ const Profile = () => {
     const loadProfile = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, profile_theme, created_at, status_message, bio_short, social_facebook, social_instagram, social_tiktok")
+        .select("display_name, avatar_url, profile_theme, created_at, bio_short, social_facebook, social_instagram, social_tiktok")
         .eq("id", user.id)
         .maybeSingle();
 
+      // Also fetch status_message from the new column
+      const { data: extData } = await supabase
+        .from("profiles")
+        .select("status_message" as any)
+        .eq("id", user.id)
+        .maybeSingle() as any;
+
       if (error) {
-        // Backward compatibility: DB may not have profile_theme column yet
-        if (isMissingStatusMessageColumnError(error) || error.code === "42703") {
-          const { data: legacyData } = await supabase
-            .from("profiles")
-            .select("display_name, avatar_url, created_at")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          const storedExtras = getStoredProfileExtras(user.id);
-
-          if (legacyData) {
-            setDisplayName(legacyData.display_name || "");
-            setAvatarUrl(legacyData.avatar_url || null);
-            setProfileCreatedAt((legacyData as any).created_at || null);
-          } else {
-            setDisplayName(user.name || "");
-            setAvatarUrl(user.avatar || null);
-            setProfileCreatedAt(null);
-          }
-
-          setStatusMessage(storedExtras.statusMessage);
-          setBioShort(storedExtras.bioShort);
-          setSocialFacebook(storedExtras.socialFacebook);
-          setSocialInstagram(storedExtras.socialInstagram);
-          setSocialTiktok(storedExtras.socialTiktok);
-
-          setProfileTheme(getStoredProfileTheme(user.id));
-          setProfileLoaded(true);
-          return;
-        }
-
         console.error("Load profile error:", error);
       }
 
       if (data) {
-        const profileRow = data as any;
-        setDisplayName(profileRow.display_name || "");
-        setAvatarUrl(profileRow.avatar_url || null);
-        setProfileCreatedAt(profileRow.created_at || null);
-        setStatusMessage(profileRow.status_message || "");
-        setBioShort(profileRow.bio_short || "");
-        setSocialFacebook(profileRow.social_facebook || "");
-        setSocialInstagram(profileRow.social_instagram || "");
-        setSocialTiktok(profileRow.social_tiktok || "");
-        const resolvedTheme = isProfileTheme(profileRow.profile_theme)
-          ? profileRow.profile_theme
+        setDisplayName(data.display_name || "");
+        setAvatarUrl(data.avatar_url || null);
+        setProfileCreatedAt(data.created_at || null);
+        setStatusMessage(extData?.status_message || "");
+        setBioShort(data.bio_short || "");
+        setSocialFacebook(data.social_facebook || "");
+        setSocialInstagram(data.social_instagram || "");
+        setSocialTiktok(data.social_tiktok || "");
+        const resolvedTheme = isProfileTheme(data.profile_theme)
+          ? data.profile_theme
           : getStoredProfileTheme(user.id);
         setProfileTheme(resolvedTheme);
         setStoredProfileTheme(user.id, resolvedTheme);
         setStoredProfileExtras(user.id, {
-          statusMessage: profileRow.status_message || "",
-          bioShort: profileRow.bio_short || "",
-          socialFacebook: profileRow.social_facebook || "",
-          socialInstagram: profileRow.social_instagram || "",
-          socialTiktok: profileRow.social_tiktok || "",
+          statusMessage: extData?.status_message || "",
+          bioShort: data.bio_short || "",
+          socialFacebook: data.social_facebook || "",
+          socialInstagram: data.social_instagram || "",
+          socialTiktok: data.social_tiktok || "",
         });
       } else {
         const storedExtras = getStoredProfileExtras(user.id);
@@ -776,47 +751,29 @@ const Profile = () => {
 
     setIsSaving(true);
     try {
+      // Save core profile fields
       const { error } = await supabase
         .from("profiles")
         .upsert({
           id: user.id,
           display_name: displayName.trim(),
           avatar_url: avatarUrl || null,
-          status_message: profileExtrasPayload.statusMessage || null,
           bio_short: profileExtrasPayload.bioShort || null,
           social_facebook: profileExtrasPayload.socialFacebook || null,
           social_instagram: profileExtrasPayload.socialInstagram || null,
           social_tiktok: profileExtrasPayload.socialTiktok || null,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .select("id")
         .single();
 
-      if (error) {
-        if (isMissingStatusMessageColumnError(error) || error.code === "42703") {
-          const { error: legacyError } = await supabase
-            .from("profiles")
-            .upsert({
-              id: user.id,
-              display_name: displayName.trim(),
-              avatar_url: avatarUrl || null,
-              updated_at: new Date().toISOString(),
-            } as any)
-            .select("id")
-            .single();
+      if (error) throw error;
 
-          if (legacyError) throw legacyError;
-
-          setStoredProfileExtras(user.id, profileExtrasPayload);
-          sweetAlert.warning(
-            language === "th"
-              ? "บันทึก Bio/ลิงก์โซเชียลไว้ในเครื่องนี้ชั่วคราว (migration ยังไม่พร้อม)"
-              : "Bio/social links are saved locally for now (migration pending)"
-          );
-          return;
-        }
-        throw error;
-      }
+      // Save status_message (new column, cast needed until types regenerate)
+      await supabase
+        .from("profiles")
+        .update({ status_message: profileExtrasPayload.statusMessage || null } as any)
+        .eq("id", user.id);
 
       setStoredProfileExtras(user.id, profileExtrasPayload);
 

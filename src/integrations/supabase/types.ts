@@ -729,10 +729,14 @@ export type Database = {
           display_name: string
           id: string
           profile_theme: string | null
+          rank_display_tier_id: number | null
+          rank_path: string | null
+          rank_path_changed_at: string | null
           reputation_points: number
           social_facebook: string | null
           social_instagram: string | null
           social_tiktok: string | null
+          status_message: string | null
           updated_at: string
         }
         Insert: {
@@ -745,10 +749,14 @@ export type Database = {
           display_name: string
           id: string
           profile_theme?: string | null
+          rank_display_tier_id?: number | null
+          rank_path?: string | null
+          rank_path_changed_at?: string | null
           reputation_points?: number
           social_facebook?: string | null
           social_instagram?: string | null
           social_tiktok?: string | null
+          status_message?: string | null
           updated_at?: string
         }
         Update: {
@@ -761,10 +769,14 @@ export type Database = {
           display_name?: string
           id?: string
           profile_theme?: string | null
+          rank_display_tier_id?: number | null
+          rank_path?: string | null
+          rank_path_changed_at?: string | null
           reputation_points?: number
           social_facebook?: string | null
           social_instagram?: string | null
           social_tiktok?: string | null
+          status_message?: string | null
           updated_at?: string
         }
         Relationships: []
