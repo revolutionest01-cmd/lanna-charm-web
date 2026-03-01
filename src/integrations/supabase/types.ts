@@ -729,13 +729,9 @@ export type Database = {
           display_name: string
           id: string
           profile_theme: string | null
-          rank_display_tier_id: number | null
-          rank_path_changed_at: string | null
-          rank_path: string
           reputation_points: number
           social_facebook: string | null
           social_instagram: string | null
-          status_message: string | null
           social_tiktok: string | null
           updated_at: string
         }
@@ -749,13 +745,9 @@ export type Database = {
           display_name: string
           id: string
           profile_theme?: string | null
-          rank_display_tier_id?: number | null
-          rank_path_changed_at?: string | null
-          rank_path?: string
           reputation_points?: number
           social_facebook?: string | null
           social_instagram?: string | null
-          status_message?: string | null
           social_tiktok?: string | null
           updated_at?: string
         }
@@ -769,13 +761,9 @@ export type Database = {
           display_name?: string
           id?: string
           profile_theme?: string | null
-          rank_display_tier_id?: number | null
-          rank_path_changed_at?: string | null
-          rank_path?: string
           reputation_points?: number
           social_facebook?: string | null
           social_instagram?: string | null
-          status_message?: string | null
           social_tiktok?: string | null
           updated_at?: string
         }
