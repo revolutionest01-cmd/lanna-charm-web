@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wifi } from "lucide-react";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { format, startOfToday } from "date-fns";
 import {
   Carousel,
   CarouselContent,
@@ -15,6 +16,7 @@ import { useRooms } from "@/hooks/useContentData";
 import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
 import RoomDetailModal from "@/components/RoomDetailModal";
+import { supabase } from "@/integrations/supabase/client";
 
 
 interface Room {
@@ -40,9 +42,90 @@ const RoomsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { data: rooms = [], isLoading: loading } = useRooms();
+  const [todayAvailabilityByRoom, setTodayAvailabilityByRoom] = useState<Record<string, boolean>>({});
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const closeCooldownUntilRef = useRef(0);
+
+  useEffect(() => {
+    const fetchTodayAvailability = async () => {
+      if (!rooms.length) {
+        setTodayAvailabilityByRoom({});
+        return;
+      }
+
+      const todayKey = format(startOfToday(), "yyyy-MM-dd");
+      const roomIds = rooms.map((room) => room.id);
+
+      const { data, error } = await (supabase as any)
+        .from("room_availability")
+        .select("room_id, is_available")
+        .in("room_id", roomIds)
+        .eq("availability_date", todayKey);
+
+      if (error) {
+        console.error("Error fetching today's room availability:", error);
+        return;
+      }
+
+      const availabilityMap: Record<string, boolean> = {};
+      data?.forEach((record: { room_id: string; is_available: boolean }) => {
+        availabilityMap[record.room_id] = record.is_available;
+      });
+
+      setTodayAvailabilityByRoom(availabilityMap);
+    };
+
+    fetchTodayAvailability();
+  }, [rooms]);
+
+  useEffect(() => {
+    const todayKey = format(startOfToday(), "yyyy-MM-dd");
+
+    const channel = (supabase as any)
+      .channel("rooms-today-availability")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "room_availability",
+        },
+        (payload: any) => {
+          const nextRecord = payload.new;
+          const prevRecord = payload.old;
+
+          if (payload.eventType === "DELETE") {
+            if (prevRecord?.availability_date !== todayKey || !prevRecord?.room_id) return;
+            setTodayAvailabilityByRoom((prev) => {
+              const next = { ...prev };
+              delete next[prevRecord.room_id];
+              return next;
+            });
+            return;
+          }
+
+          if (nextRecord?.availability_date !== todayKey || !nextRecord?.room_id) return;
+
+          setTodayAvailabilityByRoom((prev) => ({
+            ...prev,
+            [nextRecord.room_id]: nextRecord.is_available,
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
+
+  const getRoomAvailableStatus = (room: Room) => {
+    const todayOverride = todayAvailabilityByRoom[room.id];
+    if (todayOverride !== undefined) return todayOverride;
+    if (room.is_available === false) return false;
+    return true;
+  };
 
   const handleRoomClick = (room: Room) => {
     if (Date.now() < closeCooldownUntilRef.current) {
@@ -110,7 +193,9 @@ const RoomsSection = () => {
             className="w-full"
           >
             <CarouselContent className="-ml-3 sm:ml-0 md:ml-0 gap-2 sm:gap-4">
-              {rooms.map((room) => (
+              {rooms.map((room) => {
+                const isAvailableToday = getRoomAvailableStatus(room);
+                return (
                 <CarouselItem key={room.id} className="pl-3 sm:pl-4 md:pl-0 basis-full sm:basis-1/2 lg:basis-1/3">
                   <button
                     onClick={() => handleRoomClick(room)}
@@ -125,11 +210,11 @@ const RoomsSection = () => {
                         />
                         {/* Room Status Badge */}
                         <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-white text-[10px] sm:text-xs font-semibold ${
-                          room.is_available === false 
+                          !isAvailableToday 
                             ? 'bg-red-500/90 hover:bg-red-600' 
                             : 'bg-green-500/90 hover:bg-green-600'
                         } shadow-lg transition-colors`}>
-                          {room.is_available === false 
+                          {!isAvailableToday 
                             ? (language === 'th' ? 'ไม่ว่าง' : language === 'zh' ? '已满房' : 'Unavailable')
                             : (language === 'th' ? 'ว่าง' : language === 'zh' ? '有房' : 'Available')}
                         </div>
@@ -166,7 +251,8 @@ const RoomsSection = () => {
                     </Card>
                   </button>
                 </CarouselItem>
-              ))}
+                );
+              })}
             </CarouselContent>
             {/* Navigation buttons - Visible on all devices and kept inside viewport */}
             <CarouselPrevious className="left-1 sm:left-2 md:left-3 top-auto bottom-3 sm:bottom-4 translate-y-0 z-20 flex h-8 w-8 sm:h-10 sm:w-10" />

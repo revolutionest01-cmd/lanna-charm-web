@@ -41,34 +41,35 @@ const FacebookPagePlugin = () => {
   }, []);
 
   return (
-    <Card className="p-6 bg-card/50 border-border/50 animate-fade-in h-fit">
+    <Card className="p-4 sm:p-6 bg-card/50 border-border/50 animate-fade-in h-fit w-full min-w-0 overflow-hidden">
       <div className="flex items-center gap-3 mb-4">
         <div className="bg-[#1877F2] p-2 rounded-lg">
           <Facebook className="w-5 h-5 text-white" />
         </div>
-        <h3 className="text-xl font-semibold text-foreground">
+        <h3 className="text-lg sm:text-xl font-semibold text-foreground break-words">
           {language === "th" ? "ติดตามเราบน Facebook" : "Follow Us on Facebook"}
         </h3>
       </div>
       
       <div 
         ref={containerRef}
-        className="flex justify-center overflow-hidden rounded-lg"
+        className="w-full max-w-full flex justify-center overflow-hidden rounded-lg"
       >
         <div 
           id="fb-root"
           className="hidden"
         />
         <div 
-          className="fb-page" 
+          className="fb-page w-full max-w-full" 
           data-href="https://www.facebook.com/profile.php?id=100075885228455" 
           data-tabs="timeline" 
-          data-width="340" 
+          data-width="300" 
           data-height="400" 
           data-small-header="true" 
           data-adapt-container-width="true" 
           data-hide-cover="false" 
           data-show-facepile="true"
+          style={{ width: "100%" }}
         >
           <blockquote 
             cite="https://www.facebook.com/profile.php?id=100075885228455" 

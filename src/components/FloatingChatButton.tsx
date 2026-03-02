@@ -78,12 +78,12 @@ const FloatingChatButton = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed z-50 flex items-center gap-1.5",
-          "rounded-l-2xl px-2.5 py-3 sm:px-3 sm:py-4",
+          "fixed z-50 flex items-center justify-center",
+          "w-11 h-11 sm:w-12 sm:h-12 rounded-l-2xl",
           "bg-foreground text-background",
           "shadow-xl",
           "transition-all duration-300 ease-out",
-          "hover:px-4 active:scale-95",
+          "hover:scale-105 active:scale-95",
           // Position: vertically centered, move left when panel is open
           "top-1/2 -translate-y-1/2",
           isOpen ? "right-[15rem] sm:right-[17rem]" : "right-0",
@@ -95,12 +95,7 @@ const FloatingChatButton = () => {
         {isOpen ? (
           <X className="h-5 w-5" />
         ) : (
-          <>
-            <HelpCircle className="h-5 w-5" />
-            <span className="text-xs font-semibold tracking-wide [writing-mode:vertical-lr] rotate-180">
-              {language === 'th' ? 'ช่วยเหลือ' : language === 'zh' ? '帮助' : 'HELP'}
-            </span>
-          </>
+          <HelpCircle className="h-5 w-5" />
         )}
       </button>
 

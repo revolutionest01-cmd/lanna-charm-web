@@ -227,8 +227,8 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="py-16 sm:py-20 bg-background">
-      <div className="container mx-auto px-5 sm:px-6">
+    <section id="contact" className="py-16 sm:py-20 bg-background overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 max-w-full">
         {/* Google Maps */}
         {businessInfo?.address_th && (
           <div className="mb-10 sm:mb-16 animate-fade-in rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-primary/20">
@@ -254,9 +254,9 @@ const ContactSection = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 sm:gap-8 max-w-7xl mx-auto lg:grid-cols-3">
+        <div className="grid gap-6 sm:gap-8 max-w-7xl mx-auto lg:grid-cols-3 min-w-0">
           {/* Left side - Contact Information */}
-          <div className="space-y-5 sm:space-y-8 animate-fade-in lg:col-span-1">
+          <div className="space-y-5 sm:space-y-8 animate-fade-in lg:col-span-1 min-w-0">
             {/* Address */}
             {businessInfo && (businessInfo.address_th || businessInfo.address_en) && (
               <div className="flex gap-3 sm:gap-4 items-start">
@@ -415,7 +415,7 @@ const ContactSection = () => {
           </div>
 
           {/* Center - Contact Form */}
-          <Card className="p-4 sm:p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1">
+          <Card className="p-4 sm:p-6 md:p-8 animate-fade-in bg-card/50 lg:col-span-1 w-full min-w-0 overflow-hidden">
             <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-foreground">
               {t.sendMessageForm}
             </h3>
@@ -468,7 +468,7 @@ const ContactSection = () => {
           </Card>
 
           {/* Right side - Facebook Page Plugin */}
-          <div className="lg:col-span-1 order-3">
+          <div className="lg:col-span-1 order-3 w-full min-w-0">
             <FacebookPagePlugin />
           </div>
         </div>

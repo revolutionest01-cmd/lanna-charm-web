@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import * as LucideIcons from "lucide-react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -311,7 +312,9 @@ const LightboxModal = ({
     };
   }, [onClose, onPrev, onNext]);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] bg-foreground/90 backdrop-blur-sm flex items-center justify-center"
       onClick={onClose}
@@ -356,7 +359,8 @@ const LightboxModal = ({
           <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
         </button>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 
