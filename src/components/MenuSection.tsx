@@ -138,7 +138,7 @@ const MenuSection = () => {
                               <img
                                 src={item.image_url}
                                 alt={language === "th" ? item.name_th : item.name_en}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                className="w-full h-full object-cover lg:object-contain transition-transform duration-500 group-hover:scale-110"
                               />
                               {/* Recommended Badge */}
                               <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-primary/90 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1">
@@ -252,7 +252,7 @@ const MenuSection = () => {
                                     <img
                                       src={item.image_url}
                                       alt={language === "th" ? item.name_th : item.name_en}
-                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                      className="w-full h-full object-cover lg:object-contain transition-transform duration-500 group-hover:scale-110"
                                     />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-accent/30">

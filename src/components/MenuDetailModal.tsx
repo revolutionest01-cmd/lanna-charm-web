@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Heart, Share2, Upload, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Heart, Share2, Upload, Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,9 +41,18 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
   const [isAdmin, setIsAdmin] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
+  const [imageContainerSize, setImageContainerSize] = useState({ width: 0, height: 0 });
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [focusPoint, setFocusPoint] = useState({ x: 50, y: 50 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const miniMapRef = useRef<HTMLDivElement>(null);
   const maxImages = 5;
   const minSwipeDistance = 50;
+  const minZoom = 1;
+  const maxZoom = 3;
+  const zoomStep = 0.25;
 
   // Get current menu index
   const currentMenuIndex = menu ? allMenus.findIndex(m => m.id === menu.id) : -1;
@@ -122,6 +131,33 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
     };
     checkAdminStatus();
   }, [user]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!imageContainerRef.current) return;
+
+    const updateContainerSize = () => {
+      if (!imageContainerRef.current) return;
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      setImageContainerSize({ width: rect.width, height: rect.height });
+    };
+
+    updateContainerSize();
+
+    const observer = new ResizeObserver(() => updateContainerSize());
+    observer.observe(imageContainerRef.current);
+    window.addEventListener("resize", updateContainerSize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateContainerSize);
+    };
+  }, [isOpen, menu?.id]);
+
+  useEffect(() => {
+    setZoomLevel(1);
+    setFocusPoint({ x: 50, y: 50 });
+  }, [menu?.id]);
 
   if (!isOpen || !menu) return null;
 
@@ -202,6 +238,73 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
     ...uploadedImages.map(url => ({ url, isOriginal: false }))
   ];
 
+  const mainImageUrl = allImages.length > 0 ? allImages[0].url : menu.icon_url || "/placeholder.svg";
+
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+  const getViewportRect = () => {
+    const naturalWidth = imageNaturalSize.width;
+    const naturalHeight = imageNaturalSize.height;
+    const containerWidth = imageContainerSize.width;
+    const containerHeight = imageContainerSize.height;
+
+    if (!naturalWidth || !naturalHeight || !containerWidth || !containerHeight) {
+      return { left: 0, top: 0, width: 100, height: 100 };
+    }
+
+    const visibleWidth = naturalWidth / zoomLevel;
+    const visibleHeight = naturalHeight / zoomLevel;
+
+    const desiredCenterX = (focusPoint.x / 100) * naturalWidth;
+    const desiredCenterY = (focusPoint.y / 100) * naturalHeight;
+
+    const clampedCenterX = clamp(desiredCenterX, visibleWidth / 2, naturalWidth - visibleWidth / 2);
+    const clampedCenterY = clamp(desiredCenterY, visibleHeight / 2, naturalHeight - visibleHeight / 2);
+
+    const viewportLeft = clampedCenterX - visibleWidth / 2;
+    const viewportTop = clampedCenterY - visibleHeight / 2;
+
+    return {
+      left: (viewportLeft / naturalWidth) * 100,
+      top: (viewportTop / naturalHeight) * 100,
+      width: (visibleWidth / naturalWidth) * 100,
+      height: (visibleHeight / naturalHeight) * 100,
+    };
+  };
+
+  const viewportRect = getViewportRect();
+  const viewportIndicatorStyle = {
+    left: `${viewportRect.left}%`,
+    top: `${viewportRect.top}%`,
+    width: `${viewportRect.width}%`,
+    height: `${viewportRect.height}%`,
+  };
+
+  const handleZoomIn = () => setZoomLevel((prev) => clamp(prev + zoomStep, minZoom, maxZoom));
+  const handleZoomOut = () => setZoomLevel((prev) => clamp(prev - zoomStep, minZoom, maxZoom));
+  const handleResetView = () => {
+    setZoomLevel(1);
+    setFocusPoint({ x: 50, y: 50 });
+  };
+
+  const handleMainImageWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setZoomLevel((prev) => {
+      const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
+      return clamp(prev + delta, minZoom, maxZoom);
+    });
+  };
+
+  const handleMinimapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!miniMapRef.current) return;
+
+    const rect = miniMapRef.current.getBoundingClientRect();
+    const clickX = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    const clickY = clamp((e.clientY - rect.top) / rect.height, 0, 1);
+
+    setFocusPoint({ x: clickX * 100, y: clickY * 100 });
+  };
+
   return (
     <Portal>
       <>
@@ -266,12 +369,79 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
             <div className="flex flex-col gap-3 sm:gap-4">
               {/* Main Image */}
               {allImages.length > 0 || menu.icon_url ? (
-                <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72">
+                <div
+                  ref={imageContainerRef}
+                  className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72"
+                  onWheel={handleMainImageWheel}
+                >
                   <img
-                    src={allImages.length > 0 ? allImages[0].url : menu.icon_url || "/placeholder.svg"}
+                    src={mainImageUrl}
                     alt={menuName}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain transition-transform duration-200 ease-out select-none"
+                    style={{
+                      objectPosition: `${focusPoint.x}% ${focusPoint.y}%`,
+                      transform: `scale(${zoomLevel})`,
+                      transformOrigin: "center center",
+                    }}
+                    onLoad={(e) => {
+                      setImageNaturalSize({
+                        width: e.currentTarget.naturalWidth,
+                        height: e.currentTarget.naturalHeight,
+                      });
+                    }}
                   />
+
+                  <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded-md border border-white/60 bg-black/45 p-1.5 backdrop-blur-[1px]">
+                    <button
+                      type="button"
+                      onClick={handleZoomOut}
+                      disabled={zoomLevel <= minZoom}
+                      className="h-7 w-7 rounded bg-white/90 text-foreground flex items-center justify-center hover:bg-white disabled:opacity-50"
+                      aria-label="Zoom out"
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                    </button>
+                    <span className="text-[11px] font-semibold text-white min-w-[42px] text-center">
+                      {Math.round(zoomLevel * 100)}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleZoomIn}
+                      disabled={zoomLevel >= maxZoom}
+                      className="h-7 w-7 rounded bg-white/90 text-foreground flex items-center justify-center hover:bg-white disabled:opacity-50"
+                      aria-label="Zoom in"
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetView}
+                      className="h-7 w-7 rounded bg-white/90 text-foreground flex items-center justify-center hover:bg-white"
+                      aria-label="Reset view"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="absolute bottom-2 right-2 z-10 rounded-md border border-white/60 bg-black/45 backdrop-blur-[1px] p-1.5">
+                    <div
+                      ref={miniMapRef}
+                      className="relative w-20 h-14 rounded-sm overflow-hidden border border-white/50 bg-black/40 cursor-crosshair"
+                      onClick={handleMinimapClick}
+                      title={language === "th" ? "คลิกเพื่อเลื่อนตำแหน่งภาพ" : "Click to move viewport"}
+                    >
+                      <img
+                        src={mainImageUrl}
+                        alt="Image area map"
+                        className="w-full h-full object-contain"
+                        draggable={false}
+                      />
+                      <div
+                        className="absolute border border-white bg-white/20 shadow-[0_0_0_1px_rgba(0,0,0,0.35)]"
+                        style={viewportIndicatorStyle}
+                      />
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="relative bg-foreground/5 rounded-lg overflow-hidden aspect-square sm:h-64 md:h-72 flex items-center justify-center">
