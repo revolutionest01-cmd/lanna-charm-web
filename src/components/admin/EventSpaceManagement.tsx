@@ -89,6 +89,9 @@ export const EventSpaceManagement = () => {
   const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [draggedGalleryImageId, setDraggedGalleryImageId] = useState<string | null>(null);
+  const [dragOverGalleryImageId, setDragOverGalleryImageId] = useState<string | null>(null);
+  const [savingGalleryOrder, setSavingGalleryOrder] = useState(false);
   const [features, setFeatures] = useState<Feature[]>([]);
   const [savingFeatures, setSavingFeatures] = useState(false);
 
@@ -205,6 +208,61 @@ export const EventSpaceManagement = () => {
       queryClient.invalidateQueries({ queryKey: ["event-space-images"] });
     } catch (error) {
       toast.error(language === "th" ? "ลบรูปล้มเหลว" : "Delete failed");
+    }
+  };
+
+  const reorderGalleryImages = (items: any[], draggedId: string, targetId: string) => {
+    const fromIndex = items.findIndex((item) => item.id === draggedId);
+    const toIndex = items.findIndex((item) => item.id === targetId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return items;
+
+    const updated = [...items];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+    return updated;
+  };
+
+  const handleGalleryReorderDrop = async (targetId: string) => {
+    if (!draggedGalleryImageId || draggedGalleryImageId === targetId || !currentEventSpace?.id) {
+      setDraggedGalleryImageId(null);
+      setDragOverGalleryImageId(null);
+      return;
+    }
+
+    const previousImages = [...galleryImages];
+    const reorderedImages = reorderGalleryImages(previousImages, draggedGalleryImageId, targetId);
+
+    setGalleryImages(reorderedImages);
+    setDraggedGalleryImageId(null);
+    setDragOverGalleryImageId(null);
+    setSavingGalleryOrder(true);
+
+    try {
+      const results = await Promise.all(
+        reorderedImages.map((image, index) =>
+          supabase
+            .from("event_space_images")
+            .update({ sort_order: index + 1 })
+            .eq("id", image.id)
+        )
+      );
+
+      const hasError = results.some((result) => result.error);
+      if (hasError) {
+        setGalleryImages(previousImages);
+        toast.error(language === "th" ? "จัดลำดับรูปภาพไม่สำเร็จ" : "Failed to reorder images");
+        return;
+      }
+
+      invalidateContentCache();
+      await queryClient.invalidateQueries({ queryKey: ["event-space-images"] });
+      toast.success(language === "th" ? "อัปเดตลำดับรูปภาพแล้ว" : "Image order updated");
+    } catch (error) {
+      console.error("Error reordering event gallery images:", error);
+      setGalleryImages(previousImages);
+      toast.error(language === "th" ? "จัดลำดับรูปภาพไม่สำเร็จ" : "Failed to reorder images");
+    } finally {
+      setSavingGalleryOrder(false);
     }
   };
 
@@ -457,10 +515,48 @@ export const EventSpaceManagement = () => {
                     {language === "th" ? "ยังไม่มีรูปภาพ Gallery — กดเพิ่มรูปเพื่ออัพโหลด" : "No gallery images yet — click Add Images to upload"}
                   </p>
                 ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {language === "th" ? "ลากวางรูปเพื่อจัดลำดับ" : "Drag and drop to reorder"}
+                      </p>
+                      {savingGalleryOrder && (
+                        <span className="text-xs text-primary flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          {language === "th" ? "กำลังบันทึกลำดับ..." : "Saving order..."}
+                        </span>
+                      )}
+                    </div>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {galleryImages.map((img) => (
-                      <div key={img.id} className="relative group aspect-video rounded-lg overflow-hidden border border-border">
+                    {galleryImages.map((img, index) => (
+                      <div
+                        key={img.id}
+                        draggable={!savingGalleryOrder}
+                        onDragStart={() => setDraggedGalleryImageId(img.id)}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (dragOverGalleryImageId !== img.id) setDragOverGalleryImageId(img.id);
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverGalleryImageId === img.id) setDragOverGalleryImageId(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          handleGalleryReorderDrop(img.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedGalleryImageId(null);
+                          setDragOverGalleryImageId(null);
+                        }}
+                        className={`relative group aspect-video rounded-lg overflow-hidden border border-border transition-all ${
+                          dragOverGalleryImageId === img.id ? "ring-2 ring-primary scale-[1.02]" : ""
+                        } ${draggedGalleryImageId === img.id ? "opacity-70" : ""}`}
+                      >
                         <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute top-1 left-1 bg-black/55 text-white rounded px-1 py-0.5 flex items-center gap-1 z-20">
+                          <GripVertical className="w-3 h-3" />
+                          <span className="text-[10px] font-semibold">#{index + 1}</span>
+                        </div>
                         <Button type="button" variant="destructive" size="icon"
                           className="absolute top-1 right-1 h-6 w-6 bg-destructive text-destructive-foreground border border-destructive/70 hover:bg-destructive/90 shadow-sm"
                           onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}>
@@ -469,6 +565,7 @@ export const EventSpaceManagement = () => {
                       </div>
                     ))}
                   </div>
+                  </>
                 )}
               </div>
             </CardContent>

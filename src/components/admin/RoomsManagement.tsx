@@ -83,6 +83,9 @@ export const RoomsManagement = () => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
+  const [draggedRoomImageId, setDraggedRoomImageId] = useState<string | null>(null);
+  const [dragOverRoomImageId, setDragOverRoomImageId] = useState<string | null>(null);
+  const [savingRoomImageOrder, setSavingRoomImageOrder] = useState(false);
   const [_imageToDelete, _setImageToDelete] = useState<RoomImage | null>(null);
 
   const form = useForm<RoomFormValues>({
@@ -262,6 +265,69 @@ export const RoomsManagement = () => {
       );
     } finally {
       setUploadingImages(false);
+    }
+  };
+
+  const reorderRoomImages = (items: RoomImage[], draggedId: string, targetId: string) => {
+    const fromIndex = items.findIndex((item) => item.id === draggedId);
+    const toIndex = items.findIndex((item) => item.id === targetId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return items;
+
+    const updated = [...items];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+    return updated;
+  };
+
+  const handleRoomImageReorderDrop = async (targetImageId: string) => {
+    if (!selectedRoom || !selectedRoom.images || !draggedRoomImageId || draggedRoomImageId === targetImageId) {
+      setDraggedRoomImageId(null);
+      setDragOverRoomImageId(null);
+      return;
+    }
+
+    const previousImages = [...selectedRoom.images];
+    const reorderedImages = reorderRoomImages(previousImages, draggedRoomImageId, targetImageId);
+
+    setSelectedRoom({ ...selectedRoom, images: reorderedImages });
+    setDraggedRoomImageId(null);
+    setDragOverRoomImageId(null);
+    setSavingRoomImageOrder(true);
+
+    try {
+      const results = await Promise.all(
+        reorderedImages.map((image, index) =>
+          supabase
+            .from("room_images")
+            .update({ sort_order: index })
+            .eq("id", image.id)
+        )
+      );
+
+      const hasError = results.some((result) => result.error);
+      if (hasError) {
+        setSelectedRoom({ ...selectedRoom, images: previousImages });
+        toast.error(language === "th" ? "จัดลำดับรูปภาพไม่สำเร็จ" : "Failed to reorder room images");
+        return;
+      }
+
+      setRooms((prevRooms) =>
+        prevRooms.map((room) =>
+          room.id === selectedRoom.id
+            ? { ...room, images: reorderedImages }
+            : room
+        )
+      );
+
+      invalidateContentCache();
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      toast.success(language === "th" ? "อัปเดตลำดับรูปภาพแล้ว" : "Room image order updated");
+    } catch (error) {
+      console.error("Error reordering room images:", error);
+      setSelectedRoom({ ...selectedRoom, images: previousImages });
+      toast.error(language === "th" ? "จัดลำดับรูปภาพไม่สำเร็จ" : "Failed to reorder room images");
+    } finally {
+      setSavingRoomImageOrder(false);
     }
   };
 
@@ -601,16 +667,50 @@ export const RoomsManagement = () => {
                         ({selectedRoom.images.length})
                       </span>
                     </FormLabel>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {language === "th" ? "ลากวางรูปเพื่อจัดลำดับ" : "Drag and drop to reorder"}
+                      </p>
+                      {savingRoomImageOrder && (
+                        <span className="text-xs text-primary flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          {language === "th" ? "กำลังบันทึกลำดับ..." : "Saving order..."}
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {selectedRoom.images.map((image, idx) => (
-                        <div key={image.id} className="group relative aspect-square rounded-lg bg-background border border-border">
+                        <div
+                          key={image.id}
+                          draggable={!savingRoomImageOrder}
+                          onDragStart={() => setDraggedRoomImageId(image.id)}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            if (dragOverRoomImageId !== image.id) setDragOverRoomImageId(image.id);
+                          }}
+                          onDragLeave={() => {
+                            if (dragOverRoomImageId === image.id) setDragOverRoomImageId(null);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            handleRoomImageReorderDrop(image.id);
+                          }}
+                          onDragEnd={() => {
+                            setDraggedRoomImageId(null);
+                            setDragOverRoomImageId(null);
+                          }}
+                          className={`group relative aspect-square rounded-lg bg-background border border-border transition-all ${
+                            dragOverRoomImageId === image.id ? "ring-2 ring-primary scale-[1.02]" : ""
+                          } ${draggedRoomImageId === image.id ? "opacity-70" : ""}`}
+                        >
                           <img
                             src={image.image_url}
                             alt="Room"
                             className="w-full h-full object-cover rounded-lg"
                           />
-                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center text-xs font-bold z-10">
-                            {idx + 1}
+                          <div className="absolute top-2 left-2 rounded-md bg-primary/90 text-primary-foreground flex items-center gap-1 px-1.5 py-1 text-xs font-bold z-10">
+                            <GripVertical className="w-3 h-3" />
+                            <span>{idx + 1}</span>
                           </div>
                           <Button
                             type="button"
