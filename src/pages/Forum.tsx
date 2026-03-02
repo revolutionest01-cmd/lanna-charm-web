@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MessageCircle, Eye, Heart, PlusCircle, LogOut, User, ArrowLeft, Search, Loader2, Sparkles, TrendingUp, Flame, Users, Crown, Coffee } from "lucide-react";
+import { MessageCircle, Eye, Heart, PlusCircle, LogOut, User, ArrowLeft, Search, Loader2, Sparkles, TrendingUp, Flame, Users, Crown } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
@@ -238,47 +238,44 @@ const Forum = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Hero Banner - Profile style gradient */}
         <div className="mb-6 sm:mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-900 via-amber-800 to-yellow-900 p-6 sm:p-8 lg:p-10 shadow-xl">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.06%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-40" />
-            <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-600/10 rounded-full blur-3xl" />
-            <Coffee className="absolute top-4 right-6 h-10 w-10 text-amber-400/20 animate-pulse" />
-            <Sparkles className="absolute bottom-4 right-20 h-6 w-6 text-yellow-400/15" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-6 sm:p-8 lg:p-10 shadow-lg">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
+            <Sparkles className="absolute top-4 right-6 h-8 w-8 text-white/20 animate-pulse" />
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 rounded-xl bg-amber-500/20 backdrop-blur-sm border border-amber-400/20">
-                  <Users className="h-6 w-6 text-amber-200" />
+                <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                  <Users className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-amber-50">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-white">
                     {language === "th" ? "ชุมชนคนเพลินพิง" : "Plern Ping Community"}
                   </h2>
                 </div>
               </div>
-              <p className="text-amber-200/80 text-sm sm:text-base max-w-xl leading-relaxed">
+              <p className="text-white/80 text-sm sm:text-base max-w-xl leading-relaxed">
                 {language === "th"
                   ? "แลกเปลี่ยนประสบการณ์ แนะนำเมนู และแบ่งปันช่วงเวลาดีๆ กับชุมชนของเรา"
                   : "Share experiences, recommend dishes, and connect with our community"}
               </p>
               {/* Stats Row */}
-              <div className="flex items-center gap-4 sm:gap-6 mt-5 pt-4 border-t border-amber-400/15">
+              <div className="flex items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-white/10">
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-amber-100">{topics.length}</p>
-                  <p className="text-[10px] sm:text-xs text-amber-300/60 uppercase tracking-wider font-medium">{language === "th" ? "กระทู้" : "Topics"}</p>
+                  <p className="text-lg sm:text-xl font-bold text-white">{topics.length}</p>
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">{language === "th" ? "กระทู้" : "Topics"}</p>
                 </div>
-                <div className="w-px h-8 bg-amber-400/20" />
+                <div className="w-px h-8 bg-white/20" />
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-amber-100">
+                  <p className="text-lg sm:text-xl font-bold text-white">
                     {topics.reduce((sum, t) => sum + (t.replies_count || 0), 0)}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-amber-300/60 uppercase tracking-wider font-medium">{language === "th" ? "ตอบกลับ" : "Replies"}</p>
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">{language === "th" ? "ตอบกลับ" : "Replies"}</p>
                 </div>
-                <div className="w-px h-8 bg-amber-400/20" />
+                <div className="w-px h-8 bg-white/20" />
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-amber-100">
+                  <p className="text-lg sm:text-xl font-bold text-white">
                     {topics.reduce((sum, t) => sum + (t.likes_count || 0), 0)}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-amber-300/60 uppercase tracking-wider font-medium">{language === "th" ? "ถูกใจ" : "Likes"}</p>
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">{language === "th" ? "ถูกใจ" : "Likes"}</p>
                 </div>
               </div>
             </div>
@@ -488,9 +485,9 @@ const Forum = () => {
 
               {/* Trending Topics - Profile card style */}
               <Card className="border-border/50 bg-card/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-amber-800 via-amber-700 to-yellow-800 px-4 py-3 flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-amber-200" />
-                  <h3 className="text-sm font-bold text-amber-50">
+                <div className="bg-gradient-to-r from-primary to-primary/80 px-4 py-3 flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-white" />
+                  <h3 className="text-sm font-bold text-white">
                     {language === "th" ? "กระทู้ยอดนิยม" : "Trending"}
                   </h3>
                 </div>
@@ -540,9 +537,9 @@ const Forum = () => {
 
               {/* Categories Card - Profile style */}
               <Card className="border-border/50 bg-card/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-amber-900/90 via-amber-800/80 to-yellow-900/80 px-4 py-3 flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-amber-200" />
-                  <h4 className="text-sm font-bold text-amber-50">
+                <div className="bg-gradient-to-r from-primary/80 to-primary/60 px-4 py-3 flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-white" />
+                  <h4 className="text-sm font-bold text-white">
                     {language === "th" ? "หมวดหมู่" : "Categories"}
                   </h4>
                 </div>
