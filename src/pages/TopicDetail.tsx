@@ -723,6 +723,7 @@ const TopicDetail = () => {
                   userId={topic.user_id}
                   userName={topic.author_name || "Anonymous"}
                   size="md"
+                  bubblePlacement="bottom"
                   avatarClassName="border-2 border-sky-200 dark:border-slate-700"
                   fallbackClassName="bg-gradient-to-br from-sky-500 via-cyan-500 to-violet-500 text-white font-semibold"
                 />
@@ -919,6 +920,7 @@ const TopicDetail = () => {
                         userId={reply.user_id}
                         userName={reply.author_name || "Anonymous"}
                         size="md"
+                        bubblePlacement="bottom"
                         className="flex-shrink-0"
                         avatarClassName="border-2 border-sky-200 dark:border-slate-700"
                         fallbackClassName="bg-gradient-to-br from-emerald-500 via-cyan-500 to-violet-500 text-white text-sm font-semibold"

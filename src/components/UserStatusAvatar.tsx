@@ -9,6 +9,7 @@ interface UserStatusAvatarProps {
   avatarUrl?: string | null;
   statusMessage?: string | null;
   size?: "sm" | "md" | "lg" | "xl";
+  bubblePlacement?: "top" | "bottom";
   className?: string;
   avatarClassName?: string;
   fallbackClassName?: string;
@@ -27,6 +28,7 @@ export const UserStatusAvatar = ({
   avatarUrl,
   statusMessage,
   size = "md",
+  bubblePlacement = "top",
   className,
   avatarClassName,
   fallbackClassName,
@@ -39,10 +41,18 @@ export const UserStatusAvatar = ({
   return (
     <div className={cn("relative inline-flex", className)}>
       {message && (
-        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-10 w-max max-w-[240px]">
+        <div className={cn(
+          "absolute left-0 sm:left-1/2 sm:-translate-x-1/2 z-10 w-max max-w-[min(240px,calc(100vw-1rem))]",
+          bubblePlacement === "top" ? "bottom-full mb-2" : "top-full mt-2"
+        )}>
           <div className="relative rounded-xl border border-slate-300/80 bg-white px-2.5 py-1.5 text-[10px] leading-relaxed text-slate-700 shadow-sm text-center whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
             {message}
-            <span className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 h-2.5 w-2.5 rotate-45 border-r border-b border-slate-300/80 bg-white" />
+            <span className={cn(
+              "absolute left-5 sm:left-1/2 sm:-translate-x-1/2 h-2.5 w-2.5 rotate-45 bg-white",
+              bubblePlacement === "top"
+                ? "-bottom-1.5 border-r border-b border-slate-300/80"
+                : "-top-1.5 border-l border-t border-slate-300/80"
+            )} />
           </div>
         </div>
       )}

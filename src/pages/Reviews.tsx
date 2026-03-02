@@ -1019,36 +1019,36 @@ const Reviews = () => {
                               {review.helpful_count}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
                               variant={isLiked ? "default" : "outline"}
                               size="sm"
                               onClick={() => toggleLikeMutation.mutate({ reviewId: review.id, isLiked })}
                               disabled={toggleLikeMutation.isPending || !isAuthenticated}
-                              className="gap-2"
+                              className="px-2 sm:px-3 gap-0 sm:gap-2"
                             >
                               <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-                              {language === "th" ? "เป็นประโยชน์" : "Helpful"}
+                              <span className="hidden sm:inline">{language === "th" ? "เป็นประโยชน์" : "Helpful"}</span>
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleShareReview(review)}
-                              className="gap-2"
+                              className="px-2 sm:px-3 gap-0 sm:gap-2"
                             >
                               <Share2 className="w-4 h-4" />
-                              {language === "th" ? "แชร์" : "Share"}
+                              <span className="hidden sm:inline">{language === "th" ? "แชร์" : "Share"}</span>
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => toggleExpandReview(review.id)}
-                              className="gap-2"
+                              className="px-2 sm:px-3 gap-0 sm:gap-2"
                             >
                               <MessageCircle className="w-4 h-4" />
-                              {language === "th" ? "ความเห็น" : "Comments"}
+                              <span className="hidden sm:inline">{language === "th" ? "ความเห็น" : "Comments"}</span>
                               {(replyCounts[review.id] || 0) > 0 && (
-                                <span className="ml-1 text-xs bg-primary/20 text-primary rounded-full px-1.5 py-0.5 font-bold">
+                                <span className="ml-0 sm:ml-1 text-xs bg-primary/20 text-primary rounded-full px-1.5 py-0.5 font-bold">
                                   {replyCounts[review.id]}
                                 </span>
                               )}

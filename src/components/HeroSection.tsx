@@ -81,9 +81,9 @@ const HeroSection = () => {
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center px-3 sm:px-0 w-full sm:w-auto">
           <Button 
-            variant="highlight" 
+            variant="default" 
             size="lg" 
-            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r from-[#b94a2f] via-[#c65539] to-[#b94a2f] hover:from-[#a8422a] hover:via-[#c65539] hover:to-[#a8422a] text-white shadow-[0_10px_24px_rgba(198,85,57,0.35),0_6px_14px_rgba(0,0,0,0.35)] hover:shadow-[0_14px_30px_rgba(198,85,57,0.45),0_10px_20px_rgba(0,0,0,0.42)]"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.exploreMenu}
@@ -92,7 +92,7 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold bg-white/10 hover:bg-white/20 text-white border-white/30 hover:text-white rounded-xl transition-all duration-300 hover:scale-105 drop-shadow-[0_4px_12px_rgba(0,0,0,0.65)]"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold bg-white/20 hover:bg-white/30 text-white border-2 border-white/90 hover:text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.65)]"
             onClick={() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.viewRooms}
