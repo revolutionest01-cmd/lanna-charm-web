@@ -235,7 +235,7 @@ const Secondbar = () => {
             className={cn(
               "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0",
               isPlaying
-                ? "bg-[#c65539] text-white shadow-lg hover:bg-[#c65539]/90"
+                ? "bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
                 : "bg-background/40 text-background hover:bg-background/60"
             )}
             aria-label={isPlaying ? "ปิดเสียง" : "เปิดเสียงธรรมชาติ"}

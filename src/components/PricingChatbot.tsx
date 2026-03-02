@@ -150,7 +150,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   return (
     <div className="fixed bottom-20 right-2 left-2 md:inset-auto md:bottom-24 md:right-8 z-50 w-auto md:w-96 h-[70dvh] max-h-[500px] md:h-[500px] md:max-h-[600px] bg-background border border-border rounded-2xl md:rounded-lg shadow-2xl flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between p-2.5 sm:p-3 border-b border-border bg-gradient-to-r from-[#8B6F47] to-[#c65539] rounded-t-2xl md:rounded-t-lg shrink-0">
+      <div className="flex items-center justify-between p-2.5 sm:p-3 border-b border-border bg-gradient-to-r from-primary/90 to-highlight rounded-t-2xl md:rounded-t-lg shrink-0">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/20 text-white h-7 w-7 md:hidden">
             <ArrowLeft size={18} />
@@ -175,7 +175,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
         <div className="space-y-3">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-lg p-2.5 ${msg.role === 'user' ? 'bg-[#c65539] text-white' : 'bg-muted text-foreground'}`}>
+              <div className={`max-w-[80%] rounded-lg p-2.5 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 <p className="text-[10px] opacity-70 mt-1">
                   {msg.timestamp.toLocaleTimeString(language === 'th' ? 'th-TH' : language === 'zh' ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
@@ -222,7 +222,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
             disabled={isLoading}
             className="flex-1 h-9 text-sm"
           />
-          <Button onClick={() => handleSend()} disabled={!input.trim() || isLoading} size="icon" className="bg-[#c65539] hover:bg-[#8B6F47] h-9 w-9">
+          <Button onClick={() => handleSend()} disabled={!input.trim() || isLoading} size="icon" className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-9">
             {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
           </Button>
         </div>

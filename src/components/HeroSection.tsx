@@ -83,7 +83,7 @@ const HeroSection = () => {
           <Button 
             variant="default" 
             size="lg" 
-            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r from-[#40b968] via-[#1f6042] to-[#40b968] hover:from-[#2d8f54] hover:via-[#0f4428] hover:to-[#2d8f54] text-white border-2 border-white/90 drop-shadow-[0_3px_8px_rgba(0,0,0,0.5)] shadow-[0_10px_24px_rgba(64,185,104,0.35),0_6px_14px_rgba(0,0,0,0.35)] hover:shadow-[0_14px_30px_rgba(64,185,104,0.45),0_10px_20px_rgba(0,0,0,0.42)]"
+            className="w-full sm:w-auto px-6 sm:px-8 h-12 sm:h-12 text-sm sm:text-base font-semibold group rounded-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r from-primary via-highlight to-primary hover:from-primary/90 hover:via-highlight/90 hover:to-primary/90 text-primary-foreground border-2 border-primary-foreground/80 drop-shadow-[0_3px_8px_rgba(0,0,0,0.5)] shadow-[0_10px_24px_hsl(var(--primary)/0.35),0_6px_14px_rgba(0,0,0,0.35)] hover:shadow-[0_14px_30px_hsl(var(--primary)/0.45),0_10px_20px_rgba(0,0,0,0.42)]"
             onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
           >
             {t.exploreMenu}

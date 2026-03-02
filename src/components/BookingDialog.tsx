@@ -428,7 +428,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       </div>
 
       {/* Submit */}
-      <Button type="submit" className="w-full h-10 sm:h-12 rounded-xl text-sm sm:text-base font-bold tracking-wide bg-[#c65539] text-white hover:bg-[#c65539]/90 shadow-lg hover:shadow-xl transition-all" size="lg">
+      <Button type="submit" className="w-full h-10 sm:h-12 rounded-xl text-sm sm:text-base font-bold tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all" size="lg">
         <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
         {language === 'th' ? 'ยืนยันการจอง' : language === 'zh' ? '确认预订' : 'Confirm Booking'}
       </Button>
@@ -469,7 +469,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
               : 'Fill in details to book your room'}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden sm:[&::-webkit-scrollbar]:w-2 sm:[&::-webkit-scrollbar-track]:bg-transparent sm:[&::-webkit-scrollbar-thumb]:bg-[#c65539]/30 sm:[&::-webkit-scrollbar-thumb]:rounded-full sm:[&::-webkit-scrollbar-thumb]:hover:bg-[#c65539]/60 px-0.5">
+        <div className="flex-1 overflow-y-auto scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden sm:[&::-webkit-scrollbar]:w-2 sm:[&::-webkit-scrollbar-track]:bg-transparent sm:[&::-webkit-scrollbar-thumb]:bg-primary/30 sm:[&::-webkit-scrollbar-thumb]:rounded-full sm:[&::-webkit-scrollbar-thumb]:hover:bg-primary/60 px-0.5">
           {bookingForm}
         </div>
       </DialogContent>

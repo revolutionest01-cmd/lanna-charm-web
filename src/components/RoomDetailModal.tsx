@@ -913,7 +913,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                 <div className="flex flex-col gap-2 md:gap-3 pt-2 md:pt-4">
                   <BookingDialog roomId={room.id}>
                     <Button
-                      className="w-full font-bold h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
+                      className="w-full font-bold h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base rounded-lg transition-all hover:scale-105 bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       {t.bookRoom}
                     </Button>
@@ -1145,7 +1145,7 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
                     <div className="space-y-3">
                       <BookingDialog roomId={room.id}>
                         <Button
-                          className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-[#c65539] text-white hover:bg-[#c65539]/90"
+                          className="w-full font-bold h-12 text-base rounded-lg transition-all hover:scale-105 bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                           {t.bookRoom}
                         </Button>

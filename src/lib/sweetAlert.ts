@@ -1,5 +1,10 @@
 import Swal from 'sweetalert2';
 
+const THEME_PRIMARY = 'hsl(var(--primary))';
+const THEME_MUTED = 'hsl(var(--muted-foreground))';
+const THEME_FOREGROUND = 'hsl(var(--foreground))';
+const THEME_DESTRUCTIVE = 'hsl(var(--destructive))';
+
 // SweetAlert2 utility functions with Thai-styled theme
 const Toast = Swal.mixin({
   toast: true,
@@ -57,7 +62,7 @@ export const sweetAlert = {
         icon: 'success',
         title,
         text,
-        confirmButtonColor: '#c65539',
+        confirmButtonColor: THEME_PRIMARY,
       });
     },
 
@@ -66,7 +71,7 @@ export const sweetAlert = {
         icon: 'error',
         title,
         text,
-        confirmButtonColor: '#c65539',
+        confirmButtonColor: THEME_PRIMARY,
       });
     },
 
@@ -75,7 +80,7 @@ export const sweetAlert = {
         icon: 'warning',
         title,
         text,
-        confirmButtonColor: '#c65539',
+        confirmButtonColor: THEME_PRIMARY,
       });
     },
 
@@ -84,7 +89,7 @@ export const sweetAlert = {
         icon: 'info',
         title,
         text,
-        confirmButtonColor: '#c65539',
+        confirmButtonColor: THEME_PRIMARY,
       });
     },
 
@@ -93,8 +98,8 @@ export const sweetAlert = {
         icon: 'question',
         title,
         showCancelButton: true,
-        confirmButtonColor: '#c65539',
-        cancelButtonColor: '#6b7280',
+        confirmButtonColor: THEME_PRIMARY,
+        cancelButtonColor: THEME_MUTED,
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,
         allowOutsideClick: false,
@@ -119,16 +124,16 @@ export const sweetAlert = {
           container: '!z-[99999]',
           popup: '!z-[99999]',
           backdrop: '!z-[99998]',
-          title: '!text-[hsl(12,55%,50%)]',
-          htmlContainer: '!text-[hsl(12,55%,50%)]',
+          title: '!text-[hsl(var(--foreground))]',
+          htmlContainer: '!text-[hsl(var(--foreground))]',
           confirmButton: '!pointer-events-auto',
           cancelButton: '!pointer-events-auto',
         },
-        titleColor: 'hsl(12, 55%, 50%)',
+        titleColor: THEME_FOREGROUND,
         didRender: (dialog: HTMLElement) => {
           const content = dialog.querySelector('.swal2-html-container') as HTMLElement;
           if (content) {
-            content.style.color = 'hsl(12, 55%, 50%)';
+            content.style.color = THEME_FOREGROUND;
           }
         },
       };
@@ -147,8 +152,8 @@ export const sweetAlert = {
         title,
         text,
         showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
+        confirmButtonColor: THEME_DESTRUCTIVE,
+        cancelButtonColor: THEME_MUTED,
         confirmButtonText: 'ลบ',
         cancelButtonText: 'ยกเลิก',
       });

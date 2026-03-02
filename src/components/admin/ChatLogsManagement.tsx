@@ -214,8 +214,8 @@ export const ChatLogsManagement = () => {
                             </div>
                             {/* AI reply */}
                             <div className="flex items-start gap-2">
-                              <div className="shrink-0 w-6 h-6 rounded-full bg-[#c65539]/10 flex items-center justify-center">
-                                <Bot className="h-3 w-3 text-[#c65539]" />
+                              <div className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Bot className="h-3 w-3 text-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm bg-card border border-border rounded-lg p-2 whitespace-pre-wrap">{msg.ai_reply}</p>
