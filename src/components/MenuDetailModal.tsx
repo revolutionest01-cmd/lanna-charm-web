@@ -252,8 +252,24 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
       return { left: 0, top: 0, width: 100, height: 100 };
     }
 
-    const visibleWidth = naturalWidth / zoomLevel;
-    const visibleHeight = naturalHeight / zoomLevel;
+    const imageAspect = naturalWidth / naturalHeight;
+    const containerAspect = containerWidth / containerHeight;
+
+    let cropX = 0;
+    let cropY = 0;
+    let cropWidth = naturalWidth;
+    let cropHeight = naturalHeight;
+
+    if (imageAspect > containerAspect) {
+      cropWidth = (containerWidth * naturalHeight) / containerHeight;
+      cropX = (naturalWidth - cropWidth) / 2;
+    } else {
+      cropHeight = (containerHeight * naturalWidth) / containerWidth;
+      cropY = (naturalHeight - cropHeight) / 2;
+    }
+
+    const visibleWidth = cropWidth / zoomLevel;
+    const visibleHeight = cropHeight / zoomLevel;
 
     const desiredCenterX = (focusPoint.x / 100) * naturalWidth;
     const desiredCenterY = (focusPoint.y / 100) * naturalHeight;
@@ -377,7 +393,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
                   <img
                     src={mainImageUrl}
                     alt={menuName}
-                    className="w-full h-full object-contain transition-transform duration-200 ease-out select-none"
+                    className="w-full h-full object-cover transition-transform duration-200 ease-out select-none"
                     style={{
                       objectPosition: `${focusPoint.x}% ${focusPoint.y}%`,
                       transform: `scale(${zoomLevel})`,
@@ -426,7 +442,7 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
                   <div className="absolute bottom-2 right-2 z-10 rounded-md border border-white/60 bg-black/45 backdrop-blur-[1px] p-1.5">
                     <div
                       ref={miniMapRef}
-                      className="relative w-20 h-14 rounded-sm overflow-hidden border border-white/50 bg-black/40 cursor-crosshair"
+                      className="relative w-24 h-16 rounded-sm overflow-hidden border border-white/50 bg-black/40 cursor-crosshair"
                       onClick={handleMinimapClick}
                       title={language === "th" ? "คลิกเพื่อเลื่อนตำแหน่งภาพ" : "Click to move viewport"}
                     >
@@ -439,6 +455,14 @@ const MenuDetailModal = ({ menu, isOpen, onClose, allMenus = [], onMenuChange }:
                       <div
                         className="absolute border border-white bg-white/20 shadow-[0_0_0_1px_rgba(0,0,0,0.35)]"
                         style={viewportIndicatorStyle}
+                      />
+                      <div
+                        className="absolute w-3 h-3 border-2 border-primary-foreground bg-primary/30 shadow-[0_0_0_1px_rgba(0,0,0,0.45)] pointer-events-none"
+                        style={{
+                          left: `${focusPoint.x}%`,
+                          top: `${focusPoint.y}%`,
+                          transform: "translate(-50%, -50%)",
+                        }}
                       />
                     </div>
                   </div>
