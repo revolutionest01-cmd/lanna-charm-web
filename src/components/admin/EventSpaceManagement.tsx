@@ -415,7 +415,7 @@ export const EventSpaceManagement = () => {
                       <img src={imagePreview} alt="Event space preview" className="w-full h-full object-cover rounded-lg" />
                       {currentEventSpace?.image_url && (
                         <Button type="button" variant="destructive" size="icon"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                          className="absolute top-2 right-2 z-20 h-8 w-8 bg-destructive text-destructive-foreground border border-destructive/70 hover:bg-destructive/90 shadow-sm"
                           disabled={loading} onClick={() => setIsDeletingImage(true)}>
                           <X className="w-4 h-4" />
                         </Button>
@@ -462,7 +462,7 @@ export const EventSpaceManagement = () => {
                       <div key={img.id} className="relative group aspect-video rounded-lg overflow-hidden border border-border">
                         <img src={img.image_url} alt="" className="w-full h-full object-cover" />
                         <Button type="button" variant="destructive" size="icon"
-                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 h-6 w-6 bg-destructive text-destructive-foreground border border-destructive/70 hover:bg-destructive/90 shadow-sm"
                           onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}>
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -581,7 +581,7 @@ export const EventSpaceManagement = () => {
                         type="button" 
                         variant="destructive" 
                         size="icon" 
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity border-destructive/50 hover:border-destructive"
+                        className="h-7 w-7 bg-destructive text-destructive-foreground border border-destructive/70 hover:bg-destructive/90 shadow-sm"
                         onClick={() => removeFeature(index)}
                         title={language === "th" ? "ลบ" : "Delete"}
                       >
