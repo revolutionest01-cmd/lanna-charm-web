@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast";
 import sweetAlert from "@/lib/sweetAlert";
-import { Loader2, Plus, Trash2, Upload, X } from "lucide-react";
+import { GripVertical, Loader2, Plus, Trash2, Upload, X } from "lucide-react";
 import { z } from "zod";
 
 const gallerySchema = z.object({
@@ -44,6 +44,9 @@ export const GalleryManagement = () => {
   });
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
+  const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   useEffect(() => {
     fetchGalleryImages();
@@ -102,11 +105,67 @@ export const GalleryManagement = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleUploadDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
     handleFiles(files);
+  };
+
+  const reorderImages = (items: GalleryImage[], draggedId: string, targetId: string) => {
+    const fromIndex = items.findIndex((item) => item.id === draggedId);
+    const toIndex = items.findIndex((item) => item.id === targetId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return items;
+
+    const updated = [...items];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+    return updated;
+  };
+
+  const handleImageReorderDrop = async (targetId: string) => {
+    if (!draggedImageId || draggedImageId === targetId) {
+      setDragOverImageId(null);
+      setDraggedImageId(null);
+      return;
+    }
+
+    const previousImages = [...images];
+    const reorderedImages = reorderImages(previousImages, draggedImageId, targetId);
+
+    setImages(reorderedImages);
+    setDragOverImageId(null);
+    setDraggedImageId(null);
+    setSavingOrder(true);
+
+    try {
+      const results = await Promise.all(
+        reorderedImages.map((image, index) =>
+          supabase
+            .from("gallery_images")
+            .update({ sort_order: index })
+            .eq("id", image.id)
+        )
+      );
+
+      const hasError = results.some((result) => result.error);
+      if (hasError) {
+        setImages(previousImages);
+        toast.error(language === "th" ? "จัดลำดับรูปภาพไม่สำเร็จ" : "Failed to reorder images");
+        return;
+      }
+
+      invalidateContentCache();
+      await queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      await queryClient.refetchQueries({ queryKey: ["gallery"] });
+      toast.success(language === "th" ? "อัปเดตลำดับรูปภาพแล้ว" : "Image order updated");
+    } catch (error) {
+      console.error("Error reordering gallery images:", error);
+      setImages(previousImages);
+      toast.error(language === "th" ? "จัดลำดับรูปภาพไม่สำเร็จ" : "Failed to reorder images");
+    } finally {
+      setSavingOrder(false);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -287,7 +346,7 @@ export const GalleryManagement = () => {
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              onDrop={handleUploadDrop}
               className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer bg-white ${
                 isDragging 
                   ? 'border-primary bg-primary/20' 
@@ -360,10 +419,49 @@ export const GalleryManagement = () => {
       </Card>
 
       {/* Gallery Grid */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          {language === "th"
+            ? "ลากวางรูปเพื่อสลับลำดับการแสดงผล"
+            : "Drag and drop images to reorder display"}
+        </p>
+        {savingOrder && (
+          <span className="text-xs text-primary flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            {language === "th" ? "กำลังบันทึกลำดับ..." : "Saving order..."}
+          </span>
+        )}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {images.map((image) => (
-          <Card key={image.id} className="group relative overflow-hidden">
+          <Card
+            key={image.id}
+            draggable={!savingOrder}
+            onDragStart={() => setDraggedImageId(image.id)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (dragOverImageId !== image.id) setDragOverImageId(image.id);
+            }}
+            onDragLeave={() => {
+              if (dragOverImageId === image.id) setDragOverImageId(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              handleImageReorderDrop(image.id);
+            }}
+            onDragEnd={() => {
+              setDraggedImageId(null);
+              setDragOverImageId(null);
+            }}
+            className={`group relative overflow-hidden transition-all ${
+              dragOverImageId === image.id ? "ring-2 ring-primary scale-[1.01]" : ""
+            } ${draggedImageId === image.id ? "opacity-70" : ""}`}
+          >
             <CardContent className="p-0">
+              <div className="absolute top-2 left-2 z-20 bg-black/50 text-white rounded-md px-1.5 py-1 flex items-center gap-1">
+                <GripVertical className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-semibold">#{image.sort_order + 1}</span>
+              </div>
               <img
                 src={image.image_url}
                 alt={language === "th" ? image.title_th || "" : image.title_en || ""}

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Edit, Trash2, Star, Coffee, Image as ImageIcon } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Star, Coffee, Image as ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -100,6 +100,9 @@ export const MenusManagement = () => {
   const [isDraggingIcon, setIsDraggingIcon] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<{ url: string; isExisting: boolean } | null>(null);
   const [iconToDelete, setIconToDelete] = useState<{ url: string; isExisting: boolean } | null>(null);
+  const [draggedMenuId, setDraggedMenuId] = useState<string | null>(null);
+  const [dragOverMenuId, setDragOverMenuId] = useState<string | null>(null);
+  const [savingMenuOrder, setSavingMenuOrder] = useState(false);
 
   const categoryForm = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
@@ -822,6 +825,62 @@ export const MenusManagement = () => {
     return category ? (language === "th" ? category.name_th : category.name_en) : "-";
   };
 
+  const reorderMenus = (items: Menu[], draggedId: string, targetId: string) => {
+    const fromIndex = items.findIndex((item) => item.id === draggedId);
+    const toIndex = items.findIndex((item) => item.id === targetId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return items;
+
+    const updated = [...items];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+    return updated;
+  };
+
+  const handleMenuReorderDrop = async (targetId: string) => {
+    if (!draggedMenuId || draggedMenuId === targetId) {
+      setDraggedMenuId(null);
+      setDragOverMenuId(null);
+      return;
+    }
+
+    const previousMenus = [...menus];
+    const reorderedMenus = reorderMenus(previousMenus, draggedMenuId, targetId);
+
+    setMenus(reorderedMenus);
+    setDraggedMenuId(null);
+    setDragOverMenuId(null);
+    setSavingMenuOrder(true);
+
+    try {
+      const results = await Promise.all(
+        reorderedMenus.map((menu, index) =>
+          supabase
+            .from("menus")
+            .update({ sort_order: index })
+            .eq("id", menu.id)
+        )
+      );
+
+      const hasError = results.some((result) => result.error);
+      if (hasError) {
+        setMenus(previousMenus);
+        toast.error(language === "th" ? "จัดลำดับเมนูไม่สำเร็จ" : "Failed to reorder menus");
+        return;
+      }
+
+      invalidateContentCache();
+      await queryClient.invalidateQueries({ queryKey: ["menus"] });
+      await queryClient.refetchQueries({ queryKey: ["menus"] });
+      toast.success(language === "th" ? "อัปเดตลำดับเมนูแล้ว" : "Menu order updated");
+    } catch (error) {
+      console.error("Error reordering menus:", error);
+      setMenus(previousMenus);
+      toast.error(language === "th" ? "จัดลำดับเมนูไม่สำเร็จ" : "Failed to reorder menus");
+    } finally {
+      setSavingMenuOrder(false);
+    }
+  };
+
   if (loading && categories.length === 0 && menus.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1138,9 +1197,46 @@ export const MenusManagement = () => {
               </CardContent>
             </Card>
           ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {language === "th"
+                    ? "ลากการ์ดเมนูเพื่อจัดลำดับก่อน-หลัง"
+                    : "Drag menu cards to reorder"}
+                </p>
+                {savingMenuOrder && (
+                  <span className="text-xs text-primary flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    {language === "th" ? "กำลังบันทึกลำดับ..." : "Saving order..."}
+                  </span>
+                )}
+              </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {menus.map((menu) => (
-                <Card key={menu.id} className="overflow-hidden">
+                <Card
+                  key={menu.id}
+                  draggable={!savingMenuOrder}
+                  onDragStart={() => setDraggedMenuId(menu.id)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragOverMenuId !== menu.id) setDragOverMenuId(menu.id);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverMenuId === menu.id) setDragOverMenuId(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleMenuReorderDrop(menu.id);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedMenuId(null);
+                    setDragOverMenuId(null);
+                  }}
+                  className={`overflow-hidden transition-all ${
+                    dragOverMenuId === menu.id ? "ring-2 ring-primary scale-[1.01]" : ""
+                  } ${draggedMenuId === menu.id ? "opacity-70" : ""}`}
+                >
                   {menu.image_url && (
                     <img
                       src={menu.image_url}
@@ -1152,6 +1248,9 @@ export const MenusManagement = () => {
                     <CardTitle className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center rounded bg-primary/10 text-primary px-1.5 py-0.5">
+                            <GripVertical className="w-3.5 h-3.5" />
+                          </span>
                           <span className="text-lg">
                             {language === "th" ? menu.name_th : menu.name_en}
                           </span>
@@ -1193,6 +1292,7 @@ export const MenusManagement = () => {
                   )}
                 </Card>
               ))}
+            </div>
             </div>
           )}
         </TabsContent>
