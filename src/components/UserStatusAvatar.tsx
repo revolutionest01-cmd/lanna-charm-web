@@ -39,8 +39,8 @@ export const UserStatusAvatar = ({
   return (
     <div className={cn("relative inline-flex", className)}>
       {message && (
-        <div className="absolute -top-9 left-1/2 -translate-x-1/2 z-10 max-w-[180px]">
-          <div className="relative rounded-xl border border-slate-300/80 bg-white px-2 py-1 text-[10px] leading-snug text-slate-700 shadow-sm text-center line-clamp-2">
+        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-10 w-max max-w-[240px]">
+          <div className="relative rounded-xl border border-slate-300/80 bg-white px-2.5 py-1.5 text-[10px] leading-relaxed text-slate-700 shadow-sm text-center whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
             {message}
             <span className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 h-2.5 w-2.5 rotate-45 border-r border-b border-slate-300/80 bg-white" />
           </div>
