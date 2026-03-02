@@ -107,23 +107,22 @@ export const RANK_PATH_OPTIONS: Array<{
 ];
 
 export const RANK_PATH_UNLOCK_POINTS = 200;
-export const RANK_PATH_UNLOCK_QUESTS = 2;
 export const RANK_PATH_CHANGE_COOLDOWN_DAYS = 90;
 
 const CHICKEN_RANK_TIERS: RankTier[] = [
   {
     id: 1,
-    name: "ไก่วัด",
-    nameEn: "Temple Chicken",
+    name: "ลูกเจี๊ยบมือใหม่",
+    nameEn: "Newbie Chick",
     minPoints: 0,
     maxPoints: 199,
-    icon: "🥚",
+    icon: "🐣",
     color: "from-amber-700 to-amber-800",
     borderColor: "border-amber-600",
     bgColor: "bg-amber-50 dark:bg-amber-950/20",
     nameColor: "text-amber-900 dark:text-amber-200",
-    description: "จุดเริ่มต้นของผู้น้อย ถือกำเนิดจากการจิกกินข้าวก้นบาตร ใช้ชีวิตแบบเจียมตัวในบอร์ด วันๆ นั่งอ่านกระทู้และพยักหน้าหงึกๆ ภาวนาไม่ให้โดนแบน",
-    descriptionEn: "A humble beginning: quietly reading threads, nodding along, and praying not to get banned.",
+    description: "สมาชิกใหม่ทุกคนเริ่มจากลูกเจี๊ยบมือใหม่ เรียนรู้ชุมชน เก็บประสบการณ์ และสะสมคะแนนเพื่อเติบโตเข้าสู่สายที่ตัวเองชอบ",
+    descriptionEn: "Every new member starts as a Newbie Chick, learns the community, and builds points before choosing a preferred path.",
     nextRankBenefit: "ครบ 200 คะแนน: ปลดล็อกเลือกสาย ไก่ / หมา / แมว",
     nextRankBenefitEn: "At 200 points: Unlock branch selection (Chicken / Dog / Cat)",
   },
@@ -133,7 +132,7 @@ const CHICKEN_RANK_TIERS: RankTier[] = [
     nameEn: "Rookie Flock Sergeant",
     minPoints: 200,
     maxPoints: 699,
-    icon: "🐣",
+    icon: "🐓",
     color: "from-emerald-700 to-emerald-800",
     borderColor: "border-emerald-600",
     bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
@@ -402,7 +401,7 @@ const CAT_RANK_TIERS: RankTier[] = [
     ...CHICKEN_RANK_TIERS[6],
     name: "เทพมารส้มแสวงพ่าย",
     nameEn: "Defeat-Seeking Orange Demon",
-    icon: "👑",
+    icon: "😾",
     color: "from-orange-500 via-amber-600 to-fuchsia-700",
     borderColor: "border-orange-500",
     bgColor: "bg-orange-50/60 dark:bg-orange-950/35",
@@ -534,8 +533,7 @@ export const calculatePoints = (
  * ฟังก์ชันหาระดับยศจากคะแนน
  */
 export const getRankFromPoints = (points: number, path: RankPath = "chicken"): RankTier => {
-  const effectivePath = points < RANK_PATH_UNLOCK_POINTS ? "chicken" : path;
-  const tiers = getRankTiersByPath(effectivePath);
+  const tiers = getRankTiersByPath(path);
   return tiers.find((tier) => points >= tier.minPoints && points <= tier.maxPoints) || tiers[0];
 };
 

@@ -9,7 +9,6 @@ import {
   RANK_PATH_CHANGE_COOLDOWN_DAYS,
   RANK_PATH_OPTIONS,
   RANK_PATH_UNLOCK_POINTS,
-  RANK_PATH_UNLOCK_QUESTS,
   getRankById,
   getProgressToNextRank,
   getRankFromPoints,
@@ -32,21 +31,23 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
   const [selectedPath, setSelectedPath] = useState<RankPath>("chicken");
   const [previewPath, setPreviewPath] = useState<RankPath>("chicken");
   const [lastChangedAt, setLastChangedAt] = useState<string | null>(null);
+  const [rankPathStartPoints, setRankPathStartPoints] = useState<number | null>(null);
   const [isUpdatingPath, setIsUpdatingPath] = useState(false);
   const [selectedRankTierId, setSelectedRankTierId] = useState<number | null>(null);
   const [previewRankTierId, setPreviewRankTierId] = useState<number | null>(null);
   const [isUpdatingRankTier, setIsUpdatingRankTier] = useState(false);
-  const [completedQuestCount, setCompletedQuestCount] = useState(0);
 
   const hasEnoughPoints = points >= RANK_PATH_UNLOCK_POINTS;
-  const hasEnoughQuests = completedQuestCount >= RANK_PATH_UNLOCK_QUESTS;
-  const canChoosePath = hasEnoughPoints && hasEnoughQuests;
+  const isPathInitialized = rankPathStartPoints !== null || !!lastChangedAt;
+  const pointsForRanking = rankPathStartPoints !== null ? Math.max(0, points - rankPathStartPoints) : points;
+  const canChoosePath = isPathInitialized || hasEnoughPoints;
   const effectivePath: RankPath = canChoosePath ? previewPath : "chicken";
   const isPreviewingDifferentPath = previewPath !== selectedPath;
 
   const getLocalPathKey = (uid: string) => `rank-path-${uid}`;
   const getLocalChangedAtKey = (uid: string) => `rank-path-changed-at-${uid}`;
   const getLocalRankTierKey = (uid: string) => `rank-tier-${uid}`;
+  const getLocalPathStartPointsKey = (uid: string) => `rank-path-start-points-${uid}`;
 
   const getNextAllowedDate = (changedAt: string) => {
     const date = new Date(changedAt);
@@ -65,31 +66,19 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
     if (!userId) return;
 
     const loadPath = async () => {
-      const [
-        profileResult,
-        forumLikesResult,
-        reviewLikesResult,
-        forumRepliesResult,
-        reviewRepliesResult,
-        reviewsResult,
-      ] = await Promise.all([
-        supabase
+      let profileResult = await supabase
+        .from("profiles")
+        .select("rank_path, rank_path_changed_at, rank_display_tier_id, rank_path_start_points")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profileResult.error?.code === "42703") {
+        profileResult = await supabase
           .from("profiles")
           .select("rank_path, rank_path_changed_at, rank_display_tier_id")
           .eq("id", userId)
-          .maybeSingle(),
-        supabase.from("forum_likes").select("id", { count: "exact", head: true }).eq("user_id", userId),
-        supabase.from("review_likes").select("id", { count: "exact", head: true }).eq("user_id", userId),
-        supabase.from("forum_replies").select("id", { count: "exact", head: true }).eq("user_id", userId),
-        supabase.from("review_replies").select("id", { count: "exact", head: true }).eq("user_id", userId),
-        supabase.from("reviews").select("id", { count: "exact", head: true }).eq("user_id", userId),
-      ]);
-
-      const likedCount = (forumLikesResult.count || 0) + (reviewLikesResult.count || 0);
-      const commentCount = (forumRepliesResult.count || 0) + (reviewRepliesResult.count || 0);
-      const reviewCount = reviewsResult.count || 0;
-      const questsDone = Number(likedCount > 0) + Number(commentCount > 0) + Number(reviewCount > 0);
-      setCompletedQuestCount(questsDone);
+          .maybeSingle();
+      }
 
       const { data, error } = profileResult;
 
@@ -97,9 +86,12 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
         const resolved = normalizeRankPath((data as any).rank_path);
         const changedAt = (data as any).rank_path_changed_at || null;
         const rankTierId = Number((data as any).rank_display_tier_id) || null;
+        const startPointsRaw = Number((data as any).rank_path_start_points);
+        const startPoints = Number.isFinite(startPointsRaw) && startPointsRaw >= 0 ? Math.floor(startPointsRaw) : null;
         setSelectedPath(resolved);
         setPreviewPath(resolved);
         setLastChangedAt(changedAt);
+        setRankPathStartPoints(startPoints);
         setSelectedRankTierId(rankTierId);
         setPreviewRankTierId(rankTierId);
         localStorage.setItem(getLocalPathKey(userId), resolved);
@@ -109,15 +101,23 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
         if (rankTierId) {
           localStorage.setItem(getLocalRankTierKey(userId), String(rankTierId));
         }
+        if (startPoints !== null) {
+          localStorage.setItem(getLocalPathStartPointsKey(userId), String(startPoints));
+        } else {
+          localStorage.removeItem(getLocalPathStartPointsKey(userId));
+        }
         return;
       }
 
       const localPath = normalizeRankPath(localStorage.getItem(getLocalPathKey(userId)));
       const localChangedAt = localStorage.getItem(getLocalChangedAtKey(userId));
       const localRankTierRaw = localStorage.getItem(getLocalRankTierKey(userId));
+      const localPathStartRaw = localStorage.getItem(getLocalPathStartPointsKey(userId));
       const localRankTier = localRankTierRaw ? Number(localRankTierRaw) : null;
+      const localPathStart = localPathStartRaw ? Number(localPathStartRaw) : null;
       setSelectedPath(localPath);
       setLastChangedAt(localChangedAt || null);
+      setRankPathStartPoints(Number.isFinite(localPathStart) && (localPathStart as number) >= 0 ? Math.floor(localPathStart as number) : null);
       setPreviewPath(localPath);
       setSelectedRankTierId(localRankTier && Number.isFinite(localRankTier) ? localRankTier : null);
       setPreviewRankTierId(localRankTier && Number.isFinite(localRankTier) ? localRankTier : null);
@@ -136,12 +136,14 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
   const affiliatedRankTiers = useMemo(() => getRankTiersByPath(selectedPath), [selectedPath]);
 
   const highestRank = useMemo(() => {
-    return getRankFromPoints(points, effectivePath);
-  }, [points, effectivePath]);
+    return getRankFromPoints(pointsForRanking, effectivePath);
+  }, [pointsForRanking, effectivePath]);
 
   const affiliatedHighestRank = useMemo(() => {
-    return getRankFromPoints(points, selectedPath);
-  }, [points, selectedPath]);
+    return getRankFromPoints(pointsForRanking, selectedPath);
+  }, [pointsForRanking, selectedPath]);
+
+  const canBypassPathCooldown = affiliatedHighestRank.id >= 7;
 
   useEffect(() => {
     const maxUnlockedTierId = affiliatedHighestRank.id;
@@ -164,8 +166,8 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
     if (!canChoosePath) {
       sweetAlert.warning(
         language === "th"
-          ? `ต้องมีอย่างน้อย ${RANK_PATH_UNLOCK_POINTS} คะแนน และทำเควส ${RANK_PATH_UNLOCK_QUESTS} อย่าง (ไลก์/คอมเมนต์/รีวิว) เพื่อเปลี่ยนสาย`
-          : `You need at least ${RANK_PATH_UNLOCK_POINTS} points and ${RANK_PATH_UNLOCK_QUESTS} quests (Like/Comment/Review) to change path`
+          ? `ต้องมีอย่างน้อย ${RANK_PATH_UNLOCK_POINTS} คะแนนเพื่อปลดล็อกการเลือกสาย`
+          : `You need at least ${RANK_PATH_UNLOCK_POINTS} points to unlock rank path selection`
       );
       return;
     }
@@ -175,7 +177,7 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
       return;
     }
 
-    if (lastChangedAt) {
+    if (isPathInitialized && lastChangedAt && !canBypassPathCooldown) {
       const remainingDays = getRemainingCooldownDays(lastChangedAt);
       if (remainingDays > 0) {
         const nextDate = getNextAllowedDate(lastChangedAt).toLocaleDateString(
@@ -193,15 +195,35 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
     setIsUpdatingPath(true);
     const previousPath = selectedPath;
     const previousChangedAt = lastChangedAt;
+    const previousStartPoints = rankPathStartPoints;
     const changedAtNow = new Date().toISOString();
+    const shouldInitializePath = !isPathInitialized;
+    const nextPathStartPoints = shouldInitializePath ? points : rankPathStartPoints;
     setSelectedPath(previewPath);
     setLastChangedAt(changedAtNow);
+    setRankPathStartPoints(nextPathStartPoints);
     localStorage.setItem(getLocalPathKey(userId), previewPath);
     localStorage.setItem(getLocalChangedAtKey(userId), changedAtNow);
+    if (nextPathStartPoints !== null) {
+      localStorage.setItem(getLocalPathStartPointsKey(userId), String(nextPathStartPoints));
+    }
+
+    const updatePayload: Record<string, unknown> = {
+      rank_path: previewPath,
+      rank_path_changed_at: changedAtNow,
+      updated_at: changedAtNow,
+    };
+    if (shouldInitializePath) {
+      updatePayload.rank_path_start_points = points;
+      updatePayload.rank_display_tier_id = 1;
+      setPreviewRankTierId(1);
+      setSelectedRankTierId(1);
+      localStorage.setItem(getLocalRankTierKey(userId), "1");
+    }
 
     const { error } = await supabase
       .from("profiles")
-      .update({ rank_path: previewPath, rank_path_changed_at: changedAtNow, updated_at: changedAtNow } as any)
+      .update(updatePayload as any)
       .eq("id", userId);
 
     if (error) {
@@ -220,11 +242,17 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
       } else {
         setSelectedPath(previousPath);
         setLastChangedAt(previousChangedAt || null);
+        setRankPathStartPoints(previousStartPoints);
         localStorage.setItem(getLocalPathKey(userId), previousPath);
         if (previousChangedAt) {
           localStorage.setItem(getLocalChangedAtKey(userId), previousChangedAt);
         } else {
           localStorage.removeItem(getLocalChangedAtKey(userId));
+        }
+        if (previousStartPoints !== null) {
+          localStorage.setItem(getLocalPathStartPointsKey(userId), String(previousStartPoints));
+        } else {
+          localStorage.removeItem(getLocalPathStartPointsKey(userId));
         }
         sweetAlert.error(language === "th" ? "บันทึกสายยศไม่สำเร็จ" : "Failed to save rank path");
       }
@@ -232,24 +260,28 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
       return;
     }
 
-    sweetAlert.success(language === "th" ? "เปลี่ยนสายยศสำเร็จ" : "Rank path updated");
+    sweetAlert.success(
+      shouldInitializePath
+        ? language === "th" ? "เลือกสายครั้งแรกสำเร็จ คะแนนเริ่มใหม่ที่ 0" : "First path selected. Rank points reset to 0."
+        : language === "th" ? "เปลี่ยนสายยศสำเร็จ" : "Rank path updated"
+    );
     setIsUpdatingPath(false);
   };
 
   const currentRank = useMemo(() => {
     if (isPreviewingDifferentPath) {
-      return getRankFromPoints(points, effectivePath);
+      return getRankFromPoints(pointsForRanking, effectivePath);
     }
     return getRankById(previewRankTierId || affiliatedHighestRank.id, selectedPath);
-  }, [isPreviewingDifferentPath, points, effectivePath, previewRankTierId, affiliatedHighestRank.id, selectedPath]);
+  }, [isPreviewingDifferentPath, pointsForRanking, effectivePath, previewRankTierId, affiliatedHighestRank.id, selectedPath]);
 
   const nextRank = useMemo(() => {
     return rankTiers.find((tier) => tier.id === highestRank.id + 1);
   }, [highestRank.id, rankTiers]);
 
   const progress = useMemo(() => {
-    return getProgressToNextRank(points, effectivePath);
-  }, [points, effectivePath]);
+    return getProgressToNextRank(pointsForRanking, effectivePath);
+  }, [pointsForRanking, effectivePath]);
 
   const unlockedPerks = useMemo(() => {
     return getUnlockedPerks(highestRank.id, effectivePath);
@@ -362,7 +394,7 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
               </p>
               {!canChoosePath && (
                 <Badge variant="outline" className="text-[10px]">
-                  {language === "th" ? `ปลดล็อกที่ ${RANK_PATH_UNLOCK_POINTS} คะแนน + ${RANK_PATH_UNLOCK_QUESTS} เควส` : `Unlock at ${RANK_PATH_UNLOCK_POINTS} points + ${RANK_PATH_UNLOCK_QUESTS} quests`}
+                  {language === "th" ? `ปลดล็อกที่ ${RANK_PATH_UNLOCK_POINTS} คะแนน` : `Unlock at ${RANK_PATH_UNLOCK_POINTS} points`}
                 </Badge>
               )}
             </div>
@@ -371,6 +403,11 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
               <div className="text-2xl leading-none">🐣</div>
               <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 mt-1">
                 {language === "th" ? "ลูกเจี๊ยบมือใหม่" : "Newbie Chick"}
+              </p>
+              <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1 px-3 text-center leading-relaxed">
+                {language === "th"
+                  ? "ยศเริ่มต้นของสมาชิกทุกคน (0-199 คะแนน) สะสมครบ 200 คะแนนเพื่อเลือกสายที่ต้องการ"
+                  : "Starter rank for everyone (0-199 points). Reach 200 points to choose your preferred path."}
               </p>
             </div>
 
@@ -413,7 +450,7 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
                   isUpdatingPath ||
                   !canChoosePath ||
                   previewPath === selectedPath ||
-                  !!(lastChangedAt && getRemainingCooldownDays(lastChangedAt) > 0)
+                  !!(!canBypassPathCooldown && lastChangedAt && getRemainingCooldownDays(lastChangedAt) > 0)
                 }
                 className="w-full sm:w-auto"
               >
@@ -430,13 +467,6 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
                 ? `ยศสูงสุดในสายปัจจุบัน: ${affiliatedHighestRank.icon} ${affiliatedHighestRank.name}`
                 : `Highest unlocked rank in current path: ${affiliatedHighestRank.icon} ${affiliatedHighestRank.nameEn}`}
             </p>
-            {!hasEnoughQuests && (
-              <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                {language === "th"
-                  ? `Quest สำหรับเลือกสายยศ: ${completedQuestCount}/${RANK_PATH_UNLOCK_QUESTS} (ไลก์/คอมเมนต์/รีวิว)`
-                  : `Rank path quest progress: ${completedQuestCount}/${RANK_PATH_UNLOCK_QUESTS} (Like/Comment/Review)`}
-              </p>
-            )}
             {previewPath !== selectedPath && (
               <p className="text-[11px] text-blue-700 dark:text-blue-300">
                 {language === "th"
@@ -456,6 +486,20 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
                 {language === "th"
                   ? `เปลี่ยนสายได้อีกครั้งใน ${getRemainingCooldownDays(lastChangedAt)} วัน`
                   : `Path change available again in ${getRemainingCooldownDays(lastChangedAt)} day(s)`}
+              </p>
+            )}
+            {canBypassPathCooldown && (
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
+                {language === "th"
+                  ? "Lv.7 ขึ้นไป: เปลี่ยนสายยศได้ตลอดเวลา (ไม่ติดคูลดาวน์ 3 เดือน)"
+                  : "Lv.7+ members can switch rank path anytime (3-month cooldown is bypassed)."}
+              </p>
+            )}
+            {isPathInitialized && rankPathStartPoints !== null && (
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                {language === "th"
+                  ? "เมื่อเลือกสายครั้งแรก คะแนนยศจะเริ่มใหม่จาก 0 และการเปลี่ยนสายครั้งต่อไปจะไม่รีเซ็ตคะแนนอีก"
+                  : "After first path selection, rank points restart from 0 and future path changes do not reset points."}
               </p>
             )}
           </div>
@@ -519,9 +563,9 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
 
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-              {language === "th" ? "คะแนนรวม" : "Total Points"}
+              {language === "th" ? "คะแนนยศปัจจุบัน" : "Current Rank Points"}
             </span>
-            <span className="text-3xl font-bold text-slate-800 dark:text-white">{points}</span>
+            <span className="text-3xl font-bold text-slate-800 dark:text-white">{pointsForRanking}</span>
           </div>
 
           {/* Progress Bar */}
@@ -537,7 +581,7 @@ const RankingSystem = ({ points, language, userId }: RankingSystemProps) => {
               </div>
               <Progress value={progress.percentage} className="h-3" />
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                {nextRank.minPoints - points} {language === "th" ? "คะแนนไปยัง" : "points to"}{" "}
+                {nextRank.minPoints - pointsForRanking} {language === "th" ? "คะแนนไปยัง" : "points to"}{" "}
                 <span className="font-semibold text-slate-700 dark:text-slate-300">{nextRank.icon} {nextRank.name}</span>
               </p>
             </div>

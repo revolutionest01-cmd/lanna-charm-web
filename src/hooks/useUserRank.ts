@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getRankById, getRankFromPoints, normalizeRankPath, type RankPath } from "@/lib/pointSystem";
+import { getRankById, getRankFromPoints, normalizeRankPath, RANK_PATH_UNLOCK_POINTS, type RankPath } from "@/lib/pointSystem";
 
 export interface UserRankData {
   points: number;
@@ -21,25 +21,40 @@ export const useUserRank = (userId: string | undefined | null) => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("reputation_points, rank_path, rank_display_tier_id")
+        .select("reputation_points, rank_path, rank_display_tier_id, rank_path_changed_at, rank_path_start_points")
         .eq("id", userId)
         .single();
 
       if (error?.code === "42703") {
         const { data: legacyData, error: legacyError } = await supabase
           .from("profiles")
-          .select("reputation_points")
+          .select("reputation_points, rank_path, rank_display_tier_id, rank_path_changed_at")
           .eq("id", userId)
           .single();
 
-        const legacyPoints = legacyError ? 0 : (legacyData?.reputation_points ?? 0);
-        return { points: legacyPoints, rankPath: "chicken", rank: getRankFromPoints(legacyPoints, "chicken") };
+        const legacyProfile = legacyData as any;
+        const legacyPoints = legacyError ? 0 : (legacyProfile?.reputation_points ?? 0);
+        const legacySavedPath = normalizeRankPath(legacyProfile?.rank_path);
+        const legacyChangedAt = legacyProfile?.rank_path_changed_at || null;
+        const isPathInitialized = !!legacyChangedAt;
+        const rankPath = !isPathInitialized && legacyPoints < RANK_PATH_UNLOCK_POINTS ? "chicken" : legacySavedPath;
+        const highestRank = getRankFromPoints(legacyPoints, rankPath);
+        const rawDisplayTier = Number(legacyProfile?.rank_display_tier_id);
+        const displayTierId = Number.isFinite(rawDisplayTier) && rawDisplayTier >= 1
+          ? Math.min(Math.floor(rawDisplayTier), highestRank.id)
+          : highestRank.id;
+        return { points: legacyPoints, rankPath, rank: getRankById(displayTierId, rankPath) };
       }
 
-      const points = error ? 0 : (data?.reputation_points ?? 0);
-      const rankPath = normalizeRankPath(error ? null : (data as any)?.rank_path);
+      const profileData = data as any;
+      const rawPoints = error ? 0 : (profileData?.reputation_points ?? 0);
+      const points = rawPoints;
+      const savedPath = normalizeRankPath(error ? null : profileData?.rank_path);
+      const changedAt = profileData?.rank_path_changed_at || null;
+      const isPathInitialized = !!changedAt;
+      const rankPath = !isPathInitialized && points < RANK_PATH_UNLOCK_POINTS ? "chicken" : savedPath;
       const highestRank = getRankFromPoints(points, rankPath);
-      const rawDisplayTier = Number((data as any)?.rank_display_tier_id);
+      const rawDisplayTier = Number(profileData?.rank_display_tier_id);
       const displayTierId = Number.isFinite(rawDisplayTier) && rawDisplayTier >= 1
         ? Math.min(Math.floor(rawDisplayTier), highestRank.id)
         : highestRank.id;

@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStatusMessage } from "@/hooks/useUserStatusMessage";
+import { useUserRank } from "@/hooks/useUserRank";
 import { cn } from "@/lib/utils";
 
 interface UserStatusAvatarProps {
@@ -31,7 +32,9 @@ export const UserStatusAvatar = ({
   fallbackClassName,
 }: UserStatusAvatarProps) => {
   const { data: fetchedStatus } = useUserStatusMessage(userId, statusMessage);
+  const { data: rankData } = useUserRank(userId);
   const message = fetchedStatus?.trim() || "";
+  const fallbackIcon = rankData?.rank?.icon || userName?.charAt(0)?.toUpperCase() || "U";
 
   return (
     <div className={cn("relative inline-flex", className)}>
@@ -46,7 +49,7 @@ export const UserStatusAvatar = ({
       <Avatar className={cn(SIZE_CLASS[size], avatarClassName)}>
         <AvatarImage src={avatarUrl || undefined} alt={userName} />
         <AvatarFallback className={cn("bg-primary/20 text-primary font-semibold", fallbackClassName)}>
-          {userName?.charAt(0)?.toUpperCase() || "U"}
+          {fallbackIcon}
         </AvatarFallback>
       </Avatar>
     </div>

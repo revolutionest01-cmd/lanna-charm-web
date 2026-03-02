@@ -232,8 +232,8 @@ const TopicCard = ({
   return (
     <Card
       className={cn(
-        "group border border-border/50 bg-card/80 backdrop-blur-sm shadow-sm",
-        "hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5",
+        "group border border-border/60 bg-white dark:bg-card shadow-md",
+        "hover:shadow-xl hover:border-primary/20 hover:-translate-y-0.5",
         "transition-all duration-300 cursor-pointer overflow-hidden"
       )}
       onClick={onClick}

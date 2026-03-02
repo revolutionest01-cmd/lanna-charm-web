@@ -12,28 +12,29 @@ export const OnlineUsersPanel = () => {
   const navigate = useNavigate();
 
   return (
-    <Card className="border-primary/10 dark:border-primary/20 rounded-xl shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="w-5 h-5 text-primary dark:text-primary/80" />
-          <h4 className="font-semibold text-sm text-foreground">
+    <Card className="border-border/60 bg-white dark:bg-card rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+      <div className="bg-gradient-to-r from-primary to-primary/80 px-4 py-3 flex items-center gap-2">
+          <Users className="w-4 h-4 text-white" />
+          <h4 className="text-sm font-bold text-white">
             {language === "th" ? "สมาชิกออนไลน์" : "Online Members"}
           </h4>
-          <Badge variant="secondary" className="ml-auto text-xs">
+          <Badge variant="secondary" className="ml-auto text-xs bg-white/20 text-white border-white/20 hover:bg-white/20">
             {onlineUsers.length}
           </Badge>
-        </div>
+      </div>
+
+      <CardContent className="p-0">
 
         {onlineUsers.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-3">
+          <p className="text-sm text-muted-foreground text-center py-6 px-4">
             {language === "th" ? "ไม่มีสมาชิกออนไลน์" : "No members online"}
           </p>
         ) : (
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="max-h-64 overflow-y-auto divide-y divide-border/50">
             {onlineUsers.map((u) => (
               <div
                 key={u.id}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer transition-colors"
+                className="flex items-center gap-2 p-3.5 hover:bg-muted/50 cursor-pointer transition-colors"
                 onClick={() => navigate(`/members/${u.id}`)}
               >
                 <div className="relative">

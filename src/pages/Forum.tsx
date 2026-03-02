@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -24,13 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MessageCircle, Eye, Heart, PlusCircle, LogOut, User, ArrowLeft, Search, Loader2, Sparkles, TrendingUp, Flame, Users, Crown } from "lucide-react";
+import { MessageCircle, Eye, Heart, PlusCircle, LogOut, User, ArrowLeft, Search, Loader2, Sparkles, TrendingUp, Flame, Users, Upload } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
 import { createTopicValidation } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
-import { getCategoriesWithAll, getCategoryLabel, getCategoryColor, FORUM_CATEGORIES } from "@/lib/forumConfig";
+import { getCategoriesWithAll, getCategoryLabel, FORUM_CATEGORIES } from "@/lib/forumConfig";
 import TopicCard from "@/components/TopicCard";
 import { OnlineUsersPanel } from "@/components/OnlineUsersPanel";
 import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
@@ -68,17 +68,111 @@ const Forum = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [forumHeroImageUrl, setForumHeroImageUrl] = useState<string | null>(null);
+  const [forumHeroRowId, setForumHeroRowId] = useState<string | null>(null);
+  const [isUploadingForumHero, setIsUploadingForumHero] = useState(false);
+  const forumHeroInputRef = useRef<HTMLInputElement>(null);
 
   const displayLanguage: "th" | "en" = language === "th" ? "th" : "en";
   const categories = getCategoriesWithAll(displayLanguage);
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => { fetchTopics(false); }, []);
+
+  useEffect(() => {
+    loadForumHeroImage();
+  }, []);
 
   useEffect(() => {
     if (user && isAuthenticated) { loadUserLikedTopics(); }
   }, [user, isAuthenticated]);
 
   const loadUserLikedTopics = async () => { return; };
+
+  const loadForumHeroImage = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("hero_content")
+        .select("id, image_url")
+        .eq("title_en", "forum_hero")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setForumHeroRowId(data?.id || null);
+      setForumHeroImageUrl(data?.image_url || null);
+    } catch (error) {
+      console.error("Error loading forum hero image:", error);
+    }
+  };
+
+  const handleForumHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !isAdmin) return;
+
+    if (!file.type.startsWith("image/")) {
+      sweetAlert.error(language === "th" ? "กรุณาเลือกไฟล์รูปภาพ" : "Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      sweetAlert.error(language === "th" ? "ไฟล์ต้องมีขนาดไม่เกิน 5MB" : "File size must not exceed 5MB");
+      return;
+    }
+
+    try {
+      setIsUploadingForumHero(true);
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `forum-hero-${Date.now()}.${fileExt}`;
+      const filePath = `forum/hero/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("forum")
+        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from("forum").getPublicUrl(filePath);
+      const imageUrl = publicUrlData.publicUrl;
+
+      if (forumHeroRowId) {
+        const { error: updateError } = await supabase
+          .from("hero_content")
+          .update({ image_url: imageUrl })
+          .eq("id", forumHeroRowId);
+
+        if (updateError) throw updateError;
+      } else {
+        const { data: insertedData, error: insertError } = await supabase
+          .from("hero_content")
+          .insert({
+            title_th: "รูป Hero เว็บบอร์ด",
+            title_en: "forum_hero",
+            subtitle_th: null,
+            subtitle_en: null,
+            image_url: imageUrl,
+            is_active: false,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+        setForumHeroRowId(insertedData.id);
+      }
+
+      setForumHeroImageUrl(imageUrl);
+      sweetAlert.success(language === "th" ? "อัปโหลดรูป Hero สำเร็จ" : "Hero image uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading forum hero image:", error);
+      sweetAlert.error(language === "th" ? "อัปโหลดรูปไม่สำเร็จ" : "Failed to upload hero image");
+    } finally {
+      setIsUploadingForumHero(false);
+      e.target.value = "";
+    }
+  };
 
   const filteredTopics = topics.filter((topic) => {
     const matchesSearch =
@@ -236,50 +330,88 @@ const Forum = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Hero Banner - Profile style gradient */}
+        {/* Community Card */}
         <div className="mb-6 sm:mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-6 sm:p-8 lg:p-10 shadow-lg">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
-            <Sparkles className="absolute top-4 right-6 h-8 w-8 text-white/20 animate-pulse" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
-                  <Users className="h-6 w-6 text-white" />
+          <Card className="border-border/60 bg-white dark:bg-card rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+            <div className="bg-gradient-to-r from-primary to-primary/80 px-6 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-white/15 backdrop-blur-sm flex-shrink-0">
+                  <Users className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-white">
-                    {language === "th" ? "ชุมชนคนเพลินพิง" : "Plern Ping Community"}
-                  </h2>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-white truncate">
+                  {language === "th" ? "ชุมชนคนเพลินพิง" : "Plern Ping Community"}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {isAdmin && (
+                  <>
+                    <input
+                      ref={forumHeroInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleForumHeroImageUpload}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isUploadingForumHero}
+                      className="h-8 rounded-lg bg-white/20 hover:bg-white/30 text-white border border-white/30"
+                      onClick={() => forumHeroInputRef.current?.click()}
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                      {isUploadingForumHero
+                        ? language === "th" ? "กำลังอัปโหลด..." : "Uploading..."
+                        : language === "th" ? "อัปโหลดรูป" : "Upload Image"}
+                    </Button>
+                  </>
+                )}
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white/70" />
+              </div>
+            </div>
+
+            {forumHeroImageUrl && (
+              <div className="px-6 sm:px-8 pt-5">
+                <div className="rounded-xl overflow-hidden border border-border/60 shadow-sm">
+                  <img
+                    src={forumHeroImageUrl}
+                    alt={language === "th" ? "รูป Hero ชุมชน" : "Community hero image"}
+                    className="w-full h-44 sm:h-56 object-cover"
+                  />
                 </div>
               </div>
-              <p className="text-white/80 text-sm sm:text-base max-w-xl leading-relaxed">
+            )}
+
+            <CardContent className={cn("p-6 sm:p-8", forumHeroImageUrl && "pt-5 sm:pt-6")}>
+              <p className="text-muted-foreground text-sm sm:text-base max-w-3xl leading-relaxed">
                 {language === "th"
                   ? "แลกเปลี่ยนประสบการณ์ แนะนำเมนู และแบ่งปันช่วงเวลาดีๆ กับชุมชนของเรา"
                   : "Share experiences, recommend dishes, and connect with our community"}
               </p>
-              {/* Stats Row */}
-              <div className="flex items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-white/10">
+
+              <div className="flex items-center gap-4 sm:gap-6 mt-5 pt-5 border-t border-border/60">
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-white">{topics.length}</p>
-                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">{language === "th" ? "กระทู้" : "Topics"}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{topics.length}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{language === "th" ? "กระทู้" : "Topics"}</p>
                 </div>
-                <div className="w-px h-8 bg-white/20" />
+                <div className="w-px h-8 bg-border/70" />
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-white">
+                  <p className="text-lg sm:text-xl font-bold text-foreground">
                     {topics.reduce((sum, t) => sum + (t.replies_count || 0), 0)}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">{language === "th" ? "ตอบกลับ" : "Replies"}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{language === "th" ? "ตอบกลับ" : "Replies"}</p>
                 </div>
-                <div className="w-px h-8 bg-white/20" />
+                <div className="w-px h-8 bg-border/70" />
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-white">
+                  <p className="text-lg sm:text-xl font-bold text-foreground">
                     {topics.reduce((sum, t) => sum + (t.likes_count || 0), 0)}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">{language === "th" ? "ถูกใจ" : "Likes"}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{language === "th" ? "ถูกใจ" : "Likes"}</p>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Search & Create Section */}
@@ -450,7 +582,7 @@ const Forum = () => {
             </div>
 
             {filteredTopics.length === 0 ? (
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm rounded-2xl shadow-sm">
+              <Card className="border-border/60 bg-white dark:bg-card rounded-2xl shadow-md">
                 <CardContent className="p-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <MessageCircle className="h-8 w-8 text-muted-foreground" />
@@ -484,7 +616,7 @@ const Forum = () => {
               <OnlineUsersPanel />
 
               {/* Trending Topics - Profile card style */}
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden">
+              <Card className="border-border/60 bg-white dark:bg-card rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
                 <div className="bg-gradient-to-r from-primary to-primary/80 px-4 py-3 flex items-center gap-2">
                   <Flame className="w-4 h-4 text-white" />
                   <h3 className="text-sm font-bold text-white">
@@ -535,45 +667,6 @@ const Forum = () => {
                 </CardContent>
               </Card>
 
-              {/* Categories Card - Profile style */}
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-primary/80 to-primary/60 px-4 py-3 flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-white" />
-                  <h4 className="text-sm font-bold text-white">
-                    {language === "th" ? "หมวดหมู่" : "Categories"}
-                  </h4>
-                </div>
-                <CardContent className="p-3">
-                  <div className="space-y-1">
-                    {FORUM_CATEGORIES.map((cat) => {
-                      const colors = getCategoryColor(cat.value);
-                      return (
-                        <button
-                          key={cat.value}
-                          onClick={() => setSelectedCategory(cat.value)}
-                          className={cn(
-                            "w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                            selectedCategory === cat.value
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "text-foreground hover:bg-muted"
-                          )}
-                        >
-                          <span>{cat.icon}</span>
-                          <span>{cat.label[language]}</span>
-                          {cat.description && (
-                            <span className={cn(
-                              "ml-auto text-[10px]",
-                              selectedCategory === cat.value ? "text-primary-foreground/70" : "text-muted-foreground"
-                            )}>
-                              {cat.description[displayLanguage]}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

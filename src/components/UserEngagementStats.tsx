@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Award,
   Zap,
+  Info,
 } from "lucide-react";
 import { format } from "date-fns";
 import { th, enUS } from "date-fns/locale";
@@ -348,6 +349,15 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
             </span>
           </TabsTrigger>
           <TabsTrigger
+            value="ranking-guide"
+            className="gap-1 text-xs sm:text-sm rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-3.5 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
+          >
+            <Info className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {language === "th" ? "คำอธิบายระบบ Ranking System" : "Ranking System Guide"}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger
             value="points"
             className="gap-1 text-xs sm:text-sm rounded-t-[12px] rounded-b-none border border-slate-300 border-b-0 bg-white/70 px-3.5 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-[state=active]:-mb-px"
           >
@@ -382,6 +392,115 @@ const UserEngagementStats = ({ userId, language }: UserEngagementStatsProps) => 
         <TabsContent value="ranking" className="mt-0 space-y-6">
           <RankingSystem points={data.totalPoints} language={language} userId={userId} />
           <PerkEquipPanel userId={userId} language={language} />
+        </TabsContent>
+
+        {/* Ranking Guide Tab */}
+        <TabsContent value="ranking-guide" className="mt-0 space-y-4">
+          <Card className="border-0 shadow-lg overflow-hidden bg-white dark:bg-slate-900">
+            <div className="h-16 bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500"></div>
+            <CardHeader className="pb-3 -mt-12 relative z-10 bg-white dark:bg-slate-900">
+              <CardTitle className="text-lg flex items-center gap-2 text-slate-800 dark:text-white">
+                <Info className="h-5 w-5 text-blue-600" />
+                {language === "th" ? "คำอธิบายระบบ Ranking System" : "Ranking System Guide"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5 bg-white dark:bg-slate-900">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {language === "th" ? "ระบบ Ranking คืออะไร และดียังไง" : "What Ranking is and why it matters"}
+                </h4>
+                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  {language === "th"
+                    ? "ระบบ Ranking ของเว็บบอร์ดคือระบบที่ออกแบบมาเพื่อวัดทั้งปริมาณการมีส่วนร่วมและคุณภาพการมีส่วนร่วมของสมาชิกอย่างต่อเนื่อง โดยเน้นให้ผู้ใช้เห็นพัฒนาการของตัวเองแบบชัดเจน มีเป้าหมายในการใช้งานระยะสั้น-ระยะยาว และรู้สึกว่าการมีส่วนร่วมทุกครั้งมีคุณค่า ยศที่ได้ไม่ใช่เพียงภาพลักษณ์ แต่สะท้อนประสบการณ์ ความสม่ำเสมอ วินัย และสไตล์การเล่นของแต่ละคน"
+                    : "Ranking is designed to track both engagement volume and contribution quality over time. It gives users visible progress, clear short/long-term goals, and a stronger sense that every contribution matters. Rank is not only visual identity—it reflects experience, consistency, discipline, and play style."}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {language === "th" ? "ผู้ใช้งานได้อะไรจากระบบนี้" : "What users get from this system"}
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  <li>{language === "th" ? "เห็นการเติบโตของตัวเองอย่างเป็นรูปธรรม ตั้งแต่สมาชิกใหม่จนถึงระดับสูง" : "Concrete personal progression from newcomer to advanced tiers."}</li>
+                  <li>{language === "th" ? "มีแรงจูงใจในการกลับมาใช้งาน เพราะมีเป้าหมายการอัปยศที่ชัดเจน" : "Stronger return motivation with clear rank-up goals."}</li>
+                  <li>{language === "th" ? "เลือกสายยศให้ตรงบุคลิกการเล่นและแนวทางการมีส่วนร่วมของตัวเองได้" : "Freedom to choose a rank path that fits personal play style."}</li>
+                  <li>{language === "th" ? "มีความยืดหยุ่นในการแสดงตัวตน ด้วยการเลือกยศที่ใช้งานได้ต่ำกว่ายศสูงสุด" : "Flexible identity via active-rank display selection below highest unlocked rank."}</li>
+                  <li>{language === "th" ? "สร้างสมดุลระหว่างความท้าทาย ความแฟร์ และความสนุกของระบบระยะยาว" : "Balanced long-term challenge, fairness, and enjoyment."}</li>
+                  <li>{language === "th" ? "ช่วยยกระดับคุณภาพชุมชน เพราะระบบให้รางวัลกับการมีส่วนร่วมที่ต่อเนื่อง" : "Improves community quality by rewarding sustained engagement."}</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {language === "th" ? "หลักการทำงานของระบบ Ranking" : "How the Ranking system works"}
+                </h4>
+                <ol className="list-decimal pl-5 space-y-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  <li>
+                    <span className="font-medium">{language === "th" ? "จุดเริ่มต้นมาตรฐานเดียวกัน" : "Unified starting point"}:</span>{" "}
+                    {language === "th"
+                      ? "สมาชิกใหม่ทุกคนเริ่มจากยศลูกเจี๊ยบมือใหม่ (0-199 คะแนน) เพื่อให้ทุกคนเริ่มต้นในฐานเดียวกัน เรียนรู้วัฒนธรรมชุมชน และสะสมประสบการณ์ก่อนเข้าสู่สายเฉพาะ"
+                      : "All new members start at Newbie Chick (0-199 points) for a fair baseline and onboarding period."}
+                  </li>
+                  <li>
+                    <span className="font-medium">{language === "th" ? "เงื่อนไขปลดล็อกสาย" : "Path unlock condition"}:</span>{" "}
+                    {language === "th"
+                      ? "เมื่อครบ 200 คะแนน ระบบจะปลดล็อกปุ่มเลือกสายอัตโนมัติ โดยเลือกได้ 3 สาย: ไก่ / หมา / แมว"
+                      : "At 200 points, path selection is unlocked automatically: Chicken / Dog / Cat."}
+                  </li>
+                  <li>
+                    <span className="font-medium">{language === "th" ? "การรีเซ็ตคะแนนครั้งแรก (ครั้งเดียว)" : "One-time first reset"}:</span>{" "}
+                    {language === "th"
+                      ? "เมื่อเลือกสายครั้งแรก คะแนนยศจะรีเซ็ตเป็น 0 เพื่อเริ่มเส้นทางเฉพาะสายอย่างยุติธรรม และแยกช่วงฝึกจากช่วงเล่นจริง"
+                      : "When selecting a path for the first time, rank points reset to 0 for a fair path-specific progression start."}
+                  </li>
+                  <li>
+                    <span className="font-medium">{language === "th" ? "การสะสมหลังเลือกสาย" : "Post-selection accumulation"}:</span>{" "}
+                    {language === "th"
+                      ? "หลังเลือกสายครั้งแรก คะแนนจะสะสมต่อภายในสายนั้นและใช้เลื่อนยศตามเกณฑ์ของระบบเดิม"
+                      : "After first selection, points continue accumulating in that path and drive rank progression normally."}
+                  </li>
+                  <li>
+                    <span className="font-medium">{language === "th" ? "การเปลี่ยนสายในครั้งถัดไป" : "Subsequent path changes"}:</span>{" "}
+                    {language === "th"
+                      ? "เปลี่ยนสายได้ทุก 90 วัน (3 เดือน) เพื่อป้องกันการสลับสายบ่อยเกินไป และหลังจากนี้คะแนนจะไม่รีเซ็ตอีก"
+                      : "Path change is available every 90 days (3 months), and points will not reset again."}
+                  </li>
+                  <li>
+                    <span className="font-medium">{language === "th" ? "ข้อยกเว้นระดับสูง" : "High-tier exception"}:</span>{" "}
+                    {language === "th"
+                      ? "สมาชิกที่มี Rank ถึง Lv.7 สามารถเปลี่ยนสายได้ตามต้องการทันที โดยไม่ติดคูลดาวน์ 3 เดือน"
+                      : "Members at Lv.7 can switch paths freely without the 3-month cooldown."}
+                  </li>
+                  <li>
+                    <span className="font-medium">{language === "th" ? "การเลือกยศที่ใช้งาน" : "Active-rank display"}:</span>{" "}
+                    {language === "th"
+                      ? "ผู้ใช้สามารถเลือกยศที่ใช้งานให้ต่ำกว่ายศสูงสุดที่ปลดล็อกแล้วได้ โดยไม่กระทบความคืบหน้าจริงของบัญชี"
+                      : "Users can set an active display rank lower than the highest unlocked rank without losing progression."}
+                  </li>
+                </ol>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {language === "th" ? "ข้อกำหนดสำคัญในการอัปยศและเปลี่ยนสาย (สรุปเงื่อนไข)" : "Key requirements summary"}
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  <li>{language === "th" ? "ช่วงเริ่มต้น: 0-199 คะแนน = ลูกเจี๊ยบมือใหม่" : "Starter range: 0-199 points = Newbie Chick."}</li>
+                  <li>{language === "th" ? "ปลดล็อกเลือกสาย: 200 คะแนนขึ้นไป" : "Path unlock: 200+ points."}</li>
+                  <li>{language === "th" ? "เลือกสายครั้งแรก: รีเซ็ตคะแนนเป็น 0" : "First path selection: points reset to 0."}</li>
+                  <li>{language === "th" ? "เปลี่ยนสายรอบถัดไป: ทุก 90 วัน" : "Later path changes: every 90 days."}</li>
+                  <li>{language === "th" ? "Lv.7 ขึ้นไป: เปลี่ยนสายได้ทันที ไม่ติดคูลดาวน์" : "Lv.7+: immediate path switch, no cooldown."}</li>
+                  <li>{language === "th" ? "เปลี่ยนสายหลังครั้งแรก: คะแนนไม่รีเซ็ตอีก" : "After first switch: no more point resets."}</li>
+                </ul>
+              </div>
+
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                {language === "th"
+                  ? "สรุป: ระบบนี้ทำให้ผู้ใช้เห็นความก้าวหน้าแบบจับต้องได้ มีเป้าหมายชัดเจนในการมีส่วนร่วมระยะยาว เลือกสไตล์การเติบโตของตัวเองได้ และช่วยผลักดันให้ชุมชนมีคุณภาพและคึกคักมากขึ้นอย่างยั่งยืน"
+                  : "In short: this system provides visible progress, long-term purpose, style-driven growth, and stronger sustainable community quality."}
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Points System Tab */}
