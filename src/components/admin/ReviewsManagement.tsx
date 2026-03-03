@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/toast";
 import sweetAlert from "@/lib/sweetAlert";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 import { Loader2, Plus, Trash2, Edit, Star, TrendingUp, BarChart3, Heart } from "lucide-react";
 import { z } from "zod";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
@@ -380,6 +381,7 @@ export const ReviewsManagement = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeadingEditor sectionKey="reviews" label={language === "th" ? "หัวข้อ Section รีวิว" : "Reviews Section Heading"} />
       <div className="flex justify-between items-center gap-3">
         <h3 className="text-base sm:text-lg font-semibold truncate text-primary">
           {language === "th" ? "จัดการรีวิว" : "Manage Reviews"}

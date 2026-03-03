@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 interface FeaturePanel {
   id: string;
@@ -20,6 +21,7 @@ interface FeaturePanel {
 const FeaturesSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { title: sectionTitle, subtitle: sectionSubtitle } = useSectionHeading("features");
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isHovering, setIsHovering] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -90,10 +92,10 @@ const FeaturesSection = () => {
             <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-primary/60" />
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 font-serif leading-tight">
-            {t.featuresTitle}
+            {sectionTitle || t.featuresTitle}
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {t.featuresSubtitle}
+            {sectionSubtitle || t.featuresSubtitle}
           </p>
         </div>
 

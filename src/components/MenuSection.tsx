@@ -17,6 +17,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useMenus } from "@/hooks/useContentData";
 import { MenuSkeleton } from "@/components/SkeletonCard";
 import MenuDetailModal from "@/components/MenuDetailModal";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 interface Menu {
   id: string;
@@ -42,6 +43,8 @@ const MenuSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const navigate = useNavigate();
+  const { title: recTitle, subtitle: recSubtitle } = useSectionHeading("menu_recommended");
+  const { title: menuTitle, subtitle: menuSubtitle } = useSectionHeading("menu_all");
   const { data: menuData, isLoading: loading } = useMenus();
   const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,12 +105,12 @@ const MenuSection = () => {
               <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
                 <Star className="text-primary fill-primary" size={24} />
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground font-serif">
-                  {t.recommended}
+                  {recTitle || t.recommended}
                 </h2>
                 <Star className="text-primary fill-primary" size={24} />
               </div>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-                {t.recommendedSubtitle}
+                {recSubtitle || t.recommendedSubtitle}
               </p>
             </div>
 
@@ -177,10 +180,10 @@ const MenuSection = () => {
         {/* Regular Menu Section */}
         <div className="text-center mb-10 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 font-serif">
-            {t.menuTitle}
+            {menuTitle || t.menuTitle}
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-            {t.menuSubtitle}
+            {menuSubtitle || t.menuSubtitle}
           </p>
         </div>
 

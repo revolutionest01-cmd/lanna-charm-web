@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Save, X, Plus, Image as ImageIcon, Trash2, Upload, GripVertical } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { toast } from "@/lib/toast";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -451,6 +452,7 @@ export const EventSpaceManagement = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeadingEditor sectionKey="events" label={language === "th" ? "หัวข้อ Section อีเว้นท์" : "Events Section Heading"} />
       <div>
         <h3 className="text-base sm:text-lg font-semibold mb-2 text-primary">
           {language === "th" ? "จัดการห้องประชุม & งานเลี้ยง" : "Manage Meeting & Event Space"}

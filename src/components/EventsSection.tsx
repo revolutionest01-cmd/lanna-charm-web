@@ -8,6 +8,7 @@ import { useEventSpaces, useEventSpaceImages, useEventSpaceFeatures } from "@/ho
 import { EventSkeleton } from "@/components/SkeletonCard";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { cn } from "@/lib/utils";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 // Dynamic icon resolver
 const getIcon = (iconName: string) => {
@@ -18,6 +19,7 @@ const getIcon = (iconName: string) => {
 const EventsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { title: sectionTitle, subtitle: sectionSubtitle } = useSectionHeading("events");
   const { data: eventSpace, isLoading: loading } = useEventSpaces();
   const { data: galleryImages = [] } = useEventSpaceImages(eventSpace?.id);
   const { data: features = [] } = useEventSpaceFeatures(eventSpace?.id);
@@ -113,10 +115,10 @@ const EventsSection = () => {
               <div className="h-px w-6 sm:w-10 md:w-12 bg-gradient-to-l from-transparent to-primary/60" />
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 text-foreground font-serif leading-tight px-2">
-              {t.eventsTitle}
+              {sectionTitle || t.eventsTitle}
             </h2>
             <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-3">
-              {t.eventsSubtitle}
+              {sectionSubtitle || t.eventsSubtitle}
             </p>
           </div>
 

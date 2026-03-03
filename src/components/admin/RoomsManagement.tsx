@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Plus, Edit, Trash2, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -490,6 +491,7 @@ export const RoomsManagement = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeadingEditor sectionKey="rooms" label={language === "th" ? "หัวข้อ Section ห้องพัก" : "Rooms Section Heading"} />
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">

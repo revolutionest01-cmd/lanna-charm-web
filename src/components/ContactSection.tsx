@@ -9,10 +9,12 @@ import sweetAlert from "@/lib/sweetAlert";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import FacebookPagePlugin from "@/components/FacebookPagePlugin";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 const ContactSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { title: sectionTitle, subtitle: sectionSubtitle } = useSectionHeading("contact");
 
   const [businessInfo, setBusinessInfo] = useState<{
     phone_primary: string;
@@ -247,10 +249,10 @@ const ContactSection = () => {
 
         <div className="text-center mb-10 sm:mb-16 animate-fade-in">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-foreground">
-            {t.contactTitle}
+            {sectionTitle || t.contactTitle}
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-2">
-            {t.contactSubtitle}
+            {sectionSubtitle || t.contactSubtitle}
           </p>
         </div>
 
