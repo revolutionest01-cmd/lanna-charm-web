@@ -1011,6 +1011,39 @@ export type Database = {
         }
         Relationships: []
       }
+      section_headings: {
+        Row: {
+          created_at: string
+          id: string
+          section_key: string
+          subtitle_en: string | null
+          subtitle_th: string | null
+          title_en: string
+          title_th: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          section_key: string
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          section_key?: string
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string
+          title_th?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
