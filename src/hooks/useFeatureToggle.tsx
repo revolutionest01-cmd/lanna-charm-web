@@ -142,7 +142,7 @@ export const useFeatureToggle = () => {
 export const showFeatureDisabledAlert = (language: string) => {
   sweetAlert.warning(
     language === "th"
-      ? "ฟีเจอร์พิเศษยังไม่เปิดใช้งาน"
+      ? "ขณะนี้ระบบไม่พร้อมใช้งานค่ะ"
       : "This feature is not yet enabled",
     language === "th"
       ? "โปรดติดต่อผู้พัฒนาเพื่อเปิดใช้งาน"
