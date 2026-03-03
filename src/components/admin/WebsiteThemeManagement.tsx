@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Palette, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,8 +70,14 @@ const REQUIRED_THEME_TOGGLES: Array<{
 export const WebsiteThemeManagement = () => {
   const { language } = useLanguage();
   const [activeTheme, setActiveTheme] = useState<SiteThemeId>("original");
+  const [pendingTheme, setPendingTheme] = useState<SiteThemeId>("original");
   const [updating, setUpdating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const activeThemeRef = useRef<SiteThemeId>("original");
+
+  useEffect(() => {
+    activeThemeRef.current = activeTheme;
+  }, [activeTheme]);
 
   const loadTheme = async () => {
     setLoading(true);
@@ -92,11 +98,15 @@ export const WebsiteThemeManagement = () => {
 
     const { data, error } = await supabase
       .from("feature_toggles")
-      .select("feature_key, is_enabled")
+      .select("feature_key, is_enabled, updated_at")
       .in("feature_key", SITE_THEME_FEATURE_KEYS);
 
     if (!error && data) {
-      setActiveTheme(resolveSiteThemeFromRows(data));
+      const resolvedTheme = resolveSiteThemeFromRows(data);
+      setActiveTheme(resolvedTheme);
+      setPendingTheme((currentPending) =>
+        currentPending === activeThemeRef.current ? resolvedTheme : currentPending
+      );
     }
 
     setLoading(false);
@@ -106,8 +116,10 @@ export const WebsiteThemeManagement = () => {
     loadTheme();
   }, []);
 
-  const handleThemeChange = async (themeId: SiteThemeId) => {
-    if (updating || themeId === activeTheme) return;
+  const handleThemeChange = async () => {
+    if (updating || pendingTheme === activeTheme) return;
+
+    const themeId = pendingTheme;
 
     const targetThemeLabel =
       language === "th"
@@ -125,11 +137,7 @@ export const WebsiteThemeManagement = () => {
 
     if (!confirmed) return;
 
-    const previousTheme = activeTheme;
     setUpdating(true);
-    setActiveTheme(themeId);
-    applySiteThemeClass(themeId);
-    setLocalSiteTheme(themeId);
 
     const updates = await Promise.all(
       SITE_THEME_OPTIONS.map((theme) =>
@@ -143,9 +151,6 @@ export const WebsiteThemeManagement = () => {
     const hasError = updates.some((result) => result.error);
 
     if (hasError) {
-      setActiveTheme(previousTheme);
-      applySiteThemeClass(previousTheme);
-      setLocalSiteTheme(previousTheme);
       sweetAlert.warning(
         language === "th"
           ? "ไม่สามารถอัปเดตธีมทั้งระบบได้ในตอนนี้"
@@ -156,10 +161,16 @@ export const WebsiteThemeManagement = () => {
     }
 
     clearFeatureToggleCache();
+    setActiveTheme(themeId);
+    setPendingTheme(themeId);
+    applySiteThemeClass(themeId);
+    setLocalSiteTheme(themeId);
     await loadTheme();
     sweetAlert.success(language === "th" ? "เปลี่ยนธีมเว็บไซต์สำเร็จ" : "Website theme updated successfully");
     setUpdating(false);
   };
+
+  const hasPendingChange = pendingTheme !== activeTheme;
 
   if (loading) {
     return (
@@ -187,22 +198,46 @@ export const WebsiteThemeManagement = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
             {SITE_THEME_SELECT_OPTIONS.map((theme) => {
               const isActive = activeTheme === theme.id;
+              const isSelected = pendingTheme === theme.id;
               return (
                 <Button
                   key={theme.id}
                   type="button"
-                  variant={isActive ? "default" : "outline"}
+                  variant={isSelected ? "default" : "outline"}
                   disabled={updating}
-                  onClick={() => handleThemeChange(theme.id)}
+                  onClick={() => setPendingTheme(theme.id)}
                   className="h-auto py-2.5 px-3 flex flex-col items-start gap-2"
                 >
                   <span className={`w-full h-2.5 rounded-full bg-gradient-to-r ${theme.preview}`} />
                   <span className="text-xs font-semibold leading-none">
                     {language === "th" ? theme.labelTh : theme.labelEn}
                   </span>
+                  {isActive && (
+                    <span className="text-[10px] leading-none opacity-90">
+                      {language === "th" ? "ใช้งานอยู่" : "Active"}
+                    </span>
+                  )}
                 </Button>
               );
             })}
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={updating || !hasPendingChange}
+              onClick={() => setPendingTheme(activeTheme)}
+            >
+              {language === "th" ? "ยกเลิกการเลือก" : "Discard Selection"}
+            </Button>
+            <Button
+              type="button"
+              disabled={updating || !hasPendingChange}
+              onClick={handleThemeChange}
+            >
+              {language === "th" ? "ยืนยันการเปลี่ยนธีม" : "Confirm Theme Change"}
+            </Button>
           </div>
         </CardContent>
       </Card>

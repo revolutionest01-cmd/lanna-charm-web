@@ -16,7 +16,7 @@ export const useWebsiteTheme = () => {
     const syncTheme = async () => {
       const { data, error } = await supabase
         .from("feature_toggles")
-        .select("feature_key, is_enabled")
+        .select("feature_key, is_enabled, updated_at")
         .in("feature_key", SITE_THEME_FEATURE_KEYS);
 
       if (error) return;

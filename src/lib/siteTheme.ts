@@ -30,13 +30,27 @@ export const SITE_THEME_SELECT_OPTIONS: Array<{
 const LOCAL_THEME_KEY = "site-theme-local";
 
 export const resolveSiteThemeFromRows = (
-  rows: Array<{ feature_key: string; is_enabled: boolean }> | null | undefined
+  rows: Array<{ feature_key: string; is_enabled: boolean; updated_at?: string | null }> | null | undefined
 ): SiteThemeId => {
   if (!rows?.length) return "original";
 
-  const enabledMap = new Map(rows.map((row) => [row.feature_key, row.is_enabled]));
-  const matched = SITE_THEME_OPTIONS.find((theme) => enabledMap.get(getSiteThemeFeatureKey(theme.id)) === true);
-  return matched?.id || "original";
+  const enabledRows = rows.filter((row) => row.is_enabled === true && row.feature_key.startsWith("site_theme_"));
+  if (!enabledRows.length) return "original";
+
+  const resolved = enabledRows
+    .map((row) => {
+      const themeId = row.feature_key.replace("site_theme_", "") as Exclude<SiteThemeId, "original">;
+      const validTheme = SITE_THEME_OPTIONS.find((theme) => theme.id === themeId);
+      if (!validTheme) return null;
+      return {
+        id: validTheme.id,
+        updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : 0,
+      };
+    })
+    .filter((item): item is { id: Exclude<SiteThemeId, "original">; updatedAt: number } => !!item)
+    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+
+  return resolved?.id || "original";
 };
 
 export const applySiteThemeClass = (themeId: SiteThemeId) => {
