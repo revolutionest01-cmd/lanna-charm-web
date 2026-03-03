@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Wifi, Heart, Share2, Upload, Loader2, Check, X as XIcon } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Wifi, Heart, Share2, Upload, Loader2, Check, X as XIcon, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -87,9 +87,18 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
   const [isAdminEditorOpen, setIsAdminEditorOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
+  const [imageContainerSize, setImageContainerSize] = useState({ width: 0, height: 0 });
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [focusPoint, setFocusPoint] = useState({ x: 50, y: 50 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const miniMapRef = useRef<HTMLDivElement>(null);
   const maxImages = 5;
   const minSwipeDistance = 50;
+  const minZoom = 1;
+  const maxZoom = 3;
+  const zoomStep = 0.25;
 
   const handleRequestClose = (event?: React.SyntheticEvent) => {
     if (event) {
@@ -152,6 +161,33 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
       setCurrentImageIndex(0);
     }
   }, [isOpen, room?.id]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!imageContainerRef.current) return;
+
+    const updateContainerSize = () => {
+      if (!imageContainerRef.current) return;
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      setImageContainerSize({ width: rect.width, height: rect.height });
+    };
+
+    updateContainerSize();
+
+    const observer = new ResizeObserver(() => updateContainerSize());
+    observer.observe(imageContainerRef.current);
+    window.addEventListener("resize", updateContainerSize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateContainerSize);
+    };
+  }, [isOpen, room?.id, currentImageIndex]);
+
+  useEffect(() => {
+    setZoomLevel(1);
+    setFocusPoint({ x: 50, y: 50 });
+  }, [room?.id, currentImageIndex]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -324,6 +360,87 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
   const handleNextImage = () => {
     const totalImages = images.length + uploadedImages.length;
     setCurrentImageIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
+  };
+
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+  const getViewportRect = () => {
+    const naturalWidth = imageNaturalSize.width;
+    const naturalHeight = imageNaturalSize.height;
+    const containerWidth = imageContainerSize.width;
+    const containerHeight = imageContainerSize.height;
+
+    if (!naturalWidth || !naturalHeight || !containerWidth || !containerHeight) {
+      return { left: 0, top: 0, width: 100, height: 100 };
+    }
+
+    const imageAspect = naturalWidth / naturalHeight;
+    const containerAspect = containerWidth / containerHeight;
+
+    let cropX = 0;
+    let cropY = 0;
+    let cropWidth = naturalWidth;
+    let cropHeight = naturalHeight;
+
+    if (imageAspect > containerAspect) {
+      cropWidth = (containerWidth * naturalHeight) / containerHeight;
+      cropX = (naturalWidth - cropWidth) / 2;
+    } else {
+      cropHeight = (containerHeight * naturalWidth) / containerWidth;
+      cropY = (naturalHeight - cropHeight) / 2;
+    }
+
+    const visibleWidth = cropWidth / zoomLevel;
+    const visibleHeight = cropHeight / zoomLevel;
+
+    const desiredCenterX = (focusPoint.x / 100) * naturalWidth;
+    const desiredCenterY = (focusPoint.y / 100) * naturalHeight;
+
+    const clampedCenterX = clamp(desiredCenterX, visibleWidth / 2, naturalWidth - visibleWidth / 2);
+    const clampedCenterY = clamp(desiredCenterY, visibleHeight / 2, naturalHeight - visibleHeight / 2);
+
+    const viewportLeft = clampedCenterX - visibleWidth / 2;
+    const viewportTop = clampedCenterY - visibleHeight / 2;
+
+    return {
+      left: (viewportLeft / naturalWidth) * 100,
+      top: (viewportTop / naturalHeight) * 100,
+      width: (visibleWidth / naturalWidth) * 100,
+      height: (visibleHeight / naturalHeight) * 100,
+    };
+  };
+
+  const viewportRect = getViewportRect();
+  const viewportIndicatorStyle = {
+    left: `${viewportRect.left}%`,
+    top: `${viewportRect.top}%`,
+    width: `${viewportRect.width}%`,
+    height: `${viewportRect.height}%`,
+  };
+
+  const handleZoomIn = () => setZoomLevel((prev) => clamp(prev + zoomStep, minZoom, maxZoom));
+  const handleZoomOut = () => setZoomLevel((prev) => clamp(prev - zoomStep, minZoom, maxZoom));
+  const handleResetView = () => {
+    setZoomLevel(1);
+    setFocusPoint({ x: 50, y: 50 });
+  };
+
+  const handleMainImageWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setZoomLevel((prev) => {
+      const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
+      return clamp(prev + delta, minZoom, maxZoom);
+    });
+  };
+
+  const handleMinimapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!miniMapRef.current) return;
+
+    const rect = miniMapRef.current.getBoundingClientRect();
+    const clickX = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    const clickY = clamp((e.clientY - rect.top) / rect.height, 0, 1);
+
+    setFocusPoint({ x: clickX * 100, y: clickY * 100 });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -605,12 +722,87 @@ const RoomDetailModal = ({ room, isOpen, onClose, allRooms = [], onRoomChange }:
             {/* Hero Image Gallery Section */}
             <div className="relative bg-gradient-to-br from-muted/50 to-muted/20 overflow-hidden group">
               {/* Main Image */}
-              <div className="relative h-[180px] sm:h-[240px] md:h-[320px] lg:h-[420px] overflow-hidden bg-black">
+              <div
+                ref={imageContainerRef}
+                className="relative h-[180px] sm:h-[240px] md:h-[320px] lg:h-[420px] overflow-hidden bg-black"
+                onWheel={handleMainImageWheel}
+              >
                 <img
                   src={currentImage?.image_url || "/placeholder.svg"}
                   alt={roomName}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-200 ease-out select-none"
+                  style={{
+                    objectPosition: `${focusPoint.x}% ${focusPoint.y}%`,
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: "center center",
+                  }}
+                  onLoad={(e) => {
+                    setImageNaturalSize({
+                      width: e.currentTarget.naturalWidth,
+                      height: e.currentTarget.naturalHeight,
+                    });
+                  }}
                 />
+
+                <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded-md border border-white/60 bg-black/45 p-1.5 backdrop-blur-[1px]">
+                  <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    disabled={zoomLevel <= minZoom}
+                    className="h-7 w-7 rounded bg-white/90 text-foreground flex items-center justify-center hover:bg-white disabled:opacity-50"
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <span className="text-[11px] font-semibold text-white min-w-[42px] text-center">
+                    {Math.round(zoomLevel * 100)}%
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    disabled={zoomLevel >= maxZoom}
+                    className="h-7 w-7 rounded bg-white/90 text-foreground flex items-center justify-center hover:bg-white disabled:opacity-50"
+                    aria-label="Zoom in"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetView}
+                    className="h-7 w-7 rounded bg-white/90 text-foreground flex items-center justify-center hover:bg-white"
+                    aria-label="Reset view"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="absolute bottom-2 right-2 z-10 rounded-md border border-white/60 bg-black/45 backdrop-blur-[1px] p-1.5">
+                  <div
+                    ref={miniMapRef}
+                    className="relative w-24 h-16 rounded-sm overflow-hidden border border-white/50 bg-black/40 cursor-crosshair"
+                    onClick={handleMinimapClick}
+                    title={language === "th" ? "คลิกเพื่อเลื่อนตำแหน่งภาพ" : "Click to move viewport"}
+                  >
+                    <img
+                      src={currentImage?.image_url || "/placeholder.svg"}
+                      alt="Image area map"
+                      className="w-full h-full object-contain"
+                      draggable={false}
+                    />
+                    <div
+                      className="absolute border border-white bg-white/20 shadow-[0_0_0_1px_rgba(0,0,0,0.35)]"
+                      style={viewportIndicatorStyle}
+                    />
+                    <div
+                      className="absolute w-3 h-3 border-2 border-primary-foreground bg-primary/30 shadow-[0_0_0_1px_rgba(0,0,0,0.45)] pointer-events-none"
+                      style={{
+                        left: `${focusPoint.x}%`,
+                        top: `${focusPoint.y}%`,
+                        transform: "translate(-50%, -50%)",
+                      }}
+                    />
+                  </div>
+                </div>
 
                 {/* Navigation Buttons */}
                 {totalImages > 1 && (

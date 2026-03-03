@@ -156,6 +156,7 @@ export const WebsiteThemeManagement = () => {
     }
 
     clearFeatureToggleCache();
+    await loadTheme();
     sweetAlert.success(language === "th" ? "เปลี่ยนธีมเว็บไซต์สำเร็จ" : "Website theme updated successfully");
     setUpdating(false);
   };
