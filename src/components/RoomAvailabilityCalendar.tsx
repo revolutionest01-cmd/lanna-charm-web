@@ -94,14 +94,22 @@ export const RoomAvailabilityCalendar = ({
           const record = payload.new || payload.old;
           if (!record || record.room_id !== roomId) return;
 
-          setAvailabilityData((prev) => ({
-            ...prev,
-            [record.availability_date]: {
-              isAvailable: record.is_available,
-              bookedBy: record.booked_by,
-              notes: record.notes,
-            },
-          }));
+          setAvailabilityData((prev) => {
+            if (payload.eventType === 'DELETE') {
+              const next = { ...prev };
+              delete next[record.availability_date];
+              return next;
+            }
+
+            return {
+              ...prev,
+              [record.availability_date]: {
+                isAvailable: record.is_available,
+                bookedBy: record.booked_by,
+                notes: record.notes,
+              },
+            };
+          });
         }
       )
       .subscribe();

@@ -41,6 +41,38 @@ function validateDate(dateStr: string): boolean {
   return !isNaN(date.getTime()) && date > new Date();
 }
 
+function parseISODateString(dateStr: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return null;
+  }
+
+  const date = new Date(`${dateStr}T00:00:00.000Z`);
+  if (isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date;
+}
+
+function toISODateUTC(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getStayDates(checkInDate: Date, checkOutDate: Date): string[] {
+  const dates: string[] = [];
+  const cursor = new Date(checkInDate);
+
+  while (cursor < checkOutDate) {
+    dates.push(toISODateUTC(cursor));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return dates;
+}
+
 function sanitizeString(str: string, maxLength: number = 500): string {
   if (typeof str !== 'string') return '';
   // Remove potentially dangerous characters and limit length
@@ -137,6 +169,28 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    if (!validateDate(sanitizedCheckIn) || !validateDate(sanitizedCheckOut)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid booking dates" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const checkInDate = parseISODateString(sanitizedCheckIn);
+    const checkOutDate = parseISODateString(sanitizedCheckOut);
+    if (!checkInDate || !checkOutDate || checkOutDate <= checkInDate) {
+      return new Response(
+        JSON.stringify({ error: "Check-out date must be after check-in date" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
     
     // Log only non-sensitive data
     console.log("Booking request received:", { 
@@ -185,8 +239,9 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+        const roomIdEncoded = encodeURIComponent(sanitizedRoomId);
         
-        const fetchUrl = `${supabaseUrl}/rest/v1/rooms?id=eq.${sanitizedRoomId}&select=name_th,price`;
+        const fetchUrl = `${supabaseUrl}/rest/v1/rooms?id=eq.${roomIdEncoded}&select=name_th,price,is_available`;
         console.log('Fetching room from:', fetchUrl);
         
         const roomResponse = await fetch(fetchUrl, {
@@ -206,16 +261,84 @@ const handler = async (req: Request): Promise<Response> => {
             roomName = rooms[0].name_th || '';
             roomPrice = `${rooms[0].price} บาท/คืน` || '';
             console.log('Room name:', roomName, 'Room price:', roomPrice);
+
+            if (rooms[0].is_available === false) {
+              return new Response(
+                JSON.stringify({
+                  error: 'Selected room is currently unavailable',
+                  code: 'ROOM_UNAVAILABLE',
+                }),
+                {
+                  status: 409,
+                  headers: { "Content-Type": "application/json", ...corsHeaders },
+                }
+              );
+            }
           } else {
             console.log('No room found with id:', sanitizedRoomId);
+            return new Response(
+              JSON.stringify({ error: 'Selected room was not found' }),
+              {
+                status: 404,
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+              }
+            );
           }
         } else {
           const errorText = await roomResponse.text();
           console.error('Room fetch error response:', errorText);
+          return new Response(
+            JSON.stringify({ error: 'Failed to validate room availability' }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+
+        const unavailableUrl = `${supabaseUrl}/rest/v1/room_availability?room_id=eq.${roomIdEncoded}&is_available=eq.false&availability_date=gte.${sanitizedCheckIn}&availability_date=lt.${sanitizedCheckOut}&select=availability_date`;
+        const unavailableResponse = await fetch(unavailableUrl, {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          }
+        });
+
+        if (!unavailableResponse.ok) {
+          const unavailableErrorText = await unavailableResponse.text();
+          console.error('Availability conflict check failed:', unavailableErrorText);
+          return new Response(
+            JSON.stringify({ error: 'Failed to check room conflict dates' }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+
+        const unavailableDates = await unavailableResponse.json();
+        if (Array.isArray(unavailableDates) && unavailableDates.length > 0) {
+          return new Response(
+            JSON.stringify({
+              error: 'Selected room is unavailable for one or more dates',
+              code: 'ROOM_UNAVAILABLE',
+              unavailableDates: unavailableDates.map((item: { availability_date: string }) => item.availability_date),
+            }),
+            {
+              status: 409,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
         }
       } catch (err) {
         console.error('Error fetching room details:', err);
-        // Continue without room details
+        return new Response(
+          JSON.stringify({ error: "Failed to validate room before booking" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
       }
     } else {
       console.log('No roomId provided in booking');
@@ -280,6 +403,56 @@ ${roomName ? `🛏️ ประเภทห้อง: ${roomName}${roomPrice ? `
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
+    }
+
+    if (sanitizedRoomId) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+      if (!supabaseServiceRoleKey) {
+        console.error('SUPABASE_SERVICE_ROLE_KEY is missing; cannot lock room dates');
+        return new Response(
+          JSON.stringify({ error: 'Booking sent but date lock is not configured on server' }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      const stayDates = getStayDates(checkInDate, checkOutDate);
+      const bookedBy = `${sanitizedName} (${sanitizedPhone})`;
+      const lockRows = stayDates.map((availabilityDate) => ({
+        room_id: sanitizedRoomId,
+        availability_date: availabilityDate,
+        is_available: false,
+        booked_by: bookedBy,
+        notes: `Website booking (${sanitizedCheckIn} to ${sanitizedCheckOut})`,
+      }));
+
+      const lockUrl = `${supabaseUrl}/rest/v1/room_availability?on_conflict=room_id,availability_date`;
+      const lockResponse = await fetch(lockUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+          'apikey': supabaseServiceRoleKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal',
+        },
+        body: JSON.stringify(lockRows),
+      });
+
+      if (!lockResponse.ok) {
+        const lockErrorText = await lockResponse.text();
+        console.error('Failed to lock room availability dates:', lockErrorText);
+        return new Response(
+          JSON.stringify({ error: 'Booking received but failed to lock room dates', code: 'ROOM_LOCK_FAILED' }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
     }
 
     return new Response(

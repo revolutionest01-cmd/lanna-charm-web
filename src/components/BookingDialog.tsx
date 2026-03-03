@@ -58,6 +58,51 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const getAvailabilityDateRange = (checkInDate: Date, checkOutDate: Date) => {
+    const start = format(checkInDate, "yyyy-MM-dd");
+    const end = format(new Date(checkOutDate.getTime() - 24 * 60 * 60 * 1000), "yyyy-MM-dd");
+    return { start, end };
+  };
+
+  const checkRoomAvailability = async (roomIdToCheck: string, checkInDate: Date, checkOutDate: Date) => {
+    const { start, end } = getAvailabilityDateRange(checkInDate, checkOutDate);
+
+    const { data: roomData, error: roomError } = await supabase
+      .from("rooms")
+      .select("id, is_available")
+      .eq("id", roomIdToCheck)
+      .maybeSingle();
+
+    if (roomError) {
+      throw roomError;
+    }
+
+    if (!roomData || roomData.is_available === false) {
+      return {
+        available: false,
+        blockedDates: [] as string[],
+      };
+    }
+
+    const { data: blockedDates, error: availabilityError } = await (supabase as any)
+      .from("room_availability")
+      .select("availability_date")
+      .eq("room_id", roomIdToCheck)
+      .eq("is_available", false)
+      .gte("availability_date", start)
+      .lte("availability_date", end)
+      .order("availability_date", { ascending: true });
+
+    if (availabilityError) {
+      throw availabilityError;
+    }
+
+    return {
+      available: !blockedDates || blockedDates.length === 0,
+      blockedDates: (blockedDates || []).map((item: { availability_date: string }) => item.availability_date),
+    };
+  };
+
   // Update selectedRoom when roomId prop changes
   useEffect(() => {
     if (roomId) {
@@ -76,6 +121,9 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     
     // Prevent body scroll when modal is open on mobile
     if (newOpen) {
+      if (roomId) {
+        setSelectedRoom(roomId);
+      }
       document.body.style.overflow = "hidden";
       document.body.style.position = "fixed";
       document.body.style.width = "100%";
@@ -86,7 +134,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       // Reset form when closing
       setCheckIn(undefined);
       setCheckOut(undefined);
-      setSelectedRoom("");
+      setSelectedRoom(roomId || "");
       setGuests("2");
       setName("");
       setEmail("");
@@ -152,6 +200,51 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     if (!validation.valid && validation.error) {
       const errorMessage = getErrorMessage(validation.error, language as 'th' | 'en' | 'zh');
       sweetAlert.error(errorMessage);
+      return;
+    }
+
+    if (!selectedRoom) {
+      sweetAlert.error(
+        language === 'th'
+          ? 'กรุณาเลือกประเภทห้องพัก'
+          : language === 'zh'
+          ? '请选择房型'
+          : 'Please select a room type'
+      );
+      return;
+    }
+
+    try {
+      const availabilityCheck = await checkRoomAvailability(selectedRoom, checkIn!, checkOut!);
+
+      if (!availabilityCheck.available) {
+        const blockedPreview = availabilityCheck.blockedDates.slice(0, 3).join(', ');
+        const hasMore = availabilityCheck.blockedDates.length > 3;
+
+        sweetAlert.error(
+          language === 'th'
+            ? availabilityCheck.blockedDates.length > 0
+              ? `ห้องไม่ว่างในช่วงวันที่เลือก (${blockedPreview}${hasMore ? ' ...' : ''})`
+              : 'ห้องนี้ไม่พร้อมให้จองในขณะนี้'
+            : language === 'zh'
+            ? availabilityCheck.blockedDates.length > 0
+              ? `该房间在所选日期不可用 (${blockedPreview}${hasMore ? ' ...' : ''})`
+              : '该房间当前不可预订'
+            : availabilityCheck.blockedDates.length > 0
+            ? `Room is unavailable for selected dates (${blockedPreview}${hasMore ? ' ...' : ''})`
+            : 'This room is currently unavailable'
+        );
+        return;
+      }
+    } catch (availabilityError) {
+      console.error('Availability check error:', availabilityError);
+      sweetAlert.error(
+        language === 'th'
+          ? 'ไม่สามารถตรวจสอบห้องว่างได้ กรุณาลองอีกครั้ง'
+          : language === 'zh'
+          ? '无法检查房间可用性，请重试'
+          : 'Failed to check room availability. Please try again.'
+      );
       return;
     }
 
@@ -233,6 +326,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     name: language === 'th' ? room.name_th : room.name_en,
     name_th: room.name_th,
     name_en: room.name_en,
+    isAvailable: room.is_available !== false,
   }));
 
   const bookingForm = (
@@ -316,8 +410,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
           </SelectTrigger>
           <SelectContent>
             {roomTypes.map((room) => (
-              <SelectItem key={room.id} value={room.id}>
-                {room.name}
+              <SelectItem key={room.id} value={room.id} disabled={!room.isAvailable}>
+                {room.name}{!room.isAvailable ? ` (${language === 'th' ? 'ไม่ว่าง' : language === 'zh' ? '不可用' : 'Unavailable'})` : ''}
               </SelectItem>
             ))}
           </SelectContent>
