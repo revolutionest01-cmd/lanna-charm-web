@@ -17,6 +17,7 @@ import { RoomSkeleton } from "@/components/SkeletonCard";
 import BookingDialog from "@/components/BookingDialog";
 import RoomDetailModal from "@/components/RoomDetailModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 
 interface Room {
@@ -41,6 +42,7 @@ interface RoomImage {
 const RoomsSection = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { title: sectionTitle, subtitle: sectionSubtitle } = useSectionHeading("rooms");
   const { data: rooms = [], isLoading: loading } = useRooms();
   const [todayAvailabilityByRoom, setTodayAvailabilityByRoom] = useState<Record<string, boolean>>({});
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -172,10 +174,10 @@ const RoomsSection = () => {
       <div className="container mx-auto px-3 sm:px-4 md:px-6">
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4 font-serif px-2">
-            {t.roomsTitle}
+            {sectionTitle || t.roomsTitle}
           </h2>
           <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-3">
-            {t.roomsSubtitle}
+            {sectionSubtitle || t.roomsSubtitle}
           </p>
         </div>
 

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast";
 import sweetAlert from "@/lib/sweetAlert";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 import { GripVertical, Loader2, Plus, Trash2, Upload, X } from "lucide-react";
 import { z } from "zod";
 
@@ -312,6 +313,7 @@ export const GalleryManagement = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeadingEditor sectionKey="gallery" label={language === "th" ? "หัวข้อ Section แกลเลอรี่" : "Gallery Section Heading"} />
       {/* Upload Form */}
       <Card>
         <CardContent className="pt-6">

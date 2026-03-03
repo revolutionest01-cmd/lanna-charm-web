@@ -9,6 +9,7 @@ import { GallerySkeleton } from "@/components/SkeletonCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState, useRef, useEffect } from "react";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 
 type GalleryImage = {
@@ -23,6 +24,7 @@ const GallerySection = () => {
   const t = translations[language];
   const { data: images = [], isLoading: loading } = useGalleryImages(9);
   const { isFeatureEnabled } = useFeatureToggle();
+  const { title: sectionTitle, subtitle: sectionSubtitle } = useSectionHeading("gallery");
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -95,10 +97,10 @@ const GallerySection = () => {
       <div className="container mx-auto px-5 sm:px-6">
         <div className="text-center mb-12 sm:mb-20">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 font-serif">
-            {t.galleryTitle}
+            {sectionTitle || t.galleryTitle}
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-            {t.gallerySubtitle}
+            {sectionSubtitle || t.gallerySubtitle}
           </p>
         </div>
 

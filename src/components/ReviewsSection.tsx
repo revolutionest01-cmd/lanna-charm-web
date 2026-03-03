@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ReviewSkeleton } from "@/components/SkeletonCard";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
+import { useSectionHeading } from "@/hooks/useSectionHeading";
 
 type Review = {
   id: string;
@@ -23,6 +24,7 @@ const ReviewsSection = () => {
   const t = translations[language];
   const { data: reviews = [], isLoading: loading } = useReviews(9);
   const { isFeatureEnabled } = useFeatureToggle();
+  const { title: sectionTitle, subtitle: sectionSubtitle } = useSectionHeading("reviews");
   if (!isFeatureEnabled("reviews")) return null;
 
   if (loading) {
@@ -52,10 +54,10 @@ const ReviewsSection = () => {
       <div className="container mx-auto px-5 sm:px-6">
         <div className="text-center mb-10 sm:mb-16 animate-fade-in">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-3 sm:mb-4 text-foreground">
-            {t.reviewsTitle}
+            {sectionTitle || t.reviewsTitle}
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-2">
-            {t.reviewsSubtitle}
+            {sectionSubtitle || t.reviewsSubtitle}
           </p>
         </div>
 

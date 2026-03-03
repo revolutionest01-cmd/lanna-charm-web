@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, Save, Trash2, Image as ImageIcon, GripVertical, Plus, X, Sparkles } from "lucide-react";
 import sweetAlert from "@/lib/sweetAlert";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 
 interface FeaturePanel {
   id: string;
@@ -185,6 +186,7 @@ export const FeaturesManagement = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeadingEditor sectionKey="features" label={language === "th" ? "หัวข้อ Section Features" : "Features Section Heading"} />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">

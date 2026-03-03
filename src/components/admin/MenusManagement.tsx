@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Edit, Trash2, Star, Coffee, Image as ImageIcon, GripVertical } from "lucide-react";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 import { toast } from "@/lib/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -891,6 +892,8 @@ export const MenusManagement = () => {
 
   return (
     <div className="space-y-6">
+      <SectionHeadingEditor sectionKey="menu_recommended" label={language === "th" ? "หัวข้อ Section เมนูแนะนำ" : "Recommended Menu Section Heading"} />
+      <SectionHeadingEditor sectionKey="menu_all" label={language === "th" ? "หัวข้อ Section เมนูทั้งหมด" : "All Menu Section Heading"} />
       <Tabs defaultValue="menus" className="w-full">
         <TabsList className="grid w-full md:grid-cols-2 grid-cols-1 md:w-auto inline-flex md:inline-grid bg-card/50 border border-primary/20 rounded-lg p-1 shadow-sm" style={{ scrollbarWidth: 'none' }}>
           <TabsTrigger value="menus" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md transition-all hover:bg-primary/10">

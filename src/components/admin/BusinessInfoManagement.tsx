@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "@/lib/toast";
 import { Loader2, Save } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { SectionHeadingEditor } from "./SectionHeadingEditor";
 
 const businessInfoSchema = z.object({
   business_name_th: z.string().min(1, "กรุณากรอกชื่อธุรกิจภาษาไทย").max(200),
@@ -162,7 +163,9 @@ const BusinessInfoManagement = () => {
   }
 
   return (
-    <Card>
+    <>
+      <SectionHeadingEditor sectionKey="contact" label={language === "th" ? "หัวข้อ Section ติดต่อเรา" : "Contact Section Heading"} />
+      <Card className="mt-6">
       <CardHeader>
         <CardTitle className="text-base sm:text-2xl">
           {language === 'th' ? 'จัดการข้อมูลธุรกิจ' : 'Business Information Management'}
@@ -434,6 +437,7 @@ const BusinessInfoManagement = () => {
         </Form>
       </CardContent>
     </Card>
+    </>
   );
 };
 
