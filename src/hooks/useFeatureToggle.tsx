@@ -13,6 +13,62 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 let globalToggles: FeatureToggleState | null = null;
 let fetchPromise: Promise<FeatureToggleState> | null = null;
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+const subscribers = new Set<(next: FeatureToggleState) => void>();
+
+const writeCache = (next: FeatureToggleState) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+    localStorage.setItem(CACHE_EXPIRY_KEY, Date.now().toString());
+  } catch {}
+};
+
+const updateGlobalToggles = (next: FeatureToggleState) => {
+  globalToggles = next;
+  writeCache(next);
+  subscribers.forEach((notify) => notify(next));
+};
+
+const fetchTogglesFromServer = async (): Promise<FeatureToggleState> => {
+  const { data, error } = await supabase
+    .from("feature_toggles")
+    .select("feature_key, is_enabled");
+
+  const result: FeatureToggleState = {};
+  if (!error && data) {
+    data.forEach((f) => {
+      result[f.feature_key] = f.is_enabled;
+    });
+  }
+  return result;
+};
+
+const refreshTogglesNow = async () => {
+  const fresh = await fetchTogglesFromServer();
+  updateGlobalToggles(fresh);
+  return fresh;
+};
+
+const ensureRealtimeSubscription = () => {
+  if (realtimeChannel) return;
+
+  realtimeChannel = supabase
+    .channel("feature-toggles-global-sync")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "feature_toggles" },
+      () => {
+        void refreshTogglesNow();
+      }
+    )
+    .subscribe();
+};
+
+const cleanupRealtimeSubscription = () => {
+  if (!realtimeChannel) return;
+  supabase.removeChannel(realtimeChannel);
+  realtimeChannel = null;
+};
 
 const fetchToggles = async (): Promise<FeatureToggleState> => {
   try {
@@ -23,20 +79,8 @@ const fetchToggles = async (): Promise<FeatureToggleState> => {
     }
   } catch {}
 
-  const { data, error } = await supabase
-    .from("feature_toggles")
-    .select("feature_key, is_enabled");
-
-  const result: FeatureToggleState = {};
-  if (!error && data) {
-    data.forEach((f) => {
-      result[f.feature_key] = f.is_enabled;
-    });
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(result));
-      localStorage.setItem(CACHE_EXPIRY_KEY, Date.now().toString());
-    } catch {}
-  }
+  const result = await fetchTogglesFromServer();
+  writeCache(result);
   return result;
 };
 
@@ -49,22 +93,39 @@ export const useFeatureToggle = () => {
   const [isLoading, setIsLoading] = useState(!globalToggles);
 
   useEffect(() => {
+    subscribers.add(setToggles);
+    ensureRealtimeSubscription();
+
+    const handleVisibilityOrFocus = () => {
+      void refreshTogglesNow();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
     if (globalToggles) {
       setToggles(globalToggles);
       setIsLoading(false);
-      return;
+    } else {
+      if (!fetchPromise) {
+        fetchPromise = fetchToggles();
+      }
+
+      fetchPromise.then((data) => {
+        updateGlobalToggles(data);
+        setIsLoading(false);
+        fetchPromise = null;
+      });
     }
 
-    if (!fetchPromise) {
-      fetchPromise = fetchToggles();
-    }
-
-    fetchPromise.then((data) => {
-      globalToggles = data;
-      setToggles(data);
-      setIsLoading(false);
-      fetchPromise = null;
-    });
+    return () => {
+      subscribers.delete(setToggles);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      if (subscribers.size === 0) {
+        cleanupRealtimeSubscription();
+      }
+    };
   }, []);
 
   const isFeatureEnabled = (key: string): boolean => {

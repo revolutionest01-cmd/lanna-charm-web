@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import sweetAlert from "@/lib/sweetAlert";
 import BookingDialog from "./BookingDialog";
 import LanguageDropdown from "./LanguageDropdown";
@@ -49,9 +50,11 @@ const AppSidebar = () => {
   const { language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
   const { isAdmin } = useAdminStatus();
+  const { isFeatureEnabled } = useFeatureToggle();
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const { activeSection } = useActiveSection();
   const t = translations[language];
+  const isUserProfileEnabled = isFeatureEnabled("user_profile");
 
   const getThemeStyles = (theme: SectionTheme) => {
     // Use consistent dark foreground color like Help button
@@ -470,18 +473,30 @@ const AppSidebar = () => {
           {isAuthenticated && user ? (
             <div className="space-y-2.5">
               {/* User Profile Card - Minimal & Elegant */}
-              <button
-                onClick={() => {
-                  if (isMobile) setOpenMobile(false);
-                  navigate('/profile');
-                }}
+              <div
                 className={cn(
                   "flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 w-full text-left",
                   "bg-gradient-to-br from-highlight/8 to-highlight/5",
                   "border border-highlight/15 hover:border-highlight/25",
-                  "hover:shadow-sm hover:from-highlight/12 hover:to-highlight/8",
-                  "cursor-pointer active:scale-95"
+                  isUserProfileEnabled
+                    ? "hover:shadow-sm hover:from-highlight/12 hover:to-highlight/8 cursor-pointer active:scale-95"
+                    : "opacity-80 cursor-default"
                 )}
+                onClick={() => {
+                  if (!isUserProfileEnabled) return;
+                  if (isMobile) setOpenMobile(false);
+                  navigate('/profile');
+                }}
+                role={isUserProfileEnabled ? "button" : undefined}
+                tabIndex={isUserProfileEnabled ? 0 : -1}
+                onKeyDown={(e) => {
+                  if (!isUserProfileEnabled) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (isMobile) setOpenMobile(false);
+                    navigate('/profile');
+                  }
+                }}
               >
                 {/* Avatar - Handle both emoji and URL avatars */}
                 {user.avatar && /^[\p{Emoji}]$/u.test(user.avatar) ? (
@@ -501,13 +516,15 @@ const AppSidebar = () => {
                 <div className="flex-1 min-w-0">
                   <p className={cn("text-sm font-medium truncate", themeStyles.text)}>{user.name}</p>
                   <p className={cn("text-[11px] tracking-wide", themeStyles.muted)}>
-                    {isAdmin 
+                    {!isUserProfileEnabled
+                      ? (language === 'th' ? 'โปรไฟล์ปิดใช้งาน' : language === 'zh' ? '个人资料已禁用' : 'Profile disabled')
+                      : isAdmin 
                       ? (language === 'th' ? 'ผู้ดูแลระบบ' : language === 'zh' ? '管理员' : 'Administrator')
                       : (language === 'th' ? 'สมาชิก' : language === 'zh' ? '会员' : 'Member')
                     }
                   </p>
                 </div>
-              </button>
+              </div>
 
               {/* Admin & Logout - Refined & Minimal */}
               <div className="flex gap-2 mt-2">

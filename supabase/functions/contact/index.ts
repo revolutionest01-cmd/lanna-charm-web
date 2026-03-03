@@ -62,6 +62,29 @@ interface ContactRequest {
   language?: string;
 }
 
+async function isFeatureTemporarilyDisabled(featureKey: string): Promise<boolean> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !supabaseAnonKey) return false;
+
+    const url = `${supabaseUrl}/rest/v1/feature_toggles?feature_key=eq.${encodeURIComponent(featureKey)}&select=is_enabled&limit=1`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'apikey': supabaseAnonKey,
+      }
+    });
+
+    if (!response.ok) return false;
+    const rows = await response.json();
+    if (!Array.isArray(rows) || rows.length === 0) return false;
+    return rows[0]?.is_enabled === false;
+  } catch {
+    return false;
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -69,6 +92,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const contactDisabled = await isFeatureTemporarilyDisabled('contact');
+    if (contactDisabled) {
+      return new Response(
+        JSON.stringify({ error: "Contact is temporarily disabled", code: "FEATURE_DISABLED" }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     // Rate limiting check
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 
                      req.headers.get('cf-connecting-ip') || 

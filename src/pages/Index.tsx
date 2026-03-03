@@ -12,50 +12,87 @@ import BackToTop from "@/components/BackToTop";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Toaster } from "@/components/ui/sonner";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 const Index = () => {
+  const { toggles, isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+
+  const hasToggleKey = (key: string) => Object.prototype.hasOwnProperty.call(toggles, key);
+  const isToggleOff = (key: string) => hasToggleKey(key) && toggles[key] === false;
+
+  const isSectionVisible = (primaryKey: string, relatedKeys: string[] = []) => {
+    if (featureLoading) return false;
+    if (isToggleOff(primaryKey)) return false;
+    if (relatedKeys.some((key) => isToggleOff(key))) return false;
+    return isFeatureEnabled(primaryKey);
+  };
+
+  const showFallingLeaves = isSectionVisible("falling_leaves");
+  const showFeatures = isSectionVisible("features");
+  const showEvents = isSectionVisible("events");
+  const showRooms = isSectionVisible("rooms", ["booking"]);
+  const showMenu = isSectionVisible("menu");
+  const showGallery = isSectionVisible("gallery");
+  const showReviews = isSectionVisible("reviews");
+  const showContact = isSectionVisible("contact");
+
   return (
     <div className="relative min-h-screen page-gradient-bg">
       {/* Parallax gradient orbs */}
       <ParallaxBackground />
       
-      {/* Temporarily hidden */}
+      {showFallingLeaves && <FallingLeaves />}
+
       <main className="relative z-10">
         <HeroSection />
         
-        <ScrollReveal animation="fade-up" delay={0}>
-          <div className="section-glow">
-            <FeaturesSection />
-          </div>
-        </ScrollReveal>
+        {showFeatures && (
+          <ScrollReveal animation="fade-up" delay={0}>
+            <div className="section-glow">
+              <FeaturesSection />
+            </div>
+          </ScrollReveal>
+        )}
         
-        <ScrollReveal animation="fade-up" delay={100}>
-          <EventsSection />
-        </ScrollReveal>
+        {showEvents && (
+          <ScrollReveal animation="fade-up" delay={100}>
+            <EventsSection />
+          </ScrollReveal>
+        )}
         
-        <ScrollReveal animation="fade-up" delay={0}>
-          <div className="section-glow">
-            <RoomsSection />
-          </div>
-        </ScrollReveal>
+        {showRooms && (
+          <ScrollReveal animation="fade-up" delay={0}>
+            <div className="section-glow">
+              <RoomsSection />
+            </div>
+          </ScrollReveal>
+        )}
         
-        <ScrollReveal animation="fade-up" delay={100}>
-          <MenuSection />
-        </ScrollReveal>
+        {showMenu && (
+          <ScrollReveal animation="fade-up" delay={100}>
+            <MenuSection />
+          </ScrollReveal>
+        )}
         
-        <ScrollReveal animation="fade-up" delay={0}>
-          <div className="section-glow">
-            <GallerySection />
-          </div>
-        </ScrollReveal>
+        {showGallery && (
+          <ScrollReveal animation="fade-up" delay={0}>
+            <div className="section-glow">
+              <GallerySection />
+            </div>
+          </ScrollReveal>
+        )}
         
-        <ScrollReveal animation="fade-up" delay={100}>
-          <ReviewsSection />
-        </ScrollReveal>
+        {showReviews && (
+          <ScrollReveal animation="fade-up" delay={100}>
+            <ReviewsSection />
+          </ScrollReveal>
+        )}
         
-        <ScrollReveal animation="fade-up" delay={0}>
-          <ContactSection />
-        </ScrollReveal>
+        {showContact && (
+          <ScrollReveal animation="fade-up" delay={0}>
+            <ContactSection />
+          </ScrollReveal>
+        )}
       </main>
       <Footer />
       <BackToTop />

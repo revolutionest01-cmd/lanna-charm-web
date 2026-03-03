@@ -85,6 +85,19 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const { data: chatbotToggle } = await supabase
+      .from('feature_toggles')
+      .select('is_enabled')
+      .eq('feature_key', 'ai_chatbot')
+      .maybeSingle();
+
+    if (chatbotToggle?.is_enabled === false) {
+      return new Response(
+        JSON.stringify({ error: 'AI chatbot is temporarily disabled', code: 'FEATURE_DISABLED' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // ═══════════════════════════════════════════════
     // FETCH ALL DATABASE CONTEXT COMPREHENSIVELY
     // ═══════════════════════════════════════════════

@@ -54,6 +54,38 @@ const REQUIRED_FEATURE_TOGGLES: Array<{
   is_enabled: boolean;
 }> = [
   {
+    feature_key: "features",
+    feature_name_th: "หน้าแรก: จุดเด่น",
+    feature_name_en: "Homepage: Features",
+    description_th: "ส่วนแนะนำจุดเด่นของหน้าแรก",
+    description_en: "Landing page features section",
+    is_enabled: true,
+  },
+  {
+    feature_key: "rooms",
+    feature_name_th: "หน้าแรก: ห้องพัก",
+    feature_name_en: "Homepage: Rooms",
+    description_th: "ส่วนแสดงห้องพักบนหน้าแรก",
+    description_en: "Landing page rooms section",
+    is_enabled: true,
+  },
+  {
+    feature_key: "menu",
+    feature_name_th: "หน้าแรก: เมนู",
+    feature_name_en: "Homepage: Menu",
+    description_th: "ส่วนแสดงเมนูอาหารและเครื่องดื่มบนหน้าแรก",
+    description_en: "Landing page menu section",
+    is_enabled: true,
+  },
+  {
+    feature_key: "contact",
+    feature_name_th: "หน้าแรก: ติดต่อเรา",
+    feature_name_en: "Homepage: Contact",
+    description_th: "ส่วนข้อมูลติดต่อในหน้าแรก",
+    description_en: "Landing page contact section",
+    is_enabled: true,
+  },
+  {
     feature_key: "falling_leaves",
     feature_name_th: "เอฟเฟกต์ใบไม้หน้าแรก",
     feature_name_en: "Homepage Falling Leaves",

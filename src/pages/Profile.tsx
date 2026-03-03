@@ -242,17 +242,18 @@ const Profile = () => {
     socialInstagram: socialInstagram.trim(),
     socialTiktok: socialTiktok.trim(),
   };
+  const isUserProfileEnabled = isFeatureEnabled("user_profile");
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate("/auth");
     }
-    if (!authLoading && isAuthenticated && !featureLoading && !isFeatureEnabled("user_profile")) {
+    if (!authLoading && isAuthenticated && !featureLoading && !isUserProfileEnabled) {
       showFeatureDisabledAlert(language);
       navigate("/");
     }
-  }, [isAuthenticated, authLoading, navigate, featureLoading]);
+  }, [isAuthenticated, authLoading, navigate, featureLoading, isUserProfileEnabled, language]);
 
   // Load profile data
   useEffect(() => {
