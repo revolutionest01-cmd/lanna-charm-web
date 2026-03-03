@@ -1,18 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, HelpCircle, MessageCircle, X, ChevronLeft, Headphones } from "lucide-react";
+import { Phone, HelpCircle, MessageCircle, X, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 import PricingChatbot from "./PricingChatbot";
 import QuickInfoPopup from "./QuickInfoPopup";
-import LiveChatWidget from "./LiveChatWidget";
 
 const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = useState(false);
-  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
   const { language } = useLanguage();
   const { isFeatureEnabled } = useFeatureToggle();
 
@@ -58,16 +56,6 @@ const FloatingChatButton = () => {
       onClick: () => {
         if (!isFeatureEnabled("ai_chatbot")) { showFeatureDisabledAlert(language); return; }
         setIsChatOpen(true); setIsOpen(false);
-      },
-    },
-    {
-      icon: Headphones,
-      label: 'Live Chat',
-      color: 'text-foreground',
-      bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
-      onClick: () => {
-        if (!isFeatureEnabled("live_chat")) { showFeatureDisabledAlert(language); return; }
-        setIsLiveChatOpen(true); setIsOpen(false);
       },
     },
   ];
@@ -152,7 +140,6 @@ const FloatingChatButton = () => {
 
       <PricingChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <QuickInfoPopup isOpen={isQuickInfoOpen} onClose={() => setIsQuickInfoOpen(false)} />
-      <LiveChatWidget isOpen={isLiveChatOpen} onClose={() => setIsLiveChatOpen(false)} />
     </>
   );
 };
