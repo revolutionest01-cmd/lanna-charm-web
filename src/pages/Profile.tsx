@@ -359,13 +359,17 @@ const Profile = () => {
     if (!user?.id) return;
 
     const loadLikesReceived = async () => {
-      const getLikeCountFromIds = async (tableName: string, idColumn: string, ids: string[]) => {
+      const getLikeCountFromTable = async (
+        tableName: "forum_likes" | "review_likes",
+        idColumn: string,
+        ids: string[]
+      ) => {
         if (!ids.length) return 0;
 
         const { count, error } = await supabase
           .from(tableName)
           .select("*", { count: "exact", head: true })
-          .in(idColumn, ids);
+          .in(idColumn as never, ids as never);
 
         if (error) {
           if (error.code === "42P01") return 0;
@@ -376,23 +380,20 @@ const Profile = () => {
       };
 
       try {
-        const [{ data: topicRows }, { data: replyRows }, { data: reviewRows }] = await Promise.all([
+        const [{ data: topicRows }, { data: reviewRows }] = await Promise.all([
           supabase.from("forum_topics").select("id").eq("user_id", user.id),
-          supabase.from("forum_replies").select("id").eq("user_id", user.id),
           supabase.from("reviews").select("id").eq("user_id", user.id),
         ]);
 
         const topicIds = ((topicRows || []) as IdRow[]).map((row) => row.id);
-        const replyIds = ((replyRows || []) as IdRow[]).map((row) => row.id);
         const reviewIds = ((reviewRows || []) as IdRow[]).map((row) => row.id);
 
-        const [topicLikes, replyLikes, reviewLikes] = await Promise.all([
-          getLikeCountFromIds("forum_likes", "topic_id", topicIds),
-          getLikeCountFromIds("forum_reply_likes", "reply_id", replyIds),
-          getLikeCountFromIds("review_likes", "review_id", reviewIds),
+        const [topicLikes, reviewLikes] = await Promise.all([
+          getLikeCountFromTable("forum_likes", "topic_id", topicIds),
+          getLikeCountFromTable("review_likes", "review_id", reviewIds),
         ]);
 
-        setLikesReceived(topicLikes + replyLikes + reviewLikes);
+        setLikesReceived(topicLikes + reviewLikes);
       } catch (error) {
         console.warn("Load likes received error:", error);
         setLikesReceived(0);
@@ -424,9 +425,9 @@ const Profile = () => {
       if (data) {
         setHasClaimedToday(true);
         setGachaResult({
-          rewardType: data.reward_type,
-          rewardValue: data.reward_value,
-          rewardMeta: data.reward_meta,
+          rewardType: data.reward_type as string,
+          rewardValue: data.reward_value as number,
+          rewardMeta: (data.reward_meta as Record<string, unknown>) ?? undefined,
         });
       }
     };
@@ -494,7 +495,8 @@ const Profile = () => {
 
     setIsGachaOpening(true);
     try {
-      const { data, error } = await supabase.rpc("claim_daily_gacha");
+      const { data: rawData, error } = await supabase.rpc("claim_daily_gacha");
+      const data = rawData as Record<string, unknown> | null;
 
       if (error) throw error;
 
@@ -546,10 +548,10 @@ const Profile = () => {
         return;
       }
 
-      const nextResult = {
-        rewardType: data.reward_type,
-        rewardValue: data.reward_value,
-        rewardMeta: data,
+      const nextResult: GachaResult = {
+        rewardType: String(data.reward_type ?? ""),
+        rewardValue: Number(data.reward_value ?? 0),
+        rewardMeta: (typeof data === "object" && data !== null ? data : {}) as Record<string, unknown>,
       };
 
       setGachaResult(nextResult);
