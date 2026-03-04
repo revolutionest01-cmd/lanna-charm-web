@@ -8,7 +8,7 @@ import { getPrivacyConsentState, savePrivacyConsentLog, setPrivacyConsentState }
 
 export default function PrivacyConsentBanner() {
   const { language } = useLanguage();
-  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+  const { toggles, isLoading: featureLoading } = useFeatureToggle();
   const [visible, setVisible] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -36,7 +36,7 @@ export default function PrivacyConsentBanner() {
   }, [language]);
 
   useEffect(() => {
-    const analyticsFeatureEnabled = !featureLoading && isFeatureEnabled("analytics");
+    const analyticsFeatureEnabled = !featureLoading && toggles["analytics"] === true;
     if (!analyticsFeatureEnabled) {
       setVisible(false);
       setDetailOpen(false);
@@ -50,7 +50,7 @@ export default function PrivacyConsentBanner() {
       setVisible(false);
       setDetailOpen(false);
     }
-  }, [featureLoading, isFeatureEnabled]);
+  }, [featureLoading, toggles]);
 
   const onChoose = async (allowAnalytics: boolean) => {
     const status = allowAnalytics ? "accepted" : "rejected";

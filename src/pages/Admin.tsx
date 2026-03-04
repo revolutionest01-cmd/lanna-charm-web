@@ -82,7 +82,7 @@ const Admin = () => {
   const { language } = useLanguage();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { isAdmin, isDeveloper, isStaff, userRole, isChecking } = useAdminStatus();
-  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+  const { toggles, isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
   const canAccessDevMode = !isChecking && !!user && user.id === DEVELOPER_ID && isDeveloper;
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({
@@ -94,7 +94,7 @@ const Admin = () => {
 
   // Filter tabs based on user role
   const TABS = useMemo(() => {
-    const analyticsEnabled = !featureLoading && isFeatureEnabled("analytics");
+    const analyticsEnabled = !featureLoading && toggles["analytics"] === true;
 
     return BASE_TABS.filter((tab) => {
       if (tab.id === "chatanalytics" && !analyticsEnabled) return false;
@@ -104,7 +104,7 @@ const Admin = () => {
       if (tab.minRole === "staff") return isStaff;
       return true;
     });
-  }, [isDeveloper, isAdmin, isStaff, featureLoading, isFeatureEnabled, canAccessDevMode]);
+  }, [isDeveloper, isAdmin, isStaff, featureLoading, toggles, canAccessDevMode]);
 
   useEffect(() => {
     if (!TABS.some((tab) => tab.id === activeTab)) {
@@ -216,7 +216,7 @@ const Admin = () => {
       case "business": return <BusinessInfoManagement />;
       case "chatlog": return <ChatLogsManagement />;
       case "chatanalytics":
-        if (featureLoading || !isFeatureEnabled("analytics")) return null;
+        if (featureLoading || toggles["analytics"] !== true) return null;
         return <ChatAnalyticsDashboard />;
       case "roles": return <UserRolesManagement />;
       case "devmode": return canAccessDevMode ? <DevGodMode /> : null;

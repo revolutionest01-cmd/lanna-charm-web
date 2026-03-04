@@ -34,7 +34,7 @@ setGlobalQueryClient(queryClient);
 
 // Component to track page views
 const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; onLoadingComplete: () => void }) => {
-  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+  const { toggles, isLoading: featureLoading } = useFeatureToggle();
   const [consentState, setConsentState] = useState<PrivacyConsentState>(() => getPrivacyConsentState());
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
     return () => window.removeEventListener("privacy-consent-updated", onConsentChanged as EventListener);
   }, []);
 
-  const analyticsEnabled = !featureLoading && isFeatureEnabled("analytics") && consentState.analyticsAllowed;
+  const analyticsEnabled = !featureLoading && toggles["analytics"] === true && consentState.analyticsAllowed;
 
   useEffect(() => {
     initializeGA(analyticsEnabled);
