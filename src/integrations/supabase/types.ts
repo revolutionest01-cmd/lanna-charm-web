@@ -799,6 +799,47 @@ export type Database = {
           },
         ]
       }
+      point_transactions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          points: number
+          reason: string | null
+          source_id: string | null
+          source_type: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          points: number
+          reason?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          points?: number
+          reason?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active_perks: string[]
