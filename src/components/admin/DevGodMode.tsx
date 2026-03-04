@@ -152,9 +152,8 @@ export const DevGodMode = () => {
   const [updating, setUpdating] = useState<string | null>(null);
   const [activeSiteTheme, setActiveSiteTheme] = useState<SiteThemeId>("original");
   const [pendingSiteTheme, setPendingSiteTheme] = useState<SiteThemeId>("original");
-  const liveChatFeature = features.find((feature) => feature.feature_key === "live_chat");
   const nonThemeFeatures = features.filter(
-    (feature) => !SITE_THEME_FEATURE_KEYS.includes(feature.feature_key) && feature.feature_key !== "live_chat"
+    (feature) => !SITE_THEME_FEATURE_KEYS.includes(feature.feature_key)
   );
   const isUpdatingSiteTheme = updating === "site-theme";
   const hasPendingThemeChange = pendingSiteTheme !== activeSiteTheme;
@@ -462,48 +461,6 @@ export const DevGodMode = () => {
               {language === "th" ? "ยืนยันการเปลี่ยนธีม" : "Confirm Theme Change"}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <ToggleRight className="w-5 h-5 text-primary" />
-            {language === "th" ? "Live Chat" : "Live Chat"}
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            {language === "th"
-              ? "ย้ายหัวข้อ Live Chat มาควบคุมที่ Dev God Mode"
-              : "Live Chat controls moved from Admin Panel to Dev God Mode"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-          {liveChatFeature ? (
-            <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">
-                  {language === "th" ? liveChatFeature.feature_name_th : liveChatFeature.feature_name_en}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {language === "th" ? liveChatFeature.description_th : liveChatFeature.description_en}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 ml-3">
-                <Badge variant={liveChatFeature.is_enabled ? "default" : "secondary"} className="text-[10px]">
-                  {liveChatFeature.is_enabled ? "ON" : "OFF"}
-                </Badge>
-                <Switch
-                  checked={liveChatFeature.is_enabled}
-                  onCheckedChange={() => handleToggleFeature(liveChatFeature.id, liveChatFeature.is_enabled)}
-                  disabled={updating === liveChatFeature.id}
-                />
-              </div>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {language === "th" ? "ไม่พบฟีเจอร์ live_chat ในระบบ" : "live_chat feature toggle was not found"}
-            </p>
-          )}
         </CardContent>
       </Card>
 
