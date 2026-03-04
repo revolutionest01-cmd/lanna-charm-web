@@ -20,7 +20,9 @@ const writeCache = (next: FeatureToggleState) => {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(next));
     localStorage.setItem(CACHE_EXPIRY_KEY, Date.now().toString());
-  } catch {}
+  } catch {
+    // Ignore cache write failures (private mode / storage quota)
+  }
 };
 
 const updateGlobalToggles = (next: FeatureToggleState) => {
@@ -77,7 +79,9 @@ const fetchToggles = async (): Promise<FeatureToggleState> => {
     if (cached && cacheTime && Date.now() - parseInt(cacheTime) < CACHE_DURATION) {
       return JSON.parse(cached);
     }
-  } catch {}
+  } catch {
+    // Ignore cache read failures and fetch from server instead
+  }
 
   const result = await fetchTogglesFromServer();
   writeCache(result);

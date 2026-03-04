@@ -159,7 +159,8 @@ serve(async (req) => {
     if (menus.length > 0) {
       const menusByCategory: Record<string, typeof menus> = {};
       menus.forEach(m => {
-        const cat = (m.menu_categories as any)?.name_th || 'ทั่วไป';
+        const menuCategory = m.menu_categories as { name_th?: string } | null;
+        const cat = menuCategory?.name_th || 'ทั่วไป';
         if (!menusByCategory[cat]) menusByCategory[cat] = [];
         menusByCategory[cat].push(m);
       });

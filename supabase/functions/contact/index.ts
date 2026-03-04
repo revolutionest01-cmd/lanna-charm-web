@@ -62,6 +62,15 @@ interface ContactRequest {
   language?: string;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return 'Unknown error';
+}
+
 async function isFeatureTemporarilyDisabled(featureKey: string): Promise<boolean> {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -272,8 +281,8 @@ ${sanitizedMessage}
     try {
       await Promise.all(sendPromises);
       console.log("LINE message sent successfully");
-    } catch (error: any) {
-      console.error("Error sending LINE messages:", error.message);
+    } catch (error: unknown) {
+      console.error("Error sending LINE messages:", getErrorMessage(error));
       return new Response(
         JSON.stringify({ 
           error: "Failed to send LINE message"
@@ -292,8 +301,8 @@ ${sanitizedMessage}
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
-    console.error("Error in contact function:", error.message);
+  } catch (error: unknown) {
+    console.error("Error in contact function:", getErrorMessage(error));
     return new Response(
       JSON.stringify({ error: "An error occurred processing your request" }),
       {

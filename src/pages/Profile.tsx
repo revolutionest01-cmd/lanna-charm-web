@@ -24,6 +24,31 @@ import { useUserRank } from "@/hooks/useUserRank";
 import { getUnlockedPerks, RANK_PERKS } from "@/lib/pointSystem";
 
 type ProfileTheme = "ocean" | "sunset" | "forest" | "royal" | "mono";
+type ErrorLike = {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+};
+
+type GachaResult = {
+  rewardType: string;
+  rewardValue: number;
+  rewardMeta?: Record<string, unknown>;
+};
+
+type IdRow = { id: string };
+
+const toErrorLike = (error: unknown): ErrorLike => {
+  if (typeof error !== "object" || error === null) return {};
+  const source = error as Record<string, unknown>;
+  return {
+    code: typeof source.code === "string" ? source.code : undefined,
+    message: typeof source.message === "string" ? source.message : undefined,
+    details: typeof source.details === "string" ? source.details : undefined,
+    hint: typeof source.hint === "string" ? source.hint : undefined,
+  };
+};
 
 const PROFILE_THEME_OPTIONS: Array<{
   id: ProfileTheme;
@@ -159,12 +184,13 @@ const setStoredProfileExtras = (
   localStorage.setItem(getProfileExtraStorageKey(userId), JSON.stringify(extras));
 };
 
-const isMissingStatusMessageColumnError = (error: any) => {
+const isMissingStatusMessageColumnError = (error: unknown) => {
   if (!error) return false;
-  const code = String(error.code || "");
-  const message = String(error.message || "").toLowerCase();
-  const details = String(error.details || "").toLowerCase();
-  const hint = String(error.hint || "").toLowerCase();
+  const err = toErrorLike(error);
+  const code = String(err.code || "");
+  const message = String(err.message || "").toLowerCase();
+  const details = String(err.details || "").toLowerCase();
+  const hint = String(err.hint || "").toLowerCase();
   return (
     code === "42703" ||
     code === "PGRST204" ||
@@ -198,7 +224,7 @@ const Profile = () => {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [profileTheme, setProfileTheme] = useState<ProfileTheme>("ocean");
-  const [gachaResult, setGachaResult] = useState<{ rewardType: string; rewardValue: number; rewardMeta?: any } | null>(null);
+  const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
   const [isGachaOpening, setIsGachaOpening] = useState(false);
   const [hasClaimedToday, setHasClaimedToday] = useState(false);
   const [signatureText, setSignatureText] = useState("");
@@ -268,9 +294,9 @@ const Profile = () => {
       // Also fetch status_message from the new column
       const { data: extData } = await supabase
         .from("profiles")
-        .select("status_message" as any)
+        .select("status_message")
         .eq("id", user.id)
-        .maybeSingle() as any;
+        .maybeSingle();
 
       if (error) {
         console.error("Load profile error:", error);
@@ -336,7 +362,7 @@ const Profile = () => {
       const getLikeCountFromIds = async (tableName: string, idColumn: string, ids: string[]) => {
         if (!ids.length) return 0;
 
-        const { count, error } = await (supabase as any)
+        const { count, error } = await supabase
           .from(tableName)
           .select("*", { count: "exact", head: true })
           .in(idColumn, ids);
@@ -351,14 +377,14 @@ const Profile = () => {
 
       try {
         const [{ data: topicRows }, { data: replyRows }, { data: reviewRows }] = await Promise.all([
-          (supabase as any).from("forum_topics").select("id").eq("user_id", user.id),
-          (supabase as any).from("forum_replies").select("id").eq("user_id", user.id),
+          supabase.from("forum_topics").select("id").eq("user_id", user.id),
+          supabase.from("forum_replies").select("id").eq("user_id", user.id),
           supabase.from("reviews").select("id").eq("user_id", user.id),
         ]);
 
-        const topicIds = (topicRows || []).map((row: any) => row.id);
-        const replyIds = (replyRows || []).map((row: any) => row.id);
-        const reviewIds = (reviewRows || []).map((row: any) => row.id);
+        const topicIds = ((topicRows || []) as IdRow[]).map((row) => row.id);
+        const replyIds = ((replyRows || []) as IdRow[]).map((row) => row.id);
+        const reviewIds = ((reviewRows || []) as IdRow[]).map((row) => row.id);
 
         const [topicLikes, replyLikes, reviewLikes] = await Promise.all([
           getLikeCountFromIds("forum_likes", "topic_id", topicIds),
@@ -381,7 +407,7 @@ const Profile = () => {
 
     const loadDailyGachaStatus = async () => {
       const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("daily_gacha_claims")
         .select("reward_type, reward_value, reward_meta")
         .eq("user_id", user.id)
@@ -412,7 +438,7 @@ const Profile = () => {
     if (!user?.id) return;
 
     const loadSignatureSettings = async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_signature_settings")
         .select("signature_text, signature_image_url, is_enabled")
         .eq("user_id", user.id)
@@ -433,12 +459,12 @@ const Profile = () => {
     loadSignatureSettings();
   }, [user?.id]);
 
-  const formatGachaReward = (rewardType: string, rewardValue: number, rewardMeta?: any) => {
+  const formatGachaReward = (rewardType: string, rewardValue: number, rewardMeta?: Record<string, unknown>) => {
     if (rewardType === "rank_points") {
       return language === "th" ? `+${rewardValue} แต้มยศ` : `+${rewardValue} rank points`;
     }
     if (rewardType === "temporary_title") {
-      const title = rewardMeta?.title;
+      const title = typeof rewardMeta?.title === "string" ? rewardMeta.title : undefined;
       return language === "th"
         ? `ฉายาชั่วคราว: ${title || "ของรางวัลพิเศษ"}`
         : `Temporary title: ${title || "special reward"}`;
@@ -468,7 +494,7 @@ const Profile = () => {
 
     setIsGachaOpening(true);
     try {
-      const { data, error } = await (supabase as any).rpc("claim_daily_gacha");
+      const { data, error } = await supabase.rpc("claim_daily_gacha");
 
       if (error) throw error;
 
@@ -534,11 +560,12 @@ const Profile = () => {
           ? `เปิดกล่องสำเร็จ! ได้รับ ${formatGachaReward(nextResult.rewardType, nextResult.rewardValue, nextResult.rewardMeta)}`
           : `Mystery box opened! You got ${formatGachaReward(nextResult.rewardType, nextResult.rewardValue, nextResult.rewardMeta)}`
       );
-    } catch (error: any) {
-      const errCode = error?.code as string | undefined;
-      const errMessage = (error?.message || "") as string;
-      const errDetails = (error?.details || "") as string;
-      const errHint = (error?.hint || "") as string;
+    } catch (error: unknown) {
+      const errorData = toErrorLike(error);
+      const errCode = errorData.code;
+      const errMessage = errorData.message || "";
+      const errDetails = errorData.details || "";
+      const errHint = errorData.hint || "";
       const combinedErrorText = `${errMessage} ${errDetails} ${errHint}`.toLowerCase();
 
       if (
@@ -601,15 +628,16 @@ const Profile = () => {
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("user_signature_settings")
         .upsert(payload, { onConflict: "user_id" });
 
       if (error) throw error;
 
       sweetAlert.success(language === "th" ? "บันทึก Signature สำเร็จ" : "Signature saved");
-    } catch (error: any) {
-      if (error?.code === "42P01" || error?.message?.includes("user_signature_settings")) {
+    } catch (error: unknown) {
+      const errorData = toErrorLike(error);
+      if (errorData.code === "42P01" || errorData.message?.includes("user_signature_settings")) {
         sweetAlert.error(
           language === "th"
             ? "ระบบ Signature ยังไม่พร้อม (ยังไม่ได้รัน migration)"
@@ -773,7 +801,7 @@ const Profile = () => {
       // Save status_message (new column, cast needed until types regenerate)
       await supabase
         .from("profiles")
-        .update({ status_message: profileExtrasPayload.statusMessage || null } as any)
+        .update({ status_message: profileExtrasPayload.statusMessage || null } as unknown as Record<string, unknown>)
         .eq("id", user.id);
 
       setStoredProfileExtras(user.id, profileExtrasPayload);

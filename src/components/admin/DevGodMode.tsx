@@ -141,6 +141,22 @@ const roleConfig = {
   user: { icon: User, color: "text-foreground/70", badge: "secondary" as const, label: "User" },
 };
 
+const USER_ROLES = ["developer", "admin", "user"] as const;
+type UserRoleValue = (typeof USER_ROLES)[number];
+
+const isUserRoleValue = (value: string): value is UserRoleValue => {
+  return USER_ROLES.includes(value as UserRoleValue);
+};
+
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return undefined;
+};
+
 export const DevGodMode = () => {
   const { language } = useLanguage();
   const { user: currentUser } = useAuth();
@@ -338,7 +354,8 @@ export const DevGodMode = () => {
     if (!confirmed) return;
 
     setUpdating(userRoleId);
-    const { error } = await supabase.from("user_roles").update({ role: newRole as any }).eq("id", userRoleId);
+    const roleValue: UserRoleValue = isUserRoleValue(newRole) ? newRole : "user";
+    const { error } = await supabase.from("user_roles").update({ role: roleValue }).eq("id", userRoleId);
     if (error) {
       sweetAlert.error(language === "th" ? "เกิดข้อผิดพลาด" : "Error updating role");
     } else {
@@ -376,8 +393,8 @@ export const DevGodMode = () => {
       if (!res.ok) throw new Error(result.error);
       sweetAlert.success(language === "th" ? "ลบผู้ใช้สำเร็จ" : "User deleted successfully");
       fetchData();
-    } catch (err: any) {
-      sweetAlert.error(err.message || (language === "th" ? "เกิดข้อผิดพลาด" : "Error deleting user"));
+    } catch (err: unknown) {
+      sweetAlert.error(getErrorMessage(err) || (language === "th" ? "เกิดข้อผิดพลาด" : "Error deleting user"));
     }
     setUpdating(null);
   };
