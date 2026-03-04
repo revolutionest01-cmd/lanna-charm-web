@@ -9,6 +9,26 @@ const corsHeaders = {
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 5; // Max requests per window
 const RATE_WINDOW = 60 * 1000; // 1 minute window
+const DAILY_LIMITS = {
+  ip: 8,
+  email: 4,
+  phone: 4,
+};
+const MIN_SUBMIT_DURATION_MS = 1200;
+const FAST_SUBMIT_RISK_MS = 2500;
+const TEMP_EMAIL_DOMAINS = new Set([
+  "mailinator.com",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "temp-mail.org",
+  "tempmail.com",
+  "yopmail.com",
+  "sharklasers.com",
+  "dispostable.com",
+  "trashmail.com",
+  "maildrop.cc",
+  "fakeinbox.com",
+]);
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -91,6 +111,119 @@ interface BookingRequest {
   guests: number;
   roomId?: string;
   additionalDetails?: string;
+  honeypot?: string;
+  formStartedAt?: number;
+}
+
+interface AbuseEventPayload {
+  request_name: string;
+  request_email: string;
+  request_phone: string;
+  request_ip: string;
+  user_agent: string;
+  room_id: string | null;
+  check_in: string;
+  check_out: string;
+  guests: number;
+  additional_details: string;
+  status: "accepted" | "blocked" | "spam" | "reviewed";
+  block_reason: string | null;
+  risk_score: number;
+  risk_flags: string[];
+  honeypot_value: string;
+  submit_duration_ms: number | null;
+  metadata: Record<string, unknown>;
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function normalizePhone(phone: string): string {
+  return phone.replace(/[^\d+]/g, "").trim();
+}
+
+function getSupabaseAdminConfig() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return { supabaseUrl, serviceRoleKey };
+}
+
+async function restCount(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  query: string
+): Promise<number> {
+  const response = await fetch(`${supabaseUrl}/rest/v1/${query}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: serviceRoleKey,
+      Prefer: "count=exact",
+      Range: "0-0",
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Count query failed: ${text}`);
+  }
+
+  const contentRange = response.headers.get("content-range") || "";
+  const totalStr = contentRange.includes("/") ? contentRange.split("/")[1] : "0";
+  const total = Number(totalStr);
+  return Number.isFinite(total) ? total : 0;
+}
+
+async function isValueBlacklisted(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  type: "email" | "phone" | "ip",
+  value: string
+): Promise<boolean> {
+  if (!value) return false;
+
+  const query = `booking_blacklist?select=id,blocked_until&is_active=eq.true&type=eq.${encodeURIComponent(type)}&value=eq.${encodeURIComponent(value)}&order=created_at.desc&limit=1`;
+  const response = await fetch(`${supabaseUrl}/rest/v1/${query}`, {
+    headers: {
+      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: serviceRoleKey,
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Blacklist query failed: ${text}`);
+  }
+
+  const rows = await response.json();
+  if (!Array.isArray(rows) || rows.length === 0) return false;
+
+  const blockedUntil = rows[0]?.blocked_until as string | null;
+  if (!blockedUntil) return true;
+  return new Date(blockedUntil).getTime() > Date.now();
+}
+
+async function logAbuseEvent(payload: AbuseEventPayload): Promise<void> {
+  const config = getSupabaseAdminConfig();
+  if (!config) return;
+
+  const response = await fetch(`${config.supabaseUrl}/rest/v1/booking_abuse_events`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      apikey: config.serviceRoleKey,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error("Failed to log booking abuse event:", text);
+  }
 }
 
 function getErrorMessage(error: unknown): string {
@@ -162,7 +295,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     
     // Validate required fields exist
-    const { name, email, phone, checkIn, checkOut, guests, roomId, additionalDetails } = body as BookingRequest;
+    const { name, email, phone, checkIn, checkOut, guests, roomId, additionalDetails, honeypot, formStartedAt } = body as BookingRequest;
     
     if (!name || !email || !phone || !checkIn || !checkOut || !guests) {
       return new Response(
@@ -176,13 +309,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Sanitize and validate inputs
     const sanitizedName = sanitizeString(name, 100);
-    const sanitizedEmail = sanitizeString(email, 255);
-    const sanitizedPhone = sanitizeString(phone, 20);
+    const sanitizedEmail = normalizeEmail(sanitizeString(email, 255));
+    const sanitizedPhone = normalizePhone(sanitizeString(phone, 20));
     const sanitizedCheckIn = sanitizeString(checkIn, 20);
     const sanitizedCheckOut = sanitizeString(checkOut, 20);
     const sanitizedRoomId = roomId ? sanitizeString(roomId, 100) : '';
     const sanitizedAdditionalDetails = additionalDetails ? sanitizeString(additionalDetails, 500) : '';
+    const sanitizedHoneypot = honeypot ? sanitizeString(honeypot, 150) : '';
     const sanitizedGuests = Math.min(Math.max(1, Number(guests) || 1), 50);
+    const userAgent = sanitizeString(req.headers.get("user-agent") || "", 300);
+    const submitDurationMs = Number.isFinite(Number(formStartedAt))
+      ? Math.max(0, Date.now() - Number(formStartedAt))
+      : null;
+    const riskFlags: string[] = [];
+    let riskScore = 0;
+
+    if (submitDurationMs !== null && submitDurationMs < FAST_SUBMIT_RISK_MS) {
+      riskFlags.push("fast_submit");
+      riskScore += 35;
+    }
+
+    if (submitDurationMs !== null && submitDurationMs < MIN_SUBMIT_DURATION_MS) {
+      riskFlags.push("too_fast_submit");
+      riskScore += 65;
+    }
+
+    if (sanitizedHoneypot) {
+      riskFlags.push("honeypot_triggered");
+      riskScore += 90;
+    }
 
     // Validate input formats
     if (sanitizedName.length < 2) {
@@ -235,6 +390,174 @@ const handler = async (req: Request): Promise<Response> => {
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
+    }
+
+    const emailDomain = sanitizedEmail.split("@")[1] || "";
+    if (TEMP_EMAIL_DOMAINS.has(emailDomain)) {
+      riskFlags.push("temporary_email_domain");
+      riskScore += 100;
+
+      await logAbuseEvent({
+        request_name: sanitizedName,
+        request_email: sanitizedEmail,
+        request_phone: sanitizedPhone,
+        request_ip: clientIP,
+        user_agent: userAgent,
+        room_id: sanitizedRoomId || null,
+        check_in: sanitizedCheckIn,
+        check_out: sanitizedCheckOut,
+        guests: sanitizedGuests,
+        additional_details: sanitizedAdditionalDetails,
+        status: "blocked",
+        block_reason: "temporary_email",
+        risk_score: riskScore,
+        risk_flags: riskFlags,
+        honeypot_value: sanitizedHoneypot,
+        submit_duration_ms: submitDurationMs,
+        metadata: { source: "booking_function" },
+      });
+
+      return new Response(
+        JSON.stringify({ error: "Disposable email addresses are not allowed", code: "TEMP_EMAIL_BLOCKED" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (sanitizedHoneypot || (submitDurationMs !== null && submitDurationMs < MIN_SUBMIT_DURATION_MS)) {
+      await logAbuseEvent({
+        request_name: sanitizedName,
+        request_email: sanitizedEmail,
+        request_phone: sanitizedPhone,
+        request_ip: clientIP,
+        user_agent: userAgent,
+        room_id: sanitizedRoomId || null,
+        check_in: sanitizedCheckIn,
+        check_out: sanitizedCheckOut,
+        guests: sanitizedGuests,
+        additional_details: sanitizedAdditionalDetails,
+        status: "blocked",
+        block_reason: sanitizedHoneypot ? "honeypot_triggered" : "submit_too_fast",
+        risk_score: riskScore,
+        risk_flags: riskFlags,
+        honeypot_value: sanitizedHoneypot,
+        submit_duration_ms: submitDurationMs,
+        metadata: { source: "booking_function" },
+      });
+
+      return new Response(
+        JSON.stringify({ error: "Request rejected by anti-abuse policy", code: "ANTI_ABUSE_BLOCKED" }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const adminConfig = getSupabaseAdminConfig();
+    if (adminConfig) {
+      try {
+        const dayStart = new Date();
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayStartIso = dayStart.toISOString();
+
+        const blockedByEmail = await isValueBlacklisted(adminConfig.supabaseUrl, adminConfig.serviceRoleKey, "email", sanitizedEmail);
+        const blockedByPhone = await isValueBlacklisted(adminConfig.supabaseUrl, adminConfig.serviceRoleKey, "phone", sanitizedPhone);
+        const blockedByIp = await isValueBlacklisted(adminConfig.supabaseUrl, adminConfig.serviceRoleKey, "ip", clientIP);
+
+        if (blockedByEmail || blockedByPhone || blockedByIp) {
+          riskFlags.push("blacklist_hit");
+          riskScore += 100;
+
+          await logAbuseEvent({
+            request_name: sanitizedName,
+            request_email: sanitizedEmail,
+            request_phone: sanitizedPhone,
+            request_ip: clientIP,
+            user_agent: userAgent,
+            room_id: sanitizedRoomId || null,
+            check_in: sanitizedCheckIn,
+            check_out: sanitizedCheckOut,
+            guests: sanitizedGuests,
+            additional_details: sanitizedAdditionalDetails,
+            status: "blocked",
+            block_reason: "blacklist_hit",
+            risk_score: riskScore,
+            risk_flags: riskFlags,
+            honeypot_value: sanitizedHoneypot,
+            submit_duration_ms: submitDurationMs,
+            metadata: { source: "booking_function" },
+          });
+
+          return new Response(
+            JSON.stringify({ error: "Request blocked", code: "BLACKLISTED" }),
+            {
+              status: 403,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+
+        const [ipTodayCount, emailTodayCount, phoneTodayCount] = await Promise.all([
+          restCount(
+            adminConfig.supabaseUrl,
+            adminConfig.serviceRoleKey,
+            `booking_abuse_events?select=id&request_ip=eq.${encodeURIComponent(clientIP)}&created_at=gte.${encodeURIComponent(dayStartIso)}`
+          ),
+          restCount(
+            adminConfig.supabaseUrl,
+            adminConfig.serviceRoleKey,
+            `booking_abuse_events?select=id&request_email=eq.${encodeURIComponent(sanitizedEmail)}&created_at=gte.${encodeURIComponent(dayStartIso)}`
+          ),
+          restCount(
+            adminConfig.supabaseUrl,
+            adminConfig.serviceRoleKey,
+            `booking_abuse_events?select=id&request_phone=eq.${encodeURIComponent(sanitizedPhone)}&created_at=gte.${encodeURIComponent(dayStartIso)}`
+          ),
+        ]);
+
+        if (ipTodayCount >= DAILY_LIMITS.ip || emailTodayCount >= DAILY_LIMITS.email || phoneTodayCount >= DAILY_LIMITS.phone) {
+          riskFlags.push("daily_limit_exceeded");
+          riskScore += 80;
+
+          await logAbuseEvent({
+            request_name: sanitizedName,
+            request_email: sanitizedEmail,
+            request_phone: sanitizedPhone,
+            request_ip: clientIP,
+            user_agent: userAgent,
+            room_id: sanitizedRoomId || null,
+            check_in: sanitizedCheckIn,
+            check_out: sanitizedCheckOut,
+            guests: sanitizedGuests,
+            additional_details: sanitizedAdditionalDetails,
+            status: "blocked",
+            block_reason: "daily_limit_exceeded",
+            risk_score: riskScore,
+            risk_flags: riskFlags,
+            honeypot_value: sanitizedHoneypot,
+            submit_duration_ms: submitDurationMs,
+            metadata: {
+              source: "booking_function",
+              ipTodayCount,
+              emailTodayCount,
+              phoneTodayCount,
+            },
+          });
+
+          return new Response(
+            JSON.stringify({ error: "Daily booking request limit exceeded", code: "DAILY_LIMIT_EXCEEDED" }),
+            {
+              status: 429,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+      } catch (abuseCheckError) {
+        console.error("Anti-abuse storage check failed:", getErrorMessage(abuseCheckError));
+      }
     }
     
     // Log only non-sensitive data
@@ -450,6 +773,26 @@ ${sanitizedAdditionalDetails ? `📝 รายละเอียดเพิ่�
         }
       );
     }
+
+    await logAbuseEvent({
+      request_name: sanitizedName,
+      request_email: sanitizedEmail,
+      request_phone: sanitizedPhone,
+      request_ip: clientIP,
+      user_agent: userAgent,
+      room_id: sanitizedRoomId || null,
+      check_in: sanitizedCheckIn,
+      check_out: sanitizedCheckOut,
+      guests: sanitizedGuests,
+      additional_details: sanitizedAdditionalDetails,
+      status: "accepted",
+      block_reason: null,
+      risk_score: riskScore,
+      risk_flags: riskFlags,
+      honeypot_value: sanitizedHoneypot,
+      submit_duration_ms: submitDurationMs,
+      metadata: { source: "booking_function" },
+    });
 
     if (sanitizedRoomId) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

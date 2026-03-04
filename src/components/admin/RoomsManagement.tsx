@@ -36,6 +36,7 @@ import { ImageUploadZone } from "./ImageUploadZone";
 import { RoomStats } from "./RoomStats";
 import { calculateRoomStats } from "./roomManagementUtils";
 import { AmenitiesCheckboxGroup } from "./AmenitiesCheckboxGroup";
+import { BookingAbuseManagement } from "./BookingAbuseManagement";
 
 const roomFormSchema = z.object({
   name_th: z.string().min(1, "กรุณากรอกชื่อภาษาไทย"),
@@ -786,6 +787,8 @@ export const RoomsManagement = () => {
           language={language}
         />
       )}
+
+      <BookingAbuseManagement />
 
       {/* Rooms List */}
       {rooms.length === 0 ? (

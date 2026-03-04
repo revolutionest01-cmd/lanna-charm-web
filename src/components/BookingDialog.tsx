@@ -61,6 +61,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [formStartedAt, setFormStartedAt] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [liveRoomAvailability, setLiveRoomAvailability] = useState<RoomAvailabilityState>({});
@@ -213,6 +215,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       if (roomId) {
         setSelectedRoom(roomId);
       }
+      setFormStartedAt(Date.now());
+      setHoneypot("");
       document.body.style.overflow = "hidden";
       document.body.style.position = "fixed";
       document.body.style.width = "100%";
@@ -229,6 +233,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       setEmail("");
       setPhone("");
       setAdditionalDetails("");
+      setHoneypot("");
+      setFormStartedAt(null);
       setErrors({});
     }
   };
@@ -379,6 +385,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
           email,
           phone,
           additionalDetails,
+          honeypot,
+          formStartedAt,
           roomId: selectedRoom || null,
           checkIn: format(checkIn, "yyyy-MM-dd"),
           checkOut: format(checkOut, "yyyy-MM-dd"),
@@ -404,6 +412,8 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       setEmail("");
       setPhone("");
       setAdditionalDetails("");
+      setHoneypot("");
+      setFormStartedAt(null);
       setErrors({});
     } catch (error) {
       console.error('Booking submission error:', error);
@@ -423,6 +433,16 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
 
   const bookingForm = (
     <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        className="absolute left-[-9999px] top-[-9999px] h-0 w-0 opacity-0 pointer-events-none"
+      />
+
       {/* Date pickers */}
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-0.5">
