@@ -100,6 +100,68 @@ function hashIP(ip: string): string {
   return Math.abs(hash).toString(36);
 }
 
+interface ClientContextPayload {
+  currentUrl?: string;
+  pagePath?: string;
+  referrer?: string;
+  timezone?: string;
+  browserLanguage?: string;
+  platform?: string;
+  userAgent?: string;
+  screenResolution?: string;
+  viewport?: string;
+}
+
+function sanitizeOptionalString(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') return null;
+  const cleaned = sanitizeString(value, maxLength);
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+function detectDeviceType(userAgent: string, viewport: string | null): string {
+  const ua = userAgent.toLowerCase();
+  const viewportWidth = Number(viewport?.split('x')[0] || 0);
+
+  if (/tablet|ipad/.test(ua) || (viewportWidth >= 768 && viewportWidth < 1024)) {
+    return 'tablet';
+  }
+  if (/mobile|iphone|android/.test(ua) || (viewportWidth > 0 && viewportWidth < 768)) {
+    return 'mobile';
+  }
+  return 'desktop';
+}
+
+function parseUtm(currentUrl: string | null) {
+  if (!currentUrl) {
+    return {
+      source: null,
+      medium: null,
+      campaign: null,
+      content: null,
+      term: null,
+    };
+  }
+
+  try {
+    const url = new URL(currentUrl);
+    return {
+      source: sanitizeOptionalString(url.searchParams.get('utm_source'), 120),
+      medium: sanitizeOptionalString(url.searchParams.get('utm_medium'), 120),
+      campaign: sanitizeOptionalString(url.searchParams.get('utm_campaign'), 160),
+      content: sanitizeOptionalString(url.searchParams.get('utm_content'), 200),
+      term: sanitizeOptionalString(url.searchParams.get('utm_term'), 200),
+    };
+  } catch {
+    return {
+      source: null,
+      medium: null,
+      campaign: null,
+      content: null,
+      term: null,
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -121,6 +183,45 @@ serve(async (req) => {
     const language = body.language || 'th';
     const sessionId = body.sessionId || 'unknown';
     const conversationHistory = body.conversationHistory || [];
+    const userId = sanitizeOptionalString(body.userId, 64);
+    const rawClientContext = (typeof body.clientContext === 'object' && body.clientContext !== null)
+      ? body.clientContext as ClientContextPayload
+      : {};
+
+    const headerUserAgent = req.headers.get('user-agent') || '';
+    const headerReferrer = req.headers.get('referer') || req.headers.get('referrer') || '';
+    const countryCode = sanitizeOptionalString(req.headers.get('cf-ipcountry'), 8);
+    const region = sanitizeOptionalString(req.headers.get('x-vercel-ip-country-region') || req.headers.get('x-country-region'), 80);
+    const city = sanitizeOptionalString(req.headers.get('x-vercel-ip-city') || req.headers.get('x-city'), 120);
+
+    const currentUrl = sanitizeOptionalString(rawClientContext.currentUrl, 600);
+    const pagePath = sanitizeOptionalString(rawClientContext.pagePath, 300);
+    const referrer = sanitizeOptionalString(rawClientContext.referrer, 500)
+      || sanitizeOptionalString(headerReferrer, 500);
+    const timezone = sanitizeOptionalString(rawClientContext.timezone, 100);
+    const browserLanguage = sanitizeOptionalString(rawClientContext.browserLanguage, 32)
+      || sanitizeOptionalString(req.headers.get('accept-language'), 120);
+    const platform = sanitizeOptionalString(rawClientContext.platform, 80);
+    const userAgent = sanitizeOptionalString(rawClientContext.userAgent, 1000)
+      || sanitizeOptionalString(headerUserAgent, 1000)
+      || '';
+    const screenResolution = sanitizeOptionalString(rawClientContext.screenResolution, 40);
+    const viewport = sanitizeOptionalString(rawClientContext.viewport, 40);
+    const deviceType = detectDeviceType(userAgent, viewport);
+    const utm = parseUtm(currentUrl);
+
+    const visitorFingerprintSource = [
+      hashIP(clientIP),
+      sanitizeOptionalString(userAgent, 200),
+      browserLanguage,
+      platform,
+      screenResolution,
+      timezone,
+    ].filter(Boolean).join('|');
+
+    const visitorFingerprint = visitorFingerprintSource
+      ? hashIP(visitorFingerprintSource)
+      : null;
 
     if (!rawMessage || typeof rawMessage !== 'string') {
       return new Response(
@@ -415,7 +516,42 @@ ${context}
         ai_reply: reply,
         intent: 'auto',
         language: sanitizedLanguage,
+        user_id: userId,
         ip_hash: hashIP(clientIP),
+        ip_address: sanitizeOptionalString(clientIP, 120),
+        user_agent: userAgent,
+        user_agent_hash: userAgent ? hashIP(userAgent) : null,
+        country_code: countryCode,
+        region,
+        city,
+        referrer,
+        current_url: currentUrl,
+        page_path: pagePath,
+        utm_source: utm.source,
+        utm_medium: utm.medium,
+        utm_campaign: utm.campaign,
+        utm_content: utm.content,
+        utm_term: utm.term,
+        browser_language: browserLanguage,
+        timezone,
+        platform,
+        device_type: deviceType,
+        screen_resolution: screenResolution,
+        viewport,
+        visitor_fingerprint: visitorFingerprint,
+        request_headers: {
+          origin: req.headers.get('origin'),
+          host: req.headers.get('host'),
+          referer: req.headers.get('referer') || req.headers.get('referrer'),
+          accept_language: req.headers.get('accept-language'),
+          sec_ch_ua: req.headers.get('sec-ch-ua'),
+          sec_ch_ua_mobile: req.headers.get('sec-ch-ua-mobile'),
+          sec_ch_ua_platform: req.headers.get('sec-ch-ua-platform'),
+          cf_ray: req.headers.get('cf-ray'),
+        },
+        metadata: {
+          conversation_turns: Array.isArray(conversationHistory) ? conversationHistory.length + 1 : 1,
+        },
       });
     } catch (logError) {
       console.error('Error saving chat log:', logError);

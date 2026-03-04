@@ -32,8 +32,9 @@ export const useAdminStatus = () => {
   });
   const [isChecking, setIsChecking] = useState(true);
 
-  const isAdmin = userRole === 'admin' || userRole === 'developer';
-  const isDeveloper = userRole === 'developer';
+  const isDeveloperIdentity = user?.id === DEVELOPER_USER_ID;
+  const isDeveloper = userRole === 'developer' && isDeveloperIdentity;
+  const isAdmin = userRole === 'admin' || isDeveloper;
   const isStaff = userRole === 'staff' || isAdmin;
 
   const getCachedRole = (userId: string): string | null => {
@@ -67,6 +68,11 @@ export const useAdminStatus = () => {
 
   const checkRoleFromDB = async (userId: string): Promise<string> => {
     try {
+      if (userId === DEVELOPER_USER_ID) {
+        cacheRole(userId, 'developer');
+        return 'developer';
+      }
+
       const timeoutPromise = new Promise<string>((_, reject) =>
         setTimeout(() => reject(new Error('timeout')), 5000)
       );
@@ -77,7 +83,9 @@ export const useAdminStatus = () => {
         .single()
         .then(({ data, error }) => {
           if (error || !data) return 'user';
-          return data.role as string;
+          const dbRole = data.role as string;
+          if (dbRole === 'developer') return 'user';
+          return dbRole;
         });
       const role = await Promise.race([queryPromise, timeoutPromise]);
       cacheRole(userId, role);

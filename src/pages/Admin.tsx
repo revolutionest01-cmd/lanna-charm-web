@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { DEVELOPER_ID, useAdminStatus } from "@/hooks/useAdminStatus";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateContentCache } from "@/hooks/useContentData";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,8 @@ const Admin = () => {
   const { language } = useLanguage();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { isAdmin, isDeveloper, isStaff, userRole, isChecking } = useAdminStatus();
+  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+  const canAccessDevMode = !isChecking && !!user && user.id === DEVELOPER_ID && isDeveloper;
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({
     rooms: 0,
@@ -91,13 +94,23 @@ const Admin = () => {
 
   // Filter tabs based on user role
   const TABS = useMemo(() => {
+    const analyticsEnabled = !featureLoading && isFeatureEnabled("analytics");
+
     return BASE_TABS.filter((tab) => {
+      if (tab.id === "chatanalytics" && !analyticsEnabled) return false;
+      if (tab.id === "devmode" && !canAccessDevMode) return false;
       if (tab.minRole === "developer") return isDeveloper;
       if (tab.minRole === "admin") return isAdmin;
       if (tab.minRole === "staff") return isStaff;
       return true;
     });
-  }, [isDeveloper, isAdmin, isStaff]);
+  }, [isDeveloper, isAdmin, isStaff, featureLoading, isFeatureEnabled, canAccessDevMode]);
+
+  useEffect(() => {
+    if (!TABS.some((tab) => tab.id === activeTab)) {
+      setActiveTab("dashboard");
+    }
+  }, [TABS, activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -202,9 +215,11 @@ const Admin = () => {
       case "webboard": return <WebboardManagement />;
       case "business": return <BusinessInfoManagement />;
       case "chatlog": return <ChatLogsManagement />;
-      case "chatanalytics": return <ChatAnalyticsDashboard />;
+      case "chatanalytics":
+        if (featureLoading || !isFeatureEnabled("analytics")) return null;
+        return <ChatAnalyticsDashboard />;
       case "roles": return <UserRolesManagement />;
-      case "devmode": return isDeveloper ? <DevGodMode /> : null;
+      case "devmode": return canAccessDevMode ? <DevGodMode /> : null;
       default: return null;
     }
   };

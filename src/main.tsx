@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { initializeGA } from "./lib/googleAnalytics";
 import { debugUtils } from "./lib/debugUtils";
 import { hardReset } from "./lib/hardReset";
 import { initializeCacheCleanup } from "./lib/cacheCleanup";
@@ -10,10 +9,7 @@ import { cacheClearManager } from "./lib/cacheClearManager";
 // 1. FIRST: Clean up old caches and service workers (prevents stale data issues)
 initializeCacheCleanup();
 
-// 2. Initialize Google Analytics
-initializeGA();
-
-// 3. Make utilities available in console
+// 2. Make utilities available in console
 console.log("🚀 App starting...");
 console.log("💡 Debug utilities available:");
 console.log("   - cacheClearManager.hardClear() - Quick cache clear + reload");

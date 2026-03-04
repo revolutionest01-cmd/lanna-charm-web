@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -160,6 +161,8 @@ const getErrorMessage = (error: unknown): string | undefined => {
 export const DevGodMode = () => {
   const { language } = useLanguage();
   const { user: currentUser } = useAuth();
+  const { isDeveloper, isChecking } = useAdminStatus();
+  const canAccessDevMode = !isChecking && !!currentUser && currentUser.id === DEVELOPER_ID && isDeveloper;
   const [features, setFeatures] = useState<FeatureToggle[]>([]);
   const [users, setUsers] = useState<UserRole[]>([]);
   const [userProfiles, setUserProfiles] = useState<Map<string, { reputation_points: number }>>(new Map());
@@ -221,7 +224,13 @@ export const DevGodMode = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (!canAccessDevMode) {
+      setLoading(false);
+      return;
+    }
+    fetchData();
+  }, [canAccessDevMode]);
 
   useEffect(() => {
     const themeRows = features
@@ -405,6 +414,10 @@ export const DevGodMode = () => {
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (!canAccessDevMode) {
+    return null;
   }
 
   return (

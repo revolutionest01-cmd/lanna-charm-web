@@ -9,10 +9,14 @@ import AnimatedRoutes from "./components/AnimatedRoutes";
 import LoadingScreen from "./components/LoadingScreen";
 import AppUpdateNotifier from "./components/AppUpdateNotifier";
 import DataLoadError from "./components/DataLoadError";
-import { useGAPageTracking } from "./lib/googleAnalytics";
+import PrivacyConsentBanner from "./components/PrivacyConsentBanner";
+import { initializeGA, useGAPageTracking } from "./lib/googleAnalytics";
+import { useWebAnalyticsTracking } from "./lib/webAnalytics";
+import { getPrivacyConsentState, type PrivacyConsentState } from "./lib/privacyConsent";
 import { setGlobalQueryClient } from "./hooks/useContentData";
 import { ModalProvider } from "./contexts/ModalContext";
 import { useWebsiteTheme } from "./hooks/useWebsiteTheme";
+import { useFeatureToggle } from "./hooks/useFeatureToggle";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,12 +34,32 @@ setGlobalQueryClient(queryClient);
 
 // Component to track page views
 const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; onLoadingComplete: () => void }) => {
+  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
+  const [consentState, setConsentState] = useState<PrivacyConsentState>(() => getPrivacyConsentState());
+
+  useEffect(() => {
+    const onConsentChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<PrivacyConsentState>;
+      setConsentState(customEvent.detail || getPrivacyConsentState());
+    };
+    window.addEventListener("privacy-consent-updated", onConsentChanged as EventListener);
+    return () => window.removeEventListener("privacy-consent-updated", onConsentChanged as EventListener);
+  }, []);
+
+  const analyticsEnabled = !featureLoading && isFeatureEnabled("analytics") && consentState.analyticsAllowed;
+
+  useEffect(() => {
+    initializeGA(analyticsEnabled);
+  }, [analyticsEnabled]);
+
   useGAPageTracking();
+  useWebAnalyticsTracking(analyticsEnabled);
 
   return (
     <>
       {showLoading && <LoadingScreen onLoadingComplete={onLoadingComplete} />}
       <AnimatedRoutes />
+      <PrivacyConsentBanner />
       <AppUpdateNotifier />
       <DataLoadError />
     </>

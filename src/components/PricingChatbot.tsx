@@ -120,6 +120,9 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
     setIsLoading(true);
 
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUrl = window.location.href;
+
       // Build conversation history (exclude welcome message)
       const history = messages
         .filter(m => m.id !== '1')
@@ -130,7 +133,19 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
           message: messageText,
           language,
           sessionId: sessionId.current,
+          userId: authData.user?.id || null,
           conversationHistory: history,
+          clientContext: {
+            currentUrl,
+            pagePath: window.location.pathname,
+            referrer: document.referrer || null,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            browserLanguage: navigator.language,
+            platform: navigator.platform,
+            userAgent: navigator.userAgent,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+          },
         }
       });
 
@@ -144,7 +159,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Chatbot error:', error);
       const errMsg = language === 'th'
         ? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'

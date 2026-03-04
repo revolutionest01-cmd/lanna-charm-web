@@ -1,18 +1,21 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, HelpCircle, MessageCircle, X, ChevronLeft } from "lucide-react";
+import { Phone, HelpCircle, MessageCircle, X, ChevronLeft, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 import PricingChatbot from "./PricingChatbot";
 import QuickInfoPopup from "./QuickInfoPopup";
+import LiveChatWidget from "./LiveChatWidget";
 
 const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = useState(false);
+  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
   const { language } = useLanguage();
   const { isFeatureEnabled } = useFeatureToggle();
+  const isLiveChatEnabled = isFeatureEnabled("live_chat");
 
   // Hide on scroll down, show on scroll up (like TabBar)
   const [isVisible, setIsVisible] = useState(true);
@@ -33,7 +36,13 @@ const FloatingChatButton = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isOpen]);
 
-  const actions = [
+  useEffect(() => {
+    if (!isLiveChatEnabled) {
+      setIsLiveChatOpen(false);
+    }
+  }, [isLiveChatEnabled]);
+
+  const baseActions = [
     {
       icon: Phone,
       label: language === 'th' ? 'โทรเลย' : language === 'zh' ? '立即致电' : 'Call Now',
@@ -48,23 +57,43 @@ const FloatingChatButton = () => {
       bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
       onClick: () => { setIsQuickInfoOpen(true); setIsOpen(false); },
     },
-    {
-      icon: MessageCircle,
-      label: 'Plernping AI',
-      color: 'text-foreground',
-      bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
-      onClick: () => {
-        if (!isFeatureEnabled("ai_chatbot")) { showFeatureDisabledAlert(language); return; }
-        setIsChatOpen(true); setIsOpen(false);
-      },
+  ];
+
+  const liveChatAction = {
+    icon: Headphones,
+    label: language === 'th' ? 'คุยกับแอดมิน' : language === 'zh' ? '联系管理员' : 'Live Chat',
+    color: 'text-foreground',
+    bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
+    onClick: () => {
+      if (!isFeatureEnabled("live_chat")) { showFeatureDisabledAlert(language); return; }
+      setIsLiveChatOpen(true); setIsOpen(false);
     },
+  };
+
+  const aiAction = {
+    icon: MessageCircle,
+    label: 'Plernping AI',
+    color: 'text-foreground',
+    bg: 'bg-[hsl(var(--highlight))]/10 dark:bg-[hsl(var(--highlight))]/20',
+    onClick: () => {
+      if (!isFeatureEnabled("ai_chatbot")) { showFeatureDisabledAlert(language); return; }
+      setIsChatOpen(true); setIsOpen(false);
+    },
+  };
+
+  const actions = [
+    ...baseActions,
+    ...(isLiveChatEnabled ? [liveChatAction] : []),
+    aiAction,
   ];
 
   return (
     <>
       {/* Toggle Tab - right edge, vertically centered */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+        }}
         className={cn(
           "fixed z-50 flex items-center justify-center",
           "w-11 h-11 sm:w-12 sm:h-12 rounded-l-2xl",
@@ -139,6 +168,7 @@ const FloatingChatButton = () => {
       )}
 
       <PricingChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <LiveChatWidget isOpen={isLiveChatOpen} onClose={() => setIsLiveChatOpen(false)} />
       <QuickInfoPopup isOpen={isQuickInfoOpen} onClose={() => setIsQuickInfoOpen(false)} />
     </>
   );

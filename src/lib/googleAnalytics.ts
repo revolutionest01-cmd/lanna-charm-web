@@ -2,11 +2,19 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ReactGA from 'react-ga4';
 
+let gaInitialized = false;
+let gaTrackingEnabled = false;
+
 /**
  * Initialize Google Analytics
  * Call this once at the app root level
  */
-export const initializeGA = () => {
+export const initializeGA = (enabled = true) => {
+  gaTrackingEnabled = enabled;
+  if (!enabled) {
+    return;
+  }
+
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
   
   if (!measurementId) {
@@ -18,8 +26,11 @@ export const initializeGA = () => {
     return;
   }
 
-  ReactGA.initialize(measurementId);
-  console.log('Google Analytics initialized with ID:', measurementId);
+  if (!gaInitialized) {
+    ReactGA.initialize(measurementId);
+    gaInitialized = true;
+    console.log('Google Analytics initialized with ID:', measurementId);
+  }
 };
 
 /**
@@ -31,7 +42,7 @@ export const useGAPageTracking = () => {
 
   useEffect(() => {
     const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-    if (!measurementId) return;
+    if (!measurementId || !gaTrackingEnabled) return;
 
     // Send page_view event to Google Analytics
     const path = location.pathname + location.search + location.hash;
@@ -48,7 +59,7 @@ export const useGAPageTracking = () => {
  */
 export const trackGAEvent = (eventName: string, eventParams?: Record<string, string | number | boolean>) => {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  if (!measurementId) return;
+  if (!measurementId || !gaTrackingEnabled) return;
 
   ReactGA.event(eventName, eventParams);
 };
@@ -59,7 +70,7 @@ export const trackGAEvent = (eventName: string, eventParams?: Record<string, str
  */
 export const setGAUserProperty = (propertyName: string, value: string) => {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  if (!measurementId) return;
+  if (!measurementId || !gaTrackingEnabled) return;
 
   ReactGA.set({ [propertyName]: value });
 };
