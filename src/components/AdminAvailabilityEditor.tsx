@@ -151,16 +151,18 @@ export const AdminAvailabilityEditor = ({
       const record = availabilityData.get(selectedDate);
       let error: any = null;
 
+      const payload = {
+        is_available: editData.is_available,
+        booked_by: editData.is_available ? null : (editData.booked_by || null),
+        notes: editData.is_available ? null : (editData.notes || null),
+      };
+
       if (record) {
         // Update existing record
         // @ts-ignore - room_availability table is newly created
         const { error: updateError } = await (supabase as any)
           .from('room_availability')
-          .update({
-            is_available: editData.is_available,
-            booked_by: editData.booked_by || null,
-            notes: editData.notes || null,
-          })
+          .update(payload)
           .eq('room_id', roomId)
           .eq('availability_date', selectedDate);
 
@@ -173,9 +175,7 @@ export const AdminAvailabilityEditor = ({
           .insert({
             room_id: roomId,
             availability_date: selectedDate,
-            is_available: editData.is_available,
-            booked_by: editData.booked_by || null,
-            notes: editData.notes || null,
+            ...payload,
           });
 
         error = insertError;
@@ -400,33 +400,33 @@ export const AdminAvailabilityEditor = ({
 
       {/* Edit date modal */}
       <Dialog open={isEditingDate} onOpenChange={setIsEditingDate}>
-        <DialogContent className="max-w-full sm:max-w-md w-[95vw] sm:w-auto bg-white dark:bg-white border-2 border-primary/20 shadow-lg rounded-xl">
-          <DialogHeader className="bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 sm:-mx-5 -mt-5 px-3 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b border-primary/15 rounded-t-xl">
-            <DialogTitle className="text-base sm:text-lg font-bold text-foreground/90">
+        <DialogContent className="max-w-full sm:max-w-md w-[95vw] sm:w-auto bg-white dark:bg-white border border-border shadow-xl rounded-2xl overflow-hidden p-0">
+          <DialogHeader className="bg-muted/40 px-4 sm:px-5 pt-4 pb-3 border-b border-border">
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
               {language === 'th' ? 'แก้ไขสถานะ' : 'Edit Status'}
             </DialogTitle>
-            <p className="text-primary text-xs sm:text-sm font-semibold mt-0.5">{selectedDate}</p>
+            <p className="text-muted-foreground text-xs sm:text-sm font-semibold mt-0.5">{selectedDate}</p>
           </DialogHeader>
 
-          <div className="space-y-2 sm:space-y-3 px-3 sm:px-4 pb-3 sm:pb-4">
-            <div className="space-y-1.5 sm:space-y-2">
+          <div className="space-y-4 px-4 sm:px-5 py-4">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs sm:text-sm font-bold text-foreground/90">
+                <Label className="text-xs sm:text-sm font-bold text-foreground">
                   {language === 'th' ? 'สถานะ' : 'Status'}
                 </Label>
-                <span className="text-[9px] sm:text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold\">
+                <span className="text-[10px] sm:text-xs px-2 py-1 rounded-full bg-muted text-foreground font-semibold">
                   {editData.is_available 
                     ? (language === 'th' ? '🟢 ว่าง' : '🟢 Free')
                     : (language === 'th' ? '🔴 ไม่ว่าง' : '🔴 Booked')}
                 </span>
               </div>
-              <div className="flex gap-2 sm:gap-2.5">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
-                  onClick={() => setEditData({ ...editData, is_available: true })}
+                  onClick={() => setEditData({ ...editData, is_available: true, booked_by: '', notes: '' })}
                   className={cn(
-                    'flex-1 border font-semibold text-xs sm:text-sm transition-all px-2 sm:px-3 py-1.5 sm:py-2 duration-200',
+                    'h-10 border font-semibold text-xs sm:text-sm transition-all duration-200 rounded-xl',
                     editData.is_available
-                      ? 'border-green-600 bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                      ? 'border-green-600 bg-green-600 text-white hover:bg-green-700'
                       : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
                   )}
                 >
@@ -436,9 +436,9 @@ export const AdminAvailabilityEditor = ({
                 <Button
                   onClick={() => setEditData({ ...editData, is_available: false })}
                   className={cn(
-                    'flex-1 border font-semibold text-xs sm:text-sm transition-all px-2 sm:px-3 py-1.5 sm:py-2 duration-200',
+                    'h-10 border font-semibold text-xs sm:text-sm transition-all duration-200 rounded-xl',
                     !editData.is_available
-                      ? 'border-red-600 bg-red-600 text-white hover:bg-red-700 shadow-sm'
+                      ? 'border-red-600 bg-red-600 text-white hover:bg-red-700'
                       : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
                   )}
                 >
@@ -449,9 +449,9 @@ export const AdminAvailabilityEditor = ({
             </div>
 
             {!editData.is_available && (
-              <div className="bg-primary/5 p-2 sm:p-3 rounded-md border border-primary/10 space-y-1.5 sm:space-y-2">
+              <div className="bg-muted/40 p-3 rounded-xl border border-border space-y-2.5">
                 <div>
-                  <Label htmlFor="booked_by" className="text-[10px] sm:text-xs font-semibold text-foreground/80 block">
+                  <Label htmlFor="booked_by" className="text-[10px] sm:text-xs font-semibold text-muted-foreground block">
                     {language === 'th' ? 'จองโดย' : 'Booked By'}
                   </Label>
                   <Input
@@ -459,12 +459,12 @@ export const AdminAvailabilityEditor = ({
                     placeholder={language === 'th' ? 'Agoda, Booking.com...' : 'Agoda, Booking.com...'}
                     value={editData.booked_by}
                     onChange={(e) => setEditData({ ...editData, booked_by: e.target.value })}
-                    className="mt-0.5 border text-[10px] sm:text-xs bg-white text-foreground/90 placeholder:text-foreground/40 p-1.5 sm:p-2"
+                    className="mt-1 h-9 border-border text-xs bg-white text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="notes" className="text-[10px] sm:text-xs font-semibold text-foreground/80 block">
+                  <Label htmlFor="notes" className="text-[10px] sm:text-xs font-semibold text-muted-foreground block">
                     {language === 'th' ? 'หมายเหตุ' : 'Notes'}
                   </Label>
                   <Input
@@ -472,17 +472,33 @@ export const AdminAvailabilityEditor = ({
                     placeholder={language === 'th' ? 'Manual block, สำคัญ...' : 'Manual block, Important...'}
                     value={editData.notes}
                     onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                    className="mt-0.5 border text-[10px] sm:text-xs bg-white text-foreground/90 placeholder:text-foreground/40 p-1.5 sm:p-2"
+                    className="mt-1 h-9 border-border text-xs bg-white text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
             )}
 
-            <div className="flex gap-1.5 sm:gap-2 pt-1.5 sm:pt-2.5">
+            {editData.is_available && (
+              <p className="text-[10px] sm:text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                {language === 'th'
+                  ? 'เมื่อบันทึกสถานะเป็นว่าง ระบบจะลบข้อมูลผู้จองและหมายเหตุเดิมอัตโนมัติ'
+                  : 'Saving as available will automatically clear previous booked-by and notes details.'}
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={() => setIsEditingDate(false)}
+                disabled={isLoading}
+                variant="outline"
+                className="h-10 px-4 text-xs sm:text-sm rounded-xl"
+              >
+                {language === 'th' ? 'ยกเลิก' : 'Cancel'}
+              </Button>
               <Button
                 onClick={handleSaveAvailability}
                 disabled={isLoading}
-                className="flex-1 border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-sm transition-all text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-10 border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-all text-xs sm:text-sm rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-1">
@@ -496,7 +512,8 @@ export const AdminAvailabilityEditor = ({
               <Button
                 onClick={handleDeleteAvailability}
                 disabled={isLoading}
-                className="border border-red-400 bg-red-50 hover:bg-red-100 text-red-600 font-semibold transition-all p-1.5 sm:p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outline"
+                className="h-10 w-10 border border-red-300 bg-red-50 hover:bg-red-100 text-red-600 font-semibold transition-all p-0 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Trash2 size={13} className="sm:w-3.5 sm:h-3.5" />
               </Button>
