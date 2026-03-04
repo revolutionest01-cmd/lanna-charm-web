@@ -101,9 +101,9 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll Indicator - Hide on mobile */}
-      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce hidden sm:block">
-        <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-2">
-          <div className="w-1 h-3 bg-foreground/30 rounded-full" />
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-[80] animate-bounce hidden sm:block pointer-events-none">
+        <div className="w-6 h-10 border-2 border-white rounded-full flex items-start justify-center p-2 shadow-[0_0_20px_rgba(255,255,255,0.35)] bg-black/10">
+          <div className="w-1 h-3 bg-white rounded-full" />
         </div>
       </div>
     </section>
