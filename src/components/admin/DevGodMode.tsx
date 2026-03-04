@@ -151,10 +151,13 @@ export const DevGodMode = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [activeSiteTheme, setActiveSiteTheme] = useState<SiteThemeId>("original");
+  const [pendingSiteTheme, setPendingSiteTheme] = useState<SiteThemeId>("original");
   const liveChatFeature = features.find((feature) => feature.feature_key === "live_chat");
   const nonThemeFeatures = features.filter(
     (feature) => !SITE_THEME_FEATURE_KEYS.includes(feature.feature_key) && feature.feature_key !== "live_chat"
   );
+  const isUpdatingSiteTheme = updating === "site-theme";
+  const hasPendingThemeChange = pendingSiteTheme !== activeSiteTheme;
 
   const fetchData = async () => {
     setLoading(true);
@@ -213,7 +216,9 @@ export const DevGodMode = () => {
         is_enabled: feature.is_enabled,
       }));
 
-    setActiveSiteTheme(resolveSiteThemeFromRows(themeRows));
+    const resolvedTheme = resolveSiteThemeFromRows(themeRows);
+    setActiveSiteTheme(resolvedTheme);
+    setPendingSiteTheme(resolvedTheme);
   }, [features]);
 
   const handlePointsChange = async (userId: string, newPoints: number) => {
@@ -262,12 +267,26 @@ export const DevGodMode = () => {
     setUpdating(null);
   };
 
-  const handleWebsiteThemeChange = async (themeId: SiteThemeId) => {
-    if (updating === "site-theme" || themeId === activeSiteTheme) return;
+  const handleWebsiteThemeChange = async () => {
+    if (isUpdatingSiteTheme || !hasPendingThemeChange) return;
 
-    setActiveSiteTheme(themeId);
-    applySiteThemeClass(themeId);
-    setLocalSiteTheme(themeId);
+    const themeId = pendingSiteTheme;
+    const selectedTheme = SITE_THEME_SELECT_OPTIONS.find((theme) => theme.id === themeId);
+    const targetThemeLabel = language === "th"
+      ? selectedTheme?.labelTh || themeId
+      : selectedTheme?.labelEn || themeId;
+
+    const confirmed = await sweetAlert.modal.confirm(
+      language === "th"
+        ? `ยืนยันเปลี่ยนธีมเว็บไซต์เป็น ${targetThemeLabel}?`
+        : `Confirm changing website theme to ${targetThemeLabel}?`,
+      language === "th"
+        ? "การเปลี่ยนแปลงนี้จะมีผลกับหน้าเว็บทั้งระบบ"
+        : "This will update the color scheme across the entire website"
+    );
+
+    if (!confirmed) return;
+
     setUpdating("site-theme");
 
     const updates = await Promise.all(
@@ -284,8 +303,8 @@ export const DevGodMode = () => {
     if (hasError) {
       sweetAlert.warning(
         language === "th"
-          ? "เปลี่ยนธีมเฉพาะเครื่องนี้ได้แล้ว แต่ยังอัปเดตทั้งระบบไม่ได้ (รอ DB migration/Policy)"
-          : "Theme applied locally, but global update failed (DB migration/policy pending)."
+          ? "ไม่สามารถอัปเดตธีมทั้งระบบได้ในตอนนี้"
+          : "Unable to update the global website theme right now"
       );
       setUpdating(null);
       return;
@@ -303,6 +322,10 @@ export const DevGodMode = () => {
       })
     );
 
+    setActiveSiteTheme(themeId);
+    setPendingSiteTheme(themeId);
+    applySiteThemeClass(themeId);
+    setLocalSiteTheme(themeId);
     clearFeatureToggleCache();
     sweetAlert.success(language === "th" ? "อัปเดตธีมเว็บไซต์สำเร็จ" : "Website theme updated");
     setUpdating(null);
@@ -390,7 +413,7 @@ export const DevGodMode = () => {
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             {language === "th"
-              ? "ย้ายมาจากหน้า Dashboard เพื่อป้องกัน Admin กดเล่นระหว่างรอ DB พร้อมใช้งาน"
+              ? "อยู่ระหว่างทดสอบ Theme"
               : "Moved from Dashboard to prevent Admin testing before DB is fully ready"}
           </CardDescription>
         </CardHeader>
@@ -398,22 +421,46 @@ export const DevGodMode = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
             {SITE_THEME_SELECT_OPTIONS.map((theme) => {
               const isActive = activeSiteTheme === theme.id;
+              const isSelected = pendingSiteTheme === theme.id;
               return (
                 <Button
                   key={theme.id}
                   type="button"
-                  variant={isActive ? "default" : "outline"}
-                  disabled={updating === "site-theme"}
-                  onClick={() => handleWebsiteThemeChange(theme.id)}
+                  variant={isSelected ? "default" : "outline"}
+                  disabled={isUpdatingSiteTheme}
+                  onClick={() => setPendingSiteTheme(theme.id)}
                   className="h-auto py-2.5 px-3 flex flex-col items-start gap-2"
                 >
                   <span className={`w-full h-2.5 rounded-full bg-gradient-to-r ${theme.preview}`} />
                   <span className="text-xs font-semibold leading-none">
                     {language === "th" ? theme.labelTh : theme.labelEn}
                   </span>
+                  {isActive && (
+                    <span className="text-[10px] leading-none opacity-90">
+                      {language === "th" ? "ใช้งานอยู่" : "Active"}
+                    </span>
+                  )}
                 </Button>
               );
             })}
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isUpdatingSiteTheme || !hasPendingThemeChange}
+              onClick={() => setPendingSiteTheme(activeSiteTheme)}
+            >
+              {language === "th" ? "ยกเลิกการเลือก" : "Discard Selection"}
+            </Button>
+            <Button
+              type="button"
+              disabled={isUpdatingSiteTheme || !hasPendingThemeChange}
+              onClick={handleWebsiteThemeChange}
+            >
+              {language === "th" ? "ยืนยันการเปลี่ยนธีม" : "Confirm Theme Change"}
+            </Button>
           </div>
         </CardContent>
       </Card>
