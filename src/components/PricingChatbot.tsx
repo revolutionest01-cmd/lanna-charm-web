@@ -29,6 +29,17 @@ const getSessionId = () => {
   return id;
 };
 
+const CHAT_OPEN_COUNT_KEY = 'plernping-chat-open-count-v1';
+
+const getChatOpenCount = () => {
+  const count = Number(localStorage.getItem(CHAT_OPEN_COUNT_KEY) || '0');
+  return Number.isFinite(count) && count > 0 ? count : 0;
+};
+
+const setChatOpenCount = (count: number) => {
+  localStorage.setItem(CHAT_OPEN_COUNT_KEY, String(count));
+};
+
 const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   const { language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,14 +47,15 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionId = useRef(getSessionId());
+  const wasOpenRef = useRef(false);
 
-  const welcomeMessage = language === 'th'
-    ? "สวัสดีค่ะ! 😊 ฉันคือ Plernping AI ช่วยตอบทุกคำถามเกี่ยวกับห้องพัก เมนูอาหาร-เครื่องดื่ม ห้องประชุม ราคา ข้อมูลติดต่อ และอื่นๆ ได้เลยค่ะ"
+  const firstOpenMessage = language === 'th'
+    ? "สวัสดีค่ะ 😊 เพลินนะคะ ยินดีที่ได้รู้จักค่ะ เพลินเป็นผู้ช่วย AI ของ Plern Ping Cafe & Resort พร้อมช่วยตอบทุกคำถามเรื่องห้องพัก เมนู ราคา และข้อมูลต่างๆ ให้ลูกค้าตามที่อยากทราบค่ะ"
     : language === 'zh'
-    ? "你好！😊 我是Plernping AI，可以回答关于房间、菜单、价格、会议室、联系方式等所有问题。"
+    ? "你好呀 😊 我叫Ploen，很高兴认识你！我是 Plern Ping Cafe & Resort 的AI女助手，可以亲切又礼貌地帮助你了解房间、菜单、价格和各项服务。"
     : language === 'ja'
-    ? "こんにちは！😊 Plernping AIです。お部屋、メニュー、料金、会議室、連絡先など何でもお聞きください。"
-    : "Hi! 😊 I'm Plernping AI. Ask me anything about rooms, menus, prices, meeting spaces, contact info, and more!";
+    ? "こんにちは 😊 私はプローンです。はじめまして！Plern Ping Cafe & Resort の女性AIアシスタントとして、お部屋・メニュー・料金などを丁寧で親しみやすくご案内します。"
+    : "Hi there 😊 I'm Ploen. Nice to meet you! I'm the female AI assistant of Plern Ping Cafe & Resort, here to help with rooms, menus, prices, and more in a friendly and polite way.";
 
   const quickQuestions = language === 'th'
     ? ["ห้องพักราคาเท่าไหร่?", "มีห้องว่างไหม?", "เมนูแนะนำ?", "เบอร์โทรติดต่อ?", "จัดงานได้ไหม?", "เวลาเปิด-ปิด?"]
@@ -54,15 +66,37 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
     : ["Room prices?", "Any rooms available?", "Menu recommendations?", "Contact number?", "Can host events?", "Opening hours?"];
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    if (isOpen && !wasOpenRef.current) {
+      const nextOpenCount = getChatOpenCount() + 1;
+      setChatOpenCount(nextOpenCount);
+
+      const greetingMessage =
+        language === 'th' && nextOpenCount === 2
+          ? `${firstOpenMessage} รอบนี้มีอะไรให้เพลินช่วยดีคะ`
+          : firstOpenMessage;
+
       setMessages([{
         id: '1',
         role: 'assistant',
-        content: welcomeMessage,
+        content: greetingMessage,
         timestamp: new Date()
       }]);
+
+      const newId = `s_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      sessionStorage.setItem('plernping-chat-session', newId);
+      sessionId.current = newId;
     }
-  }, [isOpen, messages.length, welcomeMessage]);
+
+    wasOpenRef.current = isOpen;
+  }, [isOpen, firstOpenMessage, language]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      if (messages.length > 0) {
+        setMessages([]);
+      }
+    }
+  }, [isOpen, messages.length]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -127,7 +161,7 @@ const PricingChatbot = ({ isOpen, onClose }: PricingChatbotProps) => {
     setMessages([{
       id: '1',
       role: 'assistant',
-      content: welcomeMessage,
+      content: firstOpenMessage,
       timestamp: new Date()
     }]);
     // New session

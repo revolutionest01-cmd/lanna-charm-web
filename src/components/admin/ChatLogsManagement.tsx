@@ -209,7 +209,9 @@ export const ChatLogsManagement = () => {
                                 <p className="text-xs text-muted-foreground mb-0.5">
                                   {new Date(msg.created_at).toLocaleTimeString(language === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                                 </p>
-                                <p className="text-sm bg-card border border-border rounded-lg p-2">{msg.user_message}</p>
+                                <div className="text-sm bg-card border border-border rounded-lg p-2 max-h-36 overflow-y-auto whitespace-pre-wrap break-words">
+                                  {msg.user_message}
+                                </div>
                               </div>
                             </div>
                             {/* AI reply */}
@@ -218,7 +220,9 @@ export const ChatLogsManagement = () => {
                                 <Bot className="h-3 w-3 text-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm bg-card border border-border rounded-lg p-2 whitespace-pre-wrap">{msg.ai_reply}</p>
+                                <div className="text-sm bg-card border border-border rounded-lg p-2 max-h-44 overflow-y-auto whitespace-pre-wrap break-words">
+                                  {msg.ai_reply}
+                                </div>
                               </div>
                             </div>
                           </div>

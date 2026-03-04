@@ -29,6 +29,66 @@ function sanitizeString(str: string, maxLength: number = 500): string {
   return str.replace(/[<>]/g, '').trim().substring(0, maxLength);
 }
 
+function getBangkokDateString(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function toIsoDate(year: number, month: number, day: number): string | null {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
+  if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  const yyyy = String(year);
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function extractRequestedDate(message: string, fallbackDate: string): { date: string; hasExplicitDate: boolean } {
+  const trimmed = message.trim();
+
+  const lower = trimmed.toLowerCase();
+  if (trimmed.includes('วันนี้') || trimmed.includes('คืนนี้') || lower.includes('today') || lower.includes('tonight')) {
+    return { date: fallbackDate, hasExplicitDate: true };
+  }
+
+  if (trimmed.includes('พรุ่งนี้') || lower.includes('tomorrow')) {
+    const tomorrow = new Date(`${fallbackDate}T00:00:00.000Z`);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    const yyyy = tomorrow.getUTCFullYear();
+    const mm = String(tomorrow.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(tomorrow.getUTCDate()).padStart(2, '0');
+    return { date: `${yyyy}-${mm}-${dd}`, hasExplicitDate: true };
+  }
+
+  const ymd = trimmed.match(/\b(20\d{2})[-\/](\d{1,2})[-\/](\d{1,2})\b/);
+  if (ymd) {
+    const parsed = toIsoDate(Number(ymd[1]), Number(ymd[2]), Number(ymd[3]));
+    if (parsed) return { date: parsed, hasExplicitDate: true };
+  }
+
+  const dmy = trimmed.match(/\b(\d{1,2})[-\/](\d{1,2})[-\/](20\d{2})\b/);
+  if (dmy) {
+    const parsed = toIsoDate(Number(dmy[3]), Number(dmy[2]), Number(dmy[1]));
+    if (parsed) return { date: parsed, hasExplicitDate: true };
+  }
+
+  return { date: fallbackDate, hasExplicitDate: false };
+}
+
 // Hash IP for privacy
 function hashIP(ip: string): string {
   let hash = 0;
@@ -102,8 +162,16 @@ serve(async (req) => {
     // FETCH ALL DATABASE CONTEXT COMPREHENSIVELY
     // ═══════════════════════════════════════════════
 
-    const [roomsRes, eventsRes, menusRes, reviewsRes, businessRes] = await Promise.all([
-      supabase.from('rooms').select('name_th, name_en, description_th, description_en, price, capacity, amenities_th, amenities_en, is_available').eq('is_active', true).order('sort_order'),
+    const todayInBangkok = getBangkokDateString();
+    const dateResolution = extractRequestedDate(message, todayInBangkok);
+    const requestedDate = dateResolution.date;
+    const hasExplicitDate = dateResolution.hasExplicitDate;
+
+    const [roomsRes, roomAvailabilityRes, eventsRes, menusRes, reviewsRes, businessRes] = await Promise.all([
+      supabase.from('rooms').select('id, name_th, name_en, description_th, description_en, price, capacity, amenities_th, amenities_en, is_available').eq('is_active', true).order('sort_order'),
+      hasExplicitDate
+        ? supabase.from('room_availability').select('room_id, is_available, availability_date').eq('availability_date', requestedDate)
+        : Promise.resolve({ data: [], error: null }),
       supabase.from('event_spaces').select('title_th, title_en, description_th, description_en, keywords_th, keywords_en').eq('is_active', true),
       supabase.from('menus').select('name_th, name_en, description_th, description_en, price, is_recommended, menu_categories(name_th, name_en)').eq('is_active', true).order('sort_order'),
       supabase.from('reviews').select('rating, customer_name, review_text_th, review_text_en').eq('is_active', true).order('created_at', { ascending: false }).limit(10),
@@ -111,10 +179,17 @@ serve(async (req) => {
     ]);
 
     const rooms = roomsRes.data || [];
+    const roomAvailabilityRows = roomAvailabilityRes.data || [];
     const events = eventsRes.data || [];
     const menus = menusRes.data || [];
     const reviews = reviewsRes.data || [];
     const business = businessRes.data;
+
+    const calendarAvailabilityByRoomId = new Map<string, boolean>();
+    roomAvailabilityRows.forEach((row: { room_id: string; is_available: boolean | null }) => {
+      if (!row?.room_id) return;
+      calendarAvailabilityByRoomId.set(row.room_id, row.is_available !== false);
+    });
 
     // ═══════════════════════════════════════════════
     // BUILD COMPREHENSIVE CONTEXT
@@ -140,12 +215,46 @@ serve(async (req) => {
 
     // Rooms
     if (rooms.length > 0) {
+      const availableRoomNames: string[] = [];
+      const unavailableRoomNames: string[] = [];
+
+      rooms.forEach(r => {
+        const roomName = isLangTh ? r.name_th : r.name_en;
+        const roomAvailable = calendarAvailabilityByRoomId.has(r.id)
+          ? calendarAvailabilityByRoomId.get(r.id) === true
+          : r.is_available === true;
+
+        if (roomAvailable) {
+          availableRoomNames.push(roomName);
+        } else {
+          unavailableRoomNames.push(roomName);
+        }
+      });
+
+      if (hasExplicitDate) {
+        context += `📅 สถานะห้องจากปฏิทิน (วันที่ ${requestedDate}):\n`;
+      } else {
+        context += `🟢 สถานะห้องปัจจุบัน (ยังไม่ได้ระบุวันที่เข้าพัก):\n`;
+      }
+      context += `- ห้องว่าง: ${availableRoomNames.length > 0 ? availableRoomNames.join(', ') : 'ไม่มี'}\n`;
+      context += `- ห้องไม่ว่าง: ${unavailableRoomNames.length > 0 ? unavailableRoomNames.join(', ') : 'ไม่มี'}\n`;
+      if (hasExplicitDate && calendarAvailabilityByRoomId.size === 0) {
+        context += `- หมายเหตุ: ไม่พบรายการปฏิทินเฉพาะวันที่นี้ จึงใช้สถานะหลักของห้องแทน\n`;
+      }
+      if (!hasExplicitDate) {
+        context += `- หมายเหตุ: หากลูกค้าระบุวันเข้าพัก/วันออก ให้ตรวจสอบตามปฏิทินรายวันอีกครั้งก่อนยืนยัน\n`;
+      }
+      context += '\n';
+
       context += `🛏️ ห้องพัก (${rooms.length} ห้อง):\n`;
       rooms.forEach(r => {
         const name = isLangTh ? r.name_th : r.name_en;
         const desc = isLangTh ? r.description_th : r.description_en;
         const amenities = isLangTh ? r.amenities_th : r.amenities_en;
-        const status = r.is_available ? '✅ ว่าง' : '❌ ไม่ว่าง';
+        const roomAvailable = hasExplicitDate && calendarAvailabilityByRoomId.has(r.id)
+          ? calendarAvailabilityByRoomId.get(r.id) === true
+          : r.is_available === true;
+        const status = roomAvailable ? '✅ ว่าง' : '❌ ไม่ว่าง';
         context += `- ${name}: ${r.price} บาท/คืน [${status}]`;
         if (r.capacity) context += ` | ความจุ: ${r.capacity}`;
         if (desc) context += `\n  ${desc}`;
@@ -235,7 +344,9 @@ serve(async (req) => {
 ✓ ${langInstruction}
 ✓ ตอบกระชับได้ใจความ (2-4 บรรทัด) แต่ครบถ้วน
 ✓ ถ้าถามราคา → แจ้งราคาจริงจาก DB พร้อมรายละเอียด
-✓ ถ้าถามห้องพัก → แจ้งสถานะว่าง/ไม่ว่าง ราคา ความจุ สิ่งอำนวยความสะดวก
+✓ ถ้าถามห้องพักหรือถามว่ามีห้องว่างไหม:
+  - ถ้าลูกค้าระบุวันที่ชัดเจน → ต้องอ้างอิงจาก "สถานะห้องจากปฏิทิน" ของวันที่นั้น และรายงานชื่อห้องที่ว่าง/ไม่ว่างตามข้อมูลจริง
+  - ถ้ายังไม่ระบุวันที่ → รายงาน "สถานะห้องปัจจุบัน" ก่อน และชวนลูกค้าระบุวันที่เพื่อเช็คจากปฏิทินรายวันให้แม่นยำ
 ✓ ถ้าถามเมนู → แนะนำพร้อมราคาและคำอธิบาย เน้นเมนูแนะนำ (⭐)
 ✓ ถ้าถามข้อมูลติดต่อ → ให้เบอร์โทร LINE อีเมล ที่อยู่
 ✓ ถ้าถามเรื่องนอกเหนือ → แนะนำให้ติดต่อเจ้าหน้าที่พร้อมเบอร์โทร

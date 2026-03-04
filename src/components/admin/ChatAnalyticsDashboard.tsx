@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ChartContainer,
   ChartTooltip,
@@ -25,6 +26,12 @@ interface ChatLog {
   intent: string | null;
   language: string | null;
   created_at: string;
+}
+
+interface TopQuestionItem {
+  question: string;
+  count: number;
+  entries: ChatLog[];
 }
 
 const PIE_COLORS = [
@@ -51,6 +58,7 @@ export const ChatAnalyticsDashboard = () => {
   const { language } = useLanguage();
   const [logs, setLogs] = useState<ChatLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedQuestion, setSelectedQuestion] = useState<TopQuestionItem | null>(null);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -113,16 +121,31 @@ export const ChatAnalyticsDashboard = () => {
       count,
     }));
 
-    // Top questions (by frequency of similar messages)
-    const questionMap: Record<string, number> = {};
+    // Popular questions (group by normalized message)
+    const questionMap: Record<string, TopQuestionItem> = {};
     logs.forEach(l => {
-      const q = l.user_message.trim().toLowerCase().slice(0, 80);
-      questionMap[q] = (questionMap[q] || 0) + 1;
+      const normalizedQuestion = l.user_message
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+
+      if (!normalizedQuestion) return;
+
+      if (!questionMap[normalizedQuestion]) {
+        questionMap[normalizedQuestion] = {
+          question: l.user_message.trim(),
+          count: 0,
+          entries: [],
+        };
+      }
+
+      questionMap[normalizedQuestion].count += 1;
+
+      if (questionMap[normalizedQuestion].entries.length < 50) {
+        questionMap[normalizedQuestion].entries.push(l);
+      }
     });
-    const topQuestions = Object.entries(questionMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([question, count]) => ({ question, count }));
+    const topQuestions = Object.values(questionMap).sort((a, b) => b.count - a.count);
 
     // Hourly distribution
     const hourMap: Record<number, number> = {};
@@ -322,7 +345,7 @@ export const ChatAnalyticsDashboard = () => {
         <CardHeader className="pb-2 p-3 sm:p-4">
           <CardTitle className="text-sm flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
-            {language === "th" ? "คำถามยอดนิยม Top 10" : "Top 10 Popular Questions"}
+            {language === "th" ? "คำถามยอดนิยม (ทั้งหมด)" : "Popular Questions (All)"}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-2 sm:p-4 pt-0">
@@ -334,6 +357,14 @@ export const ChatAnalyticsDashboard = () => {
                     #{i + 1}
                   </Badge>
                   <p className="text-sm text-foreground flex-1 break-words">{q.question}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 shrink-0"
+                    onClick={() => setSelectedQuestion(q)}
+                  >
+                    {language === "th" ? "ดูรายละเอียด" : "View details"}
+                  </Button>
                   <Badge variant="outline" className="text-xs shrink-0">
                     {q.count} {language === "th" ? "ครั้ง" : "times"}
                   </Badge>
@@ -343,6 +374,55 @@ export const ChatAnalyticsDashboard = () => {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedQuestion} onOpenChange={(open) => !open && setSelectedQuestion(null)}>
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
+          <DialogHeader className="px-4 py-3 border-b border-border">
+            <DialogTitle className="text-sm sm:text-base">
+              {language === "th" ? "รายละเอียดการคุยของคำถาม" : "Conversation details for question"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground break-words">
+              {selectedQuestion?.question}
+            </p>
+          </DialogHeader>
+
+          <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+            <Badge variant="secondary" className="text-xs">
+              {selectedQuestion?.count ?? 0} {language === "th" ? "ครั้ง" : "times"}
+            </Badge>
+            <p className="text-[11px] text-muted-foreground">
+              {language === "th" ? "แสดงสูงสุด 50 รายการล่าสุด" : "Showing up to 50 latest entries"}
+            </p>
+          </div>
+
+          <ScrollArea className="h-[60vh] px-4 py-3">
+            <div className="space-y-3">
+              {(selectedQuestion?.entries || []).map((entry) => (
+                <div key={entry.id} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                    <span className="truncate">session: {entry.session_id}</span>
+                    <span className="shrink-0">
+                      {new Date(entry.created_at).toLocaleString(language === "th" ? "th-TH" : "en-US")}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] text-muted-foreground">{language === "th" ? "ผู้ใช้" : "User"}</p>
+                    <div className="text-sm bg-muted/40 rounded-md p-2 max-h-36 overflow-y-auto whitespace-pre-wrap break-words">
+                      {entry.user_message}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] text-muted-foreground">AI</p>
+                    <div className="text-sm bg-muted/40 rounded-md p-2 max-h-44 overflow-y-auto whitespace-pre-wrap break-words">
+                      {entry.ai_reply}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
