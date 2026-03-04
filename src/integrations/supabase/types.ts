@@ -813,6 +813,7 @@ export type Database = {
           rank_display_tier_id: number | null
           rank_path: string | null
           rank_path_changed_at: string | null
+          rank_path_start_points: number | null
           reputation_points: number
           social_facebook: string | null
           social_instagram: string | null
@@ -833,6 +834,7 @@ export type Database = {
           rank_display_tier_id?: number | null
           rank_path?: string | null
           rank_path_changed_at?: string | null
+          rank_path_start_points?: number | null
           reputation_points?: number
           social_facebook?: string | null
           social_instagram?: string | null
@@ -853,6 +855,7 @@ export type Database = {
           rank_display_tier_id?: number | null
           rank_path?: string | null
           rank_path_changed_at?: string | null
+          rank_path_start_points?: number | null
           reputation_points?: number
           social_facebook?: string | null
           social_instagram?: string | null
