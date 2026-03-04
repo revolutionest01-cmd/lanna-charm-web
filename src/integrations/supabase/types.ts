@@ -47,6 +47,87 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_abuse_events: {
+        Row: {
+          block_reason: string | null
+          created_at: string
+          id: string
+          raw_payload: Json | null
+          request_email: string | null
+          request_ip: string | null
+          request_name: string | null
+          request_phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_flags: string[] | null
+          risk_score: number
+          status: string
+        }
+        Insert: {
+          block_reason?: string | null
+          created_at?: string
+          id?: string
+          raw_payload?: Json | null
+          request_email?: string | null
+          request_ip?: string | null
+          request_name?: string | null
+          request_phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_flags?: string[] | null
+          risk_score?: number
+          status?: string
+        }
+        Update: {
+          block_reason?: string | null
+          created_at?: string
+          id?: string
+          raw_payload?: Json | null
+          request_email?: string | null
+          request_ip?: string | null
+          request_name?: string | null
+          request_phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_flags?: string[] | null
+          risk_score?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      booking_blacklist: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          reason: string | null
+          type: string
+          value: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          type: string
+          value: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          type?: string
+          value?: string
+        }
+        Relationships: []
+      }
       business_info: {
         Row: {
           address_en: string | null
