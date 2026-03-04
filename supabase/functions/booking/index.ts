@@ -90,6 +90,7 @@ interface BookingRequest {
   checkOut: string;
   guests: number;
   roomId?: string;
+  additionalDetails?: string;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -161,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     
     // Validate required fields exist
-    const { name, email, phone, checkIn, checkOut, guests, roomId } = body as BookingRequest;
+    const { name, email, phone, checkIn, checkOut, guests, roomId, additionalDetails } = body as BookingRequest;
     
     if (!name || !email || !phone || !checkIn || !checkOut || !guests) {
       return new Response(
@@ -180,6 +181,7 @@ const handler = async (req: Request): Promise<Response> => {
     const sanitizedCheckIn = sanitizeString(checkIn, 20);
     const sanitizedCheckOut = sanitizeString(checkOut, 20);
     const sanitizedRoomId = roomId ? sanitizeString(roomId, 100) : '';
+    const sanitizedAdditionalDetails = additionalDetails ? sanitizeString(additionalDetails, 500) : '';
     const sanitizedGuests = Math.min(Math.max(1, Number(guests) || 1), 50);
 
     // Validate input formats
@@ -398,6 +400,7 @@ ${roomName ? `🛏️ ประเภทห้อง: ${roomName}${roomPrice ? `
 📅 เช็คอิน: ${sanitizedCheckIn}
 📅 เช็คเอาท์: ${sanitizedCheckOut}
 👥 จำนวนผู้เข้าพัก: ${sanitizedGuests} คน
+${sanitizedAdditionalDetails ? `📝 รายละเอียดเพิ่มเติม: ${sanitizedAdditionalDetails}` : ''}
     `.trim();
 
     // Send message to LINE Messaging API (to both user and group if configured)

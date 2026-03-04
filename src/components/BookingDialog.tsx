@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -41,6 +42,10 @@ interface BookingDialogProps {
   roomId?: string;
 }
 
+interface RoomAvailabilityState {
+  [roomId: string]: boolean;
+}
+
 const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const { language } = useLanguage();
   const t = translations[language];
@@ -55,8 +60,10 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [additionalDetails, setAdditionalDetails] = useState("");
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [liveRoomAvailability, setLiveRoomAvailability] = useState<RoomAvailabilityState>({});
 
   const getAvailabilityDateRange = (checkInDate: Date, checkOutDate: Date) => {
     const start = format(checkInDate, "yyyy-MM-dd");
@@ -84,7 +91,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       };
     }
 
-    const { data: blockedDates, error: availabilityError } = await (supabase as any)
+    const { data: blockedDates, error: availabilityError } = await supabase
       .from("room_availability")
       .select("availability_date")
       .eq("room_id", roomIdToCheck)
@@ -103,6 +110,60 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     };
   };
 
+  const fetchLiveRoomAvailability = useCallback(async () => {
+    const activeRooms = rooms.filter((room) => room.is_active);
+    if (activeRooms.length === 0) {
+      setLiveRoomAvailability({});
+      return;
+    }
+
+    const roomIds = activeRooms.map((room) => room.id);
+    const baseStatus: RoomAvailabilityState = {};
+    activeRooms.forEach((room) => {
+      baseStatus[room.id] = true;
+    });
+
+    let startDate = format(new Date(), "yyyy-MM-dd");
+    let endDate = startDate;
+
+    if (checkIn && checkOut) {
+      const range = getAvailabilityDateRange(checkIn, checkOut);
+      startDate = range.start;
+      endDate = range.end;
+    } else if (checkIn) {
+      startDate = format(checkIn, "yyyy-MM-dd");
+      endDate = startDate;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("room_availability")
+        .select("room_id, is_available")
+        .in("room_id", roomIds)
+        .eq("is_available", false)
+        .gte("availability_date", startDate)
+        .lte("availability_date", endDate);
+
+      if (error) throw error;
+
+      const nextStatus: RoomAvailabilityState = { ...baseStatus };
+      (data || []).forEach((record: { room_id: string; is_available: boolean }) => {
+        if (record.is_available === false) {
+          nextStatus[record.room_id] = false;
+        }
+      });
+
+      setLiveRoomAvailability(nextStatus);
+
+      if (selectedRoom && nextStatus[selectedRoom] === false) {
+        setSelectedRoom("");
+      }
+    } catch (error) {
+      console.error("Failed to refresh live room availability:", error);
+      setLiveRoomAvailability(baseStatus);
+    }
+  }, [rooms, checkIn, checkOut, selectedRoom]);
+
   // Update selectedRoom when roomId prop changes
   useEffect(() => {
     if (roomId) {
@@ -110,6 +171,34 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       setSelectedRoom(roomId);
     }
   }, [roomId]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    void fetchLiveRoomAvailability();
+
+    const channel = supabase
+      .channel("booking-dialog-room-availability")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_availability" },
+        () => {
+          void fetchLiveRoomAvailability();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "rooms" },
+        () => {
+          void fetchLiveRoomAvailability();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [open, fetchLiveRoomAvailability]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen && !isFeatureEnabled("booking")) {
@@ -139,6 +228,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       setName("");
       setEmail("");
       setPhone("");
+      setAdditionalDetails("");
       setErrors({});
     }
   };
@@ -288,6 +378,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
           name,
           email,
           phone,
+          additionalDetails,
           roomId: selectedRoom || null,
           checkIn: format(checkIn, "yyyy-MM-dd"),
           checkOut: format(checkOut, "yyyy-MM-dd"),
@@ -312,6 +403,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       setName("");
       setEmail("");
       setPhone("");
+      setAdditionalDetails("");
       setErrors({});
     } catch (error) {
       console.error('Booking submission error:', error);
@@ -326,7 +418,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     name: language === 'th' ? room.name_th : room.name_en,
     name_th: room.name_th,
     name_en: room.name_en,
-    isAvailable: room.is_available !== false,
+    isAvailable: liveRoomAvailability[room.id] ?? true,
   }));
 
   const bookingForm = (
@@ -433,7 +525,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
             value={guests}
             onChange={handleGuestsChange}
             maxLength={2}
-            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.guests && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm placeholder:text-muted-foreground/50", errors.guests && "border-destructive focus-visible:ring-destructive")}
             style={{ fontSize: "16px" }}
           />
         </div>
@@ -458,7 +550,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
             placeholder={language === 'th' ? 'กรอกชื่อของคุณ' : language === 'zh' ? '请输入您的姓名' : 'Enter your name'}
             value={name}
             onChange={handleNameChange}
-            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.name && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm placeholder:text-muted-foreground/50", errors.name && "border-destructive focus-visible:ring-destructive")}
             style={{ fontSize: "16px" }}
           />
         </div>
@@ -483,7 +575,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
             placeholder="example@email.com"
             value={email}
             onChange={handleEmailChange}
-            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.email && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm placeholder:text-muted-foreground/50", errors.email && "border-destructive focus-visible:ring-destructive")}
             style={{ fontSize: "16px" }}
           />
         </div>
@@ -509,7 +601,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
             value={phone}
             onChange={handlePhoneChange}
             maxLength={10}
-            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm", errors.phone && "border-destructive focus-visible:ring-destructive")}
+            className={cn("pl-10 h-10 sm:h-11 rounded-xl text-sm placeholder:text-muted-foreground/50", errors.phone && "border-destructive focus-visible:ring-destructive")}
             style={{ fontSize: "16px" }}
           />
         </div>
@@ -519,6 +611,27 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
             <span>{errors.phone}</span>
           </div>
         )}
+      </div>
+
+      {/* Additional Details */}
+      <div className="space-y-0.5">
+        <Label htmlFor="additionalDetails" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {language === 'th' ? 'คำอธิบาย / เพิ่มเติม' : language === 'zh' ? '附加说明' : 'Additional Details'}
+        </Label>
+        <Textarea
+          id="additionalDetails"
+          placeholder={
+            language === 'th'
+              ? 'แจ้งรายละเอียดเพิ่มเติม เช่น ขอเตียงเสริม, เวลาเช็คอินโดยประมาณ, หรือข้อมูลสำคัญอื่นๆ'
+              : language === 'zh'
+              ? '可填写补充信息，例如加床需求、预计入住时间或其他重要说明'
+              : 'Add any important notes such as extra bed request, expected check-in time, or special requirements'
+          }
+          value={additionalDetails}
+          onChange={(e) => setAdditionalDetails(e.target.value.slice(0, 500))}
+          className="min-h-[84px] rounded-xl text-sm bg-white placeholder:text-muted-foreground/50"
+          style={{ fontSize: "16px" }}
+        />
       </div>
 
       {/* Submit */}
