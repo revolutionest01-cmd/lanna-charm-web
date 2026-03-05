@@ -92,7 +92,7 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
 
     const { data: roomData, error: roomError } = await supabase
       .from("rooms")
-      .select("id, is_available")
+      .select("id")
       .eq("id", roomIdToCheck)
       .maybeSingle();
 
@@ -124,10 +124,9 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       overrideMap[item.availability_date] = item.is_available;
     });
 
-    const roomFallbackAvailable = roomData.is_available !== false;
     const blockedDates = dateKeys.filter((dateKey) => {
       const overrideValue = overrideMap[dateKey];
-      const dateAvailable = overrideValue !== undefined ? overrideValue : roomFallbackAvailable;
+      const dateAvailable = overrideValue !== undefined ? overrideValue : true;
       return !dateAvailable;
     });
 
