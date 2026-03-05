@@ -18,7 +18,7 @@ import { UserStatusAvatar } from "@/components/UserStatusAvatar";
 
 import UserEngagementStats from "@/components/UserEngagementStats";
 import { format } from "date-fns";
-import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { useUserPerks, AVATAR_FRAMES } from "@/hooks/useUserPerks";
 import { useUserRank } from "@/hooks/useUserRank";
 import { getUnlockedPerks, RANK_PERKS } from "@/lib/pointSystem";
@@ -130,6 +130,8 @@ const isProfileTheme = (value: string | null | undefined): value is ProfileTheme
 
 const getThemeStorageKey = (userId: string) => `profile-theme-${userId}`;
 const getProfileExtraStorageKey = (userId: string) => `profile-extra-${userId}`;
+const getDisplayNameCooldownKey = (userId: string) => `profile-display-name-cooldown-${userId}`;
+const DISPLAY_NAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 
 const getStoredProfileTheme = (userId: string): ProfileTheme => {
   const stored = localStorage.getItem(getThemeStorageKey(userId));
@@ -182,6 +184,25 @@ const setStoredProfileExtras = (
   }
 ) => {
   localStorage.setItem(getProfileExtraStorageKey(userId), JSON.stringify(extras));
+};
+
+const getStoredDisplayNameCooldown = (userId: string) => {
+  try {
+    const raw = localStorage.getItem(getDisplayNameCooldownKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { lastChangedAt?: string; lastChangedName?: string };
+    if (!parsed?.lastChangedAt) return null;
+    return {
+      lastChangedAt: parsed.lastChangedAt,
+      lastChangedName: parsed.lastChangedName || "",
+    };
+  } catch {
+    return null;
+  }
+};
+
+const setStoredDisplayNameCooldown = (userId: string, payload: { lastChangedAt: string; lastChangedName: string }) => {
+  localStorage.setItem(getDisplayNameCooldownKey(userId), JSON.stringify(payload));
 };
 
 const isMissingStatusMessageColumnError = (error: unknown) => {
@@ -237,6 +258,8 @@ const Profile = () => {
   const [socialFacebook, setSocialFacebook] = useState("");
   const [socialInstagram, setSocialInstagram] = useState("");
   const [socialTiktok, setSocialTiktok] = useState("");
+  const [originalDisplayName, setOriginalDisplayName] = useState("");
+  const [originalStatusMessage, setOriginalStatusMessage] = useState("");
   const [likesReceived, setLikesReceived] = useState(0);
   const [isOnline, setIsOnline] = useState<boolean>(typeof window !== "undefined" ? window.navigator.onLine : true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -269,17 +292,14 @@ const Profile = () => {
     socialTiktok: socialTiktok.trim(),
   };
   const isUserProfileEnabled = isFeatureEnabled("user_profile");
+  const isProfileRestrictedMode = !featureLoading && !isUserProfileEnabled;
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate("/auth");
     }
-    if (!authLoading && isAuthenticated && !featureLoading && !isUserProfileEnabled) {
-      showFeatureDisabledAlert(language);
-      navigate("/");
-    }
-  }, [isAuthenticated, authLoading, navigate, featureLoading, isUserProfileEnabled, language]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   // Load profile data
   useEffect(() => {
@@ -304,9 +324,11 @@ const Profile = () => {
 
       if (data) {
         setDisplayName(data.display_name || "");
+        setOriginalDisplayName(data.display_name || "");
         setAvatarUrl(data.avatar_url || null);
         setProfileCreatedAt(data.created_at || null);
         setStatusMessage(extData?.status_message || "");
+        setOriginalStatusMessage(extData?.status_message || "");
         setBioShort(data.bio_short || "");
         setSocialFacebook(data.social_facebook || "");
         setSocialInstagram(data.social_instagram || "");
@@ -326,10 +348,12 @@ const Profile = () => {
       } else {
         const storedExtras = getStoredProfileExtras(user.id);
         setDisplayName(user.name || "");
+        setOriginalDisplayName(user.name || "");
         setAvatarUrl(user.avatar || null);
         setProfileTheme(getStoredProfileTheme(user.id));
         setProfileCreatedAt(null);
         setStatusMessage(storedExtras.statusMessage);
+        setOriginalStatusMessage(storedExtras.statusMessage);
         setBioShort(storedExtras.bioShort);
         setSocialFacebook(storedExtras.socialFacebook);
         setSocialInstagram(storedExtras.socialInstagram);
@@ -474,6 +498,7 @@ const Profile = () => {
   };
 
   const handleOpenDailyGacha = async () => {
+    if (isProfileRestrictedMode) return;
     if (!user?.id) {
       sweetAlert.warning(language === "th" ? "กรุณาเข้าสู่ระบบก่อน" : "Please sign in first");
       return;
@@ -618,7 +643,7 @@ const Profile = () => {
   };
 
   const handleSaveSignature = async () => {
-    if (!user?.id || !canUseSignature) return;
+    if (!user?.id || !canUseSignature || isProfileRestrictedMode) return;
 
     setIsSavingSignature(true);
     try {
@@ -654,7 +679,7 @@ const Profile = () => {
   };
 
   const handleThemeSelect = async (themeId: ProfileTheme) => {
-    if (!user?.id || profileTheme === themeId) return;
+    if (!user?.id || profileTheme === themeId || isProfileRestrictedMode) return;
 
     const previousTheme = profileTheme;
     setProfileTheme(themeId);
@@ -780,6 +805,76 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!user?.id || !displayName.trim()) return;
 
+    const trimmedDisplayName = displayName.trim();
+
+    if (isProfileRestrictedMode) {
+      const trimmedStatusMessage = profileExtrasPayload.statusMessage;
+      const hasDisplayNameChange = trimmedDisplayName !== originalDisplayName.trim();
+      const hasStatusMessageChange = trimmedStatusMessage !== originalStatusMessage.trim();
+
+      if (!hasDisplayNameChange && !hasStatusMessageChange) {
+        sweetAlert.warning(language === "th" ? "ยังไม่มีข้อมูลที่เปลี่ยนแปลง" : "No changes detected");
+        return;
+      }
+
+      if (hasDisplayNameChange) {
+        const cooldownRecord = getStoredDisplayNameCooldown(user.id);
+        if (cooldownRecord?.lastChangedAt) {
+          const elapsed = Date.now() - new Date(cooldownRecord.lastChangedAt).getTime();
+          if (elapsed < DISPLAY_NAME_COOLDOWN_MS) {
+            const remainingMs = DISPLAY_NAME_COOLDOWN_MS - elapsed;
+            const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+            sweetAlert.warning(
+              language === "th"
+                ? `เปลี่ยนชื่อได้อีกครั้งในอีกประมาณ ${remainingDays} วัน (จำกัด 14 วันเปลี่ยนได้ 1 ครั้ง)`
+                : `You can change your display name again in about ${remainingDays} day(s) (limited to once every 14 days).`
+            );
+            return;
+          }
+        }
+      }
+
+      setIsSaving(true);
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            display_name: trimmedDisplayName,
+            status_message: trimmedStatusMessage || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (error) throw error;
+
+        const nowIso = new Date().toISOString();
+        setOriginalDisplayName(trimmedDisplayName);
+        setOriginalStatusMessage(trimmedStatusMessage);
+        if (hasDisplayNameChange) {
+          setStoredDisplayNameCooldown(user.id, {
+            lastChangedAt: nowIso,
+            lastChangedName: trimmedDisplayName,
+          });
+        }
+
+        sweetAlert.success(
+          language === "th"
+            ? hasDisplayNameChange
+              ? "บันทึกชื่อที่แสดงสำเร็จ (เปลี่ยนได้อีกครั้งใน 14 วัน)"
+              : "บันทึกความรู้สึกสำเร็จ"
+            : hasDisplayNameChange
+              ? "Display name updated successfully (next change available in 14 days)."
+              : "Status message updated successfully."
+        );
+      } catch (error) {
+        console.error("Save display name error:", error);
+        sweetAlert.error(language === "th" ? "ไม่สามารถบันทึกข้อมูลได้" : "Failed to save changes");
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
     setIsSaving(true);
     try {
       // Save core profile fields
@@ -787,7 +882,7 @@ const Profile = () => {
         .from("profiles")
         .upsert({
           id: user.id,
-          display_name: displayName.trim(),
+          display_name: trimmedDisplayName,
           avatar_url: avatarUrl || null,
           bio_short: profileExtrasPayload.bioShort || null,
           social_facebook: profileExtrasPayload.socialFacebook || null,
@@ -806,6 +901,8 @@ const Profile = () => {
         .update({ status_message: profileExtrasPayload.statusMessage || null } as unknown as Record<string, unknown>)
         .eq("id", user.id);
 
+      setOriginalDisplayName(trimmedDisplayName);
+      setOriginalStatusMessage(profileExtrasPayload.statusMessage);
       setStoredProfileExtras(user.id, profileExtrasPayload);
 
       sweetAlert.success(language === "th" ? "บันทึกโปรไฟล์สำเร็จ" : "Profile saved successfully");
@@ -939,8 +1036,16 @@ const Profile = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mb-4">
-                  {language === "th" ? "จัดการโปรไฟล์ของคุณ" : "Manage your profile"}
+                  {isProfileRestrictedMode
+                    ? (language === "th" ? "โหมดเริ่มต้น : แก้ไขได้เฉพาะฟังค์ชั่นเริ่มต้น" : "Restricted mode: profile picture only")
+                    : (language === "th" ? "จัดการโปรไฟล์ของคุณ" : "Manage your profile")}
                 </p>
+
+                {isProfileRestrictedMode && (
+                  <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
+                    This is User Profile Version 1.0 (Display Name + Avatar only)
+                  </div>
+                )}
 
                 {/* Go to Website Button */}
                 <Button
@@ -951,6 +1056,7 @@ const Profile = () => {
                   {language === "th" ? "เข้าสู่เว็บไซด์" : "Go to Website"}
                 </Button>
 
+                {!isProfileRestrictedMode && (
                 <div className="space-y-2 mb-4 border-t border-slate-200 pt-4">
                   <Label className="text-sm font-medium text-slate-700">
                     {language === "th" ? "ธีมหน้าโปรไฟล์ของฉัน" : "My Profile Theme"}
@@ -981,6 +1087,7 @@ const Profile = () => {
                     })}
                   </div>
                 </div>
+                )}
 
                 {/* Display Name */}
                 <div className="space-y-2 mb-4 border-t border-slate-200 dark:border-slate-700 pt-4">
@@ -1017,6 +1124,7 @@ const Profile = () => {
                   <Input
                     value={bioShort}
                     onChange={(e) => setBioShort(e.target.value)}
+                    disabled={isProfileRestrictedMode}
                     maxLength={140}
                     placeholder={language === "th" ? "แนะนำตัวสั้นๆ" : "Tell people about yourself"}
                     className="border-slate-300 focus-visible:ring-primary bg-white"
@@ -1030,18 +1138,21 @@ const Profile = () => {
                   <Input
                     value={socialFacebook}
                     onChange={(e) => setSocialFacebook(e.target.value)}
+                    disabled={isProfileRestrictedMode}
                     placeholder="Facebook URL"
                     className="border-slate-300 focus-visible:ring-primary bg-white"
                   />
                   <Input
                     value={socialInstagram}
                     onChange={(e) => setSocialInstagram(e.target.value)}
+                    disabled={isProfileRestrictedMode}
                     placeholder="Instagram URL"
                     className="border-slate-300 focus-visible:ring-primary bg-white"
                   />
                   <Input
                     value={socialTiktok}
                     onChange={(e) => setSocialTiktok(e.target.value)}
+                    disabled={isProfileRestrictedMode}
                     placeholder="TikTok URL"
                     className="border-slate-300 focus-visible:ring-primary bg-white"
                   />
@@ -1063,7 +1174,9 @@ const Profile = () => {
                   className={cn("w-full text-white font-semibold shadow-md mb-2", activeTheme.primaryButton)}
                 >
                   {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {language === "th" ? "บันทึกโปรไฟล์" : "Save Profile"}
+                  {isProfileRestrictedMode
+                    ? (language === "th" ? "บันทึกชื่อที่แสดง" : "Save Display Name")
+                    : (language === "th" ? "บันทึกโปรไฟล์" : "Save Profile")}
                 </Button>
 
                 {/* Logout */}
@@ -1082,6 +1195,7 @@ const Profile = () => {
 
           {/* Stats Section - Right Side */}
           <div className="lg:col-span-3 space-y-6">
+            {!isProfileRestrictedMode && (
             <Tabs defaultValue="identity" className="w-full">
               <TabsList
                 className={cn(
@@ -1270,9 +1384,10 @@ const Profile = () => {
                 </TabsContent>
               </div>
             </Tabs>
+            )}
 
             {/* User Engagement Stats */}
-            {user?.id && <UserEngagementStats userId={user.id} language={language} />}
+            {!isProfileRestrictedMode && user?.id && <UserEngagementStats userId={user.id} language={language} />}
           </div>
         </div>
 

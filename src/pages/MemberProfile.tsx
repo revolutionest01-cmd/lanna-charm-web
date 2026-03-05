@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useFeatureToggle, showFeatureDisabledAlert } from "@/hooks/useFeatureToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRankBadge } from "@/components/UserRankBadge";
 import { UserStatusAvatar } from "@/components/UserStatusAvatar";
@@ -86,9 +87,11 @@ const MemberProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
+  const { isFeatureEnabled, isLoading: featureLoading } = useFeatureToggle();
   const { userId } = useParams();
   const routeState = (location.state as MemberProfileRouteState | null) || null;
   const fallbackMemberName = routeState?.memberName?.trim();
+  const isUserProfileEnabled = isFeatureEnabled("user_profile");
 
   const [profile, setProfile] = useState<MemberProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,6 +109,13 @@ const MemberProfile = () => {
   const [allTopics, setAllTopics] = useState<MemberTopic[]>([]);
   const [allReplies, setAllReplies] = useState<MemberReply[]>([]);
   const [allReviews, setAllReviews] = useState<MemberReview[]>([]);
+
+  useEffect(() => {
+    if (!featureLoading && !isUserProfileEnabled) {
+      showFeatureDisabledAlert(language);
+      navigate("/");
+    }
+  }, [featureLoading, isUserProfileEnabled, language, navigate]);
 
   useEffect(() => {
     if (!userId) return;

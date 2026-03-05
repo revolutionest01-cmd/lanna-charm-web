@@ -3,6 +3,7 @@ import { useUserPerks } from "@/hooks/useUserPerks";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 interface UserRankBadgeProps {
   userId?: string | null;
@@ -26,10 +27,12 @@ export const UserRankBadge = ({
   disableProfileLink = false,
 }: UserRankBadgeProps) => {
   const navigate = useNavigate();
+  const { isFeatureEnabled } = useFeatureToggle();
   const { data: rankData } = useUserRank(userId);
   const { data: perksData } = useUserPerks(userId);
+  const isUserProfileEnabled = isFeatureEnabled("user_profile");
 
-  const canOpenProfile = !!userId && !disableProfileLink;
+  const canOpenProfile = !!userId && !disableProfileLink && isUserProfileEnabled;
 
   const openProfile = (e: React.MouseEvent | React.KeyboardEvent) => {
     if (!canOpenProfile) return;

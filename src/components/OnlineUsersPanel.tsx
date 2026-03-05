@@ -5,11 +5,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 export const OnlineUsersPanel = () => {
   const { language } = useLanguage();
   const { onlineUsers } = useOnlineUsers();
   const navigate = useNavigate();
+  const { isFeatureEnabled } = useFeatureToggle();
+  const isUserProfileEnabled = isFeatureEnabled("user_profile");
 
   return (
     <Card className="border-border/60 bg-white dark:bg-card rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
@@ -34,8 +37,10 @@ export const OnlineUsersPanel = () => {
             {onlineUsers.map((u) => (
               <div
                 key={u.id}
-                className="flex items-center gap-2 p-3.5 hover:bg-muted/50 cursor-pointer transition-colors"
-                onClick={() => navigate(`/members/${u.id}`)}
+                className={`flex items-center gap-2 p-3.5 transition-colors ${
+                  isUserProfileEnabled ? "hover:bg-muted/50 cursor-pointer" : "cursor-default"
+                }`}
+                onClick={isUserProfileEnabled ? () => navigate(`/members/${u.id}`) : undefined}
               >
                 <div className="relative">
                   <Avatar className="h-7 w-7">
