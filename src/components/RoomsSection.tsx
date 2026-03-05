@@ -216,8 +216,8 @@ const RoomsSection = () => {
                             : 'bg-green-500/90 hover:bg-green-600'
                         } shadow-lg transition-colors`}>
                           {!isAvailableToday 
-                            ? (language === 'th' ? 'ไม่ว่าง' : language === 'zh' ? '已满房' : 'Unavailable')
-                            : (language === 'th' ? 'ว่าง' : language === 'zh' ? '有房' : 'Available')}
+                            ? (language === 'th' ? 'ไม่ว่าง' : language === 'zh' ? '已满房' : language === 'ja' ? '満室' : 'Unavailable')
+                            : (language === 'th' ? 'ว่าง' : language === 'zh' ? '有房' : language === 'ja' ? '空室あり' : 'Available')}
                         </div>
                       </div>
                       
@@ -246,7 +246,7 @@ const RoomsSection = () => {
 
                       <CardFooter className="p-2.5 sm:p-4 md:p-6 pt-0">
                         <div className="w-full text-center text-primary font-semibold text-[10px] sm:text-sm">
-                          {language === 'th' ? 'ดูรายละเอียด' : language === 'zh' ? '查看详情' : 'View'}
+                          {language === 'th' ? 'ดูรายละเอียด' : language === 'zh' ? '查看详情' : language === 'ja' ? '詳細を見る' : 'View'}
                         </div>
                       </CardFooter>
                     </Card>

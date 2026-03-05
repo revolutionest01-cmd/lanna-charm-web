@@ -201,7 +201,7 @@ export const ChatAnalyticsDashboard = () => {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(1000),
-      supabase
+      (supabase as any)
         .from("web_analytics_events")
         .select("*")
         .order("created_at", { ascending: false })
@@ -215,8 +215,8 @@ export const ChatAnalyticsDashboard = () => {
       supabase.from("booking_abuse_events").select("id", { count: "exact", head: true }),
     ]);
 
-    setLogs((chatRes.data as ChatLog[]) || []);
-    setWebEvents((eventRes.data as WebAnalyticsEvent[]) || []);
+    setLogs((chatRes.data as unknown as ChatLog[]) || []);
+    setWebEvents((eventRes.data as unknown as WebAnalyticsEvent[]) || []);
     const reviewRows = reviewsRes.data || [];
     const reviewAvgRating = reviewRows.length
       ? reviewRows.reduce((sum, row) => sum + (row.rating || 0), 0) / reviewRows.length

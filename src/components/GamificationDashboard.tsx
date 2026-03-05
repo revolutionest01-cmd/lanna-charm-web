@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Sparkles,
 } from "lucide-react";
+import { t4 } from "@/lib/i18n";
 
 interface GamificationDashboardProps {
   language: string;
@@ -55,11 +56,9 @@ const GamificationDashboard = ({
             <Sparkles className="h-6 w-6 text-blue-500" />
             <div>
               <p className="text-xs text-muted-foreground">
-                {language === "th" ? "คะแนน" : "Points"}
+                {t4(language, "คะแนน", "Points", "积分", "ポイント")}
               </p>
-              <p className="text-2xl font-bold text-blue-600">
-                {userPoints.toLocaleString()}
-              </p>
+              <p className="text-2xl font-bold text-blue-600">{userPoints.toLocaleString()}</p>
             </div>
           </div>
         </Card>
@@ -69,7 +68,7 @@ const GamificationDashboard = ({
             <Trophy className="h-6 w-6 text-purple-500" />
             <div>
               <p className="text-xs text-muted-foreground">
-                {language === "th" ? "ตำแหน่ง" : "Rank"}
+                {t4(language, "ตำแหน่ง", "Rank", "排名", "ランク")}
               </p>
               <p className="text-2xl font-bold text-purple-600">#{userRank}</p>
             </div>
@@ -81,11 +80,9 @@ const GamificationDashboard = ({
             <Zap className="h-6 w-6 text-green-500" />
             <div>
               <p className="text-xs text-muted-foreground">
-                {language === "th" ? "ภารกิจ" : "Quests"}
+                {t4(language, "ภารกิจ", "Quests", "任务", "クエスト")}
               </p>
-              <p className="text-2xl font-bold text-green-600">
-                {completedQuests.length}/4
-              </p>
+              <p className="text-2xl font-bold text-green-600">{completedQuests.length}/4</p>
             </div>
           </div>
         </Card>
@@ -95,11 +92,9 @@ const GamificationDashboard = ({
             <Gift className="h-6 w-6 text-orange-500" />
             <div>
               <p className="text-xs text-muted-foreground">
-                {language === "th" ? "แจ้งเตือน" : "Alerts"}
+                {t4(language, "แจ้งเตือน", "Alerts", "通知", "通知")}
               </p>
-              <p className="text-2xl font-bold text-orange-600">
-                {unreadNotifications}
-              </p>
+              <p className="text-2xl font-bold text-orange-600">{unreadNotifications}</p>
             </div>
           </div>
         </Card>
@@ -107,80 +102,39 @@ const GamificationDashboard = ({
 
       {/* Main Tabs */}
       <Card className="border-border/50 shadow-xl">
-        <Tabs
-          defaultValue="quests"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
+        <Tabs defaultValue="quests" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 rounded-none border-b">
             <TabsTrigger value="quests" className="gap-1.5 rounded-none relative">
               <Zap className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {language === "th" ? "ภารกิจ" : "Quests"}
-              </span>
+              <span className="hidden sm:inline">{t4(language, "ภารกิจ", "Quests", "任务", "クエスト")}</span>
               <TabBadge count={4 - completedQuests.length} />
             </TabsTrigger>
-
             <TabsTrigger value="leaderboards" className="gap-1.5 rounded-none">
               <Trophy className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {language === "th" ? "อันดับ" : "Rankings"}
-              </span>
+              <span className="hidden sm:inline">{t4(language, "อันดับ", "Rankings", "排行", "ランキング")}</span>
             </TabsTrigger>
-
             <TabsTrigger value="notifications" className="gap-1.5 rounded-none">
               <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {language === "th" ? "แจ้งเตือน" : "Alerts"}
-              </span>
+              <span className="hidden sm:inline">{t4(language, "แจ้งเตือน", "Alerts", "通知", "通知")}</span>
               <TabBadge count={unreadNotifications} />
             </TabsTrigger>
-
             <TabsTrigger value="rewards" className="gap-1.5 rounded-none">
               <Gift className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {language === "th" ? "รางวัล" : "Rewards"}
-              </span>
+              <span className="hidden sm:inline">{t4(language, "รางวัล", "Rewards", "奖励", "報酬")}</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Quests & Achievements */}
           <TabsContent value="quests" className="p-6">
-            <QuestsAndAchievements
-              language={language}
-              completedQuests={completedQuests}
-              unlockedAchievements={unlockedAchievements}
-            />
+            <QuestsAndAchievements language={language} completedQuests={completedQuests} unlockedAchievements={unlockedAchievements} />
           </TabsContent>
-
-          {/* Leaderboards */}
           <TabsContent value="leaderboards" className="p-6">
-            <Leaderboards
-              language={language}
-              currentUserRank={userRank}
-              currentUserPoints={userPoints}
-              currentUserId="current-user-id"
-            />
+            <Leaderboards language={language} currentUserRank={userRank} currentUserPoints={userPoints} currentUserId="current-user-id" />
           </TabsContent>
-
-          {/* Notifications */}
           <TabsContent value="notifications" className="p-6">
             <NotificationCenter language={language} />
           </TabsContent>
-
-          {/* Rewards */}
           <TabsContent value="rewards" className="p-6">
-            <RewardShop
-              language={language}
-              userPoints={userPoints}
-              userRewards={claimedRewards.map((id) => ({
-                id,
-                rewardId: id,
-                claimedAt: new Date(),
-                status: "completed",
-              }))}
-            />
+            <RewardShop language={language} userPoints={userPoints} userRewards={claimedRewards.map((id) => ({ id, rewardId: id, claimedAt: new Date(), status: "completed" as const }))} />
           </TabsContent>
         </Tabs>
       </Card>
@@ -190,98 +144,25 @@ const GamificationDashboard = ({
         <div className="p-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Target className="h-5 w-5 text-indigo-600" />
-            {language === "th" ? "วิธีเพิ่มรายได้" : "How to Maximize"}
+            {t4(language, "วิธีเพิ่มรายได้", "How to Maximize", "如何最大化", "ポイントを増やす方法")}
           </h3>
           <div className="grid md:grid-cols-3 gap-4">
-            {/* Tip 1 */}
-            <div className="flex gap-3">
-              <div className="text-2xl flex-shrink-0">📝</div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {language === "th" ? "สร้างหัวข้อ" : "Create Topics"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "th"
-                    ? "+10 คะแนนต่อหัวข้อ"
-                    : "+10 pts per topic"}
-                </p>
+            {[
+              { icon: "📝", th: "สร้างหัวข้อ", en: "Create Topics", zh: "创建主题", ja: "トピック作成", descTh: "+10 คะแนนต่อหัวข้อ", descEn: "+10 pts per topic", descZh: "+10分/主题", descJa: "+10pt/トピック" },
+              { icon: "💬", th: "ตอบกระทู้", en: "Reply Threads", zh: "回复帖子", ja: "スレッドに返信", descTh: "+5 คะแนนต่อตอบ", descEn: "+5 pts per reply", descZh: "+5分/回复", descJa: "+5pt/返信" },
+              { icon: "⭐", th: "รับความชื่นชอบ", en: "Get Likes", zh: "获得点赞", ja: "いいねを獲得", descTh: "+15 คะแนนต่อไลค์", descEn: "+15 pts per like", descZh: "+15分/点赞", descJa: "+15pt/いいね" },
+              { icon: "✅", th: "ภารกิจรายวัน", en: "Daily Quests", zh: "每日任务", ja: "デイリークエスト", descTh: "สำเร็จทุกวัน", descEn: "Complete everyday", descZh: "每天完成", descJa: "毎日完了" },
+              { icon: "🏆", th: "เหตุการณ์พิเศษ", en: "Special Events", zh: "特别活动", ja: "特別イベント", descTh: "คะแนนสองเท่า", descEn: "Double points", descZh: "双倍积分", descJa: "ポイント2倍" },
+              { icon: "🎁", th: "แลกรางวัล", en: "Redeem Rewards", zh: "兑换奖励", ja: "報酬を交換", descTh: "ใช้คะแนนของคุณ", descEn: "Spend your points", descZh: "使用你的积分", descJa: "ポイントを使う" },
+            ].map((tip, i) => (
+              <div key={i} className="flex gap-3">
+                <div className="text-2xl flex-shrink-0">{tip.icon}</div>
+                <div>
+                  <p className="font-semibold text-sm">{t4(language, tip.th, tip.en, tip.zh, tip.ja)}</p>
+                  <p className="text-xs text-muted-foreground">{t4(language, tip.descTh, tip.descEn, tip.descZh, tip.descJa)}</p>
+                </div>
               </div>
-            </div>
-
-            {/* Tip 2 */}
-            <div className="flex gap-3">
-              <div className="text-2xl flex-shrink-0">💬</div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {language === "th" ? "ตอบกระทู้" : "Reply Threads"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "th"
-                    ? "+5 คะแนนต่อตอบ"
-                    : "+5 pts per reply"}
-                </p>
-              </div>
-            </div>
-
-            {/* Tip 3 */}
-            <div className="flex gap-3">
-              <div className="text-2xl flex-shrink-0">⭐</div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {language === "th" ? "รับความชื่นชอบ" : "Get Likes"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "th"
-                    ? "+15 คะแนนต่อไลค์"
-                    : "+15 pts per like"}
-                </p>
-              </div>
-            </div>
-
-            {/* Tip 4 */}
-            <div className="flex gap-3">
-              <div className="text-2xl flex-shrink-0">✅</div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {language === "th" ? "ภารกิจรายวัน" : "Daily Quests"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "th"
-                    ? "สำเร็จทุกวัน"
-                    : "Complete everyday"}
-                </p>
-              </div>
-            </div>
-
-            {/* Tip 5 */}
-            <div className="flex gap-3">
-              <div className="text-2xl flex-shrink-0">🏆</div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {language === "th" ? "เหตุการณ์พิเศษ" : "Special Events"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "th"
-                    ? "คะแนนสองเท่า"
-                    : "Double points"}
-                </p>
-              </div>
-            </div>
-
-            {/* Tip 6 */}
-            <div className="flex gap-3">
-              <div className="text-2xl flex-shrink-0">🎁</div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {language === "th" ? "แลกรางวัล" : "Redeem Rewards"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "th"
-                    ? "ใช้คะแนนของคุณ"
-                    : "Spend your points"}
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </Card>
@@ -291,16 +172,22 @@ const GamificationDashboard = ({
         <div className="p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">
-              {language === "th"
-                ? "✓ ระบบการมีส่วนร่วมเปิดใช้งานแล้ว"
-                : "✓ Engagement system is active"}
+              {t4(language,
+                "✓ ระบบการมีส่วนร่วมเปิดใช้งานแล้ว",
+                "✓ Engagement system is active",
+                "✓ 互动系统已启用",
+                "✓ エンゲージメントシステムが有効です"
+              )}
             </p>
             <TrendingUp className="h-5 w-5 text-green-600" />
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            {language === "th"
-              ? "ทำกิจกรรมต่างๆ เพื่อเพิ่มคะแนน ยศ และเบิกรางวัล"
-              : "Engage in activities to earn points, rank up, and redeem rewards"}
+            {t4(language,
+              "ทำกิจกรรมต่างๆ เพื่อเพิ่มคะแนน ยศ และเบิกรางวัล",
+              "Engage in activities to earn points, rank up, and redeem rewards",
+              "参与活动赚取积分、升级和兑换奖励",
+              "アクティビティに参加してポイントを獲得し、ランクアップして報酬を交換しましょう"
+            )}
           </p>
         </div>
       </Card>

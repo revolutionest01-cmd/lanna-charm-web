@@ -233,105 +233,36 @@ export type Database = {
       chat_logs: {
         Row: {
           ai_reply: string
-          browser_language: string | null
-          city: string | null
-          country_code: string | null
           created_at: string
-          current_url: string | null
-          device_type: string | null
           id: string
           intent: string | null
           ip_hash: string | null
-          ip_address: string | null
           language: string | null
-          metadata: Json | null
-          page_path: string | null
-          platform: string | null
-          referrer: string | null
-          region: string | null
-          request_headers: Json | null
-          screen_resolution: string | null
           session_id: string
-          timezone: string | null
-          user_agent: string | null
-          user_agent_hash: string | null
           user_id: string | null
           user_message: string
-          utm_campaign: string | null
-          utm_content: string | null
-          utm_medium: string | null
-          utm_source: string | null
-          utm_term: string | null
-          viewport: string | null
-          visitor_fingerprint: string | null
         }
         Insert: {
           ai_reply: string
-          browser_language?: string | null
-          city?: string | null
-          country_code?: string | null
           created_at?: string
-          current_url?: string | null
-          device_type?: string | null
           id?: string
           intent?: string | null
           ip_hash?: string | null
-          ip_address?: string | null
           language?: string | null
-          metadata?: Json | null
-          page_path?: string | null
-          platform?: string | null
-          referrer?: string | null
-          region?: string | null
-          request_headers?: Json | null
-          screen_resolution?: string | null
           session_id: string
-          timezone?: string | null
-          user_agent?: string | null
-          user_agent_hash?: string | null
           user_id?: string | null
           user_message: string
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-          utm_term?: string | null
-          viewport?: string | null
-          visitor_fingerprint?: string | null
         }
         Update: {
           ai_reply?: string
-          browser_language?: string | null
-          city?: string | null
-          country_code?: string | null
           created_at?: string
-          current_url?: string | null
-          device_type?: string | null
           id?: string
           intent?: string | null
           ip_hash?: string | null
-          ip_address?: string | null
           language?: string | null
-          metadata?: Json | null
-          page_path?: string | null
-          platform?: string | null
-          referrer?: string | null
-          region?: string | null
-          request_headers?: Json | null
-          screen_resolution?: string | null
           session_id?: string
-          timezone?: string | null
-          user_agent?: string | null
-          user_agent_hash?: string | null
           user_id?: string | null
           user_message?: string
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-          utm_term?: string | null
-          viewport?: string | null
-          visitor_fingerprint?: string | null
         }
         Relationships: []
       }
@@ -901,6 +832,14 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "point_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       privacy_consent_logs: {
         Row: {
           analytics_allowed: boolean
@@ -911,11 +850,11 @@ export type Database = {
           locale: string | null
           metadata: Json | null
           policy_version: string
-          session_id: string | null
+          session_id: string
           source: string | null
           user_agent: string | null
           user_id: string | null
-          visitor_id: string | null
+          visitor_id: string
         }
         Insert: {
           analytics_allowed?: boolean
@@ -926,11 +865,11 @@ export type Database = {
           locale?: string | null
           metadata?: Json | null
           policy_version: string
-          session_id?: string | null
+          session_id: string
           source?: string | null
           user_agent?: string | null
           user_id?: string | null
-          visitor_id?: string | null
+          visitor_id: string
         }
         Update: {
           analytics_allowed?: boolean
@@ -941,21 +880,13 @@ export type Database = {
           locale?: string | null
           metadata?: Json | null
           policy_version?: string
-          session_id?: string | null
+          session_id?: string
           source?: string | null
           user_agent?: string | null
           user_id?: string | null
-          visitor_id?: string | null
+          visitor_id?: string
         }
         Relationships: []
-      }
-            foreignKeyName: "point_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       profiles: {
         Row: {
@@ -1334,105 +1265,6 @@ export type Database = {
           signature_text?: string | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      web_analytics_events: {
-        Row: {
-          browser: string | null
-          country_code: string | null
-          created_at: string
-          current_url: string | null
-          device_brand: string | null
-          device_type: string | null
-          duration_seconds: number | null
-          element_id: string | null
-          element_text: string | null
-          element_type: string | null
-          event_category: string | null
-          event_name: string
-          event_value: number | null
-          id: string
-          language: string | null
-          metadata: Json | null
-          os: string | null
-          page_path: string | null
-          referrer: string | null
-          screen_resolution: string | null
-          scroll_depth: number | null
-          session_id: string
-          user_id: string | null
-          utm_campaign: string | null
-          utm_content: string | null
-          utm_medium: string | null
-          utm_source: string | null
-          utm_term: string | null
-          viewport: string | null
-          visitor_id: string
-        }
-        Insert: {
-          browser?: string | null
-          country_code?: string | null
-          created_at?: string
-          current_url?: string | null
-          device_brand?: string | null
-          device_type?: string | null
-          duration_seconds?: number | null
-          element_id?: string | null
-          element_text?: string | null
-          element_type?: string | null
-          event_category?: string | null
-          event_name: string
-          event_value?: number | null
-          id?: string
-          language?: string | null
-          metadata?: Json | null
-          os?: string | null
-          page_path?: string | null
-          referrer?: string | null
-          screen_resolution?: string | null
-          scroll_depth?: number | null
-          session_id: string
-          user_id?: string | null
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-          utm_term?: string | null
-          viewport?: string | null
-          visitor_id: string
-        }
-        Update: {
-          browser?: string | null
-          country_code?: string | null
-          created_at?: string
-          current_url?: string | null
-          device_brand?: string | null
-          device_type?: string | null
-          duration_seconds?: number | null
-          element_id?: string | null
-          element_text?: string | null
-          element_type?: string | null
-          event_category?: string | null
-          event_name?: string
-          event_value?: number | null
-          id?: string
-          language?: string | null
-          metadata?: Json | null
-          os?: string | null
-          page_path?: string | null
-          referrer?: string | null
-          screen_resolution?: string | null
-          scroll_depth?: number | null
-          session_id?: string
-          user_id?: string | null
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-          utm_term?: string | null
-          viewport?: string | null
-          visitor_id?: string
         }
         Relationships: []
       }
