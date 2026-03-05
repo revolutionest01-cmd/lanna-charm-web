@@ -73,8 +73,22 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     return { start, end };
   };
 
+  const getDateKeysInRange = (checkInDate: Date, checkOutDate: Date) => {
+    const dateKeys: string[] = [];
+    const cursor = new Date(checkInDate);
+    const endDate = new Date(checkOutDate.getTime() - 24 * 60 * 60 * 1000);
+
+    while (cursor <= endDate) {
+      dateKeys.push(format(cursor, "yyyy-MM-dd"));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return dateKeys;
+  };
+
   const checkRoomAvailability = async (roomIdToCheck: string, checkInDate: Date, checkOutDate: Date) => {
     const { start, end } = getAvailabilityDateRange(checkInDate, checkOutDate);
+    const dateKeys = getDateKeysInRange(checkInDate, checkOutDate);
 
     const { data: roomData, error: roomError } = await supabase
       .from("rooms")
@@ -86,18 +100,17 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       throw roomError;
     }
 
-    if (!roomData || roomData.is_available === false) {
+    if (!roomData) {
       return {
         available: false,
         blockedDates: [] as string[],
       };
     }
 
-    const { data: blockedDates, error: availabilityError } = await supabase
+    const { data: dateOverrides, error: availabilityError } = await supabase
       .from("room_availability")
-      .select("availability_date")
+      .select("availability_date, is_available")
       .eq("room_id", roomIdToCheck)
-      .eq("is_available", false)
       .gte("availability_date", start)
       .lte("availability_date", end)
       .order("availability_date", { ascending: true });
@@ -106,9 +119,21 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       throw availabilityError;
     }
 
+    const overrideMap: Record<string, boolean> = {};
+    (dateOverrides || []).forEach((item: { availability_date: string; is_available: boolean }) => {
+      overrideMap[item.availability_date] = item.is_available;
+    });
+
+    const roomFallbackAvailable = roomData.is_available !== false;
+    const blockedDates = dateKeys.filter((dateKey) => {
+      const overrideValue = overrideMap[dateKey];
+      const dateAvailable = overrideValue !== undefined ? overrideValue : roomFallbackAvailable;
+      return !dateAvailable;
+    });
+
     return {
-      available: !blockedDates || blockedDates.length === 0,
-      blockedDates: (blockedDates || []).map((item: { availability_date: string }) => item.availability_date),
+      available: blockedDates.length === 0,
+      blockedDates,
     };
   };
 
@@ -120,10 +145,6 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
     }
 
     const roomIds = activeRooms.map((room) => room.id);
-    const baseStatus: RoomAvailabilityState = {};
-    activeRooms.forEach((room) => {
-      baseStatus[room.id] = true;
-    });
 
     let startDate = format(new Date(), "yyyy-MM-dd");
     let endDate = startDate;
@@ -137,22 +158,39 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       endDate = startDate;
     }
 
+    const dateKeys = getDateKeysInRange(
+      checkIn || new Date(`${startDate}T00:00:00`),
+      checkOut || new Date(new Date(`${endDate}T00:00:00`).getTime() + 24 * 60 * 60 * 1000)
+    );
+
     try {
       const { data, error } = await supabase
         .from("room_availability")
-        .select("room_id, is_available")
+        .select("room_id, availability_date, is_available")
         .in("room_id", roomIds)
-        .eq("is_available", false)
         .gte("availability_date", startDate)
         .lte("availability_date", endDate);
 
       if (error) throw error;
 
-      const nextStatus: RoomAvailabilityState = { ...baseStatus };
-      (data || []).forEach((record: { room_id: string; is_available: boolean }) => {
-        if (record.is_available === false) {
-          nextStatus[record.room_id] = false;
+      const dateOverrideByRoom: Record<string, Record<string, boolean>> = {};
+      (data || []).forEach((record: { room_id: string; availability_date: string; is_available: boolean }) => {
+        if (!dateOverrideByRoom[record.room_id]) {
+          dateOverrideByRoom[record.room_id] = {};
         }
+        dateOverrideByRoom[record.room_id][record.availability_date] = record.is_available;
+      });
+
+      const nextStatus: RoomAvailabilityState = {};
+      activeRooms.forEach((room) => {
+        const roomDateOverrides = dateOverrideByRoom[room.id] || {};
+        const hasBlockedDate = dateKeys.some((dateKey) => {
+          const overrideValue = roomDateOverrides[dateKey];
+          const dateAvailable = overrideValue !== undefined ? overrideValue : true;
+          return !dateAvailable;
+        });
+
+        nextStatus[room.id] = !hasBlockedDate;
       });
 
       setLiveRoomAvailability(nextStatus);
@@ -162,7 +200,11 @@ const BookingDialog = ({ children, roomId }: BookingDialogProps) => {
       }
     } catch (error) {
       console.error("Failed to refresh live room availability:", error);
-      setLiveRoomAvailability(baseStatus);
+      const fallbackStatus: RoomAvailabilityState = {};
+      activeRooms.forEach((room) => {
+        fallbackStatus[room.id] = true;
+      });
+      setLiveRoomAvailability(fallbackStatus);
     }
   }, [rooms, checkIn, checkOut, selectedRoom]);
 

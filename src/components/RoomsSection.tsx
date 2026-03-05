@@ -125,7 +125,6 @@ const RoomsSection = () => {
   const getRoomAvailableStatus = (room: Room) => {
     const todayOverride = todayAvailabilityByRoom[room.id];
     if (todayOverride !== undefined) return todayOverride;
-    if (room.is_available === false) return false;
     return true;
   };
 
