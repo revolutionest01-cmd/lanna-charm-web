@@ -10,6 +10,7 @@ import {
 } from "@/lib/engagementSystem";
 import { Crown, Medal, Sparkles, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { t4 } from "@/lib/i18n";
 
 interface LeaderboardUser {
   id: string;
@@ -65,30 +66,22 @@ const LeaderboardRow = ({
       )}
     >
       <div className="flex items-center gap-3 flex-1">
-        {/* Position */}
         <div className="w-8 flex justify-center">
           {getRankIcon(position) || (
             <span className="font-bold text-muted-foreground text-lg">{position}</span>
           )}
         </div>
-
-        {/* User Info */}
         <div className="flex items-center gap-2 flex-1">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p
-              className={cn(
-                "font-semibold text-sm truncate",
-                position <= 3 && "text-lg"
-              )}
-            >
+            <p className={cn("font-semibold text-sm truncate", position <= 3 && "text-lg")}>
               {user.name}
               {isCurrentUser && (
                 <span className="ml-1 text-xs text-blue-600 dark:text-blue-400">
-                  ({language === "th" ? "คุณ" : "You"})
+                  ({t4(language, "คุณ", "You", "你", "あなた")})
                 </span>
               )}
             </p>
@@ -98,12 +91,10 @@ const LeaderboardRow = ({
           </div>
         </div>
       </div>
-
-      {/* Badges and Points */}
       <div className="flex items-center gap-2">
         {user.badge && <span className="text-lg">{user.badge}</span>}
         <Badge className="bg-blue-600 text-white whitespace-nowrap">
-          {user.points.toLocaleString()} {language === "th" ? "คะแนน" : "pts"}
+          {user.points.toLocaleString()} {t4(language, "คะแนน", "pts", "分", "pt")}
         </Badge>
       </div>
     </div>
@@ -124,128 +115,67 @@ const Leaderboards = ({
     weeklyData.length > 0
       ? weeklyData
       : [
-          {
-            id: "1",
-            name: "สมปอง",
-            points: 1250,
-            title: "วิทยากร",
-            badge: "🏆",
-          },
-          {
-            id: "2",
-            name: "เชิดชา",
-            points: 1180,
-            title: "ผู้เชี่ยวชาญ",
-            badge: "⭐",
-          },
-          {
-            id: "3",
-            name: "ธีรพล",
-            points: 1050,
-            badge: "🎖️",
-          },
-          {
-            id: "4",
-            name: "นวลน้อย",
-            points: 950,
-          },
-          {
-            id: "5",
-            name: "สุรศักดิ์",
-            points: 850,
-          },
+          { id: "1", name: "สมปอง", points: 1250, title: "วิทยากร", badge: "🏆" },
+          { id: "2", name: "เชิดชา", points: 1180, title: "ผู้เชี่ยวชาญ", badge: "⭐" },
+          { id: "3", name: "ธีรพล", points: 1050, badge: "🎖️" },
+          { id: "4", name: "นวลน้อย", points: 950 },
+          { id: "5", name: "สุรศักดิ์", points: 850 },
         ];
 
   const mockMonthly: LeaderboardUser[] =
     monthlyData.length > 0
       ? monthlyData
       : [
-          {
-            id: "2",
-            name: "เชิดชา",
-            points: 5420,
-            title: "ผู้เชี่ยวชาญ",
-            badge: "🏆",
-          },
-          {
-            id: "1",
-            name: "สมปอง",
-            points: 5180,
-            badge: "⭐",
-          },
-          {
-            id: "3",
-            name: "ธีรพล",
-            points: 4950,
-            badge: "🎖️",
-          },
-          {
-            id: "5",
-            name: "สุรศักดิ์",
-            points: 3850,
-          },
-          {
-            id: "4",
-            name: "นวลน้อย",
-            points: 3750,
-          },
+          { id: "2", name: "เชิดชา", points: 5420, title: "ผู้เชี่ยวชาญ", badge: "🏆" },
+          { id: "1", name: "สมปอง", points: 5180, badge: "⭐" },
+          { id: "3", name: "ธีรพล", points: 4950, badge: "🎖️" },
+          { id: "5", name: "สุรศักดิ์", points: 3850 },
+          { id: "4", name: "นวลน้อย", points: 3750 },
         ];
 
   const mockAllTime: LeaderboardUser[] =
     allTimeData.length > 0
       ? allTimeData
       : [
-          {
-            id: "1",
-            name: "สมปอง",
-            rank: 5,
-            points: 25680,
-            title: MEMBER_OF_THE_MONTH.name,
-            badge: "👑",
-          },
-          {
-            id: "2",
-            name: "เชิดชา",
-            rank: 4,
-            points: 22450,
-            badge: "🏅",
-          },
-          {
-            id: "3",
-            name: "ธีรพล",
-            rank: 3,
-            points: 19800,
-            badge: "🥈",
-          },
-          {
-            id: "4",
-            name: "นวลน้อย",
-            rank: 2,
-            points: 18500,
-            badge: "🥉",
-          },
-          {
-            id: "5",
-            name: "สุรศักดิ์",
-            rank: 1,
-            points: 16750,
-          },
+          { id: "1", name: "สมปอง", rank: 5, points: 25680, title: MEMBER_OF_THE_MONTH.name, badge: "👑" },
+          { id: "2", name: "เชิดชา", rank: 4, points: 22450, badge: "🏅" },
+          { id: "3", name: "ธีรพล", rank: 3, points: 19800, badge: "🥈" },
+          { id: "4", name: "นวลน้อย", rank: 2, points: 18500, badge: "🥉" },
+          { id: "5", name: "สุรศักดิ์", rank: 1, points: 16750 },
         ];
 
   const [selectedTab, setSelectedTab] = useState("weekly");
 
   const currentData = useMemo(() => {
     switch (selectedTab) {
-      case "monthly":
-        return mockMonthly;
-      case "all-time":
-        return mockAllTime;
-      default:
-        return mockWeekly;
+      case "monthly": return mockMonthly;
+      case "all-time": return mockAllTime;
+      default: return mockWeekly;
     }
   }, [selectedTab]);
 
   const memberOfMonth = mockAllTime[0];
+
+  const renderYourRank = (data: LeaderboardUser[]) => {
+    if (!currentUserId || data.some((u) => u.id === currentUserId) || !currentUserRank) return null;
+    return (
+      <div className="border-t pt-2 mt-4">
+        <p className="text-xs text-muted-foreground mb-2">
+          {t4(language, "อันดับของคุณ", "Your Ranking", "你的排名", "あなたのランキング")}
+        </p>
+        <LeaderboardRow
+          position={currentUserRank}
+          user={{
+            id: currentUserId,
+            name: t4(language, "คุณ", "You", "你", "あなた"),
+            points: currentUserPoints || 0,
+          }}
+          language={language}
+          isCurrentUser
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -256,7 +186,7 @@ const Leaderboards = ({
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-amber-600" />
             <CardTitle className="text-lg">
-              {language === "th" ? "สมาชิกประจำเดือน" : "Member of the Month"}
+              {t4(language, "สมาชิกประจำเดือน", "Member of the Month", "本月之星", "今月の会員")}
             </CardTitle>
           </div>
         </CardHeader>
@@ -264,19 +194,16 @@ const Leaderboards = ({
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border-4 border-amber-300">
               <AvatarImage src={memberOfMonth.avatar} alt={memberOfMonth.name} />
-              <AvatarFallback className="text-xl">
-                {memberOfMonth.name.charAt(0)}
-              </AvatarFallback>
+              <AvatarFallback className="text-xl">{memberOfMonth.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="text-lg font-bold">{memberOfMonth.name}</p>
               <p className="text-sm text-amber-700 dark:text-amber-200">
-                ★ {language === "th" ? "ยอดเยี่ยม" : "Outstanding"} ★
+                ★ {t4(language, "ยอดเยี่ยม", "Outstanding", "杰出", "優秀")} ★
               </p>
               <div className="flex gap-2 mt-2">
                 <Badge className="bg-amber-700 text-white">
-                  {memberOfMonth.points.toLocaleString()}{" "}
-                  {language === "th" ? "คะแนน" : "pts"}
+                  {memberOfMonth.points.toLocaleString()} {t4(language, "คะแนน", "pts", "分", "pt")}
                 </Badge>
               </div>
             </div>
@@ -290,137 +217,60 @@ const Leaderboards = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-blue-500" />
-            {language === "th" ? "อันดับคะแนน" : "Leaderboards"}
+            {t4(language, "อันดับคะแนน", "Leaderboards", "排行榜", "ランキング")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="weekly" className="w-full" onValueChange={setSelectedTab}>
             <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="weekly">
-                {language === "th" ? "สัปดาห์" : "Weekly"}
+                {t4(language, "สัปดาห์", "Weekly", "每周", "週間")}
               </TabsTrigger>
               <TabsTrigger value="monthly">
-                {language === "th" ? "เดือน" : "Monthly"}
+                {t4(language, "เดือน", "Monthly", "每月", "月間")}
               </TabsTrigger>
               <TabsTrigger value="all-time">
-                {language === "th" ? "ทั้งหมด" : "All Time"}
+                {t4(language, "ทั้งหมด", "All Time", "全部", "全期間")}
               </TabsTrigger>
             </TabsList>
 
-            {/* Weekly */}
             <TabsContent value="weekly" className="mt-4 space-y-2">
               <div className="space-y-2">
                 {mockWeekly.map((user, index) => (
-                  <LeaderboardRow
-                    key={user.id}
-                    position={index + 1}
-                    user={user}
-                    language={language}
-                    isCurrentUser={currentUserId === user.id}
-                  />
+                  <LeaderboardRow key={user.id} position={index + 1} user={user} language={language} isCurrentUser={currentUserId === user.id} />
                 ))}
               </div>
-
-              {/* Your Rank */}
-              {currentUserId &&
-                !mockWeekly.some((u) => u.id === currentUserId) &&
-                currentUserRank && (
-                  <div className="border-t pt-2 mt-4">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {language === "th" ? "อันดับของคุณ" : "Your Ranking"}
-                    </p>
-                    <LeaderboardRow
-                      position={currentUserRank}
-                      user={{
-                        id: currentUserId,
-                        name: language === "th" ? "คุณ" : "You",
-                        points: currentUserPoints || 0,
-                      }}
-                      language={language}
-                      isCurrentUser
-                    />
-                  </div>
-                )}
+              {renderYourRank(mockWeekly)}
             </TabsContent>
 
-            {/* Monthly */}
             <TabsContent value="monthly" className="mt-4 space-y-2">
               <div className="space-y-2">
                 {mockMonthly.map((user, index) => (
-                  <LeaderboardRow
-                    key={user.id}
-                    position={index + 1}
-                    user={user}
-                    language={language}
-                    isCurrentUser={currentUserId === user.id}
-                  />
+                  <LeaderboardRow key={user.id} position={index + 1} user={user} language={language} isCurrentUser={currentUserId === user.id} />
                 ))}
               </div>
-
-              {currentUserId &&
-                !mockMonthly.some((u) => u.id === currentUserId) &&
-                currentUserRank && (
-                  <div className="border-t pt-2 mt-4">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {language === "th" ? "อันดับของคุณ" : "Your Ranking"}
-                    </p>
-                    <LeaderboardRow
-                      position={currentUserRank}
-                      user={{
-                        id: currentUserId,
-                        name: language === "th" ? "คุณ" : "You",
-                        points: currentUserPoints || 0,
-                      }}
-                      language={language}
-                      isCurrentUser
-                    />
-                  </div>
-                )}
+              {renderYourRank(mockMonthly)}
             </TabsContent>
 
-            {/* All Time */}
             <TabsContent value="all-time" className="mt-4 space-y-2">
               <div className="space-y-2">
                 {mockAllTime.map((user, index) => (
-                  <LeaderboardRow
-                    key={user.id}
-                    position={index + 1}
-                    user={user}
-                    language={language}
-                    isCurrentUser={currentUserId === user.id}
-                  />
+                  <LeaderboardRow key={user.id} position={index + 1} user={user} language={language} isCurrentUser={currentUserId === user.id} />
                 ))}
               </div>
-
-              {currentUserId &&
-                !mockAllTime.some((u) => u.id === currentUserId) &&
-                currentUserRank && (
-                  <div className="border-t pt-2 mt-4">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {language === "th" ? "อันดับของคุณ" : "Your Ranking"}
-                    </p>
-                    <LeaderboardRow
-                      position={currentUserRank}
-                      user={{
-                        id: currentUserId,
-                        name: language === "th" ? "คุณ" : "You",
-                        points: currentUserPoints || 0,
-                      }}
-                      language={language}
-                      isCurrentUser
-                    />
-                  </div>
-                )}
+              {renderYourRank(mockAllTime)}
             </TabsContent>
           </Tabs>
 
-          {/* Tips */}
           <div className="mt-6 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200/50">
             <p className="text-xs text-blue-900 dark:text-blue-200">
-              <strong>{language === "th" ? "เคล็ดลับ:" : "Tips:"}</strong>
-              {language === "th"
-                ? " อันดับจะอัปเดตของที่ 00:00 น. (เวลากรุงเทพ)"
-                : " Rankings update at 00:00 (Bangkok Time)"}
+              <strong>{t4(language, "เคล็ดลับ:", "Tips:", "提示:", "ヒント:")}</strong>
+              {t4(language,
+                " อันดับจะอัปเดตของที่ 00:00 น. (เวลากรุงเทพ)",
+                " Rankings update at 00:00 (Bangkok Time)",
+                " 排行榜每天 00:00（曼谷时间）更新",
+                " ランキングは毎日00:00（バンコク時間）に更新されます"
+              )}
             </p>
           </div>
         </CardContent>

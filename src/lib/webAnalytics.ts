@@ -145,7 +145,7 @@ const sendAnalyticsEvent = async (payload: AnalyticsEventInput) => {
       metadata: (payload.metadata ?? null) as Json,
     };
 
-    await supabase.from("web_analytics_events").insert(event);
+    await (supabase as any).from("web_analytics_events").insert(event);
   } catch (error) {
     console.error("web analytics event error:", error);
   }

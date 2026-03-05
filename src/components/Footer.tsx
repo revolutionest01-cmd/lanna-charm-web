@@ -25,7 +25,7 @@ const VisitorCounterAnimated = ({ totalVisits, language }: { totalVisits: number
           
           <div className="flex flex-col">
             <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">
-              {language === 'th' ? 'ผู้เยี่ยมชม' : language === 'zh' ? '访客' : 'Visitors'}
+              {language === 'th' ? 'ผู้เยี่ยมชม' : language === 'zh' ? '访客' : language === 'ja' ? '訪問者' : 'Visitors'}
             </span>
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent tabular-nums">
               {totalVisits.toLocaleString()}
@@ -109,7 +109,7 @@ const Footer = () => {
       <footer className="bg-card border-t border-border py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground">
-            {language === 'th' ? 'กำลังโหลดข้อมูล...' : language === 'zh' ? '加载中...' : 'Loading...'}
+            {language === 'th' ? 'กำลังโหลดข้อมูล...' : language === 'zh' ? '加载中...' : language === 'ja' ? '読み込み中...' : 'Loading...'}
           </p>
         </div>
       </footer>
