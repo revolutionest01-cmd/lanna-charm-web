@@ -55,6 +55,14 @@ const REQUIRED_FEATURE_TOGGLES: Array<{
   is_enabled: boolean;
 }> = [
   {
+    feature_key: "service_suspended",
+    feature_name_th: "หยุดให้บริการทั้งเว็บไซต์",
+    feature_name_en: "Global Service Suspended",
+    description_th: "เมื่อเปิดใช้งาน ผู้ใช้ทุกคนจะเห็นหน้าไม่สามารถให้บริการได้ทุกหน้า",
+    description_en: "When enabled, all routes show a service suspended page for all visitors",
+    is_enabled: false,
+  },
+  {
     feature_key: "features",
     feature_name_th: "หน้าแรก: จุดเด่น",
     feature_name_en: "Homepage: Features",
