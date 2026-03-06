@@ -67,6 +67,7 @@ const BASE_TABS = [
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business", minRole: "staff" },
   { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat", minRole: "admin" },
   { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
+  { id: "webanalytics", icon: TrendingUp, labelTh: "Web Analytics", labelEn: "Web Analytics", minRole: "admin" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
   { id: "devmode", icon: Zap, labelTh: "Dev God Mode", labelEn: "Dev God Mode", minRole: "developer" },
 ];
