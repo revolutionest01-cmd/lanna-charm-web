@@ -176,6 +176,68 @@ export const WebAnalyticsDashboard = () => {
       .map(([source, views]) => ({ source, views }));
   }, [events]);
 
+  // UTM Campaign data
+  const utmEvents = useMemo(() => events.filter(e => e.event_name === "page_view" && (e.utm_source || e.utm_campaign)), [events]);
+
+  const utmSourceData = useMemo(() => {
+    const map = new Map<string, { visitors: Set<string>; sessions: Set<string>; views: number }>();
+    utmEvents.forEach(e => {
+      const src = e.utm_source || "(direct)";
+      if (!map.has(src)) map.set(src, { visitors: new Set(), sessions: new Set(), views: 0 });
+      const entry = map.get(src)!;
+      entry.visitors.add(e.visitor_id);
+      entry.sessions.add(e.session_id);
+      entry.views++;
+    });
+    return Array.from(map.entries())
+      .map(([source, d]) => ({ source, visitors: d.visitors.size, sessions: d.sessions.size, views: d.views }))
+      .sort((a, b) => b.views - a.views);
+  }, [utmEvents]);
+
+  const utmMediumData = useMemo(() => {
+    const map = new Map<string, number>();
+    utmEvents.forEach(e => { const m = e.utm_medium || "(none)"; map.set(m, (map.get(m) || 0) + 1); });
+    return Array.from(map.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [utmEvents]);
+
+  const utmCampaignData = useMemo(() => {
+    const map = new Map<string, { visitors: Set<string>; sessions: Set<string>; views: number; source: string; medium: string }>();
+    utmEvents.forEach(e => {
+      const campaign = e.utm_campaign || "(none)";
+      if (!map.has(campaign)) map.set(campaign, { visitors: new Set(), sessions: new Set(), views: 0, source: e.utm_source || "", medium: e.utm_medium || "" });
+      const entry = map.get(campaign)!;
+      entry.visitors.add(e.visitor_id);
+      entry.sessions.add(e.session_id);
+      entry.views++;
+    });
+    return Array.from(map.entries())
+      .map(([campaign, d]) => ({ campaign, visitors: d.visitors.size, sessions: d.sessions.size, views: d.views, source: d.source, medium: d.medium }))
+      .sort((a, b) => b.views - a.views);
+  }, [utmEvents]);
+
+  const utmCampaignChartData = useMemo(() => utmCampaignData.slice(0, 8).map(c => ({ name: c.campaign.length > 20 ? c.campaign.slice(0, 20) + "…" : c.campaign, views: c.views })), [utmCampaignData]);
+
+  const utmDailyData = useMemo(() => {
+    const map = new Map<string, Map<string, number>>();
+    utmEvents.forEach(e => {
+      const day = new Date(e.created_at).toLocaleDateString("en-CA");
+      const src = e.utm_source || "(direct)";
+      if (!map.has(day)) map.set(day, new Map());
+      const dayMap = map.get(day)!;
+      dayMap.set(src, (dayMap.get(src) || 0) + 1);
+    });
+    const allSources = [...new Set(utmEvents.map(e => e.utm_source || "(direct)"))].slice(0, 5);
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, sources]) => {
+        const row: Record<string, string | number> = { date: date.slice(5) };
+        allSources.forEach(s => { row[s] = sources.get(s) || 0; });
+        return row;
+      });
+  }, [utmEvents]);
+
+  const utmTopSources = useMemo(() => [...new Set(utmEvents.map(e => e.utm_source || "(direct)"))].slice(0, 5), [utmEvents]);
+
   const chartConfig: ChartConfig = { value: { label: th("จำนวน", "Count") }, views: { label: th("การเข้าชม", "Views") } };
 
   const DeviceIcon = ({ type }: { type: string }) => {
