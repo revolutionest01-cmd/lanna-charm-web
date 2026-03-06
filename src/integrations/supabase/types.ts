@@ -1292,6 +1292,105 @@ export type Database = {
         }
         Relationships: []
       }
+      web_analytics_events: {
+        Row: {
+          browser: string | null
+          country_code: string | null
+          created_at: string
+          current_url: string | null
+          device_brand: string | null
+          device_type: string | null
+          duration_seconds: number | null
+          element_id: string | null
+          element_text: string | null
+          element_type: string | null
+          event_category: string | null
+          event_name: string
+          event_value: number | null
+          id: string
+          language: string | null
+          metadata: Json | null
+          os: string | null
+          page_path: string | null
+          referrer: string | null
+          screen_resolution: string | null
+          scroll_depth: number | null
+          session_id: string
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          viewport: string | null
+          visitor_id: string
+        }
+        Insert: {
+          browser?: string | null
+          country_code?: string | null
+          created_at?: string
+          current_url?: string | null
+          device_brand?: string | null
+          device_type?: string | null
+          duration_seconds?: number | null
+          element_id?: string | null
+          element_text?: string | null
+          element_type?: string | null
+          event_category?: string | null
+          event_name: string
+          event_value?: number | null
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          os?: string | null
+          page_path?: string | null
+          referrer?: string | null
+          screen_resolution?: string | null
+          scroll_depth?: number | null
+          session_id: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          viewport?: string | null
+          visitor_id: string
+        }
+        Update: {
+          browser?: string | null
+          country_code?: string | null
+          created_at?: string
+          current_url?: string | null
+          device_brand?: string | null
+          device_type?: string | null
+          duration_seconds?: number | null
+          element_id?: string | null
+          element_text?: string | null
+          element_type?: string | null
+          event_category?: string | null
+          event_name?: string
+          event_value?: number | null
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          os?: string | null
+          page_path?: string | null
+          referrer?: string | null
+          screen_resolution?: string | null
+          scroll_depth?: number | null
+          session_id?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          viewport?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
