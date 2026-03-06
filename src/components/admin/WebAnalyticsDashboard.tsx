@@ -47,6 +47,9 @@ type AnalyticsEvent = {
   created_at: string;
   utm_source: string | null;
   utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  utm_term: string | null;
 };
 
 type DateRange = "today" | "7d" | "30d" | "90d";
