@@ -19,8 +19,10 @@ import {
 import {
   Globe, Users, Eye, Monitor, Smartphone, Tablet,
   TrendingUp, Clock, MousePointerClick, ArrowDown,
-  Loader2, RefreshCw, Calendar,
+  Loader2, RefreshCw, Calendar, Tag, Megaphone, Link2, FileText,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const COLORS = [
   "hsl(217, 91%, 60%)", "hsl(38, 92%, 50%)", "hsl(271, 91%, 65%)",
