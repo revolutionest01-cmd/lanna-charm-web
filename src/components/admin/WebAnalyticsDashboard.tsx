@@ -453,6 +453,190 @@ export const WebAnalyticsDashboard = () => {
         </Card>
       )}
 
+      {/* UTM Campaign Tracking */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Megaphone className="w-5 h-5 text-primary" />
+            {th("UTM Campaign Tracking", "UTM Campaign Tracking")}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {th("วิเคราะห์แคมเปญการตลาดที่นำผู้เข้าชมมายังเว็บไซต์", "Analyze marketing campaigns driving traffic to your site")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {utmEvents.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Tag className="w-10 h-10 mx-auto mb-3 opacity-40" />
+              <p className="text-sm font-medium">{th("ยังไม่มีข้อมูล UTM", "No UTM data yet")}</p>
+              <p className="text-xs mt-1">{th("เพิ่ม ?utm_source=...&utm_campaign=... ใน URL เพื่อเริ่มติดตาม", "Add ?utm_source=...&utm_campaign=... to your URLs to start tracking")}</p>
+            </div>
+          ) : (
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
+                <TabsTrigger value="overview" className="text-xs">{th("ภาพรวม", "Overview")}</TabsTrigger>
+                <TabsTrigger value="campaigns" className="text-xs">{th("แคมเปญ", "Campaigns")}</TabsTrigger>
+                <TabsTrigger value="sources" className="text-xs">{th("แหล่งที่มา", "Sources")}</TabsTrigger>
+                <TabsTrigger value="trend" className="text-xs">{th("แนวโน้ม", "Trend")}</TabsTrigger>
+              </TabsList>
+
+              {/* Overview Tab */}
+              <TabsContent value="overview">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="p-3 rounded-lg bg-blue-500/10">
+                    <p className="text-xs text-muted-foreground">{th("UTM Page Views", "UTM Page Views")}</p>
+                    <p className="text-xl font-bold text-foreground">{utmEvents.length.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-emerald-500/10">
+                    <p className="text-xs text-muted-foreground">{th("แหล่งที่มา", "Sources")}</p>
+                    <p className="text-xl font-bold text-foreground">{utmSourceData.length}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-purple-500/10">
+                    <p className="text-xs text-muted-foreground">{th("แคมเปญ", "Campaigns")}</p>
+                    <p className="text-xl font-bold text-foreground">{utmCampaignData.filter(c => c.campaign !== "(none)").length}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-amber-500/10">
+                    <p className="text-xs text-muted-foreground">{th("สื่อ (Medium)", "Mediums")}</p>
+                    <p className="text-xl font-bold text-foreground">{utmMediumData.filter(m => m.name !== "(none)").length}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Campaign Bar Chart */}
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                      <Megaphone className="w-3.5 h-3.5 text-primary" />
+                      {th("Top แคมเปญ", "Top Campaigns")}
+                    </h4>
+                    {utmCampaignChartData.length > 0 ? (
+                      <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                        <BarChart data={utmCampaignChartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
+                          <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} angle={-20} textAnchor="end" height={50} />
+                          <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="views" radius={[6, 6, 0, 0]} barSize={30}>
+                            {utmCampaignChartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                          </Bar>
+                        </BarChart>
+                      </ChartContainer>
+                    ) : <p className="text-sm text-muted-foreground">{th("ไม่มีข้อมูลแคมเปญ", "No campaign data")}</p>}
+                  </div>
+
+                  {/* Medium Pie Chart */}
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5 text-primary" />
+                      {th("สัดส่วนสื่อ (Medium)", "Medium Distribution")}
+                    </h4>
+                    <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                      <PieChart>
+                        <Pie data={utmMediumData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3} dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                          {utmMediumData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Campaigns Tab */}
+              <TabsContent value="campaigns">
+                <div className="overflow-auto max-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">{th("แคมเปญ", "Campaign")}</TableHead>
+                        <TableHead className="text-xs">{th("แหล่งที่มา", "Source")}</TableHead>
+                        <TableHead className="text-xs">{th("สื่อ", "Medium")}</TableHead>
+                        <TableHead className="text-xs text-right">{th("เข้าชม", "Views")}</TableHead>
+                        <TableHead className="text-xs text-right">{th("ผู้เข้าชม", "Visitors")}</TableHead>
+                        <TableHead className="text-xs text-right">{th("เซสชัน", "Sessions")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {utmCampaignData.map((c, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs font-medium max-w-[150px] truncate">{c.campaign}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{c.source || "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{c.medium || "—"}</TableCell>
+                          <TableCell className="text-xs text-right font-semibold">{c.views.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs text-right">{c.visitors.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs text-right">{c.sessions.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+
+              {/* Sources Tab */}
+              <TabsContent value="sources">
+                <div className="overflow-auto max-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">{th("แหล่งที่มา (Source)", "Source")}</TableHead>
+                        <TableHead className="text-xs text-right">{th("เข้าชม", "Views")}</TableHead>
+                        <TableHead className="text-xs text-right">{th("ผู้เข้าชม", "Visitors")}</TableHead>
+                        <TableHead className="text-xs text-right">{th("เซสชัน", "Sessions")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {utmSourceData.map((s, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs font-medium">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                              {s.source}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-right font-semibold">{s.views.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs text-right">{s.visitors.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs text-right">{s.sessions.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+
+              {/* Trend Tab */}
+              <TabsContent value="trend">
+                {utmDailyData.length > 0 ? (
+                  <>
+                    <h4 className="text-sm font-medium text-foreground mb-2">
+                      {th("แนวโน้ม UTM Source รายวัน", "Daily UTM Source Trend")}
+                    </h4>
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                      <AreaChart data={utmDailyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        {utmTopSources.map((src, i) => (
+                          <Area key={src} type="monotone" dataKey={src} stroke={COLORS[i % COLORS.length]} fill={COLORS[i % COLORS.length]} fillOpacity={0.1} strokeWidth={2} />
+                        ))}
+                      </AreaChart>
+                    </ChartContainer>
+                    <div className="flex flex-wrap justify-center gap-3 mt-2">
+                      {utmTopSources.map((src, i) => (
+                        <div key={src} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span>{src}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : <p className="text-sm text-muted-foreground text-center py-4">{th("ไม่มีข้อมูลแนวโน้ม", "No trend data")}</p>}
+              </TabsContent>
+            </Tabs>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Total events info */}
       <p className="text-xs text-muted-foreground text-center">
         {th(`ข้อมูลทั้งหมด ${events.length.toLocaleString()} events`, `Total ${events.length.toLocaleString()} events`)}
