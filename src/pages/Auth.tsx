@@ -47,8 +47,16 @@ const Auth = () => {
   const [isOtpMode, setIsOtpMode] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpEmail, setOtpEmail] = useState("");
+  const [authDeniedPulse, setAuthDeniedPulse] = useState(false);
   const loginAlertShownRef = useRef(false);
   const STORAGE_KEY = 'plernping_login_data';
+  const suspendedConsoleLines = [
+    "[AUTH-GATE] restricted mode: enabled",
+    "[POLICY] role constraint: developer_only",
+    "[CHECK] realtime toggle sync: healthy",
+    "[TRACE] attempts are monitored",
+    "[SECURITY] elevated verification active",
+  ];
 
   // Load saved credentials from localStorage on component mount
   useEffect(() => {
@@ -190,14 +198,10 @@ const Auth = () => {
             await supabase.auth.signOut();
             setIsLoading(false);
             loginAlertShownRef.current = false;
+            setAuthDeniedPulse(true);
+            window.setTimeout(() => setAuthDeniedPulse(false), 700);
             sweetAlert.error(
-              language === 'th'
-                ? 'คุณไม่มีสิทธิ์เข้าถึงระบบ'
-                : language === 'zh'
-                  ? '您无权访问系统'
-                  : language === 'ja'
-                    ? 'このシステムにアクセスする権限がありません'
-                    : 'You do not have permission to access this system.'
+              'You do not have permission to access this system. (ERR-SUSP-403)'
             );
             return;
           }
@@ -585,9 +589,41 @@ const Auth = () => {
   return (
     <div className={authContainerClass}>
       {isAuthSuspendedMode && (
+        <style>{`
+          @keyframes suspended-deny-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(3px); }
+          }
+
+          @keyframes suspended-console-rise {
+            0% { transform: translateY(12px); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(-12px); opacity: 0; }
+          }
+
+          .suspended-console-line {
+            animation: suspended-console-rise 5.8s linear infinite;
+          }
+        `}</style>
+      )}
+      {isAuthSuspendedMode && (
         <>
           <div className="pointer-events-none absolute inset-0 opacity-20 [background:repeating-linear-gradient(180deg,rgba(16,185,129,0.12)_0px,rgba(16,185,129,0.12)_1px,transparent_1px,transparent_4px)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.18),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.1),transparent_35%)]" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 overflow-hidden px-6 text-[10px] sm:text-xs leading-5 text-emerald-400/45 font-mono">
+            {suspendedConsoleLines.map((line, index) => (
+              <p
+                key={`${line}-${index}`}
+                className="suspended-console-line"
+                style={{ animationDelay: `${index * 0.75}s` }}
+              >
+                {line}
+              </p>
+            ))}
+          </div>
         </>
       )}
       <div className="w-full max-w-md my-auto">
@@ -614,13 +650,32 @@ const Auth = () => {
             </>
           )}
           {isAuthSuspendedMode && (
-            <div className="mt-3 inline-flex items-center rounded-full border border-emerald-400/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-[0.16em] text-emerald-300">
-              {language === 'th' ? 'SUSPENDED LOCKDOWN: Dev Only' : 'SUSPENDED LOCKDOWN: DEV ONLY ACCESS'}
+            <div className="space-y-3">
+              <div className="rounded-lg border border-emerald-400/40 bg-black/35 px-4 py-3 text-left shadow-[0_0_0_1px_rgba(16,185,129,0.1)]">
+                <p className="text-[10px] font-semibold tracking-[0.18em] text-emerald-300/80">
+                  {language === 'th' ? 'SYSTEM STATUS' : 'SYSTEM STATUS'}
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] sm:text-xs text-emerald-200/85">
+                  <span>Mode</span>
+                  <span className="text-right font-semibold text-emerald-300">SUSPENDED</span>
+                  <span>Access</span>
+                  <span className="text-right font-semibold text-emerald-300">DEV ONLY</span>
+                  <span>Auth Gate</span>
+                  <span className="text-right font-semibold text-emerald-300">ACTIVE</span>
+                </div>
+              </div>
+
+              <div className="inline-flex items-center rounded-full border border-emerald-400/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-[0.16em] text-emerald-300">
+                SUSPENDED LOCKDOWN: DEV ONLY ACCESS
+              </div>
             </div>
           )}
         </div>
 
-        <Card className={authCardClass}>
+        <Card
+          className={authCardClass}
+          style={authDeniedPulse ? { animation: "suspended-deny-shake 0.45s ease-in-out" } : undefined}
+        >
           <CardHeader>
             {isForgotPasswordMode && !isAuthSuspendedMode ? (
               <>
@@ -646,18 +701,12 @@ const Auth = () => {
               <>
                 <CardTitle className="text-center">
                   {isAuthSuspendedMode
-                    ? (language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : language === 'ja' ? 'ログイン' : 'Login')
+                    ? 'Login'
                     : (language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {isAuthSuspendedMode
-                    ? (language === 'th'
-                      ? 'กรุณาเข้าสู่ระบบเพื่อใช้งานระบบ'
-                      : language === 'zh'
-                        ? '请登录以继续使用系统'
-                        : language === 'ja'
-                          ? 'システムを利用するにはログインしてください'
-                          : 'Please log in to continue')
+                    ? 'Please log in to continue'
                     : (language === 'th'
                       ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ'
                       : language === 'zh'
@@ -694,12 +743,12 @@ const Auth = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email-suspended" className="text-emerald-300">
-                    {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
+                    Email
                   </Label>
                   <Input
                     id="login-email-suspended"
                     type="email"
-                    placeholder={language === 'th' ? 'กรอกอีเมล' : language === 'zh' ? '请输入电子邮件' : 'Enter your email'}
+                    placeholder="Enter your email"
                     value={loginForm.email}
                     onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                     required
@@ -708,13 +757,13 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password-suspended" className="text-emerald-300">
-                    {language === 'th' ? 'รหัสผ่าน' : language === 'zh' ? '密码' : 'Password'}
+                    Password
                   </Label>
                   <div className="relative">
                     <Input
                       id="login-password-suspended"
                       type={showLoginPassword ? "text" : "password"}
-                      placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : language === 'zh' ? '请输入密码' : 'Enter your password'}
+                      placeholder="Enter your password"
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                       required
@@ -750,10 +799,10 @@ const Auth = () => {
                     className="w-4 h-4 cursor-pointer accent-primary"
                   />
                   <label htmlFor="remember-password-suspended" className="text-sm text-emerald-300 cursor-pointer select-none">
-                    {language === 'th' ? 'จดจำรหัสผ่าน' : language === 'zh' ? '记住密码' : 'Remember password'}
+                    Remember password
                   </label>
                   <span className="text-xs text-emerald-500 ml-auto">
-                    {language === 'th' ? '(ไม่แนะนำบนคอมพิวเตอร์ของคนอื่น)' : language === 'zh' ? '(不建议在公用电脑上使用)' : '(not recommended on shared devices)'}
+                    (not recommended on shared devices)
                   </span>
                 </div>
 
@@ -763,7 +812,7 @@ const Auth = () => {
                   disabled={isLoading}
                 >
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
+                  Login
                 </Button>
 
                 {/* Google Sign-In hidden temporarily */}
