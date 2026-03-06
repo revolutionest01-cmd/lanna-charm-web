@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, translations } from "@/hooks/useLanguage";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
+import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
 import sweetAlert from "@/lib/sweetAlert";
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
@@ -21,6 +23,14 @@ const Auth = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const { login, register, isAuthenticated } = useAuth();
+  const { toggles, isLoading: featureLoading } = useFeatureToggle();
+  const isAuthSuspendedMode = !featureLoading && toggles["service_suspended"] === true;
+  const authContainerClass = isAuthSuspendedMode
+    ? "relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950 via-zinc-950 to-black font-mono text-emerald-200 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]"
+    : "min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]";
+  const authCardClass = isAuthSuspendedMode
+    ? "animate-fade-in border-emerald-400/45 bg-black/75 text-emerald-200 shadow-[0_16px_55px_rgba(16,185,129,0.28)] backdrop-blur-sm"
+    : "animate-fade-in border-border/50 shadow-xl";
 
   const [isLoading, setIsLoading] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -96,6 +106,12 @@ const Auth = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (isAuthSuspendedMode && isForgotPasswordMode) {
+      setIsForgotPasswordMode(false);
+    }
+  }, [isAuthSuspendedMode, isForgotPasswordMode]);
+
   // Redirect if already authenticated (but not if we're showing a login alert)
   useEffect(() => {
     if (isAuthenticated && !loginAlertShownRef.current) {
@@ -164,6 +180,29 @@ const Auth = () => {
       const result = await login(loginForm.email, loginForm.password);
 
       if (result.success) {
+        if (isAuthSuspendedMode) {
+          const { data: { session } } = await supabase.auth.getSession();
+          const loggedInUserId = session?.user?.id;
+          const isDeveloperAccount = loggedInUserId === DEVELOPER_ID;
+
+          if (!isDeveloperAccount) {
+            loginAlertShownRef.current = true;
+            await supabase.auth.signOut();
+            setIsLoading(false);
+            loginAlertShownRef.current = false;
+            sweetAlert.error(
+              language === 'th'
+                ? 'คุณไม่มีสิทธิ์เข้าถึงระบบ'
+                : language === 'zh'
+                  ? '您无权访问系统'
+                  : language === 'ja'
+                    ? 'このシステムにアクセスする権限がありません'
+                    : 'You do not have permission to access this system.'
+            );
+            return;
+          }
+        }
+
         alertShown = true;
         loginAlertShownRef.current = true;
         setIsLoading(false);
@@ -441,7 +480,7 @@ const Auth = () => {
   // If in OTP verification mode
   if (isOtpMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]">
+      <div className={authContainerClass}>
         <div className="w-full max-w-md my-auto">
           <div className="text-center mb-6 sm:mb-8 animate-fade-in">
             <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
@@ -449,7 +488,7 @@ const Auth = () => {
               {language === 'th' ? 'ตรวจสอบอีเมลของคุณ' : 'Check Your Email'}
             </h1>
           </div>
-          <Card className="animate-fade-in border-border/50 shadow-xl">
+          <Card className={authCardClass}>
             <CardContent className="pt-6 text-center space-y-4">
               <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -487,7 +526,7 @@ const Auth = () => {
   // If in reset password mode, show the new password form
   if (isResetPasswordMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]">
+      <div className={authContainerClass}>
         <div className="w-full max-w-md my-auto">
           <div className="text-center mb-6 sm:mb-8 animate-fade-in">
             <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
@@ -498,7 +537,7 @@ const Auth = () => {
               {language === 'th' ? 'กรุณากรอกรหัสผ่านใหม่ของคุณ' : 'Please enter your new password'}
             </p>
           </div>
-          <Card className="animate-fade-in border-border/50 shadow-xl">
+          <Card className={authCardClass}>
             <CardContent className="pt-6">
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
@@ -544,29 +583,46 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]">
+    <div className={authContainerClass}>
+      {isAuthSuspendedMode && (
+        <>
+          <div className="pointer-events-none absolute inset-0 opacity-20 [background:repeating-linear-gradient(180deg,rgba(16,185,129,0.12)_0px,rgba(16,185,129,0.12)_1px,transparent_1px,transparent_4px)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.18),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.1),transparent_35%)]" />
+        </>
+      )}
       <div className="w-full max-w-md my-auto">
-        <Button
-          onClick={() => navigate("/")}
-          className="mb-4 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
-        </Button>
+        {!isAuthSuspendedMode && (
+          <Button
+            onClick={() => navigate("/")}
+            className="mb-4 gap-2 font-semibold text-sm px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {language === 'th' ? 'กลับหน้าแรก' : language === 'zh' ? '返回首页' : language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
+          </Button>
+        )}
 
         <div className="text-center mb-6 sm:mb-8 animate-fade-in">
-          <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
-            {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : language === 'ja' ? 'ようこそ' : 'Welcome'}
-          </h1>
-          <p className="text-muted-foreground">
-            {language === 'th' ? 'เข้าสู่ระบบเพื่อใช้งานเว็บบอร์ด' : language === 'zh' ? '登录以访问论坛' : language === 'ja' ? 'フォーラムにアクセスするにはログインしてください' : 'Login to access the forum'}
-          </p>
+          {!isAuthSuspendedMode && (
+            <>
+              <img src={logo} alt="Plern Ping Cafe" className="h-16 sm:h-20 mx-auto mb-3 sm:mb-4" />
+              <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
+                {language === 'th' ? 'ยินดีต้อนรับ' : language === 'zh' ? '欢迎' : language === 'ja' ? 'ようこそ' : 'Welcome'}
+              </h1>
+              <p className="text-muted-foreground">
+                {language === 'th' ? 'เข้าสู่ระบบเพื่อใช้งานเว็บบอร์ด' : language === 'zh' ? '登录以访问论坛' : language === 'ja' ? 'フォーラムにアクセスするにはログインしてください' : 'Login to access the forum'}
+              </p>
+            </>
+          )}
+          {isAuthSuspendedMode && (
+            <div className="mt-3 inline-flex items-center rounded-full border border-emerald-400/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-[0.16em] text-emerald-300">
+              {language === 'th' ? 'SUSPENDED LOCKDOWN: Dev Only' : 'SUSPENDED LOCKDOWN: DEV ONLY ACCESS'}
+            </div>
+          )}
         </div>
 
-        <Card className="animate-fade-in border-border/50 shadow-xl">
+        <Card className={authCardClass}>
           <CardHeader>
-            {isForgotPasswordMode ? (
+            {isForgotPasswordMode && !isAuthSuspendedMode ? (
               <>
                 <div className="flex items-center gap-2">
                   <Button
@@ -589,22 +645,32 @@ const Auth = () => {
             ) : (
               <>
                 <CardTitle className="text-center">
-                  {language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register'}
+                  {isAuthSuspendedMode
+                    ? (language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : language === 'ja' ? 'ログイン' : 'Login')
+                    : (language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register')}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  {language === 'th'
-                    ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ'
-                    : language === 'zh'
-                      ? '加入我们的社区，分享您的体验'
-                      : language === 'ja'
-                        ? 'コミュニティに参加して体験を共有してください'
-                        : 'Join our community and share your experiences'}
+                  {isAuthSuspendedMode
+                    ? (language === 'th'
+                      ? 'กรุณาเข้าสู่ระบบเพื่อใช้งานระบบ'
+                      : language === 'zh'
+                        ? '请登录以继续使用系统'
+                        : language === 'ja'
+                          ? 'システムを利用するにはログインしてください'
+                          : 'Please log in to continue')
+                    : (language === 'th'
+                      ? 'เข้าร่วมชุมชนและแบ่งปันประสบการณ์ของคุณ'
+                      : language === 'zh'
+                        ? '加入我们的社区，分享您的体验'
+                        : language === 'ja'
+                          ? 'コミュニティに参加して体験を共有してください'
+                          : 'Join our community and share your experiences')}
                 </CardDescription>
               </>
             )}
           </CardHeader>
           <CardContent>
-            {isForgotPasswordMode ? (
+            {isForgotPasswordMode && !isAuthSuspendedMode ? (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="forgot-email">
@@ -623,6 +689,84 @@ const Auth = () => {
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {language === 'th' ? 'ส่งลิงก์รีเซ็ต' : language === 'zh' ? '发送重置链接' : 'Send Reset Link'}
                 </Button>
+              </form>
+            ) : isAuthSuspendedMode ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email-suspended" className="text-emerald-300">
+                    {language === 'th' ? 'อีเมล' : language === 'zh' ? '电子邮件' : 'Email'}
+                  </Label>
+                  <Input
+                    id="login-email-suspended"
+                    type="email"
+                    placeholder={language === 'th' ? 'กรอกอีเมล' : language === 'zh' ? '请输入电子邮件' : 'Enter your email'}
+                    value={loginForm.email}
+                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                    required
+                    className="border-emerald-500/40 bg-zinc-950/80 text-emerald-200 placeholder:text-emerald-700 focus-visible:ring-emerald-400/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password-suspended" className="text-emerald-300">
+                    {language === 'th' ? 'รหัสผ่าน' : language === 'zh' ? '密码' : 'Password'}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="login-password-suspended"
+                      type={showLoginPassword ? "text" : "password"}
+                      placeholder={language === 'th' ? 'กรอกรหัสผ่าน' : language === 'zh' ? '请输入密码' : 'Enter your password'}
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      required
+                      className="pr-10 border-emerald-500/40 bg-zinc-950/80 text-emerald-200 placeholder:text-emerald-700 focus-visible:ring-emerald-400/50"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-emerald-500/10"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    >
+                      {showLoginPassword ? (
+                        <EyeOff className="h-4 w-4 text-emerald-300" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-emerald-300" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 py-2">
+                  <input
+                    type="checkbox"
+                    id="remember-password-suspended"
+                    checked={rememberPassword}
+                    onChange={(e) => {
+                      setRememberPassword(e.target.checked);
+                      if (!e.target.checked) {
+                        localStorage.removeItem(STORAGE_KEY);
+                      }
+                    }}
+                    className="w-4 h-4 cursor-pointer accent-primary"
+                  />
+                  <label htmlFor="remember-password-suspended" className="text-sm text-emerald-300 cursor-pointer select-none">
+                    {language === 'th' ? 'จดจำรหัสผ่าน' : language === 'zh' ? '记住密码' : 'Remember password'}
+                  </label>
+                  <span className="text-xs text-emerald-500 ml-auto">
+                    {language === 'th' ? '(ไม่แนะนำบนคอมพิวเตอร์ของคนอื่น)' : language === 'zh' ? '(不建议在公用电脑上使用)' : '(not recommended on shared devices)'}
+                  </span>
+                </div>
+
+                <Button
+                  type="submit"
+                  className={isAuthSuspendedMode ? "w-full border border-emerald-400/60 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25" : "w-full"}
+                  disabled={isLoading}
+                >
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {language === 'th' ? 'เข้าสู่ระบบ' : language === 'zh' ? '登录' : 'Login'}
+                </Button>
+
+                {/* Google Sign-In hidden temporarily */}
               </form>
             ) : (
               <Tabs defaultValue="login" className="w-full">
