@@ -45,6 +45,7 @@ import { UserRolesManagement } from "@/components/admin/UserRolesManagement";
 import { ChatLogsManagement } from "@/components/admin/ChatLogsManagement";
 import { ChatAnalyticsDashboard } from "@/components/admin/ChatAnalyticsDashboard";
 import { DevGodMode } from "@/components/admin/DevGodMode";
+import { WebAnalyticsDashboard } from "@/components/admin/WebAnalyticsDashboard";
 import {
   ChartContainer,
   ChartTooltip,
