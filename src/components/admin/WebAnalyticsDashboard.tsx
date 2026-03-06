@@ -76,7 +76,7 @@ export const WebAnalyticsDashboard = () => {
       const from = getDateFrom(range);
       const { data, error } = await (supabase as any)
         .from("web_analytics_events")
-        .select("id, visitor_id, session_id, event_name, event_category, page_path, device_type, device_brand, browser, os, referrer, duration_seconds, scroll_depth, created_at, utm_source, utm_medium")
+        .select("id, visitor_id, session_id, event_name, event_category, page_path, device_type, device_brand, browser, os, referrer, duration_seconds, scroll_depth, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term")
         .gte("created_at", from)
         .order("created_at", { ascending: false })
         .limit(5000);
