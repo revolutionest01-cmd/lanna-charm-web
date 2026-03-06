@@ -58,6 +58,7 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
   const analyticsEnabled = !featureLoading && toggles["analytics"] === true && consentState.analyticsAllowed;
   const isServiceSuspended = !featureLoading && toggles["service_suspended"] === true;
   const isAuthPath = location.pathname.startsWith("/auth");
+  const hideMenuChromeOnAuthSuspended = isServiceSuspended && isAuthPath;
   const canBypassSuspended = !roleChecking && isDeveloper;
   const allowAuthDuringSuspended = isAuthPath && !isAuthenticated;
   const shouldShowRoleLoading = isServiceSuspended && roleChecking;
@@ -102,7 +103,7 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
               </div>
             </div>
           )}
-          <AnimatedRoutes />
+          <AnimatedRoutes hideNavigationChrome={hideMenuChromeOnAuthSuspended} />
           <PrivacyConsentBanner />
           <AppUpdateNotifier />
           <DataLoadError />

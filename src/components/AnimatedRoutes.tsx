@@ -20,7 +20,15 @@ import FloatingChatButton from "@/components/FloatingChatButton";
 import { cn } from "@/lib/utils";
 
 // Wrapper component to access sidebar state
-const MainContent = ({ children, animationClass }: { children: React.ReactNode; animationClass: string }) => {
+const MainContent = ({
+  children,
+  animationClass,
+  hideNavigationChrome,
+}: {
+  children: React.ReactNode;
+  animationClass: string;
+  hideNavigationChrome: boolean;
+}) => {
   const { state, isMobile, openMobile, setOpen, setOpenMobile } = useSidebar();
   const isOpen = state === "expanded" || (isMobile && openMobile);
 
@@ -35,12 +43,15 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
   return (
     <SidebarInset className={cn(
       "flex-1 overflow-x-hidden",
-      // Mobile: no TabBar, bottom for BottomBar (14)
-      "pb-16",
-      // Tablet (sm): no TabBar
-      "sm:pb-18",
-      // Tablet/iPad (md): keep bottom bar padding
-      "md:pb-18",
+      // When menu chrome is hidden, remove reserved paddings.
+      hideNavigationChrome ? "pb-0 sm:pb-0 md:pb-0" : [
+        // Mobile: no TabBar, bottom for BottomBar (14)
+        "pb-16",
+        // Tablet (sm): no TabBar
+        "sm:pb-18",
+        // Tablet/iPad (md): keep bottom bar padding
+        "md:pb-18",
+      ],
       // Large Desktop (lg): no top or bottom bar
       "lg:pt-0 lg:pb-0"
     )}>
@@ -61,7 +72,7 @@ const MainContent = ({ children, animationClass }: { children: React.ReactNode; 
   );
 };
 
-const AnimatedRoutes = () => {
+const AnimatedRoutes = ({ hideNavigationChrome = false }: { hideNavigationChrome?: boolean }) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState<'enter' | 'exit' | 'idle'>('idle');
@@ -114,12 +125,12 @@ const AnimatedRoutes = () => {
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex flex-col w-full">
-        <Secondbar />
+        {!hideNavigationChrome && <Secondbar />}
         <div className="flex w-full flex-1">
-          <TabBar />
-          <AppSidebar />
+          {!hideNavigationChrome && <TabBar />}
+          {!hideNavigationChrome && <AppSidebar />}
         
-        <MainContent animationClass={getAnimationClass()}>
+        <MainContent animationClass={getAnimationClass()} hideNavigationChrome={hideNavigationChrome}>
           <Routes location={displayLocation}>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -136,8 +147,8 @@ const AnimatedRoutes = () => {
         </MainContent>
         
           {/* Bottom Bar for mobile */}
-          <BottomBar />
-          <FloatingChatButton />
+          {!hideNavigationChrome && <BottomBar />}
+          {!hideNavigationChrome && <FloatingChatButton />}
         </div>
       </div>
     </SidebarProvider>
