@@ -228,6 +228,7 @@ const Admin = () => {
         return <ChatAnalyticsDashboard />;
       case "webanalytics": return <WebAnalyticsDashboard />;
       case "utmbuilder": return <UTMLinkGenerator />;
+      case "customsections": return <CustomSectionsManagement />;
       case "roles": return <UserRolesManagement />;
       case "devmode": return canAccessDevMode ? <DevGodMode /> : null;
       default: return null;
