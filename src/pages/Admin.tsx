@@ -223,6 +223,7 @@ const Admin = () => {
         if (featureLoading || toggles["analytics"] !== true) return null;
         return <ChatAnalyticsDashboard />;
       case "webanalytics": return <WebAnalyticsDashboard />;
+      case "utmbuilder": return <UTMLinkGenerator />;
       case "roles": return <UserRolesManagement />;
       case "devmode": return canAccessDevMode ? <DevGodMode /> : null;
       default: return null;
