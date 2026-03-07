@@ -304,6 +304,51 @@ export type Database = {
           },
         ]
       }
+      custom_sections: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          order_index: number
+          section_type: string
+          subtitle_en: string | null
+          subtitle_th: string | null
+          title_en: string | null
+          title_th: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          order_index?: number
+          section_type?: string
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string | null
+          title_th?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          order_index?: number
+          section_type?: string
+          subtitle_en?: string | null
+          subtitle_th?: string | null
+          title_en?: string | null
+          title_th?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_gacha_claims: {
         Row: {
           claim_date: string

@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import ScrollReveal from "@/components/ScrollReveal";
+import DynamicSections from "@/components/DynamicSections";
 import { Toaster } from "@/components/ui/sonner";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
@@ -93,6 +94,9 @@ const Index = () => {
             <ContactSection />
           </ScrollReveal>
         )}
+
+        {/* Dynamic custom sections from admin */}
+        <DynamicSections />
       </main>
       <Footer />
       <BackToTop />
