@@ -66,9 +66,9 @@ const SectionRenderer = ({ section, t, language }: RendererProps) => {
 
   switch (section.section_type) {
     case "text_image":
-      return <TextImageSection section={section} title={title} subtitle={subtitle} t={t} />;
+      return <TextImageSection section={section} title={title} subtitle={subtitle} t={t} language={language} />;
     case "banner":
-      return <BannerSection section={section} title={title} subtitle={subtitle} t={t} />;
+      return <BannerSection section={section} title={title} subtitle={subtitle} t={t} language={language} />;
     case "grid_cards":
       return <GridCardsSection section={section} title={title} subtitle={subtitle} t={t} language={language} />;
     case "rich_text":

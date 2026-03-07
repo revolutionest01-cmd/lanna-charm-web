@@ -137,7 +137,7 @@ export const CustomSectionsManagement = () => {
   };
 
   const handleDelete = async (section: CustomSection) => {
-    const confirmed = await sweetAlert.confirm(
+    const confirmed = await sweetAlert.confirmDelete(
       t4(language, "ยืนยันการลบ", "Confirm Delete", "确认删除", "削除確認"),
       t4(language, `ลบ "${section.title_th || section.title_en}"?`, `Delete "${section.title_en || section.title_th}"?`, `删除 "${section.title_en}"?`, `"${section.title_en}"を削除しますか?`)
     );
