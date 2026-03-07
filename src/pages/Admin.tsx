@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
+  Link2,
   Image,
   Calendar,
   Home,
@@ -46,6 +47,7 @@ import { ChatLogsManagement } from "@/components/admin/ChatLogsManagement";
 import { ChatAnalyticsDashboard } from "@/components/admin/ChatAnalyticsDashboard";
 import { DevGodMode } from "@/components/admin/DevGodMode";
 import { WebAnalyticsDashboard } from "@/components/admin/WebAnalyticsDashboard";
+import { UTMLinkGenerator } from "@/components/admin/UTMLinkGenerator";
 import {
   ChartContainer,
   ChartTooltip,
@@ -68,6 +70,7 @@ const BASE_TABS = [
   { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat", minRole: "admin" },
   { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
   { id: "webanalytics", icon: TrendingUp, labelTh: "Web Analytics", labelEn: "Web Analytics", minRole: "admin" },
+  { id: "utmbuilder", icon: Link2, labelTh: "UTM Builder", labelEn: "UTM Builder", minRole: "staff" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
   { id: "devmode", icon: Zap, labelTh: "Dev God Mode", labelEn: "Dev God Mode", minRole: "developer" },
 ];
@@ -221,6 +224,7 @@ const Admin = () => {
         if (featureLoading || toggles["analytics"] !== true) return null;
         return <ChatAnalyticsDashboard />;
       case "webanalytics": return <WebAnalyticsDashboard />;
+      case "utmbuilder": return <UTMLinkGenerator />;
       case "roles": return <UserRolesManagement />;
       case "devmode": return canAccessDevMode ? <DevGodMode /> : null;
       default: return null;
