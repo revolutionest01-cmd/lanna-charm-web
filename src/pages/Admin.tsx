@@ -49,6 +49,7 @@ import { ChatAnalyticsDashboard } from "@/components/admin/ChatAnalyticsDashboar
 import { DevGodMode } from "@/components/admin/DevGodMode";
 import { WebAnalyticsDashboard } from "@/components/admin/WebAnalyticsDashboard";
 import { UTMLinkGenerator } from "@/components/admin/UTMLinkGenerator";
+import { CustomSectionsManagement } from "@/components/admin/CustomSectionsManagement";
 import {
   ChartContainer,
   ChartTooltip,
