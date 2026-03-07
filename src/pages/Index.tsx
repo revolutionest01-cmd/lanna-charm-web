@@ -94,6 +94,9 @@ const Index = () => {
             <ContactSection />
           </ScrollReveal>
         )}
+
+        {/* Dynamic custom sections from admin */}
+        <DynamicSections />
       </main>
       <Footer />
       <BackToTop />
