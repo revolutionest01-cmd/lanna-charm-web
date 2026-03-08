@@ -50,6 +50,7 @@ import { DevGodMode } from "@/components/admin/DevGodMode";
 import { WebAnalyticsDashboard } from "@/components/admin/WebAnalyticsDashboard";
 import { UTMLinkGenerator } from "@/components/admin/UTMLinkGenerator";
 import { CustomSectionsManagement } from "@/components/admin/CustomSectionsManagement";
+import { HomepageLayoutManagement } from "@/components/admin/HomepageLayoutManagement";
 import {
   ChartContainer,
   ChartTooltip,
