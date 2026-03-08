@@ -13,10 +13,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plus, GripVertical, Pencil, Trash2, Eye, EyeOff, Loader2,
-  LayoutGrid, Image, Type, FileText, ArrowUp, ArrowDown, Layers
+  LayoutGrid, Image, Type, FileText, ArrowUp, ArrowDown, Layers, Upload, X
 } from "lucide-react";
 import { toast } from "sonner";
 import sweetAlert from "@/lib/sweetAlert";
+import { optimizeImage } from "@/lib/imageOptimization";
 
 interface CustomSection {
   id: string;
