@@ -761,6 +761,33 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_section_order: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_visible: boolean
+          order_index: number
+          section_key: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean
+          order_index?: number
+          section_key: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean
+          order_index?: number
+          section_key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
