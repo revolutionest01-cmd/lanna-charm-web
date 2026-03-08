@@ -182,6 +182,43 @@ export const CustomSectionsManagement = () => {
     }));
   };
 
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImage = async (file: File, path?: string): Promise<string | null> => {
+    try {
+      setUploading(true);
+      const optimized = await optimizeImage(file, { maxWidth: 1920, quality: 0.85 });
+      const fileName = path || `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "")}`;
+      const { error } = await supabase.storage.from("custom-sections").upload(fileName, optimized, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("custom-sections").getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err: any) {
+      toast.error(err.message);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, `main_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "")}`);
+    if (url) setFormData((p: any) => ({ ...p, image_url: url }));
+  };
+
+  const handleCardImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, cardIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, `card_${cardIndex}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "")}`);
+    if (url) {
+      const cards = [...(formData.content?.cards || [])];
+      cards[cardIndex] = { ...cards[cardIndex], image_url: url };
+      updateContent("cards", cards);
+    }
+  };
+
   const renderContentEditor = () => {
     const type = formData.section_type;
 
