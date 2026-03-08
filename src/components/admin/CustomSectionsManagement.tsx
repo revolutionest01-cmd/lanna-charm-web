@@ -13,10 +13,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plus, GripVertical, Pencil, Trash2, Eye, EyeOff, Loader2,
-  LayoutGrid, Image, Type, FileText, ArrowUp, ArrowDown, Layers
+  LayoutGrid, Image, Type, FileText, ArrowUp, ArrowDown, Layers, Upload, X
 } from "lucide-react";
 import { toast } from "sonner";
 import sweetAlert from "@/lib/sweetAlert";
+import { optimizeImage } from "@/lib/imageOptimization";
 
 interface CustomSection {
   id: string;
@@ -181,6 +182,43 @@ export const CustomSectionsManagement = () => {
     }));
   };
 
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImage = async (file: File, path?: string): Promise<string | null> => {
+    try {
+      setUploading(true);
+      const optimized = await optimizeImage(file, { maxWidth: 1920, quality: 0.85 });
+      const fileName = path || `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "")}`;
+      const { error } = await supabase.storage.from("custom-sections").upload(fileName, optimized, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("custom-sections").getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err: any) {
+      toast.error(err.message);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, `main_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "")}`);
+    if (url) setFormData((p: any) => ({ ...p, image_url: url }));
+  };
+
+  const handleCardImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, cardIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, `card_${cardIndex}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "")}`);
+    if (url) {
+      const cards = [...(formData.content?.cards || [])];
+      cards[cardIndex] = { ...cards[cardIndex], image_url: url };
+      updateContent("cards", cards);
+    }
+  };
+
   const renderContentEditor = () => {
     const type = formData.section_type;
 
@@ -256,9 +294,22 @@ export const CustomSectionsManagement = () => {
                   const newCards = [...cards]; newCards[i] = { ...newCards[i], description_en: e.target.value }; updateContent("cards", newCards);
                 }} />
               </div>
-              <Input className="mt-2" placeholder="Image URL" value={card.image_url || ""} onChange={(e) => {
-                const newCards = [...cards]; newCards[i] = { ...newCards[i], image_url: e.target.value }; updateContent("cards", newCards);
-              }} />
+              {/* Card image upload */}
+              <div className="mt-2">
+                {card.image_url && (
+                  <div className="relative group mb-1">
+                    <img src={card.image_url} alt="" className="rounded h-20 w-full object-cover" />
+                    <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => {
+                      const newCards = [...cards]; newCards[i] = { ...newCards[i], image_url: "" }; updateContent("cards", newCards);
+                    }}><X className="h-2.5 w-2.5" /></Button>
+                  </div>
+                )}
+                <label className="flex items-center gap-1.5 px-3 py-2 border border-dashed rounded cursor-pointer text-xs text-muted-foreground hover:border-primary hover:bg-primary/5 transition-all">
+                  <Upload className="w-3 h-3" />
+                  {t4(language, "อัพโหลดรูป", "Upload Image", "上传图片", "画像アップロード")}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCardImageUpload(e, i)} />
+                </label>
+              </div>
             </Card>
           ))}
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
@@ -439,13 +490,30 @@ export const CustomSectionsManagement = () => {
                 </div>
               </div>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t4(language, "URL รูปภาพหลัก", "Main Image URL", "主图URL", "メイン画像URL")}</label>
-                <Input value={formData.image_url || ""} onChange={(e) => setFormData((p: any) => ({ ...p, image_url: e.target.value }))} placeholder="https://..." />
-                {formData.image_url && (
-                  <img src={formData.image_url} alt="Preview" className="mt-2 rounded-lg max-h-32 object-cover w-full" />
-                )}
+                <label className="text-xs font-medium text-muted-foreground">{t4(language, "รูปภาพหลัก", "Main Image", "主图", "メイン画像")}</label>
+                <div className="mt-1.5 space-y-2">
+                  {formData.image_url && (
+                    <div className="relative group">
+                      <img src={formData.image_url} alt="Preview" className="rounded-lg max-h-32 object-cover w-full" />
+                      <Button
+                        type="button" variant="destructive" size="icon"
+                        className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setFormData((p: any) => ({ ...p, image_url: null }))}
+                      ><X className="h-3 w-3" /></Button>
+                    </div>
+                  )}
+                  <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
+                    <span className="text-sm text-muted-foreground">
+                      {uploading
+                        ? t4(language, "กำลังอัพโหลด...", "Uploading...", "上传中...", "アップロード中...")
+                        : t4(language, "คลิกเพื่ออัพโหลดรูปภาพ", "Click to upload image", "点击上传图片", "クリックして画像アップロード")}
+                    </span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleMainImageUpload} disabled={uploading} />
+                  </label>
+                </div>
               </div>
 
               {/* Active toggle */}

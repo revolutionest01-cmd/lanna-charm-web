@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Link2,
   Layers,
+  Layout,
   Image,
   Calendar,
   Home,
@@ -50,6 +51,7 @@ import { DevGodMode } from "@/components/admin/DevGodMode";
 import { WebAnalyticsDashboard } from "@/components/admin/WebAnalyticsDashboard";
 import { UTMLinkGenerator } from "@/components/admin/UTMLinkGenerator";
 import { CustomSectionsManagement } from "@/components/admin/CustomSectionsManagement";
+import { HomepageLayoutManagement } from "@/components/admin/HomepageLayoutManagement";
 import {
   ChartContainer,
   ChartTooltip,
@@ -73,6 +75,7 @@ const BASE_TABS = [
   { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
   { id: "webanalytics", icon: TrendingUp, labelTh: "Web Analytics", labelEn: "Web Analytics", minRole: "admin" },
   { id: "utmbuilder", icon: Link2, labelTh: "UTM Builder", labelEn: "UTM Builder", minRole: "staff" },
+  { id: "homepagelayout", icon: Layout, labelTh: "จัดเรียงหน้าแรก", labelEn: "Homepage Layout", minRole: "admin" },
   { id: "customsections", icon: Layers, labelTh: "Dynamic Section", labelEn: "Dynamic Sections", minRole: "admin" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
   { id: "devmode", icon: Zap, labelTh: "Dev God Mode", labelEn: "Dev God Mode", minRole: "developer" },
@@ -228,6 +231,7 @@ const Admin = () => {
         return <ChatAnalyticsDashboard />;
       case "webanalytics": return <WebAnalyticsDashboard />;
       case "utmbuilder": return <UTMLinkGenerator />;
+      case "homepagelayout": return <HomepageLayoutManagement />;
       case "customsections": return <CustomSectionsManagement />;
       case "roles": return <UserRolesManagement />;
       case "devmode": return canAccessDevMode ? <DevGodMode /> : null;
