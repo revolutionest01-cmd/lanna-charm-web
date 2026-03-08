@@ -433,7 +433,7 @@ export const CustomSectionsManagement = () => {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>
               {editingSection
@@ -442,99 +442,156 @@ export const CustomSectionsManagement = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-4 py-2">
-              {/* Type */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  {t4(language, "ประเภท Section", "Section Type", "区块类型", "セクションタイプ")}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {SECTION_TYPES.map((t) => {
-                    const Icon = t.icon;
-                    const isSelected = formData.section_type === t.value;
-                    return (
-                      <button
-                        key={t.value}
-                        onClick={() => handleTypeChange(t.value)}
-                        className={`flex items-center gap-2 p-3 rounded-lg border-2 text-left transition-all text-sm
-                          ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
-                      >
-                        <Icon className={`w-4 h-4 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={isSelected ? "font-medium text-foreground" : "text-muted-foreground"}>
-                          {language === "th" ? t.labelTh : t.labelEn}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          <Tabs defaultValue="edit" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="edit" className="gap-1.5">
+                <Pencil className="w-3.5 h-3.5" />
+                {t4(language, "แก้ไข", "Edit", "编辑", "編集")}
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="gap-1.5">
+                <Eye className="w-3.5 h-3.5" />
+                {t4(language, "ตัวอย่าง", "Preview", "预览", "プレビュー")}
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Titles */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">ชื่อ Section (TH) *</label>
-                  <Input value={formData.title_th || ""} onChange={(e) => setFormData((p: any) => ({ ...p, title_th: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Section Title (EN) *</label>
-                  <Input value={formData.title_en || ""} onChange={(e) => setFormData((p: any) => ({ ...p, title_en: e.target.value }))} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">คำอธิบาย (TH)</label>
-                  <Input value={formData.subtitle_th || ""} onChange={(e) => setFormData((p: any) => ({ ...p, subtitle_th: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Subtitle (EN)</label>
-                  <Input value={formData.subtitle_en || ""} onChange={(e) => setFormData((p: any) => ({ ...p, subtitle_en: e.target.value }))} />
-                </div>
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">{t4(language, "รูปภาพหลัก", "Main Image", "主图", "メイン画像")}</label>
-                <div className="mt-1.5 space-y-2">
-                  {formData.image_url && (
-                    <div className="relative group">
-                      <img src={formData.image_url} alt="Preview" className="rounded-lg max-h-32 object-cover w-full" />
-                      <Button
-                        type="button" variant="destructive" size="icon"
-                        className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => setFormData((p: any) => ({ ...p, image_url: null }))}
-                      ><X className="h-3 w-3" /></Button>
+            {/* Edit Tab */}
+            <TabsContent value="edit">
+              <ScrollArea className="max-h-[55vh] pr-4">
+                <div className="space-y-4 py-2">
+                  {/* Type */}
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">
+                      {t4(language, "ประเภท Section", "Section Type", "区块类型", "セクションタイプ")}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SECTION_TYPES.map((t) => {
+                        const Icon = t.icon;
+                        const isSelected = formData.section_type === t.value;
+                        return (
+                          <button
+                            key={t.value}
+                            onClick={() => handleTypeChange(t.value)}
+                            className={`flex items-center gap-2 p-3 rounded-lg border-2 text-left transition-all text-sm
+                              ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
+                          >
+                            <Icon className={`w-4 h-4 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={isSelected ? "font-medium text-foreground" : "text-muted-foreground"}>
+                              {language === "th" ? t.labelTh : t.labelEn}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  )}
-                  <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-muted-foreground">
-                      {uploading
-                        ? t4(language, "กำลังอัพโหลด...", "Uploading...", "上传中...", "アップロード中...")
-                        : t4(language, "คลิกเพื่ออัพโหลดรูปภาพ", "Click to upload image", "点击上传图片", "クリックして画像アップロード")}
-                    </span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleMainImageUpload} disabled={uploading} />
-                  </label>
+                  </div>
+
+                  {/* Titles */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">ชื่อ Section (TH) *</label>
+                      <Input value={formData.title_th || ""} onChange={(e) => setFormData((p: any) => ({ ...p, title_th: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Section Title (EN) *</label>
+                      <Input value={formData.title_en || ""} onChange={(e) => setFormData((p: any) => ({ ...p, title_en: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">คำอธิบาย (TH)</label>
+                      <Input value={formData.subtitle_th || ""} onChange={(e) => setFormData((p: any) => ({ ...p, subtitle_th: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Subtitle (EN)</label>
+                      <Input value={formData.subtitle_en || ""} onChange={(e) => setFormData((p: any) => ({ ...p, subtitle_en: e.target.value }))} />
+                    </div>
+                  </div>
+
+                  {/* Image Upload */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">{t4(language, "รูปภาพหลัก", "Main Image", "主图", "メイン画像")}</label>
+                    <div className="mt-1.5 space-y-2">
+                      {formData.image_url && (
+                        <div className="relative group">
+                          <img src={formData.image_url} alt="Preview" className="rounded-lg max-h-32 object-cover w-full" />
+                          <Button
+                            type="button" variant="destructive" size="icon"
+                            className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setFormData((p: any) => ({ ...p, image_url: null }))}
+                          ><X className="h-3 w-3" /></Button>
+                        </div>
+                      )}
+                      <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
+                        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
+                        <span className="text-sm text-muted-foreground">
+                          {uploading
+                            ? t4(language, "กำลังอัพโหลด...", "Uploading...", "上传中...", "アップロード中...")
+                            : t4(language, "คลิกเพื่ออัพโหลดรูปภาพ", "Click to upload image", "点击上传图片", "クリックして画像アップロード")}
+                        </span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleMainImageUpload} disabled={uploading} />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Active toggle */}
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">
+                      {t4(language, "เปิดใช้งาน", "Active", "启用", "有効")}
+                    </label>
+                    <Switch checked={formData.is_active} onCheckedChange={(v) => setFormData((p: any) => ({ ...p, is_active: v }))} />
+                  </div>
+
+                  {/* Content Editor */}
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      {t4(language, "เนื้อหา Section", "Section Content", "区块内容", "セクション内容")}
+                    </label>
+                    {renderContentEditor()}
+                  </div>
                 </div>
-              </div>
+              </ScrollArea>
+            </TabsContent>
 
-              {/* Active toggle */}
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">
-                  {t4(language, "เปิดใช้งาน", "Active", "启用", "有効")}
-                </label>
-                <Switch checked={formData.is_active} onCheckedChange={(v) => setFormData((p: any) => ({ ...p, is_active: v }))} />
-              </div>
-
-              {/* Content Editor */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  {t4(language, "เนื้อหา Section", "Section Content", "区块内容", "セクション内容")}
-                </label>
-                {renderContentEditor()}
-              </div>
-            </div>
-          </ScrollArea>
+            {/* Preview Tab */}
+            <TabsContent value="preview">
+              <ScrollArea className="max-h-[55vh]">
+                <div className="border border-border rounded-lg overflow-hidden bg-background">
+                  <div className="bg-muted/30 px-3 py-1.5 border-b border-border flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {t4(language, "ตัวอย่างการแสดงผล", "Live Preview", "实时预览", "ライブプレビュー")}
+                    </span>
+                  </div>
+                  <div className="min-h-[200px]">
+                    {(formData.title_th || formData.title_en || formData.content) ? (
+                      <DynamicSections
+                        sections={[{
+                          id: editingSection?.id || "preview",
+                          section_type: formData.section_type,
+                          title_th: formData.title_th || "",
+                          title_en: formData.title_en || "",
+                          subtitle_th: formData.subtitle_th || null,
+                          subtitle_en: formData.subtitle_en || null,
+                          content: formData.content || {},
+                          image_url: formData.image_url || null,
+                          order_index: 0,
+                          is_active: true,
+                        }]}
+                        startIndex={0}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+                        {t4(language, "กรอกข้อมูลเพื่อดูตัวอย่าง", "Fill in content to see preview", "填写内容以查看预览", "内容を入力してプレビュー")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
