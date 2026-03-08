@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -18,21 +16,13 @@ interface CustomSection {
   is_active: boolean;
 }
 
-const DynamicSections = () => {
-  const { language } = useLanguage();
-  const [sections, setSections] = useState<CustomSection[]>([]);
+interface DynamicSectionsProps {
+  sections: CustomSection[];
+  startIndex?: number;
+}
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("custom_sections")
-        .select("*")
-        .eq("is_active", true)
-        .order("order_index", { ascending: true });
-      if (data) setSections(data as unknown as CustomSection[]);
-    };
-    fetch();
-  }, []);
+const DynamicSections = ({ sections, startIndex = 0 }: DynamicSectionsProps) => {
+  const { language } = useLanguage();
 
   const t = (th: string | null | undefined, en: string | null | undefined) => {
     if (language === "th") return th || en || "";
@@ -44,8 +34,8 @@ const DynamicSections = () => {
   return (
     <>
       {sections.map((section, i) => (
-        <ScrollReveal key={section.id} animation="fade-up" delay={i % 2 === 0 ? 0 : 100}>
-          <div className={i % 2 === 0 ? "section-glow" : ""}>
+        <ScrollReveal key={section.id} animation="fade-up" delay={(startIndex + i) % 2 === 0 ? 0 : 100}>
+          <div className={(startIndex + i) % 2 === 0 ? "section-glow" : ""}>
             <SectionRenderer section={section} t={t} language={language} />
           </div>
         </ScrollReveal>
@@ -147,7 +137,7 @@ const BannerSection = ({ section, title, subtitle, t }: RendererProps & { title:
 };
 
 /* ─── Grid Cards ─── */
-const GridCardsSection = ({ section, title, subtitle, t, language }: RendererProps & { title: string; subtitle: string }) => {
+const GridCardsSection = ({ section, title, subtitle, t }: RendererProps & { title: string; subtitle: string }) => {
   const cards = section.content?.cards || [];
   if (cards.length === 0) return null;
   const cols = cards.length <= 2 ? "sm:grid-cols-2" : cards.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-4";
