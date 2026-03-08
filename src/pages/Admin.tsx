@@ -75,6 +75,7 @@ const BASE_TABS = [
   { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
   { id: "webanalytics", icon: TrendingUp, labelTh: "Web Analytics", labelEn: "Web Analytics", minRole: "admin" },
   { id: "utmbuilder", icon: Link2, labelTh: "UTM Builder", labelEn: "UTM Builder", minRole: "staff" },
+  { id: "homepagelayout", icon: Layout, labelTh: "จัดเรียงหน้าแรก", labelEn: "Homepage Layout", minRole: "admin" },
   { id: "customsections", icon: Layers, labelTh: "Dynamic Section", labelEn: "Dynamic Sections", minRole: "admin" },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
   { id: "devmode", icon: Zap, labelTh: "Dev God Mode", labelEn: "Dev God Mode", minRole: "developer" },
