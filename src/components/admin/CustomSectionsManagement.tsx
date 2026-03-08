@@ -477,13 +477,30 @@ export const CustomSectionsManagement = () => {
                 </div>
               </div>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t4(language, "URL รูปภาพหลัก", "Main Image URL", "主图URL", "メイン画像URL")}</label>
-                <Input value={formData.image_url || ""} onChange={(e) => setFormData((p: any) => ({ ...p, image_url: e.target.value }))} placeholder="https://..." />
-                {formData.image_url && (
-                  <img src={formData.image_url} alt="Preview" className="mt-2 rounded-lg max-h-32 object-cover w-full" />
-                )}
+                <label className="text-xs font-medium text-muted-foreground">{t4(language, "รูปภาพหลัก", "Main Image", "主图", "メイン画像")}</label>
+                <div className="mt-1.5 space-y-2">
+                  {formData.image_url && (
+                    <div className="relative group">
+                      <img src={formData.image_url} alt="Preview" className="rounded-lg max-h-32 object-cover w-full" />
+                      <Button
+                        type="button" variant="destructive" size="icon"
+                        className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setFormData((p: any) => ({ ...p, image_url: null }))}
+                      ><X className="h-3 w-3" /></Button>
+                    </div>
+                  )}
+                  <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
+                    <span className="text-sm text-muted-foreground">
+                      {uploading
+                        ? t4(language, "กำลังอัพโหลด...", "Uploading...", "上传中...", "アップロード中...")
+                        : t4(language, "คลิกเพื่ออัพโหลดรูปภาพ", "Click to upload image", "点击上传图片", "クリックして画像アップロード")}
+                    </span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleMainImageUpload} disabled={uploading} />
+                  </label>
+                </div>
               </div>
 
               {/* Active toggle */}
