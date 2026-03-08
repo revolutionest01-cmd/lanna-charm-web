@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DynamicSections from "@/components/DynamicSections";
 import {
   Plus, GripVertical, Pencil, Trash2, Eye, EyeOff, Loader2,
   LayoutGrid, Image, Type, FileText, ArrowUp, ArrowDown, Layers, Upload, X
