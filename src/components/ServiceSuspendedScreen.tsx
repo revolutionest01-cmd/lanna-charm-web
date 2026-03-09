@@ -3,28 +3,42 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useMemo } from "react";
-import { useCountUp } from "@/hooks/useCountUp";
+import { useState, useEffect, useRef } from "react";
 
 const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00"); // 1 มีนาคม 2569 BE
 const DELETION_DEADLINE_DAYS = 15;
+const DEADLINE_MS = DELETION_DEADLINE_DAYS * 24 * 60 * 60 * 1000;
 
 const ServiceSuspendedScreen = () => {
   const { language } = useLanguage();
   const { logout, isAuthenticated } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const { daysPassed, daysRemaining, isExpired, progressPercent } = useMemo(() => {
-    const now = new Date();
-    const diffMs = now.getTime() - SUSPENSION_START.getTime();
-    const daysPassed = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-    const daysRemaining = Math.max(0, DELETION_DEADLINE_DAYS - daysPassed);
-    const isExpired = daysPassed >= DELETION_DEADLINE_DAYS;
-    const progressPercent = Math.min(100, (daysPassed / DELETION_DEADLINE_DAYS) * 100);
-    return { daysPassed, daysRemaining, isExpired, progressPercent };
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const { count: animatedDays } = useCountUp({ end: daysPassed, duration: 1500 });
+  const diffMs = now.getTime() - SUSPENSION_START.getTime();
+  const totalHoursPassed = Math.max(0, diffMs / (1000 * 60 * 60));
+  const daysPassed = Math.floor(totalHoursPassed / 24);
+  const daysRemaining = Math.max(0, DELETION_DEADLINE_DAYS - daysPassed);
+  const isExpired = daysPassed >= DELETION_DEADLINE_DAYS;
+  const progressPercent = Math.min(100, (diffMs / DEADLINE_MS) * 100);
+
+  // Remaining time breakdown
+  const remainingMs = Math.max(0, DEADLINE_MS - diffMs);
+  const remDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+  const remHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const remMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const remSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
+  // Overdue hours (total)
+  const totalOverdueHours = Math.floor(totalHoursPassed);
+  const overdueMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const overdueSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -74,33 +88,34 @@ const ServiceSuspendedScreen = () => {
             {language === "th" ? "ระยะเวลาที่เกินกำหนดชำระ" : "Overdue Payment Duration"}
           </div>
 
-          {/* Big counter */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex flex-col items-center">
-              <span className="text-5xl sm:text-6xl font-extrabold tabular-nums text-destructive leading-none">
-                {animatedDays}
-              </span>
-              <span className="text-xs text-muted-foreground mt-1">
-                {language === "th" ? "วันที่ผ่านไป" : "days overdue"}
-              </span>
-            </div>
-            <div className="text-2xl text-muted-foreground/50 font-light">/</div>
-            <div className="flex flex-col items-center">
-              <span className="text-5xl sm:text-6xl font-extrabold tabular-nums text-muted-foreground/60 leading-none">
-                {DELETION_DEADLINE_DAYS}
-              </span>
-              <span className="text-xs text-muted-foreground mt-1">
-                {language === "th" ? "วันกำหนด" : "day limit"}
-              </span>
-            </div>
+          {/* Live ticking counter */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            {[
+              { value: Math.floor(totalOverdueHours / 24), label: language === "th" ? "วัน" : "Days" },
+              { value: totalOverdueHours % 24, label: language === "th" ? "ชั่วโมง" : "Hours" },
+              { value: overdueMinutes, label: language === "th" ? "นาที" : "Min" },
+              { value: overdueSeconds, label: language === "th" ? "วินาที" : "Sec" },
+            ].map((unit, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <span className="text-3xl sm:text-5xl font-extrabold tabular-nums text-destructive leading-none font-mono min-w-[2.5rem] sm:min-w-[3.5rem] text-center">
+                  {String(unit.value).padStart(2, "0")}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-1">{unit.label}</span>
+              </div>
+            ))}
           </div>
+          <p className="text-xs text-muted-foreground">
+            {language === "th"
+              ? `(เลยกำหนดชำระมาแล้ว ${totalOverdueHours.toLocaleString()} ชั่วโมง)`
+              : `(${totalOverdueHours.toLocaleString()} hours overdue)`}
+          </p>
 
           {/* Progress bar */}
           <div className="w-full space-y-1.5">
             <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                  isExpired ? "bg-destructive animate-pulse" : progressPercent > 70 ? "bg-orange-500" : "bg-amber-500"
+                  isExpired ? "bg-destructive animate-pulse" : progressPercent > 70 ? "bg-destructive/70" : "bg-destructive/40"
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
@@ -113,14 +128,15 @@ const ServiceSuspendedScreen = () => {
 
           {/* Remaining or expired message */}
           {!isExpired ? (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 space-y-1">
-              <div className="flex items-center justify-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5 space-y-2">
+              <div className="flex items-center justify-center gap-1.5 text-sm font-semibold text-destructive">
                 <CalendarX className="w-4 h-4" />
-                {language === "th"
-                  ? `เหลือเวลาอีก ${daysRemaining} วัน ก่อนข้อมูลจะถูกลบ`
-                  : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} remaining before data deletion`}
+                {language === "th" ? "เวลาที่เหลือก่อนข้อมูลจะถูกลบ" : "Time remaining before data deletion"}
               </div>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/80">
+              <div className="flex items-center justify-center gap-1.5 text-lg font-mono font-bold text-destructive tabular-nums">
+                {String(remDays).padStart(2, "0")}d : {String(remHours).padStart(2, "0")}h : {String(remMinutes).padStart(2, "0")}m : {String(remSeconds).padStart(2, "0")}s
+              </div>
+              <p className="text-xs text-muted-foreground">
                 {language === "th"
                   ? "กรุณาชำระเงินก่อนครบกำหนด เพื่อป้องกันข้อมูลสูญหาย"
                   : "Please complete the payment before the deadline to prevent data loss."}
