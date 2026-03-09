@@ -542,7 +542,7 @@ export const CustomSectionsManagement = () => {
                           ><X className="h-3 w-3" /></Button>
                         </div>
                       )}
-                      <label className={`flex items-center justify-center gap-2 px-4 py-4 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
+                      <label className={`flex items-center justify-center gap-2 px-4 py-5 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
                         <span className="text-sm text-muted-foreground">
                           {uploading
