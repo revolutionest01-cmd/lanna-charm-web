@@ -130,10 +130,10 @@ const ServiceSuspendedScreen = () => {
 
           {/* Warning or expired message */}
           {!isExpired ? (
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
               {language === "th"
-                ? "กรุณาชำระเงินก่อนครบกำหนด เพื่อป้องกันข้อมูลสูญหาย"
-                : "Please complete the payment before the deadline to prevent data loss."}
+                ? "หมายเหตุ: เมื่อครบกำหนดการนับถอยหลัง ให้ถือว่าการเสนอราคาและข้อตกลงจ้างงานเดิมเป็นอันสิ้นสุดลง หากผู้ว่าจ้างประสงค์จะเข้าใช้งานระบบหลังจากนี้ จะถือเป็นการเริ่มโครงการใหม่ตามอัตราค่าบริการปัจจุบัน (Market Rate) และผู้รับจ้างไม่รับผิดชอบต่อความเสียหายหรือข้อมูลที่ถูกลบไปก่อนหน้า"
+                : "Note: Once the countdown expires, the original quotation and contract shall be considered terminated. If the client wishes to access the system thereafter, it will be treated as a new project at the current market rate, and the developer shall not be liable for any damages or previously deleted data."}
             </p>
           ) : (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-3 space-y-1.5">
