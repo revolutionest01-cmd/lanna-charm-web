@@ -88,33 +88,34 @@ const ServiceSuspendedScreen = () => {
             {language === "th" ? "ระยะเวลาที่เกินกำหนดชำระ" : "Overdue Payment Duration"}
           </div>
 
-          {/* Big counter */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex flex-col items-center">
-              <span className="text-5xl sm:text-6xl font-extrabold tabular-nums text-destructive leading-none">
-                {animatedDays}
-              </span>
-              <span className="text-xs text-muted-foreground mt-1">
-                {language === "th" ? "วันที่ผ่านไป" : "days overdue"}
-              </span>
-            </div>
-            <div className="text-2xl text-muted-foreground/50 font-light">/</div>
-            <div className="flex flex-col items-center">
-              <span className="text-5xl sm:text-6xl font-extrabold tabular-nums text-muted-foreground/60 leading-none">
-                {DELETION_DEADLINE_DAYS}
-              </span>
-              <span className="text-xs text-muted-foreground mt-1">
-                {language === "th" ? "วันกำหนด" : "day limit"}
-              </span>
-            </div>
+          {/* Live ticking counter */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            {[
+              { value: Math.floor(totalOverdueHours / 24), label: language === "th" ? "วัน" : "Days" },
+              { value: totalOverdueHours % 24, label: language === "th" ? "ชั่วโมง" : "Hours" },
+              { value: overdueMinutes, label: language === "th" ? "นาที" : "Min" },
+              { value: overdueSeconds, label: language === "th" ? "วินาที" : "Sec" },
+            ].map((unit, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <span className="text-3xl sm:text-5xl font-extrabold tabular-nums text-destructive leading-none font-mono min-w-[2.5rem] sm:min-w-[3.5rem] text-center">
+                  {String(unit.value).padStart(2, "0")}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-1">{unit.label}</span>
+              </div>
+            ))}
           </div>
+          <p className="text-xs text-muted-foreground">
+            {language === "th"
+              ? `(เลยกำหนดชำระมาแล้ว ${totalOverdueHours.toLocaleString()} ชั่วโมง)`
+              : `(${totalOverdueHours.toLocaleString()} hours overdue)`}
+          </p>
 
           {/* Progress bar */}
           <div className="w-full space-y-1.5">
             <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                  isExpired ? "bg-destructive animate-pulse" : progressPercent > 70 ? "bg-orange-500" : "bg-amber-500"
+                  isExpired ? "bg-destructive animate-pulse" : progressPercent > 70 ? "bg-destructive/70" : "bg-destructive/40"
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
