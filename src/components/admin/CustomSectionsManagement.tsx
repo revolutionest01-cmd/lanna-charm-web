@@ -620,11 +620,11 @@ export const CustomSectionsManagement = () => {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="px-6 pb-6 pt-2 shrink-0">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="px-6 pb-6 pt-3 shrink-0 border-t border-border bg-accent/20">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-border">
               {isTh ? "ยกเลิก" : "Cancel"}
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="gap-1.5">
+            <Button onClick={handleSave} disabled={saving} className="gap-1.5 shadow-sm">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {editingSection ? (isTh ? "บันทึก" : "Save") : (isTh ? "สร้าง" : "Create")}
             </Button>
