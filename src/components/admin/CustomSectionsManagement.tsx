@@ -486,7 +486,7 @@ export const CustomSectionsManagement = () => {
                             className={`flex items-start gap-2.5 p-3.5 rounded-xl border-2 text-left transition-all duration-200
                               ${isSelected ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary/20" : "border-border hover:border-primary/40 hover:bg-accent/40"}`}
                           >
-                            <Icon className={`w-5 h-5 mt-0.5 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                            <Icon className={`w-5 h-5 mt-0.5 shrink-0 transition-colors ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                             <div>
                               <span className={`text-sm block ${isSelected ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                                 {isTh ? t.labelTh : t.labelEn}
