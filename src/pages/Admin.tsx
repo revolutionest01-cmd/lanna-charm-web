@@ -73,10 +73,10 @@ const BASE_TABS = [
   { id: "business", icon: Phone, labelTh: "ข้อมูลธุรกิจ", labelEn: "Business", minRole: "staff" },
   { id: "chatlog", icon: Bot, labelTh: "แชท AI", labelEn: "AI Chat", minRole: "admin" },
   { id: "chatanalytics", icon: PieChartIcon, labelTh: "AI Analytics", labelEn: "AI Analytics", minRole: "admin" },
-  { id: "webanalytics", icon: TrendingUp, labelTh: "Web Analytics", labelEn: "Web Analytics", minRole: "admin" },
-  { id: "utmbuilder", icon: Link2, labelTh: "UTM Builder", labelEn: "UTM Builder", minRole: "staff" },
-  { id: "homepagelayout", icon: Layout, labelTh: "จัดเรียงหน้าแรก", labelEn: "Homepage Layout", minRole: "admin" },
-  { id: "customsections", icon: Layers, labelTh: "Dynamic Section", labelEn: "Dynamic Sections", minRole: "admin" },
+  { id: "webanalytics", icon: TrendingUp, labelTh: "Web Analytics", labelEn: "Web Analytics", minRole: "admin", devOnly: true },
+  { id: "utmbuilder", icon: Link2, labelTh: "UTM Builder", labelEn: "UTM Builder", minRole: "staff", devOnly: true },
+  { id: "homepagelayout", icon: Layout, labelTh: "จัดเรียงหน้าแรก", labelEn: "Homepage Layout", minRole: "admin", devOnly: true },
+  { id: "customsections", icon: Layers, labelTh: "Dynamic Section", labelEn: "Dynamic Sections", minRole: "admin", devOnly: true },
   { id: "roles", icon: UserCog, labelTh: "บทบาท", labelEn: "Roles", minRole: "admin" },
   { id: "devmode", icon: Zap, labelTh: "Dev God Mode", labelEn: "Dev God Mode", minRole: "developer" },
 ];
@@ -289,15 +289,27 @@ const Admin = () => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const label = language === "th" ? tab.labelTh : tab.labelEn;
+                const isLocked = tab.devOnly && !isDeveloper;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      if (isLocked) {
+                        sweetAlert.warning(
+                          language === "th" ? "ฟีเจอร์นี้สำหรับ Developer เท่านั้น" : "This feature is for Developer only"
+                        );
+                        return;
+                      }
+                      setActiveTab(tab.id);
+                    }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start
-                      ${isActive
-                        ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      ${isLocked
+                        ? "opacity-40 text-muted-foreground cursor-not-allowed"
+                        : isActive
+                          ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }`}
+                    title={isLocked ? (language === "th" ? "สำหรับ Developer เท่านั้น" : "Developer only") : label}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     <span className="text-xs">{label}</span>
@@ -314,15 +326,27 @@ const Admin = () => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const label = language === "th" ? tab.labelTh : tab.labelEn;
+                const isLocked = tab.devOnly && !isDeveloper;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      if (isLocked) {
+                        sweetAlert.warning(
+                          language === "th" ? "ฟีเจอร์นี้สำหรับ Developer เท่านั้น" : "This feature is for Developer only"
+                        );
+                        return;
+                      }
+                      setActiveTab(tab.id);
+                    }}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                      ${isActive
-                        ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
-                        : "text-foreground hover:text-primary hover:bg-accent"
+                      ${isLocked
+                        ? "opacity-40 text-muted-foreground cursor-not-allowed"
+                        : isActive
+                          ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
+                          : "text-foreground hover:text-primary hover:bg-accent"
                       }`}
+                    title={isLocked ? (language === "th" ? "สำหรับ Developer เท่านั้น" : "Developer only") : label}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     <span>{label}</span>
