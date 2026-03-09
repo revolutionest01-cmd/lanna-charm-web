@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,6 +100,25 @@ const Auth = () => {
   const remHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const remMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
   const remSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+  const urgencyLevel = Math.min(1, Math.max(0, progressPercent / 100));
+  const threatCycleDuration = Math.max(120, 480 - urgencyLevel * 360);
+  const overlayFlickerDuration = Math.max(0.55, 3.2 - urgencyLevel * 2.5);
+  const textFlickerDuration = Math.max(0.45, 7.2 - urgencyLevel * 6.0);
+  const greenScanOpacity = Math.max(0.04, 0.2 - urgencyLevel * 0.16);
+  const greenNebulaOpacity = Math.max(0.28, 1 - urgencyLevel * 0.65);
+  const suspendedThreatStyle = isAuthSuspendedMode
+    ? ({
+        "--suspended-threat-offset": `-${Math.round(threatCycleDuration * 0.58)}s`,
+        "--suspended-threat-cycle-duration": `${threatCycleDuration}s`,
+        "--suspended-flicker-duration": `${overlayFlickerDuration}s`,
+        "--suspended-text-flicker-duration": `${textFlickerDuration}s`,
+        "--suspended-flicker-peak": `${0.08 + urgencyLevel * 0.28}`,
+        "--suspended-long-threat-base": `${0.04 + urgencyLevel * 0.12}`,
+        "--suspended-long-threat-peak": `${0.2 + urgencyLevel * 0.28}`,
+        "--suspended-green-scan-opacity": `${greenScanOpacity}`,
+        "--suspended-green-nebula-opacity": `${greenNebulaOpacity}`,
+      } as CSSProperties)
+    : undefined;
 
   // Save credentials only after initial load is complete
   useEffect(() => {
@@ -609,13 +628,21 @@ const Auth = () => {
   }
 
   return (
-    <div className={authContainerClass}>
+    <div className={authContainerClass} style={suspendedThreatStyle}>
       {isAuthSuspendedMode && (
         <style>{`
           .suspended-threat-container {
             --suspended-safe-glow: rgba(16,185,129,0.22);
             --suspended-threat-glow: rgba(239,68,68,0.28);
             --suspended-threat-offset: -282s;
+            --suspended-threat-cycle-duration: 480s;
+            --suspended-flicker-duration: 3.2s;
+            --suspended-text-flicker-duration: 7.2s;
+            --suspended-flicker-peak: 0.18;
+            --suspended-long-threat-base: 0.04;
+            --suspended-long-threat-peak: 0.33;
+            --suspended-green-scan-opacity: 0.2;
+            --suspended-green-nebula-opacity: 1;
           }
 
           @keyframes suspended-deny-shake {
@@ -638,16 +665,16 @@ const Auth = () => {
 
           @keyframes suspended-red-flicker {
             0%, 86%, 100% { opacity: 0; }
-            88% { opacity: 0.14; }
-            90% { opacity: 0.03; }
-            93% { opacity: 0.18; }
+            88% { opacity: calc(var(--suspended-flicker-peak) * 0.78); }
+            90% { opacity: calc(var(--suspended-flicker-peak) * 0.18); }
+            93% { opacity: var(--suspended-flicker-peak); }
             96% { opacity: 0.05; }
           }
 
           /* Full loop is 8 minutes, with a red-dominant phase of ~2.7 minutes. */
           @keyframes suspended-long-threat {
-            0%, 55%, 100% { opacity: 0.04; }
-            58%, 92% { opacity: 0.33; }
+            0%, 55%, 100% { opacity: var(--suspended-long-threat-base); }
+            58%, 92% { opacity: var(--suspended-long-threat-peak); }
           }
 
           @keyframes suspended-accent-cycle {
@@ -674,23 +701,23 @@ const Auth = () => {
           }
 
           .suspended-threat-overlay-flicker {
-            animation: suspended-red-flicker 3.2s linear infinite;
+            animation: suspended-red-flicker var(--suspended-flicker-duration) linear infinite;
           }
 
           .suspended-threat-overlay-long {
-            animation: suspended-long-threat 480s ease-in-out infinite;
+            animation: suspended-long-threat var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
           .suspended-threat-surface,
           .suspended-threat-panel,
           .suspended-threat-pill {
-            animation: suspended-accent-cycle 480s ease-in-out infinite;
+            animation: suspended-accent-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
           .suspended-threat-text {
-            animation: suspended-text-cycle 480s ease-in-out infinite, suspended-text-alert-flicker 7.2s linear infinite;
+            animation: suspended-text-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite, suspended-text-alert-flicker var(--suspended-text-flicker-duration) linear infinite;
             animation-delay: var(--suspended-threat-offset), 0s;
           }
 
@@ -737,32 +764,32 @@ const Auth = () => {
 
           .suspended-threat-label,
           .suspended-threat-input-icon {
-            animation: suspended-text-cycle 480s ease-in-out infinite, suspended-text-alert-flicker 7.2s linear infinite;
+            animation: suspended-text-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite, suspended-text-alert-flicker var(--suspended-text-flicker-duration) linear infinite;
             animation-delay: var(--suspended-threat-offset), 0s;
           }
 
           .suspended-threat-subtext {
-            animation: suspended-subtext-cycle 480s ease-in-out infinite;
+            animation: suspended-subtext-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
           .suspended-threat-input {
-            animation: suspended-input-cycle 480s ease-in-out infinite;
+            animation: suspended-input-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
           .suspended-threat-input::placeholder {
-            animation: suspended-placeholder-cycle 480s ease-in-out infinite;
+            animation: suspended-placeholder-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
           .suspended-threat-button {
-            animation: suspended-button-cycle 480s ease-in-out infinite;
+            animation: suspended-button-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
           .suspended-threat-icon-button:hover {
-            animation: suspended-soft-bg-cycle 480s ease-in-out infinite;
+            animation: suspended-soft-bg-cycle var(--suspended-threat-cycle-duration) ease-in-out infinite;
             animation-delay: var(--suspended-threat-offset);
           }
 
@@ -788,8 +815,8 @@ const Auth = () => {
       )}
       {isAuthSuspendedMode && (
         <>
-          <div className="pointer-events-none absolute inset-0 opacity-20 [background:repeating-linear-gradient(180deg,rgba(16,185,129,0.12)_0px,rgba(16,185,129,0.12)_1px,transparent_1px,transparent_4px)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.18),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.1),transparent_35%)]" />
+          <div className="pointer-events-none absolute inset-0 [background:repeating-linear-gradient(180deg,rgba(16,185,129,0.12)_0px,rgba(16,185,129,0.12)_1px,transparent_1px,transparent_4px)]" style={{ opacity: "var(--suspended-green-scan-opacity)" }} />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.18),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.1),transparent_35%)]" style={{ opacity: "var(--suspended-green-nebula-opacity)" }} />
           <div className="suspended-threat-overlay-flicker pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(239,68,68,0.7),transparent_38%),radial-gradient(circle_at_24%_72%,rgba(220,38,38,0.52),transparent_44%)]" />
           <div className="suspended-threat-overlay-long pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(239,68,68,0.42),transparent_55%),linear-gradient(180deg,rgba(220,38,38,0.32)_0%,transparent_58%,rgba(220,38,38,0.22)_100%)]" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 overflow-hidden px-6 text-[10px] sm:text-xs leading-5 text-emerald-400/45 font-mono">
