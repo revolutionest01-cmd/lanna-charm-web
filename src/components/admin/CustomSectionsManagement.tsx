@@ -574,8 +574,8 @@ export const CustomSectionsManagement = () => {
             </TabsContent>
 
             {/* ─── Preview Tab ─── */}
-            <TabsContent value="preview" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-              <ScrollArea className="flex-1 max-h-[58vh]">
+            <TabsContent value="preview" className="flex-1 min-h-0 mt-0 overflow-hidden">
+              <div className="overflow-y-auto h-full max-h-[calc(90vh-220px)]">
                 <div className="border border-border rounded-lg overflow-hidden bg-background">
                   <div className="bg-muted/30 px-3 py-1.5 border-b border-border flex items-center gap-2">
                     <div className="flex gap-1">
