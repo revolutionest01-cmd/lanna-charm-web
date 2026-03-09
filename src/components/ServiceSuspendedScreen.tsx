@@ -128,14 +128,15 @@ const ServiceSuspendedScreen = () => {
 
           {/* Remaining or expired message */}
           {!isExpired ? (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 space-y-1">
-              <div className="flex items-center justify-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5 space-y-2">
+              <div className="flex items-center justify-center gap-1.5 text-sm font-semibold text-destructive">
                 <CalendarX className="w-4 h-4" />
-                {language === "th"
-                  ? `เหลือเวลาอีก ${daysRemaining} วัน ก่อนข้อมูลจะถูกลบ`
-                  : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} remaining before data deletion`}
+                {language === "th" ? "เวลาที่เหลือก่อนข้อมูลจะถูกลบ" : "Time remaining before data deletion"}
               </div>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/80">
+              <div className="flex items-center justify-center gap-1.5 text-lg font-mono font-bold text-destructive tabular-nums">
+                {String(remDays).padStart(2, "0")}d : {String(remHours).padStart(2, "0")}h : {String(remMinutes).padStart(2, "0")}m : {String(remSeconds).padStart(2, "0")}s
+              </div>
+              <p className="text-xs text-muted-foreground">
                 {language === "th"
                   ? "กรุณาชำระเงินก่อนครบกำหนด เพื่อป้องกันข้อมูลสูญหาย"
                   : "Please complete the payment before the deadline to prevent data loss."}
