@@ -85,30 +85,32 @@ const ServiceSuspendedScreen = () => {
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-center gap-2 text-sm font-semibold text-destructive">
             <Clock className="w-4 h-4" />
-            {language === "th" ? "ระยะเวลาที่เกินกำหนดชำระ" : "Overdue Payment Duration"}
+            {language === "th" ? "เวลาที่เหลือก่อนข้อมูลจะถูกลบถาวร" : "Time remaining before permanent data deletion"}
           </div>
 
-          {/* Live ticking counter */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-            {[
-              { value: Math.floor(totalOverdueHours / 24), label: language === "th" ? "วัน" : "Days" },
-              { value: totalOverdueHours % 24, label: language === "th" ? "ชั่วโมง" : "Hours" },
-              { value: overdueMinutes, label: language === "th" ? "นาที" : "Min" },
-              { value: overdueSeconds, label: language === "th" ? "วินาที" : "Sec" },
-            ].map((unit, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <span className="text-3xl sm:text-5xl font-extrabold tabular-nums text-destructive leading-none font-mono min-w-[2.5rem] sm:min-w-[3.5rem] text-center">
-                  {String(unit.value).padStart(2, "0")}
-                </span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground mt-1">{unit.label}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {language === "th"
-              ? `(เลยกำหนดชำระมาแล้ว ${totalOverdueHours.toLocaleString()} ชั่วโมง)`
-              : `(${totalOverdueHours.toLocaleString()} hours overdue)`}
-          </p>
+          {/* Countdown timer */}
+          {!isExpired ? (
+            <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
+              {[
+                { value: remDays, label: language === "th" ? "วัน" : "Days" },
+                { value: remHours, label: language === "th" ? "ชั่วโมง" : "Hours" },
+                { value: remMinutes, label: language === "th" ? "นาที" : "Min" },
+                { value: remSeconds, label: language === "th" ? "วินาที" : "Sec" },
+              ].map((unit, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <span className="text-4xl sm:text-6xl font-extrabold tabular-nums text-destructive leading-none font-mono min-w-[2.5rem] sm:min-w-[4rem] text-center">
+                    {String(unit.value).padStart(2, "0")}
+                  </span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground mt-1">{unit.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center">
+              <span className="text-4xl sm:text-6xl font-extrabold text-destructive animate-pulse">00 : 00 : 00 : 00</span>
+              <p className="text-xs text-muted-foreground mt-1">{language === "th" ? "หมดเวลาแล้ว" : "Time's up"}</p>
+            </div>
+          )}
 
           {/* Progress bar */}
           <div className="w-full space-y-1.5">
@@ -126,22 +128,13 @@ const ServiceSuspendedScreen = () => {
             </div>
           </div>
 
-          {/* Remaining or expired message */}
+          {/* Warning or expired message */}
           {!isExpired ? (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5 space-y-2">
-              <div className="flex items-center justify-center gap-1.5 text-sm font-semibold text-destructive">
-                <CalendarX className="w-4 h-4" />
-                {language === "th" ? "เวลาที่เหลือก่อนข้อมูลจะถูกลบ" : "Time remaining before data deletion"}
-              </div>
-              <div className="flex items-center justify-center gap-1.5 text-lg font-mono font-bold text-destructive tabular-nums">
-                {String(remDays).padStart(2, "0")}d : {String(remHours).padStart(2, "0")}h : {String(remMinutes).padStart(2, "0")}m : {String(remSeconds).padStart(2, "0")}s
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {language === "th"
-                  ? "กรุณาชำระเงินก่อนครบกำหนด เพื่อป้องกันข้อมูลสูญหาย"
-                  : "Please complete the payment before the deadline to prevent data loss."}
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              {language === "th"
+                ? "กรุณาชำระเงินก่อนครบกำหนด เพื่อป้องกันข้อมูลสูญหาย"
+                : "Please complete the payment before the deadline to prevent data loss."}
+            </p>
           ) : (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-3 space-y-1.5">
               <div className="flex items-center justify-center gap-1.5 text-sm font-bold text-destructive">
