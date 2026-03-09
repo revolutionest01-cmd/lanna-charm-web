@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import DynamicSections from "@/components/DynamicSections";
@@ -440,8 +440,8 @@ export const CustomSectionsManagement = () => {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl !max-h-[90vh] !flex !flex-col overflow-hidden p-0">
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-primary" />
               {editingSection
@@ -450,7 +450,7 @@ export const CustomSectionsManagement = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col">
+          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="edit" className="gap-1.5">
                 <Pencil className="w-3.5 h-3.5" />
@@ -463,8 +463,8 @@ export const CustomSectionsManagement = () => {
             </TabsList>
 
             {/* ─── Edit Tab ─── */}
-            <TabsContent value="edit" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-              <ScrollArea className="flex-1 max-h-[58vh] pr-4">
+            <TabsContent value="edit" className="flex-1 min-h-0 mt-0 overflow-hidden">
+              <div className="overflow-y-auto h-full max-h-[calc(90vh-220px)] pr-2">
                 <div className="space-y-5 py-2">
                   {/* Step 1: Section Type */}
                   <div>
@@ -570,12 +570,12 @@ export const CustomSectionsManagement = () => {
                     <Switch checked={formData.is_active} onCheckedChange={(v) => setFormData((p: any) => ({ ...p, is_active: v }))} />
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* ─── Preview Tab ─── */}
-            <TabsContent value="preview" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-              <ScrollArea className="flex-1 max-h-[58vh]">
+            <TabsContent value="preview" className="flex-1 min-h-0 mt-0 overflow-hidden">
+              <div className="overflow-y-auto h-full max-h-[calc(90vh-220px)]">
                 <div className="border border-border rounded-lg overflow-hidden bg-background">
                   <div className="bg-muted/30 px-3 py-1.5 border-b border-border flex items-center gap-2">
                     <div className="flex gap-1">
@@ -611,11 +611,11 @@ export const CustomSectionsManagement = () => {
                     )}
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
           </Tabs>
 
-          <DialogFooter>
+          <DialogFooter className="px-6 pb-6 pt-2 shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               {isTh ? "ยกเลิก" : "Cancel"}
             </Button>
