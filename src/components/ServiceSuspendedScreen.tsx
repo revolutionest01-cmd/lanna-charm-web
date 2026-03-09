@@ -3,11 +3,11 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useMemo } from "react";
-import { useCountUp } from "@/hooks/useCountUp";
+import { useState, useEffect, useRef } from "react";
 
 const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00"); // 1 มีนาคม 2569 BE
 const DELETION_DEADLINE_DAYS = 15;
+const DEADLINE_MS = DELETION_DEADLINE_DAYS * 24 * 60 * 60 * 1000;
 
 const ServiceSuspendedScreen = () => {
   const { language } = useLanguage();
