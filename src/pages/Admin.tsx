@@ -289,15 +289,27 @@ const Admin = () => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const label = language === "th" ? tab.labelTh : tab.labelEn;
+                const isLocked = tab.devOnly && !isDeveloper;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      if (isLocked) {
+                        sweetAlert.warning(
+                          language === "th" ? "ฟีเจอร์นี้สำหรับ Developer เท่านั้น" : "This feature is for Developer only"
+                        );
+                        return;
+                      }
+                      setActiveTab(tab.id);
+                    }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start
-                      ${isActive
-                        ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      ${isLocked
+                        ? "opacity-40 text-muted-foreground cursor-not-allowed"
+                        : isActive
+                          ? tab.id === "devmode" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }`}
+                    title={isLocked ? (language === "th" ? "สำหรับ Developer เท่านั้น" : "Developer only") : label}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     <span className="text-xs">{label}</span>
