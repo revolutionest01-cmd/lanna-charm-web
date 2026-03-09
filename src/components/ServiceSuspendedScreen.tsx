@@ -14,17 +14,31 @@ const ServiceSuspendedScreen = () => {
   const { logout, isAuthenticated } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const { daysPassed, daysRemaining, isExpired, progressPercent } = useMemo(() => {
-    const now = new Date();
-    const diffMs = now.getTime() - SUSPENSION_START.getTime();
-    const daysPassed = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-    const daysRemaining = Math.max(0, DELETION_DEADLINE_DAYS - daysPassed);
-    const isExpired = daysPassed >= DELETION_DEADLINE_DAYS;
-    const progressPercent = Math.min(100, (daysPassed / DELETION_DEADLINE_DAYS) * 100);
-    return { daysPassed, daysRemaining, isExpired, progressPercent };
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const { count: animatedDays } = useCountUp({ end: daysPassed, duration: 1500 });
+  const diffMs = now.getTime() - SUSPENSION_START.getTime();
+  const totalHoursPassed = Math.max(0, diffMs / (1000 * 60 * 60));
+  const daysPassed = Math.floor(totalHoursPassed / 24);
+  const daysRemaining = Math.max(0, DELETION_DEADLINE_DAYS - daysPassed);
+  const isExpired = daysPassed >= DELETION_DEADLINE_DAYS;
+  const progressPercent = Math.min(100, (diffMs / DEADLINE_MS) * 100);
+
+  // Remaining time breakdown
+  const remainingMs = Math.max(0, DEADLINE_MS - diffMs);
+  const remDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+  const remHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const remMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const remSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
+  // Overdue hours (total)
+  const totalOverdueHours = Math.floor(totalHoursPassed);
+  const overdueMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const overdueSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
