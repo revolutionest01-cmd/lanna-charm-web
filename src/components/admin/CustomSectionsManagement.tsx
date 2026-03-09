@@ -444,16 +444,18 @@ export const CustomSectionsManagement = () => {
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl !max-h-[90vh] !flex !flex-col overflow-hidden p-0">
-          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-primary" />
+          <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-border bg-accent/30">
+            <DialogTitle className="flex items-center gap-2.5 text-primary">
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <Layers className="w-5 h-5 text-primary" />
+              </div>
               {editingSection
                 ? (isTh ? "แก้ไข Section" : "Edit Section")
                 : (isTh ? "สร้าง Section ใหม่" : "Create New Section")}
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6">
+          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6 pt-2">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="edit" className="gap-1.5">
                 <Pencil className="w-3.5 h-3.5" />
