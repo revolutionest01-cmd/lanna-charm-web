@@ -567,9 +567,9 @@ export const CustomSectionsManagement = () => {
                   <Separator className="bg-border/60" />
 
                   {/* Step 5: Active */}
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between rounded-xl border border-border bg-accent/30 p-4">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{isTh ? "เปิดใช้งาน" : "Active"}</p>
+                      <p className="text-sm font-semibold text-foreground">{isTh ? "เปิดใช้งาน" : "Active"}</p>
                       <p className="text-xs text-muted-foreground">{isTh ? "แสดง Section นี้บนหน้าแรก" : "Show this section on homepage"}</p>
                     </div>
                     <Switch checked={formData.is_active} onCheckedChange={(v) => setFormData((p: any) => ({ ...p, is_active: v }))} />
