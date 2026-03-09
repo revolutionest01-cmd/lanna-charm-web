@@ -456,12 +456,12 @@ export const CustomSectionsManagement = () => {
           </DialogHeader>
 
           <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6 pt-2">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="edit" className="gap-1.5">
+            <TabsList className="grid w-full grid-cols-2 bg-accent/50">
+              <TabsTrigger value="edit" className="gap-1.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
                 <Pencil className="w-3.5 h-3.5" />
                 {isTh ? "แก้ไข" : "Edit"}
               </TabsTrigger>
-              <TabsTrigger value="preview" className="gap-1.5">
+              <TabsTrigger value="preview" className="gap-1.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
                 <Eye className="w-3.5 h-3.5" />
                 {isTh ? "ตัวอย่าง" : "Preview"}
               </TabsTrigger>
