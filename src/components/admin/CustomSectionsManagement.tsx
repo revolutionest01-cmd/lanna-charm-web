@@ -611,7 +611,7 @@ export const CustomSectionsManagement = () => {
                     )}
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
           </Tabs>
 
