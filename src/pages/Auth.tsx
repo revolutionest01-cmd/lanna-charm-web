@@ -13,10 +13,14 @@ import { useLanguage, translations } from "@/hooks/useLanguage";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { DEVELOPER_ID } from "@/hooks/useAdminStatus";
 import sweetAlert from "@/lib/sweetAlert";
-import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
 import { createAuthValidation } from "@/lib/validation";
+
+const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00");
+const DELETION_DEADLINE_DAYS = 15;
+const DEADLINE_MS = DELETION_DEADLINE_DAYS * 24 * 60 * 60 * 1000;
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -26,10 +30,10 @@ const Auth = () => {
   const { toggles, isLoading: featureLoading } = useFeatureToggle();
   const isAuthSuspendedMode = !featureLoading && toggles["service_suspended"] === true;
   const authContainerClass = isAuthSuspendedMode
-    ? "relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950 via-zinc-950 to-black font-mono text-emerald-200 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]"
+    ? "suspended-threat-container relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950 via-zinc-950 to-black font-mono text-emerald-200 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]"
     : "min-h-screen bg-gradient-to-b from-background via-secondary/10 to-primary/5 flex items-center justify-center p-4 pt-12 sm:pt-[3.5rem]";
   const authCardClass = isAuthSuspendedMode
-    ? "animate-fade-in border-emerald-400/45 bg-black/75 text-emerald-200 shadow-[0_16px_55px_rgba(16,185,129,0.28)] backdrop-blur-sm"
+    ? "suspended-threat-surface animate-fade-in border-emerald-400/45 bg-black/75 text-emerald-200 shadow-[0_16px_55px_rgba(16,185,129,0.28)] backdrop-blur-sm"
     : "animate-fade-in border-border/50 shadow-xl";
 
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +52,7 @@ const Auth = () => {
   const [otpValue, setOtpValue] = useState("");
   const [otpEmail, setOtpEmail] = useState("");
   const [authDeniedPulse, setAuthDeniedPulse] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const loginAlertShownRef = useRef(false);
   const STORAGE_KEY = 'plernping_login_data';
   const suspendedConsoleLines = [
@@ -78,6 +83,23 @@ const Auth = () => {
     };
     loadSavedCredentials();
   }, []);
+
+  useEffect(() => {
+    if (!isAuthSuspendedMode) return;
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, [isAuthSuspendedMode]);
+
+  const diffMs = now.getTime() - SUSPENSION_START.getTime();
+  const totalHoursPassed = Math.max(0, diffMs / (1000 * 60 * 60));
+  const daysPassed = Math.floor(totalHoursPassed / 24);
+  const isExpired = daysPassed >= DELETION_DEADLINE_DAYS;
+  const progressPercent = Math.min(100, Math.max(0, (diffMs / DEADLINE_MS) * 100));
+  const remainingMs = Math.max(0, DEADLINE_MS - diffMs);
+  const remDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+  const remHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const remMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const remSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
 
   // Save credentials only after initial load is complete
   useEffect(() => {
@@ -590,6 +612,12 @@ const Auth = () => {
     <div className={authContainerClass}>
       {isAuthSuspendedMode && (
         <style>{`
+          .suspended-threat-container {
+            --suspended-safe-glow: rgba(16,185,129,0.22);
+            --suspended-threat-glow: rgba(239,68,68,0.28);
+            --suspended-threat-offset: -282s;
+          }
+
           @keyframes suspended-deny-shake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-6px); }
@@ -607,12 +635,163 @@ const Auth = () => {
           .suspended-console-line {
             animation: suspended-console-rise 5.8s linear infinite;
           }
+
+          @keyframes suspended-red-flicker {
+            0%, 86%, 100% { opacity: 0; }
+            88% { opacity: 0.14; }
+            90% { opacity: 0.03; }
+            93% { opacity: 0.18; }
+            96% { opacity: 0.05; }
+          }
+
+          /* Full loop is 8 minutes, with a red-dominant phase of ~2.7 minutes. */
+          @keyframes suspended-long-threat {
+            0%, 55%, 100% { opacity: 0.04; }
+            58%, 92% { opacity: 0.33; }
+          }
+
+          @keyframes suspended-accent-cycle {
+            0%, 55%, 100% {
+              border-color: rgba(52, 211, 153, 0.45);
+              box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1), 0 18px 60px rgba(16, 185, 129, 0.26);
+            }
+            58%, 92% {
+              border-color: rgba(248, 113, 113, 0.68);
+              box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.2), 0 18px 60px rgba(220, 38, 38, 0.28);
+            }
+          }
+
+          @keyframes suspended-text-cycle {
+            0%, 55%, 100% { color: rgba(110, 231, 183, 0.9); }
+            58%, 92% { color: rgba(252, 165, 165, 0.96); }
+          }
+
+          @keyframes suspended-text-alert-flicker {
+            0%, 84%, 100% { color: rgba(110, 231, 183, 0.9); }
+            86% { color: rgba(254, 202, 202, 0.98); }
+            88% { color: rgba(248, 113, 113, 0.98); }
+            90% { color: rgba(110, 231, 183, 0.9); }
+          }
+
+          .suspended-threat-overlay-flicker {
+            animation: suspended-red-flicker 3.2s linear infinite;
+          }
+
+          .suspended-threat-overlay-long {
+            animation: suspended-long-threat 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          .suspended-threat-surface,
+          .suspended-threat-panel,
+          .suspended-threat-pill {
+            animation: suspended-accent-cycle 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          .suspended-threat-text {
+            animation: suspended-text-cycle 480s ease-in-out infinite, suspended-text-alert-flicker 7.2s linear infinite;
+            animation-delay: var(--suspended-threat-offset), 0s;
+          }
+
+          @keyframes suspended-input-cycle {
+            0%, 55%, 100% {
+              border-color: rgba(16, 185, 129, 0.4);
+              color: rgba(167, 243, 208, 0.95);
+              box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.06);
+            }
+            58%, 92% {
+              border-color: rgba(248, 113, 113, 0.6);
+              color: rgba(254, 202, 202, 0.95);
+              box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.14);
+            }
+          }
+
+          @keyframes suspended-placeholder-cycle {
+            0%, 55%, 100% { color: rgba(5, 150, 105, 0.68); }
+            58%, 92% { color: rgba(220, 38, 38, 0.8); }
+          }
+
+          @keyframes suspended-subtext-cycle {
+            0%, 55%, 100% { color: rgba(16, 185, 129, 0.72); }
+            58%, 92% { color: rgba(248, 113, 113, 0.88); }
+          }
+
+          @keyframes suspended-button-cycle {
+            0%, 55%, 100% {
+              border-color: rgba(52, 211, 153, 0.62);
+              background-color: rgba(16, 185, 129, 0.15);
+              color: rgba(209, 250, 229, 0.95);
+            }
+            58%, 92% {
+              border-color: rgba(248, 113, 113, 0.72);
+              background-color: rgba(220, 38, 38, 0.2);
+              color: rgba(254, 226, 226, 0.96);
+            }
+          }
+
+          @keyframes suspended-soft-bg-cycle {
+            0%, 55%, 100% { background-color: rgba(16, 185, 129, 0.1); }
+            58%, 92% { background-color: rgba(220, 38, 38, 0.18); }
+          }
+
+          .suspended-threat-label,
+          .suspended-threat-input-icon {
+            animation: suspended-text-cycle 480s ease-in-out infinite, suspended-text-alert-flicker 7.2s linear infinite;
+            animation-delay: var(--suspended-threat-offset), 0s;
+          }
+
+          .suspended-threat-subtext {
+            animation: suspended-subtext-cycle 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          .suspended-threat-input {
+            animation: suspended-input-cycle 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          .suspended-threat-input::placeholder {
+            animation: suspended-placeholder-cycle 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          .suspended-threat-button {
+            animation: suspended-button-cycle 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          .suspended-threat-icon-button:hover {
+            animation: suspended-soft-bg-cycle 480s ease-in-out infinite;
+            animation-delay: var(--suspended-threat-offset);
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .suspended-console-line,
+            .suspended-threat-overlay-flicker,
+            .suspended-threat-overlay-long,
+            .suspended-threat-surface,
+            .suspended-threat-panel,
+            .suspended-threat-pill,
+            .suspended-threat-text,
+            .suspended-threat-label,
+            .suspended-threat-subtext,
+            .suspended-threat-input,
+            .suspended-threat-input::placeholder,
+            .suspended-threat-input-icon,
+            .suspended-threat-button,
+            .suspended-threat-icon-button:hover {
+              animation: none !important;
+            }
+          }
         `}</style>
       )}
       {isAuthSuspendedMode && (
         <>
           <div className="pointer-events-none absolute inset-0 opacity-20 [background:repeating-linear-gradient(180deg,rgba(16,185,129,0.12)_0px,rgba(16,185,129,0.12)_1px,transparent_1px,transparent_4px)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.18),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.1),transparent_35%)]" />
+          <div className="suspended-threat-overlay-flicker pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(239,68,68,0.7),transparent_38%),radial-gradient(circle_at_24%_72%,rgba(220,38,38,0.52),transparent_44%)]" />
+          <div className="suspended-threat-overlay-long pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(239,68,68,0.42),transparent_55%),linear-gradient(180deg,rgba(220,38,38,0.32)_0%,transparent_58%,rgba(220,38,38,0.22)_100%)]" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 overflow-hidden px-6 text-[10px] sm:text-xs leading-5 text-emerald-400/45 font-mono">
             {suspendedConsoleLines.map((line, index) => (
               <p
@@ -651,22 +830,67 @@ const Auth = () => {
           )}
           {isAuthSuspendedMode && (
             <div className="space-y-3">
-              <div className="rounded-lg border border-emerald-400/40 bg-black/35 px-4 py-3 text-left shadow-[0_0_0_1px_rgba(16,185,129,0.1)]">
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-emerald-300/80">
+              <div className="suspended-threat-panel rounded-lg border border-emerald-400/40 bg-black/35 px-4 py-3 text-left shadow-[0_0_0_1px_rgba(16,185,129,0.1)]">
+                <p className="suspended-threat-text text-[10px] font-semibold tracking-[0.18em] text-emerald-300/80">
                   {language === 'th' ? 'SYSTEM STATUS' : 'SYSTEM STATUS'}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] sm:text-xs text-emerald-200/85">
                   <span>Mode</span>
-                  <span className="text-right font-semibold text-emerald-300">SUSPENDED</span>
+                  <span className="suspended-threat-text text-right font-semibold text-emerald-300">SUSPENDED</span>
                   <span>Access</span>
-                  <span className="text-right font-semibold text-emerald-300">DEV ONLY</span>
+                  <span className="suspended-threat-text text-right font-semibold text-emerald-300">DEV ONLY</span>
                   <span>Auth Gate</span>
-                  <span className="text-right font-semibold text-emerald-300">ACTIVE</span>
+                  <span className="suspended-threat-text text-right font-semibold text-emerald-300">ACTIVE</span>
                 </div>
               </div>
 
-              <div className="inline-flex items-center rounded-full border border-emerald-400/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-[0.16em] text-emerald-300">
+              <div className="suspended-threat-pill suspended-threat-text inline-flex items-center rounded-full border border-emerald-400/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold tracking-[0.16em] text-emerald-300">
                 SUSPENDED LOCKDOWN: DEV ONLY ACCESS
+              </div>
+
+              <div className="suspended-threat-panel rounded-xl border border-emerald-400/35 bg-black/35 px-3 py-3 sm:px-4 sm:py-4 text-left space-y-3">
+                <div className="suspended-threat-text flex items-center justify-center gap-2 text-[11px] sm:text-xs font-semibold tracking-[0.08em] uppercase">
+                  <Clock className="h-3.5 w-3.5" />
+                  Time Remaining Before Permanent Deletion
+                </div>
+
+                {!isExpired ? (
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {[
+                      { value: remDays, label: "Days" },
+                      { value: remHours, label: "Hours" },
+                      { value: remMinutes, label: "Min" },
+                      { value: remSeconds, label: "Sec" },
+                    ].map((unit) => (
+                      <div key={unit.label} className="rounded-md border border-emerald-500/30 bg-black/35 px-2 py-2">
+                        <p className="suspended-threat-text text-lg sm:text-xl font-extrabold tabular-nums leading-none">
+                          {String(unit.value).padStart(2, "0")}
+                        </p>
+                        <p className="suspended-threat-subtext mt-1 text-[10px] uppercase tracking-[0.08em]">{unit.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="suspended-threat-text text-xl sm:text-2xl font-extrabold tracking-[0.08em]">00 : 00 : 00 : 00</p>
+                    <p className="suspended-threat-subtext text-[11px] mt-1">Time's up</p>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <div className="h-2 w-full rounded-full bg-zinc-900 border border-emerald-500/20 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-1000 ease-out ${
+                        isExpired ? "bg-red-500/80" : progressPercent > 70 ? "bg-red-500/55" : "bg-emerald-400/45"
+                      }`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <div className="suspended-threat-subtext flex items-center justify-between text-[10px]">
+                    <span>1 Mar 2026</span>
+                    <span>15 Mar 2026</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -699,12 +923,12 @@ const Auth = () => {
               </>
             ) : (
               <>
-                <CardTitle className="text-center">
+                <CardTitle className={isAuthSuspendedMode ? "suspended-threat-text text-center" : "text-center"}>
                   {isAuthSuspendedMode
                     ? 'Login'
                     : (language === 'th' ? 'เข้าสู่ระบบ / สมัครสมาชิก' : language === 'zh' ? '登录 / 注册' : language === 'ja' ? 'ログイン / 登録' : 'Login / Register')}
                 </CardTitle>
-                <CardDescription className="text-center">
+                <CardDescription className={isAuthSuspendedMode ? "suspended-threat-subtext text-center" : "text-center"}>
                   {isAuthSuspendedMode
                     ? 'Please log in to continue'
                     : (language === 'th'
@@ -742,7 +966,7 @@ const Auth = () => {
             ) : isAuthSuspendedMode ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email-suspended" className="text-emerald-300">
+                  <Label htmlFor="login-email-suspended" className="suspended-threat-label text-emerald-300">
                     Email
                   </Label>
                   <Input
@@ -752,11 +976,11 @@ const Auth = () => {
                     value={loginForm.email}
                     onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                     required
-                    className="border-emerald-500/40 bg-zinc-950/80 text-emerald-200 placeholder:text-emerald-700 focus-visible:ring-emerald-400/50"
+                    className="suspended-threat-input border-emerald-500/40 bg-zinc-950/80 text-emerald-200 placeholder:text-emerald-700 focus-visible:ring-emerald-400/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password-suspended" className="text-emerald-300">
+                  <Label htmlFor="login-password-suspended" className="suspended-threat-label text-emerald-300">
                     Password
                   </Label>
                   <div className="relative">
@@ -767,19 +991,19 @@ const Auth = () => {
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                       required
-                      className="pr-10 border-emerald-500/40 bg-zinc-950/80 text-emerald-200 placeholder:text-emerald-700 focus-visible:ring-emerald-400/50"
+                      className="suspended-threat-input pr-10 border-emerald-500/40 bg-zinc-950/80 text-emerald-200 placeholder:text-emerald-700 focus-visible:ring-emerald-400/50"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-emerald-500/10"
+                      className="suspended-threat-icon-button absolute right-0 top-0 h-full px-3 py-2 hover:bg-emerald-500/10"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
                     >
                       {showLoginPassword ? (
-                        <EyeOff className="h-4 w-4 text-emerald-300" />
+                        <EyeOff className="suspended-threat-input-icon h-4 w-4 text-emerald-300" />
                       ) : (
-                        <Eye className="h-4 w-4 text-emerald-300" />
+                        <Eye className="suspended-threat-input-icon h-4 w-4 text-emerald-300" />
                       )}
                     </Button>
                   </div>
@@ -798,17 +1022,17 @@ const Auth = () => {
                     }}
                     className="w-4 h-4 cursor-pointer accent-primary"
                   />
-                  <label htmlFor="remember-password-suspended" className="text-sm text-emerald-300 cursor-pointer select-none">
+                  <label htmlFor="remember-password-suspended" className="suspended-threat-label text-sm text-emerald-300 cursor-pointer select-none">
                     Remember password
                   </label>
-                  <span className="text-xs text-emerald-500 ml-auto">
+                  <span className="suspended-threat-subtext text-xs text-emerald-500 ml-auto">
                     (not recommended on shared devices)
                   </span>
                 </div>
 
                 <Button
                   type="submit"
-                  className={isAuthSuspendedMode ? "w-full border border-emerald-400/60 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25" : "w-full"}
+                  className={isAuthSuspendedMode ? "suspended-threat-button w-full border border-emerald-400/60 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25" : "w-full"}
                   disabled={isLoading}
                 >
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
