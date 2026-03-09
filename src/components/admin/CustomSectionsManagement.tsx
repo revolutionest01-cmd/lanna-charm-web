@@ -64,8 +64,11 @@ const emptySection = (orderIndex: number) => ({
 });
 
 /* ─── Styled label ─── */
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">{children}</label>
+const FieldLabel = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
+  <label className="text-xs font-bold text-primary/80 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+    {icon}
+    {children}
+  </label>
 );
 
 export const CustomSectionsManagement = () => {
@@ -441,22 +444,24 @@ export const CustomSectionsManagement = () => {
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl !max-h-[90vh] !flex !flex-col overflow-hidden p-0">
-          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-primary" />
+          <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-border bg-accent/30">
+            <DialogTitle className="flex items-center gap-2.5 text-primary">
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <Layers className="w-5 h-5 text-primary" />
+              </div>
               {editingSection
                 ? (isTh ? "แก้ไข Section" : "Edit Section")
                 : (isTh ? "สร้าง Section ใหม่" : "Create New Section")}
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="edit" className="gap-1.5">
+          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6 pt-2">
+            <TabsList className="grid w-full grid-cols-2 bg-accent/50">
+              <TabsTrigger value="edit" className="gap-1.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
                 <Pencil className="w-3.5 h-3.5" />
                 {isTh ? "แก้ไข" : "Edit"}
               </TabsTrigger>
-              <TabsTrigger value="preview" className="gap-1.5">
+              <TabsTrigger value="preview" className="gap-1.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">
                 <Eye className="w-3.5 h-3.5" />
                 {isTh ? "ตัวอย่าง" : "Preview"}
               </TabsTrigger>
@@ -478,10 +483,10 @@ export const CustomSectionsManagement = () => {
                             key={t.value}
                             type="button"
                             onClick={() => handleTypeChange(t.value)}
-                            className={`flex items-start gap-2.5 p-3 rounded-lg border-2 text-left transition-all
-                              ${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/30"}`}
+                            className={`flex items-start gap-2.5 p-3.5 rounded-xl border-2 text-left transition-all duration-200
+                              ${isSelected ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary/20" : "border-border hover:border-primary/40 hover:bg-accent/40"}`}
                           >
-                            <Icon className={`w-5 h-5 mt-0.5 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                            <Icon className={`w-5 h-5 mt-0.5 shrink-0 transition-colors ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                             <div>
                               <span className={`text-sm block ${isSelected ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                                 {isTh ? t.labelTh : t.labelEn}
@@ -496,7 +501,7 @@ export const CustomSectionsManagement = () => {
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-border/60" />
 
                   {/* Step 2: Title & Subtitle */}
                   <div>
@@ -521,7 +526,7 @@ export const CustomSectionsManagement = () => {
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-border/60" />
 
                   {/* Step 3: Main Image */}
                   <div>
@@ -537,7 +542,7 @@ export const CustomSectionsManagement = () => {
                           ><X className="h-3 w-3" /></Button>
                         </div>
                       )}
-                      <label className={`flex items-center justify-center gap-2 px-4 py-4 border-2 border-dashed rounded-lg cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
+                      <label className={`flex items-center justify-center gap-2 px-4 py-5 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${uploading ? "opacity-50 pointer-events-none" : "border-border"}`}>
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
                         <span className="text-sm text-muted-foreground">
                           {uploading
@@ -549,7 +554,7 @@ export const CustomSectionsManagement = () => {
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-border/60" />
 
                   {/* Step 4: Content */}
                   <div>
@@ -559,12 +564,12 @@ export const CustomSectionsManagement = () => {
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-border/60" />
 
                   {/* Step 5: Active */}
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between rounded-xl border border-border bg-accent/30 p-4">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{isTh ? "เปิดใช้งาน" : "Active"}</p>
+                      <p className="text-sm font-semibold text-foreground">{isTh ? "เปิดใช้งาน" : "Active"}</p>
                       <p className="text-xs text-muted-foreground">{isTh ? "แสดง Section นี้บนหน้าแรก" : "Show this section on homepage"}</p>
                     </div>
                     <Switch checked={formData.is_active} onCheckedChange={(v) => setFormData((p: any) => ({ ...p, is_active: v }))} />
@@ -615,11 +620,11 @@ export const CustomSectionsManagement = () => {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="px-6 pb-6 pt-2 shrink-0">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="px-6 pb-6 pt-3 shrink-0 border-t border-border bg-accent/20">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-border">
               {isTh ? "ยกเลิก" : "Cancel"}
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="gap-1.5">
+            <Button onClick={handleSave} disabled={saving} className="gap-1.5 shadow-sm">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {editingSection ? (isTh ? "บันทึก" : "Save") : (isTh ? "สร้าง" : "Create")}
             </Button>
