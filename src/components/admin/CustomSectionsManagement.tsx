@@ -463,8 +463,8 @@ export const CustomSectionsManagement = () => {
             </TabsList>
 
             {/* ─── Edit Tab ─── */}
-            <TabsContent value="edit" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-              <ScrollArea className="flex-1 max-h-[58vh] pr-4">
+            <TabsContent value="edit" className="flex-1 min-h-0 mt-0 overflow-hidden">
+              <div className="overflow-y-auto h-full max-h-[calc(90vh-220px)] pr-2">
                 <div className="space-y-5 py-2">
                   {/* Step 1: Section Type */}
                   <div>
