@@ -615,7 +615,7 @@ export const CustomSectionsManagement = () => {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter>
+          <DialogFooter className="px-6 pb-6 pt-2 shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               {isTh ? "ยกเลิก" : "Cancel"}
             </Button>
