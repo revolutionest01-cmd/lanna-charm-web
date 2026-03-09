@@ -133,7 +133,7 @@ const ServiceSuspendedScreen = () => {
             <p className="text-xs text-muted-foreground text-center leading-relaxed">
               {language === "th"
                 ? "หมายเหตุ: หากพ้นกำหนดเวลาดังกล่าว ให้ถือว่าข้อตกลงและสัญญาจ้างฉบับนี้ ระงับสิ้นสุดลงโดยทันที เนื่องจากการผิดนัดชำระเงินตามที่ตกลงกันไว้ โดยผู้รับจ้างขอสงวนสิทธิ์ในทรัพย์สินทางปัญญา ซอร์สโค้ด และข้อมูลระบบทั้งหมดแต่เพียงผู้เดียว และจะไม่มีพันธะผูกพันในการส่งมอบงานหรือดูแลระบบอีกต่อไป"
-                : "Note: Once the countdown expires, the original quotation and contract shall be considered terminated. If the client wishes to access the system thereafter, it will be treated as a new project at the current market rate, and the developer shall not be liable for any damages or previously deleted data."}
+                : "Note: If the above deadline passes, this agreement and service contract shall be immediately terminated due to breach of payment terms as agreed. The developer reserves sole ownership of all intellectual property, source code, and system data, and shall have no further obligation to deliver work or maintain the system."}
             </p>
           ) : (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-3 space-y-1.5">
