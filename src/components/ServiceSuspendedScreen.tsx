@@ -132,7 +132,7 @@ const ServiceSuspendedScreen = () => {
           {!isExpired ? (
             <p className="text-xs text-muted-foreground text-center leading-relaxed">
               {language === "th"
-                ? "หมายเหตุ: เมื่อครบกำหนดการนับถอยหลัง ให้ถือว่าการเสนอราคาและข้อตกลงจ้างงานเดิมเป็นอันสิ้นสุดลง หากผู้ว่าจ้างประสงค์จะเข้าใช้งานระบบหลังจากนี้ จะถือเป็นการเริ่มโครงการใหม่ตามอัตราค่าบริการปัจจุบัน (Market Rate) และผู้รับจ้างไม่รับผิดชอบต่อความเสียหายหรือข้อมูลที่ถูกลบไปก่อนหน้า"
+                ? "หมายเหตุ: หากพ้นกำหนดเวลาดังกล่าว ให้ถือว่าข้อตกลงและสัญญาจ้างฉบับนี้ ระงับสิ้นสุดลงโดยทันที เนื่องจากการผิดนัดชำระเงินตามที่ตกลงกันไว้ โดยผู้รับจ้างขอสงวนสิทธิ์ในทรัพย์สินทางปัญญา ซอร์สโค้ด และข้อมูลระบบทั้งหมดแต่เพียงผู้เดียว และจะไม่มีพันธะผูกพันในการส่งมอบงานหรือดูแลระบบอีกต่อไป"
                 : "Note: Once the countdown expires, the original quotation and contract shall be considered terminated. If the client wishes to access the system thereafter, it will be treated as a new project at the current market rate, and the developer shall not be liable for any damages or previously deleted data."}
             </p>
           ) : (
