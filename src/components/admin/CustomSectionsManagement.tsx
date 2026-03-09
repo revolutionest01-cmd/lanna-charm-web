@@ -564,7 +564,7 @@ export const CustomSectionsManagement = () => {
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-border/60" />
 
                   {/* Step 5: Active */}
                   <div className="flex items-center justify-between rounded-lg border border-border p-3">
