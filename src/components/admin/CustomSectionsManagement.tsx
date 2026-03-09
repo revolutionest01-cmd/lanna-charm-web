@@ -450,7 +450,7 @@ export const CustomSectionsManagement = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col">
+          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col px-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="edit" className="gap-1.5">
                 <Pencil className="w-3.5 h-3.5" />
