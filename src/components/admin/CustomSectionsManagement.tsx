@@ -441,7 +441,7 @@ export const CustomSectionsManagement = () => {
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl !max-h-[90vh] !flex !flex-col overflow-hidden p-0">
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-primary" />
               {editingSection
