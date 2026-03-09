@@ -483,8 +483,8 @@ export const CustomSectionsManagement = () => {
                             key={t.value}
                             type="button"
                             onClick={() => handleTypeChange(t.value)}
-                            className={`flex items-start gap-2.5 p-3 rounded-lg border-2 text-left transition-all
-                              ${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/30"}`}
+                            className={`flex items-start gap-2.5 p-3.5 rounded-xl border-2 text-left transition-all duration-200
+                              ${isSelected ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary/20" : "border-border hover:border-primary/40 hover:bg-accent/40"}`}
                           >
                             <Icon className={`w-5 h-5 mt-0.5 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                             <div>
