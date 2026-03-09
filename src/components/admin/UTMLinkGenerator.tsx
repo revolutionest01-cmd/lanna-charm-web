@@ -14,7 +14,7 @@ const COMMON_MEDIUMS = ["cpc", "social", "email", "banner", "referral", "organic
 export const UTMLinkGenerator = () => {
   const { language } = useLanguage();
   const isTh = language === "th";
-  const [baseUrl, setBaseUrl] = useState("https://lanna-charm-web.lovable.app");
+  const [baseUrl, setBaseUrl] = useState("https://www.plernping.com");
   const [source, setSource] = useState("");
   const [medium, setMedium] = useState("");
   const [campaign, setCampaign] = useState("");
