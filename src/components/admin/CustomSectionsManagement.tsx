@@ -64,8 +64,11 @@ const emptySection = (orderIndex: number) => ({
 });
 
 /* ─── Styled label ─── */
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">{children}</label>
+const FieldLabel = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
+  <label className="text-xs font-bold text-primary/80 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+    {icon}
+    {children}
+  </label>
 );
 
 export const CustomSectionsManagement = () => {
