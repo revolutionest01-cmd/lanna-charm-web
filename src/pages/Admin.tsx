@@ -351,6 +351,7 @@ const Admin = () => {
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     <span>{label}</span>
+                    {isLocked && <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-muted-foreground/40 text-muted-foreground font-semibold ml-auto">Dev</Badge>}
                   </button>
                 );
               })}
