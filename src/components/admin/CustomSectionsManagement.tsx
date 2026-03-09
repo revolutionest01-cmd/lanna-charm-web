@@ -570,7 +570,7 @@ export const CustomSectionsManagement = () => {
                     <Switch checked={formData.is_active} onCheckedChange={(v) => setFormData((p: any) => ({ ...p, is_active: v }))} />
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* ─── Preview Tab ─── */}
