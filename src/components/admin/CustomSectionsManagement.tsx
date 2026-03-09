@@ -526,7 +526,7 @@ export const CustomSectionsManagement = () => {
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-border/60" />
 
                   {/* Step 3: Main Image */}
                   <div>
