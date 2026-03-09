@@ -440,7 +440,7 @@ export const CustomSectionsManagement = () => {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-primary" />
@@ -450,7 +450,7 @@ export const CustomSectionsManagement = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="edit" className="w-full">
+          <Tabs defaultValue="edit" className="w-full flex-1 min-h-0 flex flex-col">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="edit" className="gap-1.5">
                 <Pencil className="w-3.5 h-3.5" />
@@ -463,8 +463,8 @@ export const CustomSectionsManagement = () => {
             </TabsList>
 
             {/* ─── Edit Tab ─── */}
-            <TabsContent value="edit">
-              <ScrollArea className="max-h-[55vh] pr-4">
+            <TabsContent value="edit" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
+              <ScrollArea className="flex-1 max-h-[58vh] pr-4">
                 <div className="space-y-5 py-2">
                   {/* Step 1: Section Type */}
                   <div>
@@ -574,8 +574,8 @@ export const CustomSectionsManagement = () => {
             </TabsContent>
 
             {/* ─── Preview Tab ─── */}
-            <TabsContent value="preview">
-              <ScrollArea className="max-h-[55vh]">
+            <TabsContent value="preview" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
+              <ScrollArea className="flex-1 max-h-[58vh]">
                 <div className="border border-border rounded-lg overflow-hidden bg-background">
                   <div className="bg-muted/30 px-3 py-1.5 border-b border-border flex items-center gap-2">
                     <div className="flex gap-1">
