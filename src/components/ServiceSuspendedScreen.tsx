@@ -8,17 +8,35 @@ import { useState, useEffect, useRef } from "react";
 const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00"); // 1 มีนาคม 2569 BE
 const DELETION_DEADLINE_DAYS = 15;
 const DEADLINE_MS = DELETION_DEADLINE_DAYS * 24 * 60 * 60 * 1000;
+const REDIRECT_URL = "https://12theresidence.com/th-th/";
+const REDIRECT_COUNTDOWN_SECONDS = 10;
 
 const ServiceSuspendedScreen = () => {
   const { language } = useLanguage();
   const { logout, isAuthenticated } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(REDIRECT_COUNTDOWN_SECONDS);
 
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setRedirectCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    const timeout = window.setTimeout(() => {
+      window.location.href = REDIRECT_URL;
+    }, REDIRECT_COUNTDOWN_SECONDS * 1000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
   }, []);
 
   const diffMs = now.getTime() - SUSPENSION_START.getTime();
@@ -52,6 +70,36 @@ const ServiceSuspendedScreen = () => {
 
   return (
     <div className="min-h-screen w-full bg-background flex items-center justify-center px-4 py-8">
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[120] w-[calc(100%-1rem)] max-w-2xl">
+        <div className="rounded-2xl border border-amber-500/50 bg-amber-50/95 px-6 py-5 sm:px-8 sm:py-6 shadow-xl backdrop-blur-sm">
+          <div className="text-center space-y-2 sm:space-y-3">
+            <div className="mx-auto inline-flex items-center justify-center rounded-full bg-amber-100 p-2.5 sm:p-3">
+              <CalendarX className="w-7 h-7 sm:w-8 sm:h-8 text-amber-700" />
+            </div>
+
+            <p className="text-4xl sm:text-5xl font-black tracking-tight text-amber-900 leading-none">
+              Error 402
+            </p>
+
+            <p className="text-sm sm:text-lg font-semibold text-amber-900 leading-relaxed max-w-3xl mx-auto">
+              {language === "th"
+                ? "เราจะนำทางคุณไปยังโรงแรมที่ดีที่สุดและคู่ควรสำหรับคุณ."
+                : "We are directing you to the best hotel experience you truly deserve."}
+            </p>
+
+            <p className="text-2xl sm:text-3xl font-extrabold tabular-nums text-amber-900">
+              {language === "th"
+                ? `Redirect ภายใน ${redirectCountdown} วินาที`
+                : `Redirecting in ${redirectCountdown} seconds`}
+            </p>
+
+            <p className="text-sm sm:text-base text-amber-800/90">
+              {language === "th" ? "ระบบจะพาคุณไปโดยอัตโนมัติ" : "You will be redirected automatically."}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="w-full max-w-2xl rounded-2xl border border-destructive/40 bg-card p-6 sm:p-8 text-center shadow-sm space-y-5">
         {/* Header badge */}
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive">

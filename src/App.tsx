@@ -63,6 +63,13 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
   const allowAuthDuringSuspended = isAuthPath && !isAuthenticated;
   const shouldShowRoleLoading = isServiceSuspended && roleChecking;
   const shouldShowSuspended = isServiceSuspended && !canBypassSuspended && !allowAuthDuringSuspended && !shouldShowRoleLoading;
+  const shouldShowLoadingScreen = showLoading && !featureLoading && !isServiceSuspended;
+
+  useEffect(() => {
+    if (isServiceSuspended && showLoading) {
+      onLoadingComplete();
+    }
+  }, [isServiceSuspended, showLoading, onLoadingComplete]);
 
   useEffect(() => {
     initializeGA(analyticsEnabled);
@@ -73,7 +80,7 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
 
   return (
     <>
-      {showLoading && <LoadingScreen onLoadingComplete={onLoadingComplete} />}
+      {shouldShowLoadingScreen && <LoadingScreen onLoadingComplete={onLoadingComplete} />}
       {shouldShowRoleLoading ? (
         <div className="min-h-screen w-full bg-background flex items-center justify-center">
           <p className="text-sm text-muted-foreground">
