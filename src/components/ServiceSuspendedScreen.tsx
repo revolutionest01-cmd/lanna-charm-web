@@ -8,7 +8,11 @@ import { useState, useEffect, useRef } from "react";
 const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00"); // 1 มีนาคม 2569 BE
 const DELETION_DEADLINE_DAYS = 15;
 const DEADLINE_MS = DELETION_DEADLINE_DAYS * 24 * 60 * 60 * 1000;
-const REDIRECT_URL = "https://12theresidence.com/th-th/";
+const REDIRECT_URLS = [
+  "https://12theresidence.com/th-th/",
+  "https://www.radissonhotels.com/",
+  "https://th.amari.com/donmuang",
+];
 const REDIRECT_COUNTDOWN_SECONDS = 10;
 
 const ServiceSuspendedScreen = () => {
@@ -25,12 +29,14 @@ const ServiceSuspendedScreen = () => {
   }, []);
 
   useEffect(() => {
+    const randomRedirectUrl = REDIRECT_URLS[Math.floor(Math.random() * REDIRECT_URLS.length)];
+
     const interval = window.setInterval(() => {
       setRedirectCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     const timeout = window.setTimeout(() => {
-      window.location.href = REDIRECT_URL;
+      window.location.href = randomRedirectUrl;
     }, REDIRECT_COUNTDOWN_SECONDS * 1000);
 
     return () => {
