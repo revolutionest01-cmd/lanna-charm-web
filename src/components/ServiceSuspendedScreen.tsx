@@ -69,8 +69,8 @@ const ServiceSuspendedScreen = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background flex items-center justify-center px-4 py-8">
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[120] w-[calc(100%-1rem)] max-w-2xl">
+    <div className="min-h-screen w-full bg-background flex flex-col items-center justify-center px-4 py-8 gap-4 sm:gap-6">
+      <div className="w-full max-w-2xl">
         <div className="rounded-2xl border border-amber-500/50 bg-amber-50/95 px-6 py-5 sm:px-8 sm:py-6 shadow-xl backdrop-blur-sm">
           <div className="text-center space-y-2 sm:space-y-3">
             <div className="mx-auto inline-flex items-center justify-center rounded-full bg-amber-100 p-2.5 sm:p-3">
