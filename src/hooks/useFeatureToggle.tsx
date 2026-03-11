@@ -100,10 +100,12 @@ export const useFeatureToggle = () => {
     subscribers.add(setToggles);
     ensureRealtimeSubscription();
 
-    const refreshImmediately = () => {
-      void refreshTogglesNow().finally(() => {
+    const refreshImmediately = async () => {
+      try {
+        await refreshTogglesNow();
+      } finally {
         setIsLoading(false);
-      });
+      }
     };
 
     const handleVisibilityOrFocus = () => {
@@ -115,8 +117,7 @@ export const useFeatureToggle = () => {
 
     if (globalToggles) {
       setToggles(globalToggles);
-      setIsLoading(false);
-      refreshImmediately();
+      void refreshImmediately();
     } else {
       if (!fetchPromise) {
         fetchPromise = fetchToggles();
@@ -124,9 +125,11 @@ export const useFeatureToggle = () => {
 
       fetchPromise.then((data) => {
         updateGlobalToggles(data);
-        setIsLoading(false);
         fetchPromise = null;
-        refreshImmediately();
+        void refreshImmediately();
+      }).catch(() => {
+        fetchPromise = null;
+        setIsLoading(false);
       });
     }
 

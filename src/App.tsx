@@ -80,8 +80,11 @@ const AppRoutes = ({ showLoading, onLoadingComplete }: { showLoading: boolean; o
 
   return (
     <>
-      {shouldShowLoadingScreen && <LoadingScreen onLoadingComplete={onLoadingComplete} />}
-      {shouldShowRoleLoading ? (
+      {featureLoading ? (
+        <div className="min-h-screen w-full bg-background" />
+      ) : shouldShowLoadingScreen ? (
+        <LoadingScreen onLoadingComplete={onLoadingComplete} />
+      ) : shouldShowRoleLoading ? (
         <div className="min-h-screen w-full bg-background flex items-center justify-center">
           <p className="text-sm text-muted-foreground">
             {language === "th" ? "กำลังตรวจสอบสิทธิ์การเข้าถึง..." : "Checking access permissions..."}
