@@ -3,11 +3,12 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
-const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00"); // 1 มีนาคม 2569 BE
+const SUSPENSION_START = new Date("2026-03-01T00:00:00+07:00");
 const DELETION_DEADLINE_DAYS = 15;
 const DEADLINE_MS = DELETION_DEADLINE_DAYS * 24 * 60 * 60 * 1000;
+const DEADLINE_DATE = new Date(SUSPENSION_START.getTime() + DEADLINE_MS);
 const REDIRECT_URLS = [
   "https://12theresidence.com/th-th/",
   "https://www.radissonhotels.com/",
@@ -15,54 +16,68 @@ const REDIRECT_URLS = [
 ];
 const REDIRECT_COUNTDOWN_SECONDS = 10;
 
+const getRandomRedirectUrl = () =>
+  REDIRECT_URLS[Math.floor(Math.random() * REDIRECT_URLS.length)];
+
 const ServiceSuspendedScreen = () => {
   const { language } = useLanguage();
   const { logout, isAuthenticated } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(REDIRECT_COUNTDOWN_SECONDS);
-
   const [now, setNow] = useState(() => new Date());
 
+  const diffMs = now.getTime() - SUSPENSION_START.getTime();
+  const isExpired = diffMs >= DEADLINE_MS;
+
+  // Live clock tick
   useEffect(() => {
+    if (isExpired) return; // No need to tick if already expired
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isExpired]);
 
+  // Redirect logic: instant if expired, 10s delay if not
   useEffect(() => {
-    const randomRedirectUrl = REDIRECT_URLS[Math.floor(Math.random() * REDIRECT_URLS.length)];
+    const url = getRandomRedirectUrl();
 
+    if (isExpired) {
+      // Immediate redirect — blackout screen is already rendering
+      window.location.replace(url);
+      return;
+    }
+
+    // Normal 10-second countdown redirect
     const interval = window.setInterval(() => {
       setRedirectCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     const timeout = window.setTimeout(() => {
-      window.location.href = randomRedirectUrl;
+      window.location.href = url;
     }, REDIRECT_COUNTDOWN_SECONDS * 1000);
 
     return () => {
       window.clearInterval(interval);
       window.clearTimeout(timeout);
     };
-  }, []);
+  }, [isExpired]);
 
-  const diffMs = now.getTime() - SUSPENSION_START.getTime();
-  const totalHoursPassed = Math.max(0, diffMs / (1000 * 60 * 60));
-  const daysPassed = Math.floor(totalHoursPassed / 24);
-  const daysRemaining = Math.max(0, DELETION_DEADLINE_DAYS - daysPassed);
-  const isExpired = daysPassed >= DELETION_DEADLINE_DAYS;
-  const progressPercent = Math.min(100, (diffMs / DEADLINE_MS) * 100);
+  // ── BLACKOUT: When countdown has expired, render pure black screen ──
+  if (isExpired) {
+    return (
+      <div
+        className="fixed inset-0 z-[99999]"
+        style={{ backgroundColor: "#000000", width: "100vw", height: "100vh", overflow: "hidden" }}
+      />
+    );
+  }
 
-  // Remaining time breakdown
+  // ── NORMAL: Countdown still active ──
   const remainingMs = Math.max(0, DEADLINE_MS - diffMs);
   const remDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
   const remHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const remMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
   const remSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-
-  // Overdue hours (total)
-  const totalOverdueHours = Math.floor(totalHoursPassed);
-  const overdueMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  const overdueSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+  const progressPercent = Math.min(100, (diffMs / DEADLINE_MS) * 100);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -143,35 +158,28 @@ const ServiceSuspendedScreen = () => {
           </div>
 
           {/* Countdown timer */}
-          {!isExpired ? (
-            <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
-              {[
-                { value: remDays, label: language === "th" ? "วัน" : "Days" },
-                { value: remHours, label: language === "th" ? "ชั่วโมง" : "Hours" },
-                { value: remMinutes, label: language === "th" ? "นาที" : "Min" },
-                { value: remSeconds, label: language === "th" ? "วินาที" : "Sec" },
-              ].map((unit, i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <span className="text-4xl sm:text-6xl font-extrabold tabular-nums text-destructive leading-none font-mono min-w-[2.5rem] sm:min-w-[4rem] text-center">
-                    {String(unit.value).padStart(2, "0")}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground mt-1">{unit.label}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center">
-              <span className="text-4xl sm:text-6xl font-extrabold text-destructive animate-pulse">00 : 00 : 00 : 00</span>
-              <p className="text-xs text-muted-foreground mt-1">{language === "th" ? "หมดเวลาแล้ว" : "Time's up"}</p>
-            </div>
-          )}
+          <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
+            {[
+              { value: remDays, label: language === "th" ? "วัน" : "Days" },
+              { value: remHours, label: language === "th" ? "ชั่วโมง" : "Hours" },
+              { value: remMinutes, label: language === "th" ? "นาที" : "Min" },
+              { value: remSeconds, label: language === "th" ? "วินาที" : "Sec" },
+            ].map((unit, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <span className="text-4xl sm:text-6xl font-extrabold tabular-nums text-destructive leading-none font-mono min-w-[2.5rem] sm:min-w-[4rem] text-center">
+                  {String(unit.value).padStart(2, "0")}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground mt-1">{unit.label}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Progress bar */}
           <div className="w-full space-y-1.5">
             <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                  isExpired ? "bg-destructive animate-pulse" : progressPercent > 70 ? "bg-destructive/70" : "bg-destructive/40"
+                  progressPercent > 70 ? "bg-destructive/70" : "bg-destructive/40"
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
@@ -182,28 +190,12 @@ const ServiceSuspendedScreen = () => {
             </div>
           </div>
 
-          {/* Warning or expired message */}
-          {!isExpired ? (
-            <p className="text-xs text-muted-foreground text-center leading-relaxed">
-              {language === "th"
-                ? "หมายเหตุ: หากพ้นกำหนดเวลาดังกล่าว ให้ถือว่าข้อตกลงและสัญญาจ้างฉบับนี้ ระงับสิ้นสุดลงโดยทันที เนื่องจากการผิดนัดชำระเงินตามที่ตกลงกันไว้ โดยผู้รับจ้างขอสงวนสิทธิ์ในทรัพย์สินทางปัญญา ซอร์สโค้ด และข้อมูลระบบทั้งหมดแต่เพียงผู้เดียว และจะไม่มีพันธะผูกพันในการส่งมอบงานหรือดูแลระบบอีกต่อไป"
-                : "Note: If the above deadline passes, this agreement and service contract shall be immediately terminated due to breach of payment terms as agreed. The developer reserves sole ownership of all intellectual property, source code, and system data, and shall have no further obligation to deliver work or maintain the system."}
-            </p>
-          ) : (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-3 space-y-1.5">
-              <div className="flex items-center justify-center gap-1.5 text-sm font-bold text-destructive">
-                <Trash2 className="w-4 h-4" />
-                {language === "th"
-                  ? "เกินกำหนดแล้ว — ข้อมูลทั้งหมดจะถูกลบทิ้ง"
-                  : "DEADLINE EXCEEDED — All data will be permanently deleted"}
-              </div>
-              <p className="text-xs text-destructive/80 leading-relaxed">
-                {language === "th"
-                  ? "ตามนโยบายการทำงานของทีมผู้พัฒนา ข้อมูลทั้งหมดรวมถึงบัญชีผู้ใช้ ไฟล์ และฐานข้อมูลจะถูกลบออกจากระบบอย่างถาวร โดยไม่สามารถกู้คืนได้"
-                  : "Per the development team's policy, all data including user accounts, files, and databases will be permanently removed from the system and cannot be recovered."}
-              </p>
-            </div>
-          )}
+          {/* Warning message */}
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            {language === "th"
+              ? "หมายเหตุ: หากพ้นกำหนดเวลาดังกล่าว ให้ถือว่าข้อตกลงและสัญญาจ้างฉบับนี้ ระงับสิ้นสุดลงโดยทันที เนื่องจากการผิดนัดชำระเงินตามที่ตกลงกันไว้ โดยผู้รับจ้างขอสงวนสิทธิ์ในทรัพย์สินทางปัญญา ซอร์สโค้ด และข้อมูลระบบทั้งหมดแต่เพียงผู้เดียว และจะไม่มีพันธะผูกพันในการส่งมอบงานหรือดูแลระบบอีกต่อไป"
+              : "Note: If the above deadline passes, this agreement and service contract shall be immediately terminated due to breach of payment terms as agreed. The developer reserves sole ownership of all intellectual property, source code, and system data, and shall have no further obligation to deliver work or maintain the system."}
+          </p>
         </div>
 
         {/* Actions */}
