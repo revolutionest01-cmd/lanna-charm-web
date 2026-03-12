@@ -28,7 +28,10 @@ const ServiceSuspendedScreen = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Only start redirect countdown when expired
   useEffect(() => {
+    if (!isExpired) return;
+
     const randomRedirectUrl = REDIRECT_URLS[Math.floor(Math.random() * REDIRECT_URLS.length)];
 
     const interval = window.setInterval(() => {
@@ -43,7 +46,7 @@ const ServiceSuspendedScreen = () => {
       window.clearInterval(interval);
       window.clearTimeout(timeout);
     };
-  }, []);
+  }, [isExpired]);
 
   const diffMs = now.getTime() - SUSPENSION_START.getTime();
   const totalHoursPassed = Math.max(0, diffMs / (1000 * 60 * 60));
