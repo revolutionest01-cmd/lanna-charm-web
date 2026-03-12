@@ -20,7 +20,7 @@ console.log("   - hardReset.RESET_ALL() - Hard reset (legacy)");
 console.log("   - hardReset.HELP() - See reset options");
 
 // Auto-run diagnostic in development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   setTimeout(() => {
     debugUtils.suggest();
   }, 2000);
