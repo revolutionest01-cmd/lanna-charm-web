@@ -46,7 +46,7 @@ if ('serviceWorker' in navigator && false) { // Temporarily disabled - set to tr
         console.warn('[SW] Registration failed:', error);
       });
   });
-} else if (process.env.NODE_ENV === 'development') {
+} else if (import.meta.env.DEV) {
   console.log('[SW] Skipped (development mode)');
 }
 
