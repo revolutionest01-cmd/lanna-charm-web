@@ -61,19 +61,6 @@ const ServiceSuspendedScreen = () => {
       window.clearTimeout(timeout);
     };
   }, [isExpired]);
-  const progressPercent = Math.min(100, (diffMs / DEADLINE_MS) * 100);
-
-  // Remaining time breakdown
-  const remainingMs = Math.max(0, DEADLINE_MS - diffMs);
-  const remDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
-  const remHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const remMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-  const remSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-
-  // Overdue hours (total)
-  const totalOverdueHours = Math.floor(totalHoursPassed);
-  const overdueMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  const overdueSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
