@@ -74,7 +74,7 @@ export const WebboardManagement = () => {
   // Check if forum tables exist on mount
   useEffect(() => {
     let isMounted = true;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
 
     const checkTablesExist = async () => {
       try {
