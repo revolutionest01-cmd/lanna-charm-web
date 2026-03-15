@@ -19,6 +19,12 @@ const REDIRECT_COUNTDOWN_SECONDS = 10;
 const getRandomRedirectUrl = () =>
   REDIRECT_URLS[Math.floor(Math.random() * REDIRECT_URLS.length)];
 
+/** Pre-check: if deadline already passed, redirect BEFORE React even renders */
+const _isAlreadyExpired = Date.now() - SUSPENSION_START.getTime() >= DEADLINE_MS;
+if (_isAlreadyExpired && typeof window !== "undefined") {
+  window.location.replace(getRandomRedirectUrl());
+}
+
 const ServiceSuspendedScreen = () => {
   const { language } = useLanguage();
   const { logout, isAuthenticated } = useAuth();
